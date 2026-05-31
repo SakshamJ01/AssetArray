@@ -12,12 +12,16 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.assetarray.app"
     },
-    "android": {
-      "package": "com.assetarray.app",
-      "adaptiveIcon": {
-        "backgroundColor": "#102033"
-      }
-    },
+
+"android": {
+  "package": "com.assetarray.app",
+  "usesCleartextTraffic": true,
+  "adaptiveIcon": {
+    "backgroundColor": "#102033"
+  }
+},
+
+
     "web": {
       "bundler": "metro"
     },

@@ -1,0 +1,19 @@
+{
+  "name": "asset-array-backend",
+  "version": "1.0.0",
+  "private": true,
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check server.js",
+    "mongo:check": "node scripts/check-mongo.js",
+    "ai:sample": "node scripts/sample-ai-research.js"
+  },
+  "dependencies": {
+    "@google/genai": "^2.7.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
+    "express": "^4.21.2",
+    "mongodb": "^6.17.0"
+  }
+}

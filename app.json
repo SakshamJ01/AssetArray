@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "Asset Array",
+    "slug": "asset-array",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.assetarray.app"
+    },
+    "android": {
+      "package": "com.assetarray.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#102033"
+      }
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-secure-store"
+    ]
+  }
+}

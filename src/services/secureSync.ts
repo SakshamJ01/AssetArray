@@ -263,29 +263,38 @@ export async function requestAiResearch({
 }
 
 export async function loginAdvisor({ endpoint, username, password }: LoginOptions) {
- const url = `${normalizeEndpoint(endpoint)}/api/auth/login`;
+  try {
+    const url = `${normalizeEndpoint(endpoint)}/api/auth/login`;
 
-alert(`Trying: ${url}`);
+    alert(`Trying: ${url}`);
 
-const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ username, password }),
-  });
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ username, password }),
+    });
 
-  if (!response.ok) {
-    throw new Error("Login failed. Please check backend URL and credentials.");
+    alert(`Status: ${response.status}`);
+
+    if (!response.ok) {
+      const text = await response.text();
+      alert(`Server Error: ${text}`);
+      throw new Error(text);
+    }
+
+    return response.json() as Promise<{
+      ok: true;
+      user: AuthUser;
+      accessToken: string;
+      refreshToken: string;
+      expiresIn: number;
+    }>;
+  } catch (error: any) {
+    alert(`ERROR: ${error?.message || JSON.stringify(error)}`);
+    throw error;
   }
-
-  return response.json() as Promise<{
-    ok: true;
-    user: AuthUser;
-    accessToken: string;
-    refreshToken: string;
-    expiresIn: number;
-  }>;
 }
 
 export async function refreshAdvisorToken({ endpoint, refreshToken }: RefreshOptions) {

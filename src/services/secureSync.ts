@@ -263,7 +263,11 @@ export async function requestAiResearch({
 }
 
 export async function loginAdvisor({ endpoint, username, password }: LoginOptions) {
-  const response = await fetch(`${normalizeEndpoint(endpoint)}/api/auth/login`, {
+ const url = `${normalizeEndpoint(endpoint)}/api/auth/login`;
+
+alert(`Trying: ${url}`);
+
+const response = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

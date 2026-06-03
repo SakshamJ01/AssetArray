@@ -263,7 +263,6 @@ export async function requestAiResearch({
 }
 
 export async function loginAdvisor({ endpoint, username, password }: LoginOptions) {
-  try {
     const url = `${normalizeEndpoint(endpoint)}/api/auth/login`;
 
 
@@ -277,7 +276,6 @@ export async function loginAdvisor({ endpoint, username, password }: LoginOption
 
     if (!response.ok) {
       const text = await response.text();
-      alert(`Server Error: ${text}`);
       throw new Error(text);
     }
 
@@ -288,10 +286,9 @@ export async function loginAdvisor({ endpoint, username, password }: LoginOption
       refreshToken: string;
       expiresIn: number;
     }>;
-  } catch (error: any) {
-  throw error;
+    
 }
-}
+
 
 export async function refreshAdvisorToken({ endpoint, refreshToken }: RefreshOptions) {
   const response = await fetch(`${normalizeEndpoint(endpoint)}/api/auth/refresh`, {

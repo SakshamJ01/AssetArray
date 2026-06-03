@@ -1,5 +1,7 @@
 import CryptoJS from "crypto-js";
 
+import axios from "axios";
+
 type PushOptions = {
   endpoint: string;
   ownerId: string;
@@ -268,13 +270,17 @@ export async function loginAdvisor({ endpoint, username, password }: LoginOption
 
 alert(`Trying: ${url}`);
     
-alert("Testing fetch");
+alert("Testing Axios");
 
 try {
-  const r = await fetch("https://jsonplaceholder.typicode.com/todos/1");
-  alert(`Fetch OK: ${r.status}`);
+  const r = await axios.get(
+    "https://jsonplaceholder.typicode.com/todos/1"
+  );
+
+  alert(`Axios OK: ${r.status}`);
 } catch (e: any) {
-  alert(`Fetch FAILED: ${e?.message}`);
+  
+  alert(`Axios FAILED: ${e?.message}`);
 }
 
     const response = await fetch(url, {

@@ -15,7 +15,7 @@
 
 "android": {
   "package": "com.assetarray.app",
-  "usesCleartextTraffic": true,
+  
   "adaptiveIcon": {
     "backgroundColor": "#102033"
   }

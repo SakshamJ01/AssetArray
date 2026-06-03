@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Alert,
+  FlatList,
   Linking,
   Modal,
   Pressable,
@@ -11,12 +12,21 @@ import {
   Switch,
   Text,
   TextInput,
+  useColorScheme,
+  useWindowDimensions,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaProvider,
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
+
 import * as LocalAuthentication from "expo-local-authentication";
 import * as SecureStore from "expo-secure-store";
 import { StatusBar } from "expo-status-bar";
+import { BottomTabBar } from "./src/components/BottomTabBar";
+import { DashboardScreen } from "./src/components/DashboardScreen";
 import {
   AiResearchResult,
   AuthUser,
@@ -32,6 +42,7 @@ import {
   refreshAdvisorToken,
   sendBroadcastCampaign,
 } from "./src/services/secureSync";
+import { buildAppTheme } from "./src/theme";
 
 type Channel = "Phone" | "SMS" | "Email" | "WhatsApp";
 type Category = "HNI" | "Retail" | "Family Office" | "Trader" | "Long Term";
@@ -42,7 +53,7 @@ type CashFlowFrequency = "Monthly" | "Quarterly" | "Yearly";
 type CashFlowMode = "Payout" | "Cumulative";
 type SipFrequency = "Monthly" | "Quarterly";
 type CalculatorTab = "Cash Flow" | "SIP" | "Goal Planner" | "Retirement";
-type AppTab = "Clients" | "Portfolios" | "Tools" | "Workspace" | "AI Research";
+type AppTab = "Dashboard" | "Clients" | "Portfolios" | "Tools" | "Workspace" | "AI Research";
 type AssetClass =
   | "Stocks"
   | "Bonds"
@@ -511,10 +522,13 @@ async function persistVaultDocuments(documents: VaultDocument[]) {
   await SecureStore.setItemAsync(VAULT_DOCUMENTS_KEY, JSON.stringify(documents));
 }
 
-function App() {
+function AppContent() {
+  const systemColorScheme = useColorScheme();
+  const { width: windowWidth } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const [isReady, setIsReady] = useState(false);
   const [storedPin, setStoredPin] = useState<string | null>(null);
-  const [darkModeEnabled, setDarkModeEnabled] = useState(true);
+  const [darkModeEnabled, setDarkModeEnabled] = useState(systemColorScheme === "dark");
   const [pinInput, setPinInput] = useState("");
   const [pinSetup, setPinSetup] = useState("");
   const [isUnlocked, setIsUnlocked] = useState(false);
@@ -572,7 +586,7 @@ function App() {
   const [retirementYearsAfterRetire, setRetirementYearsAfterRetire] =
     useState("25");
   const [marketResearchNotes, setMarketResearchNotes] = useState("");
-  const [activeTab, setActiveTab] = useState<AppTab>("Clients");
+  const [activeTab, setActiveTab] = useState<AppTab>("Dashboard");
   const [goals, setGoals] = useState<Goal[]>([]);
   const [goalDraft, setGoalDraft] = useState<GoalDraft>(emptyGoalDraft);
   const [advisorMessages, setAdvisorMessages] = useState<AdvisorMessage[]>([]);
@@ -582,6 +596,12 @@ function App() {
   const [vaultDocumentDraft, setVaultDocumentDraft] =
     useState<VaultDocumentDraft>(emptyVaultDocumentDraft);
   const [connectedAccounts] = useState<ConnectedAccount[]>(defaultConnectedAccounts);
+  const theme = useMemo(
+    () => buildAppTheme(darkModeEnabled ? "dark" : "light"),
+    [darkModeEnabled]
+  );
+  const isCompactPageHeader = windowWidth < 420;
+  const contentBottomPadding = insets.bottom + 100;
 
   useEffect(() => {
     async function load() {
@@ -650,6 +670,7 @@ function App() {
         setIsReady(true);
       }
     }
+    
 
     void load();
   }, []);
@@ -1231,12 +1252,20 @@ function App() {
 
   const dashboardStats = useMemo(
     () => [
-      { label: "Clients", value: `${clients.length}` },
+      {
+        label: "Portfolio Summary",
+        value: currencyDisplay(`${unifiedPortfolioAnalytics.totalCurrent}`),
+      },
+      { label: "Client Count", value: `${clients.length}` },
       { label: "Due Today", value: `${dueClients.length}` },
       { label: "High Priority", value: `${highPriorityClients.length}` },
-      { label: "Selected", value: `${selectedClientIds.length}` },
     ],
-    [clients.length, dueClients.length, highPriorityClients.length, selectedClientIds.length]
+    [
+      clients.length,
+      dueClients.length,
+      highPriorityClients.length,
+      unifiedPortfolioAnalytics.totalCurrent,
+    ]
   );
 
   const categorySummary = useMemo(
@@ -1246,6 +1275,80 @@ function App() {
         value: `${clients.filter((client) => client.category === category).length}`,
       })),
     [clients]
+  );
+
+  const recentClients = useMemo(
+    () =>
+      [...clients]
+        .sort((a, b) => {
+          const aTime = Date.parse(a.lastContact || "") || 0;
+          const bTime = Date.parse(b.lastContact || "") || 0;
+          return bTime - aTime;
+        })
+        .slice(0, 5),
+    [clients]
+  );
+
+  const dashboardAnalytics = useMemo(() => {
+    const topPerformer = unifiedPortfolioAnalytics.topPerformers[0];
+    const biggestCategory = categorySummary
+      .slice()
+      .sort((a, b) => Number(b.value) - Number(a.value))[0];
+
+    return [
+      {
+        label: "Tracked Holdings",
+        value: `${unifiedPortfolioAnalytics.holdings.length}`,
+      },
+      {
+        label: "Gain / Loss",
+        value: currencyDisplay(`${unifiedPortfolioAnalytics.totalGainLoss}`),
+      },
+      {
+        label: "Top Performer",
+        value: topPerformer ? topPerformer.assetName : "No data yet",
+      },
+      {
+        label: "Largest Client Segment",
+        value: biggestCategory ? biggestCategory.label : "No data yet",
+      },
+    ];
+  }, [
+    categorySummary,
+    unifiedPortfolioAnalytics.holdings.length,
+    unifiedPortfolioAnalytics.topPerformers,
+    unifiedPortfolioAnalytics.totalGainLoss,
+  ]);
+
+  const dashboardReminderKpis = useMemo(() => {
+    const today = todayISO();
+    const scheduledClients = clients.filter((client) => Boolean(client.reminderDate));
+    const dueTodayCount = scheduledClients.filter(
+      (client) => client.reminderDate === today
+    ).length;
+    const overdueCount = scheduledClients.filter(
+      (client) => client.reminderDate < today
+    ).length;
+    const upcomingCount = scheduledClients.filter(
+      (client) => client.reminderDate > today
+    ).length;
+
+    return {
+      dueToday: dueTodayCount,
+      overdue: overdueCount,
+      upcoming: upcomingCount,
+    };
+  }, [clients]);
+
+  const visibleTabs = useMemo(
+    () => [
+      { key: "Dashboard" as AppTab, label: "Dashboard" },
+      { key: "Clients" as AppTab, label: "Clients" },
+      { key: "Portfolios" as AppTab, label: "Portfolios" },
+      { key: "Tools" as AppTab, label: "Tools" },
+      { key: "Workspace" as AppTab, label: "Workspace" },
+    ],
+    []
   );
 
   async function handleBiometricUnlock() {
@@ -2054,52 +2157,106 @@ function App() {
   }
 
   return (
-    <SafeAreaView style={[styles.screen, darkModeEnabled ? styles.screenDark : null]}>
+    <SafeAreaView
+      edges={["top", "left", "right"]}
+      style={[
+        styles.screen,
+        darkModeEnabled ? styles.screenDark : null,
+        { backgroundColor: theme.colors.background },
+      ]}
+    >
       <StatusBar style={darkModeEnabled ? "light" : "dark"} />
-      <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.heroCard}>
-          <View style={styles.heroCopy}>
-            <Text style={styles.heroEyebrow}>Asset Array</Text>
-            <Text style={styles.heroTitle}>
-              Secure portfolio and communication control for every client.
-            </Text>
-            <Text style={styles.heroText}>
-              Manage client information, update current portfolios, and send one-click
-              broadcasts to selected groups from a single private dashboard.
+      {activeTab === "Dashboard" ? (
+        <DashboardScreen
+          analytics={dashboardAnalytics}
+          contentBottomPadding={contentBottomPadding}
+          dueClients={dueClients.map((client) => ({
+            id: client.id,
+            name: client.name,
+            category: client.category,
+            reminderDate: formatReminderDate(client.reminderDate),
+            lastContact: client.lastContact,
+            priority: client.priority,
+          }))}
+          onActionAddClient={openAddModal}
+          onActionAiResearch={() => setActiveTab("AI Research")}
+          onActionBroadcast={() => setIsBroadcastModalOpen(true)}
+          onActionOpenClients={() => setActiveTab("Clients")}
+          onOpenClient={(clientId) => {
+            setSelectedClientId(clientId);
+            setActiveTab("Clients");
+          }}
+          onViewAllClients={() => setActiveTab("Clients")}
+          recentClients={recentClients.map((client) => ({
+            id: client.id,
+            name: client.name,
+            category: client.category,
+            reminderDate: formatReminderDate(client.reminderDate),
+            lastContact: client.lastContact,
+            priority: client.priority,
+          })).slice(0, 3)}
+          reminderKpis={dashboardReminderKpis}
+          stats={dashboardStats}
+          theme={theme}
+        />
+      ) : (
+      <ScrollView
+        contentContainerStyle={[
+          styles.container,
+          { paddingBottom: contentBottomPadding },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View
+          style={[
+            styles.pageHeader,
+            isCompactPageHeader ? styles.pageHeaderCompact : null,
+            { backgroundColor: theme.colors.surface },
+          ]}
+        >
+          <View style={[styles.heroCopy, isCompactPageHeader ? styles.heroCopyCompact : null]}>
+            <Text style={[styles.heroEyebrow, { color: theme.colors.brand }]}>Asset Array</Text>
+            <Text
+              style={[
+                styles.pageHeaderTitle,
+                isCompactPageHeader ? styles.pageHeaderTitleCompact : null,
+                { color: theme.colors.textPrimary },
+              ]}
+            >
+              {activeTab}
             </Text>
           </View>
-          <View style={styles.heroActionRow}>
-            <Pressable style={styles.goldButton} onPress={openAddModal}>
-              <Text style={styles.goldButtonText}>+ New Client</Text>
-            </Pressable>
+          <View
+            style={[
+              styles.heroActionRow,
+              isCompactPageHeader ? styles.heroActionRowCompact : null,
+            ]}
+          >
+            {activeTab !== "AI Research" ? (
+              <Pressable
+                style={[
+                  styles.secondaryButton,
+                  isCompactPageHeader ? styles.secondaryButtonCompact : null,
+                  { backgroundColor: theme.colors.surfaceStrong },
+                ]}
+                onPress={() => setActiveTab("AI Research")}
+              >
+                <Text style={[styles.secondaryButtonText, { color: theme.colors.textPrimary }]}>
+                  AI Research
+                </Text>
+              </Pressable>
+            ) : null}
             <Pressable
-              style={styles.secondaryButton}
-              onPress={() => setIsBroadcastModalOpen(true)}
-            >
-              <Text style={styles.secondaryButtonText}>Broadcast Center</Text>
-            </Pressable>
-            <Pressable
-              style={styles.secondaryButton}
-              onPress={() => setActiveTab("AI Research")}
-            >
-              <Text style={styles.secondaryButtonText}>AI Research</Text>
-            </Pressable>
-            <Pressable
-              style={[styles.secondaryButton, styles.logoutButton]}
+              style={[
+                styles.secondaryButton,
+                styles.logoutButton,
+                isCompactPageHeader ? styles.secondaryButtonCompact : null,
+              ]}
               onPress={() => void logoutFromBackend()}
             >
               <Text style={[styles.secondaryButtonText, styles.logoutButtonText]}>Logout</Text>
             </Pressable>
           </View>
-        </View>
-
-        <View style={styles.statRow}>
-          {dashboardStats.map((stat) => (
-            <View key={stat.label} style={styles.statCard}>
-              <Text style={styles.statValue}>{stat.value}</Text>
-              <Text style={styles.statLabel}>{stat.label}</Text>
-            </View>
-          ))}
         </View>
 
         {activeTab === "AI Research" ? (
@@ -3675,23 +3832,15 @@ function App() {
         </View>
         ) : null}
       </ScrollView>
+      )}
 
-      <View style={styles.bottomTabBar}>
-        {(["Clients", "Portfolios", "Tools", "Workspace", "AI Research"] as AppTab[]).map((tab) => {
-          const active = activeTab === tab;
-          return (
-            <Pressable
-              key={tab}
-              style={[styles.bottomTabItem, active ? styles.bottomTabItemActive : null]}
-              onPress={() => setActiveTab(tab)}
-            >
-              <Text style={[styles.bottomTabText, active ? styles.bottomTabTextActive : null]}>
-                {tab}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+      <BottomTabBar
+        activeTab={visibleTabs.some((tab) => tab.key === activeTab) ? activeTab : "Dashboard"}
+        bottomInset={insets.bottom}
+        onChange={setActiveTab}
+        tabs={visibleTabs}
+        theme={theme}
+      />
 
       <Modal visible={isEditorOpen} transparent animationType="slide">
         <View style={styles.modalBackdrop}>
@@ -4059,7 +4208,13 @@ function App() {
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <SafeAreaProvider>
+      <AppContent />
+    </SafeAreaProvider>
+  );
+}
 
 const styles = StyleSheet.create({
   screen: {
@@ -4192,8 +4347,37 @@ const styles = StyleSheet.create({
     },
     elevation: 5,
   },
+  pageHeader: {
+    alignItems: "center",
+    borderRadius: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 18,
+  },
+  pageHeaderCompact: {
+    alignItems: "stretch",
+    flexDirection: "column",
+    gap: 14,
+    justifyContent: "flex-start",
+  },
+  pageHeaderTitle: {
+    fontSize: 24,
+    fontWeight: "800",
+    lineHeight: 30,
+  },
+  pageHeaderTitleCompact: {
+    fontSize: 22,
+    lineHeight: 28,
+  },
   heroCopy: {
     gap: 8,
+    flexShrink: 1,
+    minWidth: 0,
+  },
+  heroCopyCompact: {
+    width: "100%",
   },
   heroEyebrow: {
     color: "#94abc7",
@@ -4216,6 +4400,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 10,
+  },
+  heroActionRowCompact: {
+    flexDirection: "row",
+    flexWrap: "nowrap",
+    gap: 10,
+    width: "100%",
   },
   statRow: {
     flexDirection: "row",
@@ -4792,6 +4982,13 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 12,
+  },
+  secondaryButtonCompact: {
+    alignItems: "center",
+    flex: 1,
+    justifyContent: "center",
+    minHeight: 48,
+    minWidth: 0,
   },
   secondaryButtonText: {
     color: "#bfd5f3",

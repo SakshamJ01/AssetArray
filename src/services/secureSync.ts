@@ -263,33 +263,27 @@ export async function requestAiResearch({
 }
 
 export async function loginAdvisor({ endpoint, username, password }: LoginOptions) {
-    const url = `${normalizeEndpoint(endpoint)}/api/auth/login`;
+  const response = await fetch(`${normalizeEndpoint(endpoint)}/api/auth/login`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ username, password }),
+  });
 
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || "Login failed. Please check backend URL and credentials.");
+  }
 
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ username, password }),
-    });
-
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(text);
-    }
-
-    return response.json() as Promise<{
-      ok: true;
-      user: AuthUser;
-      accessToken: string;
-      refreshToken: string;
-      expiresIn: number;
-    }>;
-    
+  return response.json() as Promise<{
+    ok: true;
+    user: AuthUser;
+    accessToken: string;
+    refreshToken: string;
+    expiresIn: number;
+  }>;
 }
-
-
 export async function refreshAdvisorToken({ endpoint, refreshToken }: RefreshOptions) {
   const response = await fetch(`${normalizeEndpoint(endpoint)}/api/auth/refresh`, {
     method: "POST",

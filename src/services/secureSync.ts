@@ -1,7 +1,5 @@
 import CryptoJS from "crypto-js";
 
-import axios from "axios";
-
 type PushOptions = {
   endpoint: string;
   ownerId: string;
@@ -268,20 +266,6 @@ export async function loginAdvisor({ endpoint, username, password }: LoginOption
   try {
     const url = `${normalizeEndpoint(endpoint)}/api/auth/login`;
 
-alert(`Trying: ${url}`);
-    
-alert("Testing Axios");
-
-try {
-  const r = await axios.get(
-    "https://jsonplaceholder.typicode.com/todos/1"
-  );
-
-  alert(`Axios OK: ${r.status}`);
-} catch (e: any) {
-  
-  alert(`Axios FAILED: ${e?.message}`);
-}
 
     const response = await fetch(url, {
       method: "POST",
@@ -290,8 +274,6 @@ try {
       },
       body: JSON.stringify({ username, password }),
     });
-
-    alert(`Status: ${response.status}`);
 
     if (!response.ok) {
       const text = await response.text();
@@ -307,9 +289,8 @@ try {
       expiresIn: number;
     }>;
   } catch (error: any) {
-    alert(`ERROR: ${error?.message || JSON.stringify(error)}`);
-    throw error;
-  }
+  throw error;
+}
 }
 
 export async function refreshAdvisorToken({ endpoint, refreshToken }: RefreshOptions) {

@@ -266,14 +266,16 @@ export async function loginAdvisor({ endpoint, username, password }: LoginOption
   try {
     const url = `${normalizeEndpoint(endpoint)}/api/auth/login`;
 
-    alert(`Trying: ${url}`);
+alert(`Trying: ${url}`);
+    
+alert("Testing fetch");
 
-alert("Testing Google");
-
-const google = await fetch("https://www.google.com");
-
-alert(`Google Status: ${google.status}`);
-
+try {
+  const r = await fetch("https://jsonplaceholder.typicode.com/todos/1");
+  alert(`Fetch OK: ${r.status}`);
+} catch (e: any) {
+  alert(`Fetch FAILED: ${e?.message}`);
+}
 
     const response = await fetch(url, {
       method: "POST",

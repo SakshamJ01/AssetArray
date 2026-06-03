@@ -268,6 +268,13 @@ export async function loginAdvisor({ endpoint, username, password }: LoginOption
 
     alert(`Trying: ${url}`);
 
+alert("Testing Google");
+
+const google = await fetch("https://www.google.com");
+
+alert(`Google Status: ${google.status}`);
+
+
     const response = await fetch(url, {
       method: "POST",
       headers: {

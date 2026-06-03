@@ -355,6 +355,18 @@ function compactText(text: string, fallback: string) {
   return cleaned || fallback;
 }
 
+function parseStoredJson<T>(raw: string | null, fallback: T) {
+  if (!raw) {
+    return fallback;
+  }
+
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback;
+  }
+}
+
 function personalizedClientMessage(client: Client, marketNote: string) {
   return `Hello ${client.name}, based on your ${client.riskProfile || "current"} profile and ${client.category} segment, ${marketNote}`;
 }
@@ -573,19 +585,19 @@ function App() {
 
   useEffect(() => {
     async function load() {
-      const [
-        pin,
-        rawClients,
-        rawBiometric,
-        rawCloudSettings,
-        storedMessage,
-        rawDarkMode,
-        rawGoals,
-        rawAdvisorMessages,
-        rawVaultDocuments,
-        rawAuthSession,
-      ] =
-        await Promise.all([
+      try {
+        const [
+          pin,
+          rawClients,
+          rawBiometric,
+          rawCloudSettings,
+          storedMessage,
+          rawDarkMode,
+          rawGoals,
+          rawAdvisorMessages,
+          rawVaultDocuments,
+          rawAuthSession,
+        ] = await Promise.all([
           SecureStore.getItemAsync(PIN_KEY),
           SecureStore.getItemAsync(CLIENTS_KEY),
           SecureStore.getItemAsync(BIOMETRIC_KEY),
@@ -598,65 +610,45 @@ function App() {
           SecureStore.getItemAsync(AUTH_SESSION_KEY),
         ]);
 
-      setStoredPin(pin);
-      setBiometricEnabled(rawBiometric ? JSON.parse(rawBiometric) : false);
-      if (rawClients) {
-        try {
-          setClients(JSON.parse(rawClients));
-        } catch {
-          setClients([]);
+        setStoredPin(pin);
+        setBiometricEnabled(parseStoredJson(rawBiometric, false));
+        setClients(parseStoredJson(rawClients, [] as Client[]));
+        setCloudSettings(parseStoredJson(rawCloudSettings, emptyCloudSettings));
+
+        if (storedMessage) {
+          setMarketMessage(storedMessage);
+          setBroadcastMessage(storedMessage);
         }
-      }
-      if (rawCloudSettings) {
-        try {
-          setCloudSettings(JSON.parse(rawCloudSettings));
-        } catch {
-          setCloudSettings(emptyCloudSettings);
-        }
-      }
-      if (storedMessage) {
-        setMarketMessage(storedMessage);
-        setBroadcastMessage(storedMessage);
-      }
-      if (rawDarkMode) {
-        setDarkModeEnabled(JSON.parse(rawDarkMode));
-      }
-      if (rawGoals) {
-        try {
-          setGoals(JSON.parse(rawGoals));
-        } catch {
-          setGoals([]);
-        }
-      }
-      if (rawAdvisorMessages) {
-        try {
-          setAdvisorMessages(JSON.parse(rawAdvisorMessages));
-        } catch {
-          setAdvisorMessages([]);
-        }
-      }
-      if (rawVaultDocuments) {
-        try {
-          setVaultDocuments(JSON.parse(rawVaultDocuments));
-        } catch {
-          setVaultDocuments([]);
-        }
-      }
-      if (rawAuthSession) {
-        try {
-          const parsed = JSON.parse(rawAuthSession) as AuthSession;
-          setAuthSession(parsed);
-          setAuthState(`Connected as ${parsed.user.username}`);
-        } catch {
+
+        setDarkModeEnabled(parseStoredJson(rawDarkMode, true));
+        setGoals(parseStoredJson(rawGoals, [] as Goal[]));
+        setAdvisorMessages(parseStoredJson(rawAdvisorMessages, [] as AdvisorMessage[]));
+        setVaultDocuments(parseStoredJson(rawVaultDocuments, [] as VaultDocument[]));
+
+        const parsedSession = parseStoredJson<AuthSession | null>(rawAuthSession, null);
+        if (parsedSession) {
+          setAuthSession(parsedSession);
+          setAuthState(`Connected as ${parsedSession.user.username}`);
+        } else {
           setAuthSession(null);
           setAuthState("Not connected");
         }
+      } catch {
+        setStoredPin(null);
+        setBiometricEnabled(false);
+        setClients([]);
+        setCloudSettings(emptyCloudSettings);
+        setGoals([]);
+        setAdvisorMessages([]);
+        setVaultDocuments([]);
+        setAuthSession(null);
+        setAuthState("Not connected");
+      } finally {
+        const hardware = await LocalAuthentication.hasHardwareAsync().catch(() => false);
+        const enrolled = await LocalAuthentication.isEnrolledAsync().catch(() => false);
+        setBiometricAvailable(hardware && enrolled);
+        setIsReady(true);
       }
-
-      const hardware = await LocalAuthentication.hasHardwareAsync();
-      const enrolled = await LocalAuthentication.isEnrolledAsync();
-      setBiometricAvailable(hardware && enrolled);
-      setIsReady(true);
     }
 
     void load();

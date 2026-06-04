@@ -33,6 +33,18 @@ type BroadcastOptions = {
   onUnauthorized?: () => Promise<string | null>;
 };
 
+export type BroadcastDelivery = {
+  deliveryId: string;
+  clientId: string;
+  clientName: string;
+  preferredChannel: string;
+  channel: string;
+  destination: string;
+  status: "queued" | "skipped";
+  reason: string | null;
+  processedAt: string;
+};
+
 export type AiResearchResult = {
   summary: string;
   opportunities: string[];
@@ -80,7 +92,30 @@ type LogoutOptions = {
 };
 
 function normalizeEndpoint(endpoint: string) {
-  return endpoint.trim().replace(/\/+$/, "");
+  const normalized = endpoint.trim().replace(/\/+$/, "");
+
+  let parsed;
+  try {
+    parsed = new URL(normalized);
+  } catch {
+    throw new Error("Backend URL must be a valid http or https address.");
+  }
+
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    throw new Error("Backend URL must use http or https.");
+  }
+
+  return normalized;
+}
+
+async function readErrorMessage(response: Response, fallback: string) {
+  const payload = await response.json().catch(() => null);
+  if (payload?.error && typeof payload.error === "string") {
+    return payload.error;
+  }
+
+  const text = await response.text().catch(() => "");
+  return text || fallback;
 }
 
 async function authorizedFetch(
@@ -221,14 +256,17 @@ export async function sendBroadcastCampaign({
     if (response.status === 401) {
       throw new Error("Session expired. Please login again.");
     }
-    throw new Error("Bulk notification campaign failed on the server.");
+    throw new Error(await readErrorMessage(response, "Bulk notification campaign failed on the server."));
   }
 
   return response.json() as Promise<{
     ok: true;
     totalClients: number;
+    queuedCount: number;
+    skippedCount: number;
     campaignId: string;
     status: string;
+    deliveries: BroadcastDelivery[];
   }>;
 }
 
@@ -272,8 +310,9 @@ export async function loginAdvisor({ endpoint, username, password }: LoginOption
   });
 
   if (!response.ok) {
-    const text = await response.text();
-    throw new Error(text || "Login failed. Please check backend URL and credentials.");
+    throw new Error(
+      await readErrorMessage(response, "Login failed. Please check backend URL and credentials.")
+    );
   }
 
   return response.json() as Promise<{

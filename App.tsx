@@ -382,6 +382,26 @@ function personalizedClientMessage(client: Client, marketNote: string) {
   return `Hello ${client.name}, based on your ${client.riskProfile || "current"} profile and ${client.category} segment, ${marketNote}`;
 }
 
+function resolveBroadcastContact(client: Client, channel: BroadcastChannel) {
+  if (channel === "Email") {
+    return client.email.trim();
+  }
+
+  if (channel === "SMS" || channel === "WhatsApp") {
+    return client.phone.trim();
+  }
+
+  if (client.preferredChannel === "Email") {
+    return client.email.trim();
+  }
+
+  if (client.preferredChannel === "SMS" || client.preferredChannel === "WhatsApp") {
+    return client.phone.trim();
+  }
+
+  return client.phone.trim() || client.email.trim();
+}
+
 function clientInsightList(client: Client) {
   const insights: string[] = [];
   const holdingCount = client.portfolio.length;
@@ -520,6 +540,15 @@ async function persistAdvisorMessages(messages: AdvisorMessage[]) {
 
 async function persistVaultDocuments(documents: VaultDocument[]) {
   await SecureStore.setItemAsync(VAULT_DOCUMENTS_KEY, JSON.stringify(documents));
+}
+
+function isValidBackendEndpoint(value: string) {
+  try {
+    const parsed = new URL(value.trim());
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
 }
 
 function AppContent() {
@@ -789,6 +818,28 @@ function AppContent() {
     () => clients.filter((client) => selectedClientIds.includes(client.id)),
     [clients, selectedClientIds]
   );
+  const broadcastPreview = useMemo(() => {
+    const eligible = broadcastTargets.filter((client) =>
+      Boolean(resolveBroadcastContact(client, broadcastChannel))
+    );
+    const skipped = broadcastTargets
+      .filter((client) => !resolveBroadcastContact(client, broadcastChannel))
+      .map((client) => ({
+        id: client.id,
+        name: client.name,
+        reason:
+          broadcastChannel === "Email"
+            ? "Missing email"
+            : broadcastChannel === "SMS" || broadcastChannel === "WhatsApp"
+              ? "Missing phone"
+              : `Missing ${client.preferredChannel === "Email" ? "email" : "phone"}`,
+      }));
+
+    return {
+      eligible,
+      skipped,
+    };
+  }, [broadcastChannel, broadcastTargets]);
 
   const portfolioStats = useMemo(() => {
   if (!selectedClient || !Array.isArray(selectedClient.portfolio)) {
@@ -1103,47 +1154,14 @@ function AppContent() {
     retirementYearsToRetire,
   ]);
 
-  const marketBrief = useMemo(() => {
-    const base = compactText(
-      marketResearchNotes,
-      marketMessage || "Markets remain selective and risk-managed positioning is preferred."
-    );
-    return {
-      summary: `AI brief: ${base}`,
-      hni: `HNI desk note: ${base} Focus on allocation quality, liquidity, and disciplined staggered entries.`,
-      trader: `Trader note: ${base} Prioritise momentum confirmation, tight risk controls, and quick review of volatility.`,
-      conservative: `Conservative note: ${base} Favour capital protection, staggered deployment, and review of downside buffers.`,
-      whatsapp: `WhatsApp draft: ${base}`,
-      email: `Subject: Daily Market Brief\n\n${base}\n\nKey focus: selective positioning, review exposure, and keep allocation aligned to each client profile.`,
-    };
-  }, [marketMessage, marketResearchNotes]);
-
-  const automationTasks = useMemo(() => {
-    const tasks: string[] = [];
-    const dueCount = dueClients.length;
-    const noPortfolioCount = clients.filter((client) => client.portfolio.length === 0).length;
-    const noReminderCount = clients.filter((client) => !client.reminderDate).length;
-    const highTouchCount = clients.filter(
-      (client) => client.priority === "High" && client.lastContact === "Not contacted yet"
-    ).length;
-
-    if (dueCount) {
-      tasks.push(`${dueCount} follow-up reminder${dueCount === 1 ? " is" : "s are"} due today.`);
-    }
-    if (highTouchCount) {
-      tasks.push(`${highTouchCount} high-priority client${highTouchCount === 1 ? " has" : "s have"} no recorded contact yet.`);
-    }
-    if (noPortfolioCount) {
-      tasks.push(`${noPortfolioCount} client${noPortfolioCount === 1 ? " is" : "s are"} missing portfolio holdings.`);
-    }
-    if (noReminderCount) {
-      tasks.push(`${noReminderCount} client${noReminderCount === 1 ? " has" : "s have"} no scheduled reminder.`);
-    }
-    if (!tasks.length) {
-      tasks.push("Automation queue is clear right now. Your core follow-up data looks healthy.");
-    }
-    return tasks;
-  }, [clients, dueClients.length]);
+  const activeResearchSummary = useMemo(
+    () =>
+      compactText(
+        aiResearchResult?.summary || marketResearchNotes,
+        marketMessage || "Markets remain selective and risk-managed positioning is preferred."
+      ),
+    [aiResearchResult?.summary, marketMessage, marketResearchNotes]
+  );
 
   const selectedClientInsights = useMemo(
     () => (selectedClient ? clientInsightList(selectedClient) : []),
@@ -1154,8 +1172,8 @@ function AppContent() {
     if (!selectedClient) {
       return "";
     }
-    return personalizedClientMessage(selectedClient, compactText(marketResearchNotes, marketMessage));
-  }, [marketMessage, marketResearchNotes, selectedClient]);
+    return personalizedClientMessage(selectedClient, activeResearchSummary);
+  }, [activeResearchSummary, selectedClient]);
 
   const selectedClientReportDraft = useMemo(() => {
     if (!selectedClient) {
@@ -1170,10 +1188,10 @@ function AppContent() {
       `Portfolio Allocation: ${selectedClient.allocation || "Not saved"}`,
       `Tracked Holdings: ${selectedClient.portfolio.length}`,
       `Next Reminder: ${formatReminderDate(selectedClient.reminderDate)}`,
-      `Market View: ${compactText(marketResearchNotes, marketMessage)}`,
+      `Market View: ${activeResearchSummary}`,
       `Advisor Notes: ${selectedClient.notes || "No private notes added yet."}`,
     ].join("\n");
-  }, [marketMessage, marketResearchNotes, selectedClient]);
+  }, [activeResearchSummary, selectedClient]);
 
   const goalCenterStats = useMemo(() => {
     const currentYear = new Date().getFullYear();
@@ -1529,6 +1547,11 @@ function AppContent() {
   }
 
   async function saveCloudSettingsAction() {
+    if (cloudSettings.endpoint.trim() && !isValidBackendEndpoint(cloudSettings.endpoint)) {
+      Alert.alert("Invalid backend URL", "Backend URL must be a valid http or https address.");
+      return;
+    }
+
     await persistCloudSettings(cloudSettings);
     setIsSyncModalOpen(false);
     setSyncState(
@@ -1637,10 +1660,15 @@ function AppContent() {
   }
 
   async function runAiResearch() {
-    const query = aiResearchQuery.trim();
+    await runAiResearchForQuery(aiResearchQuery.trim());
+  }
 
+  async function runAiResearchForQuery(query: string) {
     if (!query) {
-      Alert.alert("Research topic needed", "Enter a stock, company, fund, ETF, sector, or market topic.");
+      Alert.alert(
+        "Research topic needed",
+        "Enter a stock, company, fund, ETF, sector, or market topic."
+      );
       return;
     }
 
@@ -1652,12 +1680,22 @@ function AppContent() {
     try {
       setIsAiResearchLoading(true);
       setAiResearchState("Researching...");
+      const accessToken = await refreshAccessTokenIfNeeded();
+      if (!accessToken) {
+        setAiResearchState("Backend login required");
+        Alert.alert(
+          "Backend login required",
+          "Sign in to the backend before generating AI research."
+        );
+        return;
+      }
       const result = await requestAiResearch({
         endpoint: cloudSettings.endpoint,
         query,
-        accessToken: await refreshAccessTokenIfNeeded(),
+        accessToken,
         onUnauthorized: refreshAccessTokenIfNeeded,
       });
+      setAiResearchQuery(query);
       setAiResearchResult(result);
       setAiResearchState(`Research complete for ${query}`);
     } catch (error) {
@@ -1669,6 +1707,25 @@ function AppContent() {
     } finally {
       setIsAiResearchLoading(false);
     }
+  }
+
+  async function runWorkspaceAiBrief() {
+    await runAiResearchForQuery(marketResearchNotes.trim());
+  }
+
+  function useAiBriefAsDailyMessage() {
+    if (!aiResearchResult) {
+      Alert.alert("Generate research first", "Create an AI brief before using it as your market message.");
+      return;
+    }
+
+    const nextMessage = compactText(
+      `${aiResearchResult.summary} Short term: ${aiResearchResult.shortTermOutlook}`,
+      marketMessage
+    );
+    setMarketMessage(nextMessage);
+    setBroadcastMessage(nextMessage);
+    Alert.alert("Daily message updated", "The AI brief is now set as your default outreach message.");
   }
 
   function updateGoalDraft<K extends keyof GoalDraft>(key: K, value: GoalDraft[K]) {
@@ -1764,6 +1821,12 @@ function AppContent() {
 
     try {
       setSyncState("Pushing encrypted backup...");
+      const accessToken = await refreshAccessTokenIfNeeded();
+      if (!accessToken) {
+        setSyncState("Backend login required");
+        Alert.alert("Backend login required", "Sign in before pushing encrypted backup.");
+        return;
+      }
       const encryptedPayload = encryptPayload(
         {
           app: "Asset Array",
@@ -1779,7 +1842,7 @@ function AppContent() {
         endpoint: cloudSettings.endpoint,
         ownerId: buildOwnerId(storedPin),
         ciphertext: encryptedPayload,
-        accessToken: await refreshAccessTokenIfNeeded(),
+        accessToken,
         onUnauthorized: refreshAccessTokenIfNeeded,
       });
 
@@ -1806,10 +1869,16 @@ function AppContent() {
 
     try {
       setSyncState("Pulling encrypted backup...");
+      const accessToken = await refreshAccessTokenIfNeeded();
+      if (!accessToken) {
+        setSyncState("Backend login required");
+        Alert.alert("Backend login required", "Sign in before restoring encrypted backup.");
+        return;
+      }
       const payload = await pullPayload({
         endpoint: cloudSettings.endpoint,
         ownerId: buildOwnerId(storedPin),
-        accessToken: await refreshAccessTokenIfNeeded(),
+        accessToken,
         onUnauthorized: refreshAccessTokenIfNeeded,
       });
 
@@ -1964,7 +2033,7 @@ function AppContent() {
     if (!broadcastTargets.length) {
       Alert.alert(
         "No clients selected",
-        "Select at least one client before sending a bulk update."
+        "Select at least one client in the Clients tab before sending a bulk update."
       );
       return;
     }
@@ -1976,14 +2045,35 @@ function AppContent() {
 
     try {
       setBroadcastState("Sending campaign...");
+      const accessToken = await refreshAccessTokenIfNeeded();
+      if (!accessToken) {
+        setBroadcastState("Backend login required");
+        Alert.alert(
+          "Backend login required",
+          "Sign in to the backend before running a broadcast campaign."
+        );
+        return;
+      }
+      const validTargets = broadcastPreview.eligible;
+
+      if (!validTargets.length) {
+        setBroadcastState("No valid recipients");
+        Alert.alert(
+          "No valid recipients",
+          "The selected clients do not have the contact details required for this channel."
+        );
+        return;
+      }
+
+      const skippedCount = broadcastPreview.skipped.length;
       const response = await sendBroadcastCampaign({
         endpoint: cloudSettings.endpoint,
         ownerName: cloudSettings.ownerName || "Asset Array Owner",
         channel: broadcastChannel,
         message: broadcastMessage,
-        accessToken: await refreshAccessTokenIfNeeded(),
+        accessToken,
         onUnauthorized: refreshAccessTokenIfNeeded,
-        clients: broadcastTargets.map((client) => ({
+        clients: validTargets.map((client) => ({
           id: client.id,
           name: client.name,
           phone: client.phone,
@@ -1995,7 +2085,7 @@ function AppContent() {
       const stamp = formatDate();
       setClients((current) =>
         current.map((client) =>
-          selectedClientIds.includes(client.id)
+          validTargets.some((target) => target.id === client.id)
             ? {
                 ...client,
                 lastContact: stamp,
@@ -2009,14 +2099,16 @@ function AppContent() {
       );
 
       setBroadcastState(
-        `Campaign sent to ${response.totalClients} client${
-          response.totalClients === 1 ? "" : "s"
-        }`
+        `${response.queuedCount} queued${response.skippedCount ? `, ${response.skippedCount} skipped` : ""}`
       );
       setIsBroadcastModalOpen(false);
       Alert.alert(
         "Broadcast sent",
-        `One-click campaign processed for ${response.totalClients} selected clients.`
+        skippedCount > 0
+          ? `Campaign processed for ${response.totalClients} clients. ${skippedCount} client${
+              skippedCount === 1 ? "" : "s"
+            } were skipped due to missing contact details.`
+          : `One-click campaign processed for ${response.totalClients} selected clients.`
       );
     } catch (error) {
       setBroadcastState("Broadcast failed");
@@ -2514,27 +2606,76 @@ function AppContent() {
           <View style={styles.dualColumn}>
           {activeTab === "Workspace" ? <View style={styles.column}>
             <View style={[styles.panel, styles.calculatorPanel]}>
-              <Text style={styles.panelTitle}>AI market brief</Text>
+              <Text style={styles.panelTitle}>AI market research</Text>
               <Text style={styles.panelSubtitle}>
-                Add raw market notes and the app will generate ready-to-use message drafts for different client types.
+                Run a real Gemini-powered brief for a stock, fund, sector, or macro topic and turn it into advisor-ready outreach.
               </Text>
               <TextInput
                 value={marketResearchNotes}
                 onChangeText={setMarketResearchNotes}
-                placeholder="Write market research notes, sector view, earnings takeaway, or macro commentary"
+                placeholder="e.g. Nifty IT, Reliance Industries, banking sector, gold ETF"
                 placeholderTextColor="#7f90a8"
-                multiline
-                style={[styles.input, styles.messageInput]}
+                style={styles.input}
               />
-              <Text style={styles.sectionLabel}>Generated brief</Text>
-              <Text style={styles.historyItem}>{marketBrief.summary}</Text>
-              <Text style={styles.sectionLabel}>Client-ready variants</Text>
-              <Text style={styles.historyItem}>{marketBrief.hni}</Text>
-              <Text style={styles.historyItem}>{marketBrief.trader}</Text>
-              <Text style={styles.historyItem}>{marketBrief.conservative}</Text>
-              <Text style={styles.sectionLabel}>Quick send formats</Text>
-              <Text style={styles.historyItem}>{marketBrief.whatsapp}</Text>
-              <Text style={styles.historyItem}>{marketBrief.email}</Text>
+              <View style={styles.inlineActions}>
+                <Pressable
+                  style={styles.primaryButton}
+                  onPress={() => void runWorkspaceAiBrief()}
+                  disabled={isAiResearchLoading}
+                >
+                  <Text style={styles.primaryButtonText}>
+                    {isAiResearchLoading ? "Researching..." : "Generate Brief"}
+                  </Text>
+                </Pressable>
+                <Pressable style={styles.secondaryButton} onPress={useAiBriefAsDailyMessage}>
+                  <Text style={styles.secondaryButtonText}>Use for Broadcast</Text>
+                </Pressable>
+              </View>
+              <Text style={styles.detailBlock}>{aiResearchState}</Text>
+              {aiResearchResult ? (
+                <View style={styles.aiResearchResult}>
+                  <View style={styles.aiResearchHeader}>
+                    <Text style={styles.sectionLabel}>Live brief</Text>
+                    <Text
+                      style={[
+                        styles.sentimentPill,
+                        aiResearchResult.sentiment === "Bullish"
+                          ? styles.sentimentBullish
+                          : aiResearchResult.sentiment === "Bearish"
+                            ? styles.sentimentBearish
+                            : styles.sentimentNeutral,
+                      ]}
+                    >
+                      {aiResearchResult.sentiment}
+                    </Text>
+                  </View>
+                  <Text style={styles.historyItem}>{aiResearchResult.summary}</Text>
+                  <Text style={styles.sectionLabel}>Outlook</Text>
+                  <Text style={styles.historyItem}>
+                    Short term: {aiResearchResult.shortTermOutlook}
+                  </Text>
+                  <Text style={styles.historyItem}>
+                    Long term: {aiResearchResult.longTermOutlook}
+                  </Text>
+                  {aiResearchResult.opportunities.slice(0, 2).map((item, index) => (
+                    <Text key={`opp-${index}`} style={styles.historyItem}>
+                      Opportunity: {item}
+                    </Text>
+                  ))}
+                  {aiResearchResult.risks.slice(0, 2).map((item, index) => (
+                    <Text key={`risk-${index}`} style={styles.historyItem}>
+                      Risk: {item}
+                    </Text>
+                  ))}
+                </View>
+              ) : (
+                <View style={styles.emptyState}>
+                  <Text style={styles.emptyTitle}>No AI brief yet</Text>
+                  <Text style={styles.emptyText}>
+                    Run a topic through Gemini to generate a real market brief here.
+                  </Text>
+                </View>
+              )}
             </View>
           </View> : null}
 
@@ -2916,32 +3057,18 @@ function AppContent() {
         ) : null}
 
         {activeTab === "Workspace" ? (
-        <View style={styles.dualColumn}>
-          <View style={styles.column}>
-            <View style={styles.panel}>
-              <Text style={styles.panelTitle}>Smart segmentation</Text>
-              <Text style={styles.panelSubtitle}>
-                AI-assisted segmentation snapshot so you can decide who should receive what kind of update.
-              </Text>
-              {categorySummary.map((item) => (
-                <Text key={item.label} style={styles.historyItem}>
-                  {item.label}: {item.value} client{item.value === "1" ? "" : "s"}
-                </Text>
-              ))}
-            </View>
-          </View>
-          <View style={styles.column}>
-            <View style={styles.panel}>
-              <Text style={styles.panelTitle}>Automation queue</Text>
-              <Text style={styles.panelSubtitle}>
-                These are the most useful next actions Asset Array can surface automatically.
-              </Text>
-              {automationTasks.map((task) => (
-                <Text key={task} style={styles.historyItem}>
-                  {task}
-                </Text>
-              ))}
-            </View>
+        <View style={styles.panel}>
+          <Text style={styles.panelTitle}>Smart segmentation</Text>
+          <Text style={styles.panelSubtitle}>
+            Client mix snapshot for campaign targeting and advisor review.
+          </Text>
+          <View style={styles.categoryGrid}>
+            {categorySummary.map((item) => (
+              <View key={item.label} style={styles.categoryCard}>
+                <Text style={styles.categoryValue}>{item.value}</Text>
+                <Text style={styles.categoryLabel}>{item.label}</Text>
+              </View>
+            ))}
           </View>
         </View>
         ) : null}
@@ -3185,6 +3312,7 @@ function AppContent() {
         </View>
         ) : null}
 
+        {activeTab === "Clients" || activeTab === "Portfolios" ? (
         <View style={styles.dualColumn}>
           <View style={styles.column}>
             <View style={styles.panel}>
@@ -3316,7 +3444,9 @@ function AppContent() {
             </View>
           </View>
         </View>
+        ) : null}
 
+        {activeTab === "Clients" ? (
         <View style={styles.dualColumn}>
           <View style={styles.column}>
             <View style={styles.panel}>
@@ -3364,6 +3494,7 @@ function AppContent() {
             </View>
           </View>
         </View>
+        ) : null}
 
         {activeTab === "Tools" || activeTab === "Workspace" ? (
         <View style={styles.dualColumn}>
@@ -3509,12 +3640,12 @@ function AppContent() {
             </View>
           </View> : null}
 
-          {activeTab === "Workspace" ? <View style={styles.column}>
-            <View style={styles.panel}>
-              <Text style={styles.panelTitle}>Secure advisor portal</Text>
-              <Text style={styles.panelSubtitle}>
-                Protected workspace for advisor notes, secure client messaging drafts, and report handoff.
-              </Text>
+        {activeTab === "Workspace" ? <View style={styles.column}>
+          <View style={styles.panel}>
+            <Text style={styles.panelTitle}>Secure advisor portal</Text>
+            <Text style={styles.panelSubtitle}>
+              Protected draft space for advisor notes, client updates, and report handoff.
+            </Text>
               <TextInput
                 value={advisorMessageDraft.clientName}
                 onChangeText={(value) => updateAdvisorMessageDraft("clientName", value)}
@@ -3553,7 +3684,7 @@ function AppContent() {
                   </Text>
                 </View>
               ) : (
-                advisorMessages.slice(0, 4).map((message) => (
+                advisorMessages.slice(0, 2).map((message) => (
                   <View key={message.id} style={styles.analyticsListCard}>
                     <Text style={styles.clientName}>{message.title}</Text>
                     <Text style={styles.clientMeta}>
@@ -3648,7 +3779,7 @@ function AppContent() {
             <View style={styles.panel}>
               <Text style={styles.panelTitle}>Automated data aggregation</Text>
               <Text style={styles.panelSubtitle}>
-                Secure account aggregation snapshot for banks, brokerages, cards, and retirement accounts.
+                Linked account snapshot for banks, brokerages, cards, and retirement accounts.
               </Text>
               <View style={styles.analyticsSummaryRow}>
                 <View style={[styles.analyticsMetricCard, styles.analyticsBlue]}>
@@ -3666,7 +3797,7 @@ function AppContent() {
                   </Text>
                 </View>
               </View>
-              {connectedAccounts.map((account) => (
+              {connectedAccounts.slice(0, 2).map((account) => (
                 <View key={account.id} style={styles.analyticsListCard}>
                   <Text style={styles.clientName}>{account.institution}</Text>
                   <Text style={styles.clientMeta}>
@@ -3682,7 +3813,7 @@ function AppContent() {
         </View>
         ) : null}
 
-        {activeTab === "Portfolios" || activeTab === "Workspace" ? (
+        {activeTab === "Portfolios" ? (
         <View style={styles.dualColumn}>
           {activeTab === "Portfolios" ? <View style={styles.column}>
             <View style={styles.panel}>
@@ -3734,38 +3865,20 @@ function AppContent() {
             </View>
           </View> : null}
 
-          {activeTab === "Workspace" ? <View style={styles.column}>
-            <View style={styles.panel}>
-              <Text style={styles.panelTitle}>Security hardening</Text>
-              <Text style={styles.panelSubtitle}>
-                Security controls visible to the advisor before this moves to production infrastructure.
-              </Text>
-              {[
-                "PIN lock enabled and secure local storage active.",
-                biometricEnabled
-                  ? "Biometric unlock is enabled for faster secure access."
-                  : "Biometric unlock is available as an optional second step.",
-                "Encrypted cloud backup sends ciphertext only.",
-                "Dark mode and secure advisor workspace are ready for daily use.",
-                "Next production step: add 2FA and HTTPS-hosted backend with session controls.",
-              ].map((item) => (
-                <Text key={item} style={styles.historyItem}>
-                  {item}
-                </Text>
-              ))}
-            </View>
-          </View> : null}
         </View>
         ) : null}
 
         {activeTab === "Workspace" ? (
         <View style={styles.panel}>
           <Text style={styles.panelTitle}>Security and sync</Text>
+          <Text style={styles.panelSubtitle}>
+            Core lock, backup, and campaign controls for the advisor workspace.
+          </Text>
           <View style={styles.toggleRow}>
             <View style={styles.toggleCopy}>
               <Text style={styles.toggleTitle}>Biometric unlock</Text>
               <Text style={styles.toggleText}>
-                Use fingerprint or face authentication after your PIN is created.
+                Use fingerprint or face authentication after PIN unlock.
               </Text>
             </View>
             <Switch
@@ -3778,7 +3891,7 @@ function AppContent() {
             <View style={styles.toggleCopy}>
               <Text style={styles.toggleTitle}>Dark mode</Text>
               <Text style={styles.toggleText}>
-                Enable a darker workspace shell for lower-glare viewing.
+                Enable the darker workspace shell.
               </Text>
             </View>
             <Switch
@@ -3791,7 +3904,7 @@ function AppContent() {
             <View style={styles.toggleCopy}>
               <Text style={styles.toggleTitle}>Encrypted cloud backup</Text>
               <Text style={styles.toggleText}>
-                Your backend stores only encrypted payloads. Sync state: {syncState}
+                Backend stores ciphertext only. Sync state: {syncState}
               </Text>
             </View>
             <Pressable
@@ -3806,8 +3919,7 @@ function AppContent() {
             <View style={styles.toggleCopy}>
               <Text style={styles.toggleTitle}>Bulk notification campaigns</Text>
               <Text style={styles.toggleText}>
-                Use selected clients and trigger one backend campaign with one tap.
-                Status: {broadcastState}
+                Run one campaign for selected clients. Status: {broadcastState}
               </Text>
             </View>
             <Pressable
@@ -4177,16 +4289,30 @@ function AppContent() {
               multiline
               style={[styles.input, styles.messageInput]}
             />
+            <Text style={styles.detailBlock}>
+              Ready: {broadcastPreview.eligible.length} | Skipped: {broadcastPreview.skipped.length}
+            </Text>
             <Text style={styles.sectionLabel}>Selected clients</Text>
             {broadcastTargets.length === 0 ? (
               <Text style={styles.detailBlock}>No clients selected yet.</Text>
             ) : (
               broadcastTargets.map((client) => (
                 <Text key={client.id} style={styles.historyItem}>
-                  {client.name} | {client.preferredChannel} | {client.phone || client.email}
+                  {client.name} | {client.preferredChannel} |{" "}
+                  {resolveBroadcastContact(client, broadcastChannel) || "Missing contact"}
                 </Text>
               ))
             )}
+            {broadcastPreview.skipped.length > 0 ? (
+              <>
+                <Text style={styles.sectionLabel}>Needs attention</Text>
+                {broadcastPreview.skipped.map((client) => (
+                  <Text key={`skip-${client.id}`} style={styles.analyticsAlert}>
+                    {client.name}: {client.reason}
+                  </Text>
+                ))}
+              </>
+            ) : null}
             <View style={styles.modalActions}>
               <Pressable
                 style={styles.modalSecondary}

@@ -18,10 +18,14 @@ const TOKEN_SECRET = process.env.TOKEN_SECRET || "asset-array-dev-secret-change-
 const REFRESH_SECRET = process.env.REFRESH_SECRET || "asset-array-dev-refresh-secret-change-in-production";
 const RATE_LIMIT_WINDOW_MS = Number(process.env.RATE_LIMIT_WINDOW_MS || 60_000);
 const RATE_LIMIT_MAX = Number(process.env.RATE_LIMIT_MAX || 120);
+const AUTH_MAX_FAILURES = Number(process.env.AUTH_MAX_FAILURES || 5);
+const AUTH_LOCK_WINDOW_MS = Number(process.env.AUTH_LOCK_WINDOW_MS || 15 * 60_000);
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
 const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
 const rateLimitMap = new Map();
+const authAttemptMap = new Map();
 const mongo = new MongoClient(MONGO_URI);
 const gemini = GEMINI_API_KEY ? new GoogleGenAI({ apiKey: GEMINI_API_KEY }) : null;
 
@@ -32,8 +36,26 @@ let broadcastsCol;
 let auditCol;
 let aiResearchCol;
 
-app.use(cors({ origin: CORS_ORIGIN === "*" ? true : CORS_ORIGIN }));
+app.disable("x-powered-by");
+app.use(cors({
+  origin(origin, callback) {
+    if (CORS_ORIGIN === "*" || !origin) {
+      callback(null, true);
+      return;
+    }
+
+    const allowedOrigins = CORS_ORIGIN.split(",").map((item) => item.trim()).filter(Boolean);
+    callback(null, allowedOrigins.includes(origin));
+  },
+}));
 app.use(express.json({ limit: "5mb" }));
+app.use((req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("Referrer-Policy", "no-referrer");
+  res.setHeader("Cache-Control", "no-store");
+  next();
+});
 
 function hashPassword(password) {
   return crypto.pbkdf2Sync(password, TOKEN_SECRET, 100_000, 64, "sha512").toString("hex");
@@ -137,6 +159,48 @@ function buildResearchPrompt(query) {
   ].join("\n");
 }
 
+function resolveBroadcastChannel(client, campaignChannel) {
+  if (campaignChannel && campaignChannel !== "Preferred") {
+    return campaignChannel;
+  }
+
+  return client?.preferredChannel || "Preferred";
+}
+
+function resolveBroadcastDestination(client, deliveryChannel) {
+  if (deliveryChannel === "Email") {
+    return typeof client?.email === "string" ? client.email.trim() : "";
+  }
+
+  if (deliveryChannel === "SMS" || deliveryChannel === "WhatsApp") {
+    return typeof client?.phone === "string" ? client.phone.trim() : "";
+  }
+
+  const phone = typeof client?.phone === "string" ? client.phone.trim() : "";
+  const email = typeof client?.email === "string" ? client.email.trim() : "";
+  return phone || email;
+}
+
+function buildBroadcastDeliveries(clients, campaignChannel) {
+  return clients.map((client) => {
+    const deliveryChannel = resolveBroadcastChannel(client, campaignChannel);
+    const destination = resolveBroadcastDestination(client, deliveryChannel);
+    const valid = Boolean(destination);
+
+    return {
+      deliveryId: crypto.randomUUID(),
+      clientId: client.id || "",
+      clientName: client.name || "Unknown client",
+      preferredChannel: client.preferredChannel || "Preferred",
+      channel: deliveryChannel,
+      destination,
+      status: valid ? "queued" : "skipped",
+      reason: valid ? null : `Missing contact details for ${deliveryChannel}.`,
+      processedAt: new Date().toISOString(),
+    };
+  });
+}
+
 async function audit(action, meta) {
   await auditCol.insertOne({
     id: crypto.randomUUID(),
@@ -144,6 +208,68 @@ async function audit(action, meta) {
     date: new Date().toISOString(),
     ...meta,
   });
+}
+
+function getClientIp(req) {
+  return req.ip || req.socket?.remoteAddress || "unknown";
+}
+
+function getAuthAttemptKey(req, username) {
+  return `${getClientIp(req)}:${String(username || "").trim().toLowerCase()}`;
+}
+
+function getAuthAttemptState(req, username) {
+  const key = getAuthAttemptKey(req, username);
+  const current = authAttemptMap.get(key);
+
+  if (!current) {
+    return { key, count: 0, lockedUntil: 0 };
+  }
+
+  if (current.lockedUntil && current.lockedUntil < Date.now()) {
+    authAttemptMap.delete(key);
+    return { key, count: 0, lockedUntil: 0 };
+  }
+
+  return { key, ...current };
+}
+
+function recordAuthFailure(req, username) {
+  const key = getAuthAttemptKey(req, username);
+  const current = getAuthAttemptState(req, username);
+  const nextCount = current.count + 1;
+  const lockedUntil =
+    nextCount >= AUTH_MAX_FAILURES ? Date.now() + AUTH_LOCK_WINDOW_MS : current.lockedUntil || 0;
+
+  authAttemptMap.set(key, {
+    count: nextCount,
+    lockedUntil,
+  });
+
+  return { count: nextCount, lockedUntil };
+}
+
+function clearAuthFailures(req, username) {
+  authAttemptMap.delete(getAuthAttemptKey(req, username));
+}
+
+function validateStartupSecurity() {
+  const usingDefaultTokenSecret =
+    TOKEN_SECRET === "asset-array-dev-secret-change-in-production";
+  const usingDefaultRefreshSecret =
+    REFRESH_SECRET === "asset-array-dev-refresh-secret-change-in-production";
+  const usingDefaultAdminPassword =
+    (process.env.ADMIN_PASSWORD || "ChangeMeNow123!") === "ChangeMeNow123!";
+
+  if (IS_PRODUCTION && AUTH_REQUIRED) {
+    if (usingDefaultTokenSecret || usingDefaultRefreshSecret) {
+      throw new Error("Production auth cannot start with default token secrets.");
+    }
+
+    if (usingDefaultAdminPassword) {
+      throw new Error("Production auth cannot start with the default admin password.");
+    }
+  }
 }
 
 async function buildTokens(user) {
@@ -209,6 +335,7 @@ function requireRole(roles) {
 }
 
 async function initMongo() {
+  validateStartupSecurity();
   await mongo.connect();
   const db = mongo.db(MONGO_DB_NAME);
   usersCol = db.collection("users");
@@ -270,14 +397,30 @@ app.post("/api/auth/login", async (req, res) => {
       res.status(400).json({ error: "username and password are required." });
       return;
     }
-   const user = await usersCol.findOne({ username, active: true });
+    const attemptState = getAuthAttemptState(req, username);
+    if (attemptState.lockedUntil && attemptState.lockedUntil > Date.now()) {
+      await audit("auth.login_locked", {
+        username,
+        ip: getClientIp(req),
+        lockedUntil: new Date(attemptState.lockedUntil).toISOString(),
+      });
+      res.status(429).json({ error: "Too many failed attempts. Try again later." });
+      return;
+    }
 
-
-if (!user || !safeEqual(user.passwordHash, hashPassword(password))) {
-      await audit("auth.login_failed", { username });
+    const user = await usersCol.findOne({ username, active: true });
+    if (!user || !safeEqual(user.passwordHash, hashPassword(password))) {
+      const failure = recordAuthFailure(req, username);
+      await audit("auth.login_failed", {
+        username,
+        ip: getClientIp(req),
+        failures: failure.count,
+      });
       res.status(401).json({ error: "Invalid credentials." });
       return;
     }
+
+    clearAuthFailures(req, username);
     const { accessToken, refreshToken } = await buildTokens(user);
     await audit("auth.login_success", { userId: user.id, username: user.username, role: user.role });
     res.json({
@@ -288,7 +431,7 @@ if (!user || !safeEqual(user.passwordHash, hashPassword(password))) {
       expiresIn: ACCESS_TOKEN_TTL_SECONDS,
     });
   } catch (error) {
-    res.status(500).json({ error: "Login failed.", detail: error.message });
+    res.status(500).json({ error: "Login failed." });
   }
 });
 
@@ -314,7 +457,7 @@ app.post("/api/auth/refresh", async (req, res) => {
     await audit("auth.refreshed", { userId: user.id, username: user.username });
     res.json({ ok: true, user: sanitizeUser(user), ...tokens, expiresIn: ACCESS_TOKEN_TTL_SECONDS });
   } catch (error) {
-    res.status(500).json({ error: "Refresh failed.", detail: error.message });
+    res.status(500).json({ error: "Refresh failed." });
   }
 });
 
@@ -331,7 +474,7 @@ app.post("/api/auth/logout", requireAuth, async (req, res) => {
     await audit("auth.logout", { userId: req.user.id, username: req.user.username });
     res.json({ ok: true });
   } catch (error) {
-    res.status(500).json({ error: "Logout failed.", detail: error.message });
+    res.status(500).json({ error: "Logout failed." });
   }
 });
 
@@ -451,15 +594,21 @@ app.post("/api/broadcast", requireAuth, async (req, res) => {
     res.status(400).json({ error: "message and at least one client are required." });
     return;
   }
+  const deliveries = buildBroadcastDeliveries(clients, channel || "Preferred");
+  const queuedCount = deliveries.filter((item) => item.status === "queued").length;
+  const skippedCount = deliveries.filter((item) => item.status === "skipped").length;
   const campaign = {
     campaignId: `${Date.now()}`,
     ownerName: ownerName || "Asset Array Owner",
     channel: channel || "Preferred",
     message,
     clients,
+    deliveries,
     createdAt: createdAt || new Date().toISOString(),
     totalClients: clients.length,
-    status: "processed",
+    queuedCount,
+    skippedCount,
+    status: queuedCount > 0 ? (skippedCount > 0 ? "partial" : "queued") : "skipped",
     createdBy: req.user.username,
     createdById: req.user.id,
   };
@@ -467,6 +616,8 @@ app.post("/api/broadcast", requireAuth, async (req, res) => {
   await audit("broadcast.sent", {
     campaignId: campaign.campaignId,
     totalClients: campaign.totalClients,
+    queuedCount,
+    skippedCount,
     channel: campaign.channel,
     userId: req.user.id,
     by: req.user.username,
@@ -475,8 +626,48 @@ app.post("/api/broadcast", requireAuth, async (req, res) => {
     ok: true,
     campaignId: campaign.campaignId,
     totalClients: campaign.totalClients,
+    queuedCount,
+    skippedCount,
     status: campaign.status,
+    deliveries: deliveries.slice(0, 20),
   });
+});
+
+app.get("/api/broadcast/history", requireAuth, async (req, res) => {
+  const limit = Math.min(Math.max(Number(req.query.limit || 10), 1), 25);
+  const campaigns = await broadcastsCol
+    .find({})
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .project({
+      _id: 0,
+      campaignId: 1,
+      ownerName: 1,
+      channel: 1,
+      message: 1,
+      createdAt: 1,
+      totalClients: 1,
+      queuedCount: 1,
+      skippedCount: 1,
+      status: 1,
+    })
+    .toArray();
+
+  await audit("broadcast.history_read", {
+    limit,
+    userId: req.user.id,
+    by: req.user.username,
+  });
+  res.json({ ok: true, campaigns });
+});
+
+app.use((_req, res) => {
+  res.status(404).json({ error: "Not found." });
+});
+
+app.use((error, _req, res, _next) => {
+  console.error("Unhandled backend error:", error);
+  res.status(500).json({ error: "Internal server error." });
 });
 
 async function start() {

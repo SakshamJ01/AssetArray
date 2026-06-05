@@ -1,4 +1,5 @@
 ﻿import "react-native-get-random-values";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Alert,
@@ -507,7 +508,7 @@ function buildHoldingDraftFromHolding(holding: PortfolioHolding): HoldingDraft {
 }
 
 async function persistClients(clients: Client[]) {
-  await SecureStore.setItemAsync(CLIENTS_KEY, JSON.stringify(clients));
+  await AsyncStorage.setItem(CLIENTS_KEY, JSON.stringify(clients));
 }
 
 async function persistBiometric(value: boolean) {
@@ -531,15 +532,15 @@ async function persistAuthSession(value: AuthSession | null) {
 }
 
 async function persistGoals(goals: Goal[]) {
-  await SecureStore.setItemAsync(GOALS_KEY, JSON.stringify(goals));
+  await AsyncStorage.setItem(GOALS_KEY, JSON.stringify(goals));
 }
 
 async function persistAdvisorMessages(messages: AdvisorMessage[]) {
-  await SecureStore.setItemAsync(ADVISOR_MESSAGES_KEY, JSON.stringify(messages));
+  await AsyncStorage.setItem(ADVISOR_MESSAGES_KEY, JSON.stringify(messages));
 }
 
 async function persistVaultDocuments(documents: VaultDocument[]) {
-  await SecureStore.setItemAsync(VAULT_DOCUMENTS_KEY, JSON.stringify(documents));
+  await AsyncStorage.setItem(VAULT_DOCUMENTS_KEY, JSON.stringify(documents));
 }
 
 function isValidBackendEndpoint(value: string) {
@@ -648,14 +649,14 @@ function AppContent() {
           rawAuthSession,
         ] = await Promise.all([
           SecureStore.getItemAsync(PIN_KEY),
-          SecureStore.getItemAsync(CLIENTS_KEY),
+          AsyncStorage.getItem(CLIENTS_KEY),
           SecureStore.getItemAsync(BIOMETRIC_KEY),
           SecureStore.getItemAsync(CLOUD_SETTINGS_KEY),
           SecureStore.getItemAsync(MARKET_MESSAGE_KEY),
           SecureStore.getItemAsync(DARK_MODE_KEY),
-          SecureStore.getItemAsync(GOALS_KEY),
-          SecureStore.getItemAsync(ADVISOR_MESSAGES_KEY),
-          SecureStore.getItemAsync(VAULT_DOCUMENTS_KEY),
+          AsyncStorage.getItem(GOALS_KEY),
+          AsyncStorage.getItem(ADVISOR_MESSAGES_KEY),
+          AsyncStorage.getItem(VAULT_DOCUMENTS_KEY),
           SecureStore.getItemAsync(AUTH_SESSION_KEY),
         ]);
 

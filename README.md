@@ -15,7 +15,7 @@ It gives you:
 - search and filter tools for daily follow-up work
 - AI-style market brief, client message drafts, segmentation snapshot, automation queue, and report studio
 - goal center for target planning and progress tracking
-- secure advisor portal and document vault workflows
+- secure advisor portal and remote collaboration workflows
 - automated data aggregation snapshot for connected financial accounts
 - tax optimization snapshot and reporting review layer
 - one-to-one market update sharing by phone, SMS, email, or WhatsApp

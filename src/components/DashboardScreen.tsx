@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo } from "react";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, StyleSheet, Text, View } from "react-native";
+import { AnimatedPressable as Pressable } from "./AnimatedPressable";
 import { AppTheme } from "../theme";
 
 type DashboardMetric = {
@@ -187,7 +188,14 @@ export function DashboardScreen({
               </View>
               <View style={styles.quickActionGrid}>
                 {quickActions.map((action) => (
-                  <Pressable key={action.key} style={styles.actionCard} onPress={action.onPress}>
+                  <Pressable
+                    key={action.key}
+                    onPress={action.onPress}
+                    pressOpacity={0.98}
+                    pressScale={0.985}
+                    pressTranslateY={-4}
+                    style={styles.actionCard}
+                  >
                     <View style={styles.actionIconWrap}>
                       <Ionicons color={theme.colors.brand} name={action.icon} size={18} />
                     </View>
@@ -219,6 +227,9 @@ export function DashboardScreen({
                   <Pressable
                     key={client.id}
                     onPress={() => onOpenClient(client.id)}
+                    pressOpacity={0.98}
+                    pressScale={0.99}
+                    pressTranslateY={-4}
                     style={styles.listRow}
                   >
                     <View style={styles.listCopy}>
@@ -263,6 +274,9 @@ export function DashboardScreen({
               {dueClients.length > 0 ? (
                 <Pressable
                   onPress={() => onOpenClient(dueClients[0].id)}
+                  pressOpacity={0.98}
+                  pressScale={0.99}
+                  pressTranslateY={-4}
                   style={styles.nextDueCard}
                 >
                   <View style={styles.listCopy}>

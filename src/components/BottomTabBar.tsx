@@ -1,6 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+import { AnimatedPressable as Pressable } from "./AnimatedPressable";
+import { triggerSelectionHaptic } from "../services/haptics";
 import { AppTheme } from "../theme";
 
 type BottomTabBarProps<T extends string> = {
@@ -61,7 +63,12 @@ export function BottomTabBar<T extends string>({
           return (
             <Pressable
               key={tab.key}
-              onPress={() => onChange(tab.key)}
+              onPress={() => {
+                if (!active) {
+                  void triggerSelectionHaptic();
+                }
+                onChange(tab.key);
+              }}
               style={[styles.item, active ? styles.itemActive : null]}
             >
               <Ionicons

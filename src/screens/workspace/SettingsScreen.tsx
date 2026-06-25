@@ -3,6 +3,7 @@ import { StyleSheet, Switch, Text, View } from "react-native";
 import { AnimatedPressable as Pressable } from "../../components/AnimatedPressable";
 
 interface SettingsScreenProps {
+  appVersion: string;
   biometricEnabled: boolean;
   broadcastSummary: string;
   broadcastState: string;
@@ -10,9 +11,13 @@ interface SettingsScreenProps {
   hapticsEnabled: boolean;
   onBack: () => void;
   onConfigureSync: () => void;
+  onContactSupport: () => void;
   onOpenBroadcast: () => void;
+  onOpenPrivacyPolicy: () => void;
+  onOpenTerms: () => void;
   onPushBackup: () => void;
   onResetLock: () => void;
+  onReportBug: () => void;
   onRestoreBackup: () => void;
   onToggleBiometric: (value: boolean) => void;
   onToggleDarkMode: (value: boolean) => void;
@@ -22,6 +27,7 @@ interface SettingsScreenProps {
 }
 
 export function SettingsScreen({
+  appVersion,
   biometricEnabled,
   broadcastSummary,
   broadcastState,
@@ -29,9 +35,13 @@ export function SettingsScreen({
   hapticsEnabled,
   onBack,
   onConfigureSync,
+  onContactSupport,
   onOpenBroadcast,
+  onOpenPrivacyPolicy,
+  onOpenTerms,
   onPushBackup,
   onResetLock,
+  onReportBug,
   onRestoreBackup,
   onToggleBiometric,
   onToggleDarkMode,
@@ -112,6 +122,28 @@ export function SettingsScreen({
         <Pressable style={styles.lightChip} onPress={onResetLock}>
           <Text style={styles.lightChipText}>Reset App Lock</Text>
         </Pressable>
+      </View>
+
+      <View style={[styles.panel, styles.analyticsPanel]}>
+        <Text style={styles.panelTitle}>About Asset Array</Text>
+        <Text style={styles.panelSubtitle}>Version {appVersion}</Text>
+        <Text style={styles.detailBlock}>Built with ❤️ for modern advisory workflows.</Text>
+        <View style={styles.optionRow}>
+          <Pressable style={styles.secondaryButton} onPress={onOpenPrivacyPolicy}>
+            <Text style={styles.secondaryButtonText}>Privacy Policy</Text>
+          </Pressable>
+          <Pressable style={styles.secondaryButton} onPress={onOpenTerms}>
+            <Text style={styles.secondaryButtonText}>Terms & Conditions</Text>
+          </Pressable>
+        </View>
+        <View style={styles.optionRow}>
+          <Pressable style={styles.darkChip} onPress={onContactSupport}>
+            <Text style={styles.darkChipText}>Contact Support</Text>
+          </Pressable>
+          <Pressable style={styles.darkChip} onPress={onReportBug}>
+            <Text style={styles.darkChipText}>Report Bug</Text>
+          </Pressable>
+        </View>
       </View>
     </View>
   );

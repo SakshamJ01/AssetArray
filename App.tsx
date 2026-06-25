@@ -3,12 +3,14 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Alert,
-  Animated,
-  Easing,
+  FlatList,
   Linking,
   Modal,
+  Pressable,
+
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   useColorScheme,
@@ -24,24 +26,10 @@ import {
 import * as LocalAuthentication from "expo-local-authentication";
 import * as SecureStore from "expo-secure-store";
 import { StatusBar } from "expo-status-bar";
-import { AnimatedPressable as Pressable } from "./src/components/AnimatedPressable";
 import { BottomTabBar } from "./src/components/BottomTabBar";
 import { DashboardScreen } from "./src/components/DashboardScreen";
 import { AdvisorMessagesScreen } from "./src/screens/workspace/AdvisorMessagesScreen";
 import { AggregationScreen } from "./src/screens/workspace/AggregationScreen";
-import { GoalCenterScreen } from "./src/screens/workspace/GoalCenterScreen";
-import { SettingsScreen } from "./src/screens/workspace/SettingsScreen";
-import { VaultScreen } from "./src/screens/workspace/VaultScreen";
-import { WorkspaceHome } from "./src/screens/workspace/WorkspaceHome";
-import {
-  triggerCardPressHaptic,
-  triggerErrorHaptic,
-  triggerPrimaryActionHaptic,
-  triggerSelectionHaptic,
-  triggerSuccessHaptic,
-  triggerWarningHaptic,
-  setHapticsEnabled as applyHapticsPreference,
-} from "./src/services/haptics";
 import {
   AiResearchResult,
   AuthUser,
@@ -69,7 +57,6 @@ type CashFlowMode = "Payout" | "Cumulative";
 type SipFrequency = "Monthly" | "Quarterly";
 type CalculatorTab = "Cash Flow" | "SIP" | "Goal Planner" | "Retirement";
 type AppTab = "Dashboard" | "Clients" | "Portfolios" | "Tools" | "Workspace" | "AI Research";
-type WorkspacePage = "Home" | "Goals" | "Vault" | "Messages" | "Aggregation" | "Settings";
 type AssetClass =
   | "Stocks"
   | "Bonds"
@@ -200,7 +187,6 @@ const CLOUD_SETTINGS_KEY = "asset_array_cloud_settings";
 const AUTH_SESSION_KEY = "asset_array_auth_session";
 const MARKET_MESSAGE_KEY = "asset_array_market_message";
 const DARK_MODE_KEY = "asset_array_dark_mode";
-const HAPTICS_KEY = "asset_array_haptics";
 const GOALS_KEY = "asset_array_goals";
 const ADVISOR_MESSAGES_KEY = "asset_array_advisor_messages";
 const VAULT_DOCUMENTS_KEY = "asset_array_vault_documents";
@@ -535,10 +521,6 @@ async function persistDarkMode(value: boolean) {
   await SecureStore.setItemAsync(DARK_MODE_KEY, JSON.stringify(value));
 }
 
-async function persistHaptics(value: boolean) {
-  await SecureStore.setItemAsync(HAPTICS_KEY, JSON.stringify(value));
-}
-
 async function persistCloudSettings(value: CloudSettings) {
   await SecureStore.setItemAsync(CLOUD_SETTINGS_KEY, JSON.stringify(value));
 }
@@ -576,12 +558,9 @@ function AppContent() {
   const systemColorScheme = useColorScheme();
   const { width: windowWidth } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const screenTransitionOpacity = React.useRef(new Animated.Value(0)).current;
-  const screenTransitionTranslate = React.useRef(new Animated.Value(10)).current;
   const [isReady, setIsReady] = useState(false);
   const [storedPin, setStoredPin] = useState<string | null>(null);
   const [darkModeEnabled, setDarkModeEnabled] = useState(systemColorScheme === "dark");
-  const [hapticsEnabled, setHapticsEnabled] = useState(true);
   const [pinInput, setPinInput] = useState("");
   const [pinSetup, setPinSetup] = useState("");
   const [isUnlocked, setIsUnlocked] = useState(false);
@@ -638,37 +617,14 @@ function AppContent() {
   const [retirementYearsToRetire, setRetirementYearsToRetire] = useState("15");
   const [retirementYearsAfterRetire, setRetirementYearsAfterRetire] =
     useState("25");
-  const [marketResearchNotes] = useState("");
+  const [marketResearchNotes, setMarketResearchNotes] = useState("");
   const [activeTab, setActiveTab] = useState<AppTab>("Dashboard");
-  const [workspacePage, setWorkspacePage] = useState<WorkspacePage>("Home");
   const [goals, setGoals] = useState<Goal[]>([]);
   const [goalDraft, setGoalDraft] = useState<GoalDraft>(emptyGoalDraft);
   const [advisorMessages, setAdvisorMessages] = useState<AdvisorMessage[]>([]);
   const [advisorMessageDraft, setAdvisorMessageDraft] =
     useState<AdvisorMessageDraft>(emptyAdvisorMessageDraft);
   const [vaultDocuments, setVaultDocuments] = useState<VaultDocument[]>([]);
-  const navigationTransitionKey = activeTab === "Workspace" ? `Workspace:${workspacePage}` : activeTab;
-
-  useEffect(() => {
-    screenTransitionOpacity.setValue(0);
-    screenTransitionTranslate.setValue(10);
-
-    Animated.parallel([
-      Animated.timing(screenTransitionOpacity, {
-        toValue: 1,
-        duration: 220,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-      Animated.timing(screenTransitionTranslate, {
-        toValue: 0,
-        duration: 220,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [navigationTransitionKey, screenTransitionOpacity, screenTransitionTranslate]);
-
   const [vaultDocumentDraft, setVaultDocumentDraft] =
     useState<VaultDocumentDraft>(emptyVaultDocumentDraft);
   const [connectedAccounts] = useState<ConnectedAccount[]>(defaultConnectedAccounts);
@@ -678,22 +634,6 @@ function AppContent() {
   );
   const isCompactPageHeader = windowWidth < 420;
   const contentBottomPadding = insets.bottom + 100;
-  const workspacePageTitle = useMemo(() => {
-    switch (workspacePage) {
-      case "Goals":
-        return "Goal Center";
-      case "Vault":
-        return "Document Vault";
-      case "Messages":
-        return "Advisor Messages";
-      case "Aggregation":
-        return "Aggregation";
-      case "Settings":
-        return "Settings";
-      default:
-        return "Workspace";
-    }
-  }, [workspacePage]);
 
   useEffect(() => {
     async function load() {
@@ -705,7 +645,6 @@ function AppContent() {
           rawCloudSettings,
           storedMessage,
           rawDarkMode,
-          rawHaptics,
           rawGoals,
           rawAdvisorMessages,
           rawVaultDocuments,
@@ -717,7 +656,6 @@ function AppContent() {
           SecureStore.getItemAsync(CLOUD_SETTINGS_KEY),
           SecureStore.getItemAsync(MARKET_MESSAGE_KEY),
           SecureStore.getItemAsync(DARK_MODE_KEY),
-          SecureStore.getItemAsync(HAPTICS_KEY),
           AsyncStorage.getItem(GOALS_KEY),
           AsyncStorage.getItem(ADVISOR_MESSAGES_KEY),
           AsyncStorage.getItem(VAULT_DOCUMENTS_KEY),
@@ -735,9 +673,6 @@ function AppContent() {
         }
 
         setDarkModeEnabled(parseStoredJson(rawDarkMode, true));
-        const nextHapticsEnabled = parseStoredJson(rawHaptics, true);
-        setHapticsEnabled(nextHapticsEnabled);
-        applyHapticsPreference(nextHapticsEnabled);
         setGoals(parseStoredJson(rawGoals, [] as Goal[]));
         setAdvisorMessages(parseStoredJson(rawAdvisorMessages, [] as AdvisorMessage[]));
         setVaultDocuments(parseStoredJson(rawVaultDocuments, [] as VaultDocument[]));
@@ -755,8 +690,6 @@ function AppContent() {
         setBiometricEnabled(false);
         setClients([]);
         setCloudSettings(emptyCloudSettings);
-        setHapticsEnabled(true);
-        applyHapticsPreference(true);
         setGoals([]);
         setAdvisorMessages([]);
         setVaultDocuments([]);
@@ -910,13 +843,6 @@ function AppContent() {
       skipped,
     };
   }, [broadcastChannel, broadcastTargets]);
-  const broadcastSummary = useMemo(() => {
-    if (!broadcastTargets.length) {
-      return "No clients selected";
-    }
-
-    return `${broadcastTargets.length} selected, ${broadcastPreview.eligible.length} ready, ${broadcastPreview.skipped.length} skipped`;
-  }, [broadcastPreview.eligible.length, broadcastPreview.skipped.length, broadcastTargets.length]);
 
   const portfolioStats = useMemo(() => {
   if (!selectedClient || !Array.isArray(selectedClient.portfolio)) {
@@ -1482,14 +1408,12 @@ function AppContent() {
   }
 
   function openAddModal() {
-    void triggerPrimaryActionHaptic();
     setEditorMode("add");
     setDraft(emptyDraft);
     setIsEditorOpen(true);
   }
 
   function openEditModal(client: Client) {
-    void triggerCardPressHaptic();
     setEditorMode("edit");
     setDraft(buildDraftFromClient(client));
     setSelectedClientId(client.id);
@@ -1507,7 +1431,6 @@ function AppContent() {
 
   function submitDraft() {
     if (!draft.name.trim() || !draft.phone.trim()) {
-      void triggerWarningHaptic();
       Alert.alert("Missing details", "Client name and phone number are required.");
       return;
     }
@@ -1525,7 +1448,6 @@ function AppContent() {
     }
 
     closeEditor();
-    void triggerSuccessHaptic();
   }
 
   function deleteClient(client: Client) {
@@ -1554,7 +1476,6 @@ function AppContent() {
   }
 
   function toggleSelectedClient(clientId: string) {
-    void triggerSelectionHaptic();
     setSelectedClientIds((current) =>
       current.includes(clientId)
         ? current.filter((id) => id !== clientId)
@@ -1628,21 +1549,6 @@ function AppContent() {
     await persistDarkMode(value);
   }
 
-  async function toggleHaptics(value: boolean) {
-    if (value) {
-      applyHapticsPreference(true);
-      setHapticsEnabled(true);
-      void triggerSelectionHaptic();
-      await persistHaptics(true);
-      return;
-    }
-
-    void triggerSelectionHaptic();
-    setHapticsEnabled(false);
-    applyHapticsPreference(false);
-    await persistHaptics(false);
-  }
-
   async function saveCloudSettingsAction() {
     if (cloudSettings.endpoint.trim() && !isValidBackendEndpoint(cloudSettings.endpoint)) {
       Alert.alert("Invalid backend URL", "Backend URL must be a valid http or https address.");
@@ -1692,18 +1598,15 @@ function AppContent() {
 
   async function loginToBackend() {
     if (!cloudSettings.endpoint.trim()) {
-      void triggerWarningHaptic();
       Alert.alert("Backend URL needed", "Add backend URL before signing in.");
       return;
     }
     if (!cloudSettings.authUsername.trim() || !authPassword.trim()) {
-      void triggerWarningHaptic();
       Alert.alert("Credentials missing", "Enter username and password.");
       return;
     }
 
     try {
-      void triggerPrimaryActionHaptic();
       setAuthState("Signing in...");
       await persistCloudSettings(cloudSettings);
       const response = await loginAdvisor({
@@ -1722,17 +1625,14 @@ function AppContent() {
       setAuthPassword("");
       setAuthState(`Connected as ${session.user.username}`);
       setSyncState("Cloud sync configured + auth active");
-      void triggerSuccessHaptic();
       Alert.alert("Login successful", `Signed in as ${session.user.username}.`);
     } catch (error) {
       setAuthState("Login failed");
-      void triggerErrorHaptic();
       Alert.alert("Login failed", error instanceof Error ? error.message : "Unable to login.");
     }
   }
 
   async function logoutFromBackend() {
-    void triggerSelectionHaptic();
     const session = authSession;
     if (session && cloudSettings.endpoint.trim()) {
       try {
@@ -1768,7 +1668,6 @@ function AppContent() {
 
   async function runAiResearchForQuery(query: string) {
     if (!query) {
-      void triggerWarningHaptic();
       Alert.alert(
         "Research topic needed",
         "Enter a stock, company, fund, ETF, sector, or market topic."
@@ -1777,19 +1676,16 @@ function AppContent() {
     }
 
     if (!cloudSettings.endpoint.trim()) {
-      void triggerWarningHaptic();
       Alert.alert("Backend URL needed", "Configure your backend URL before using AI Research.");
       return;
     }
 
     try {
-      void triggerPrimaryActionHaptic();
       setIsAiResearchLoading(true);
       setAiResearchState("Researching...");
       const accessToken = await refreshAccessTokenIfNeeded();
       if (!accessToken) {
         setAiResearchState("Backend login required");
-        void triggerWarningHaptic();
         Alert.alert(
           "Backend login required",
           "Sign in to the backend before generating AI research."
@@ -1805,10 +1701,8 @@ function AppContent() {
       setAiResearchQuery(query);
       setAiResearchResult(result);
       setAiResearchState(`Research complete for ${query}`);
-      void triggerSuccessHaptic();
     } catch (error) {
       setAiResearchState("Research failed");
-      void triggerErrorHaptic();
       Alert.alert(
         "AI research failed",
         error instanceof Error ? error.message : "Unable to complete AI research."
@@ -1818,20 +1712,31 @@ function AppContent() {
     }
   }
 
+  async function runWorkspaceAiBrief() {
+    await runAiResearchForQuery(marketResearchNotes.trim());
+  }
+
+  function useAiBriefAsDailyMessage() {
+    if (!aiResearchResult) {
+      Alert.alert("Generate research first", "Create an AI brief before using it as your market message.");
+      return;
+    }
+
+    const nextMessage = compactText(
+      `${aiResearchResult.summary} Short term: ${aiResearchResult.shortTermOutlook}`,
+      marketMessage
+    );
+    setMarketMessage(nextMessage);
+    setBroadcastMessage(nextMessage);
+    Alert.alert("Daily message updated", "The AI brief is now set as your default outreach message.");
+  }
+
   function updateGoalDraft<K extends keyof GoalDraft>(key: K, value: GoalDraft[K]) {
     setGoalDraft((current) => ({ ...current, [key]: value }));
   }
 
-  function updateVaultDocumentDraft<K extends keyof VaultDocumentDraft>(
-    key: K,
-    value: VaultDocumentDraft[K]
-  ) {
-    setVaultDocumentDraft((current) => ({ ...current, [key]: value }));
-  }
-
   function saveGoalFromDraft() {
     if (!goalDraft.title.trim() || !goalDraft.targetAmount.trim()) {
-      void triggerWarningHaptic();
       Alert.alert("Goal missing", "Please enter at least a goal title and target amount.");
       return;
     }
@@ -1844,7 +1749,24 @@ function AppContent() {
       ...current,
     ]);
     setGoalDraft(emptyGoalDraft);
-    void triggerSuccessHaptic();
+  }
+
+  function addSelectedClientReportToVault() {
+    if (!selectedClient) {
+      Alert.alert("Select a client", "Open a client first before saving a report.");
+      return;
+    }
+
+    const doc: VaultDocument = {
+      id: `${Date.now()}`,
+      clientName: selectedClient.name,
+      fileName: `${selectedClient.name.replace(/\s+/g, "_")}_review_report.txt`,
+      category: "Report",
+      date: formatDate(),
+      status: "Stored",
+    };
+    setVaultDocuments((current) => [doc, ...current]);
+    Alert.alert("Saved to vault", "Client report draft has been stored in the document vault.");
   }
 
   function updateAdvisorMessageDraft<K extends keyof AdvisorMessageDraft>(
@@ -1856,7 +1778,6 @@ function AppContent() {
 
   function saveAdvisorMessageDraftAction() {
     if (!advisorMessageDraft.clientName.trim() || !advisorMessageDraft.title.trim()) {
-      void triggerWarningHaptic();
       Alert.alert("Message missing", "Enter client name and message title first.");
       return;
     }
@@ -1871,12 +1792,10 @@ function AppContent() {
     };
     setAdvisorMessages((current) => [next, ...current]);
     setAdvisorMessageDraft(emptyAdvisorMessageDraft);
-    void triggerSuccessHaptic();
   }
 
   function saveVaultDocumentDraftAction() {
     if (!vaultDocumentDraft.clientName.trim() || !vaultDocumentDraft.fileName.trim()) {
-      void triggerWarningHaptic();
       Alert.alert("Document missing", "Enter client name and file name first.");
       return;
     }
@@ -1891,7 +1810,6 @@ function AppContent() {
     };
     setVaultDocuments((current) => [next, ...current]);
     setVaultDocumentDraft(emptyVaultDocumentDraft);
-    void triggerSuccessHaptic();
   }
 
   async function syncToCloud() {
@@ -1900,18 +1818,15 @@ function AppContent() {
     }
 
     if (!cloudSettings.endpoint.trim()) {
-      void triggerWarningHaptic();
       Alert.alert("Cloud setup needed", "Add your backend URL before syncing.");
       return;
     }
 
     try {
-      void triggerPrimaryActionHaptic();
       setSyncState("Pushing encrypted backup...");
       const accessToken = await refreshAccessTokenIfNeeded();
       if (!accessToken) {
         setSyncState("Backend login required");
-        void triggerWarningHaptic();
         Alert.alert("Backend login required", "Sign in before pushing encrypted backup.");
         return;
       }
@@ -1935,11 +1850,9 @@ function AppContent() {
       });
 
       setSyncState("Encrypted backup pushed");
-      void triggerSuccessHaptic();
       Alert.alert("Sync complete", "Encrypted client data has been pushed to cloud.");
     } catch (error) {
       setSyncState("Sync failed");
-      void triggerErrorHaptic();
       Alert.alert(
         "Sync failed",
         error instanceof Error ? error.message : "Unable to push encrypted backup."
@@ -1953,18 +1866,15 @@ function AppContent() {
     }
 
     if (!cloudSettings.endpoint.trim()) {
-      void triggerWarningHaptic();
       Alert.alert("Cloud setup needed", "Add your backend URL before restoring.");
       return;
     }
 
     try {
-      void triggerPrimaryActionHaptic();
       setSyncState("Pulling encrypted backup...");
       const accessToken = await refreshAccessTokenIfNeeded();
       if (!accessToken) {
         setSyncState("Backend login required");
-        void triggerWarningHaptic();
         Alert.alert("Backend login required", "Sign in before restoring encrypted backup.");
         return;
       }
@@ -2002,11 +1912,9 @@ function AppContent() {
       setBroadcastMessage(decoded?.marketMessage ?? defaultMessage);
       setSelectedClientId(safeClients.length > 0 ? safeClients[0].id : null);
       setSyncState("Encrypted backup restored");
-      void triggerSuccessHaptic();
       Alert.alert("Restore complete", "Cloud backup has been restored to this device.");
     } catch (error) {
       setSyncState("Restore failed");
-      void triggerErrorHaptic();
       Alert.alert(
         "Restore failed",
         error instanceof Error ? error.message : "Unable to restore cloud backup."
@@ -2016,12 +1924,10 @@ function AppContent() {
 
   function openAddHoldingModal() {
     if (!selectedClient) {
-      void triggerWarningHaptic();
       Alert.alert("Select a client", "Open a client first to manage a portfolio.");
       return;
     }
 
-    void triggerPrimaryActionHaptic();
     setPortfolioMode("add");
     setHoldingDraft(emptyHoldingDraft);
     setEditingHoldingId(null);
@@ -2029,7 +1935,6 @@ function AppContent() {
   }
 
   function openEditHoldingModal(holding: PortfolioHolding) {
-    void triggerCardPressHaptic();
     setPortfolioMode("edit");
     setHoldingDraft(buildHoldingDraftFromHolding(holding));
     setEditingHoldingId(holding.id);
@@ -2055,7 +1960,6 @@ function AppContent() {
     }
 
     if (!holdingDraft.assetName.trim()) {
-      void triggerWarningHaptic();
       Alert.alert("Missing asset name", "Give this portfolio item a name first.");
       return;
     }
@@ -2086,7 +1990,6 @@ function AppContent() {
     );
 
     closeHoldingModal();
-    void triggerSuccessHaptic();
   }
 
   function deleteHolding(holding: PortfolioHolding) {
@@ -2122,10 +2025,7 @@ function AppContent() {
   }
 
   async function runBroadcastCampaign() {
-    const trimmedBroadcastMessage = broadcastMessage.trim();
-
     if (!cloudSettings.endpoint.trim()) {
-      void triggerWarningHaptic();
       Alert.alert(
         "Cloud setup needed",
         "Configure your backend URL before running a broadcast campaign."
@@ -2134,7 +2034,6 @@ function AppContent() {
     }
 
     if (!broadcastTargets.length) {
-      void triggerWarningHaptic();
       Alert.alert(
         "No clients selected",
         "Select at least one client in the Clients tab before sending a bulk update."
@@ -2142,19 +2041,16 @@ function AppContent() {
       return;
     }
 
-    if (!trimmedBroadcastMessage) {
-      void triggerWarningHaptic();
+    if (!broadcastMessage.trim()) {
       Alert.alert("Message missing", "Write the notification message first.");
       return;
     }
 
     try {
-      void triggerPrimaryActionHaptic();
       setBroadcastState("Sending campaign...");
       const accessToken = await refreshAccessTokenIfNeeded();
       if (!accessToken) {
         setBroadcastState("Backend login required");
-        void triggerWarningHaptic();
         Alert.alert(
           "Backend login required",
           "Sign in to the backend before running a broadcast campaign."
@@ -2165,7 +2061,6 @@ function AppContent() {
 
       if (!validTargets.length) {
         setBroadcastState("No valid recipients");
-        void triggerWarningHaptic();
         Alert.alert(
           "No valid recipients",
           "The selected clients do not have the contact details required for this channel."
@@ -2178,7 +2073,7 @@ function AppContent() {
         endpoint: cloudSettings.endpoint,
         ownerName: cloudSettings.ownerName || "Asset Array Owner",
         channel: broadcastChannel,
-        message: trimmedBroadcastMessage,
+        message: broadcastMessage,
         accessToken,
         onUnauthorized: refreshAccessTokenIfNeeded,
         clients: validTargets.map((client) => ({
@@ -2198,7 +2093,7 @@ function AppContent() {
                 ...client,
                 lastContact: stamp,
                 updateHistory: [
-                  `${stamp}: Broadcast campaign (${broadcastChannel}) - ${trimmedBroadcastMessage}`,
+                  `${stamp}: Broadcast campaign (${broadcastChannel}) - ${broadcastMessage}`,
                   ...client.updateHistory,
                 ].slice(0, 10),
               }
@@ -2207,10 +2102,9 @@ function AppContent() {
       );
 
       setBroadcastState(
-        `Campaign ${response.status} • ${response.queuedCount} queued${response.skippedCount ? ` • ${response.skippedCount} skipped` : ""}`
+        `${response.queuedCount} queued${response.skippedCount ? `, ${response.skippedCount} skipped` : ""}`
       );
       setIsBroadcastModalOpen(false);
-      void triggerSuccessHaptic();
       Alert.alert(
         "Broadcast sent",
         skippedCount > 0
@@ -2221,7 +2115,6 @@ function AppContent() {
       );
     } catch (error) {
       setBroadcastState("Broadcast failed");
-      void triggerErrorHaptic();
       Alert.alert(
         "Broadcast failed",
         error instanceof Error ? error.message : "Unable to run broadcast campaign."
@@ -2358,95 +2251,6 @@ function AppContent() {
     );
   }
 
-  function renderWorkspaceContent() {
-    switch (workspacePage) {
-      case "Goals":
-        return (
-          <GoalCenterScreen
-            currencyDisplay={currencyDisplay}
-            goalCenterStats={goalCenterStats}
-            goalDraft={goalDraft}
-            goalPriorityOptions={GOAL_PRIORITY_OPTIONS}
-            goalTypeOptions={GOAL_TYPE_OPTIONS}
-            onBack={() => setWorkspacePage("Home")}
-            onSaveGoal={saveGoalFromDraft}
-            onUpdateGoalDraft={updateGoalDraft}
-            styles={styles}
-          />
-        );
-      case "Vault":
-        return (
-          <VaultScreen
-            documents={vaultDocuments || []}
-            draft={vaultDocumentDraft}
-            onBack={() => setWorkspacePage("Home")}
-            onSave={saveVaultDocumentDraftAction}
-            onUpdateDraft={updateVaultDocumentDraft}
-            styles={styles}
-          />
-        );
-      case "Messages":
-        return (
-          <AdvisorMessagesScreen
-            advisorMessages={advisorMessages}
-            advisorMessageDraft={advisorMessageDraft}
-            onBack={() => setWorkspacePage("Home")}
-            onSaveDraft={saveAdvisorMessageDraftAction}
-            onUpdateDraft={updateAdvisorMessageDraft}
-            styles={styles}
-          />
-        );
-      case "Aggregation":
-        return (
-          <AggregationScreen
-            aggregationSnapshot={aggregationSnapshot}
-            connectedAccounts={connectedAccounts}
-            currencyDisplay={currencyDisplay}
-            onBack={() => setWorkspacePage("Home")}
-            styles={styles}
-          />
-        );
-      case "Settings":
-        return (
-          <SettingsScreen
-            biometricEnabled={biometricEnabled}
-            broadcastSummary={broadcastSummary}
-            broadcastState={broadcastState}
-            darkModeEnabled={darkModeEnabled}
-            hapticsEnabled={hapticsEnabled}
-            onBack={() => setWorkspacePage("Home")}
-            onConfigureSync={() => setIsSyncModalOpen(true)}
-            onOpenBroadcast={() => setIsBroadcastModalOpen(true)}
-            onPushBackup={() => void syncToCloud()}
-            onResetLock={() => void resetLock()}
-            onRestoreBackup={() => void restoreFromCloud()}
-            onToggleBiometric={(value) => void toggleBiometric(value)}
-            onToggleDarkMode={(value) => void toggleDarkMode(value)}
-            onToggleHaptics={(value) => void toggleHaptics(value)}
-            styles={styles}
-            syncState={syncState}
-          />
-        );
-      case "Home":
-      default:
-        return (
-          <WorkspaceHome
-            aiResearchState={aiResearchState}
-            broadcastState={broadcastState}
-            categorySummary={categorySummary}
-            marketMessage={marketMessage}
-            onChangeMarketMessage={(value) => {
-              setMarketMessage(value);
-              setBroadcastMessage(value);
-            }}
-            onNavigate={setWorkspacePage}
-            styles={styles}
-            syncState={syncState}
-          />
-        );
-    }
-  }
-
   return (
     <SafeAreaView
       edges={["top", "left", "right"]}
@@ -2457,194 +2261,181 @@ function AppContent() {
       ]}
     >
       <StatusBar style={darkModeEnabled ? "light" : "dark"} />
-      <Animated.View
-        style={[
-          styles.screenTransition,
-          {
-            opacity: screenTransitionOpacity,
-            transform: [{ translateY: screenTransitionTranslate }],
-          },
+      {activeTab === "Dashboard" ? (
+        <DashboardScreen
+          analytics={dashboardAnalytics}
+          contentBottomPadding={contentBottomPadding}
+          dueClients={dueClients.map((client) => ({
+            id: client.id,
+            name: client.name,
+            category: client.category,
+            reminderDate: formatReminderDate(client.reminderDate),
+            lastContact: client.lastContact,
+            priority: client.priority,
+          }))}
+          onActionAddClient={openAddModal}
+          onActionAiResearch={() => setActiveTab("AI Research")}
+          onActionBroadcast={() => setIsBroadcastModalOpen(true)}
+          onActionOpenClients={() => setActiveTab("Clients")}
+          onOpenClient={(clientId) => {
+            setSelectedClientId(clientId);
+            setActiveTab("Clients");
+          }}
+          onViewAllClients={() => setActiveTab("Clients")}
+          recentClients={recentClients.map((client) => ({
+            id: client.id,
+            name: client.name,
+            category: client.category,
+            reminderDate: formatReminderDate(client.reminderDate),
+            lastContact: client.lastContact,
+            priority: client.priority,
+          })).slice(0, 3)}
+          reminderKpis={dashboardReminderKpis}
+          stats={dashboardStats}
+          theme={theme}
+        />
+      ) : (
+      <ScrollView
+        contentContainerStyle={[
+          styles.container,
+          { paddingBottom: contentBottomPadding },
         ]}
+        showsVerticalScrollIndicator={false}
       >
-        {activeTab === "Dashboard" ? (
-          <DashboardScreen
-            analytics={dashboardAnalytics}
-            contentBottomPadding={contentBottomPadding}
-            dueClients={dueClients.map((client) => ({
-              id: client.id,
-              name: client.name,
-              category: client.category,
-              reminderDate: formatReminderDate(client.reminderDate),
-              lastContact: client.lastContact,
-              priority: client.priority,
-            }))}
-            onActionAddClient={openAddModal}
-            onActionAiResearch={() => setActiveTab("AI Research")}
-            onActionBroadcast={() => setIsBroadcastModalOpen(true)}
-            onActionOpenClients={() => setActiveTab("Clients")}
-            onOpenClient={(clientId) => {
-              setSelectedClientId(clientId);
-              setActiveTab("Clients");
-            }}
-            onViewAllClients={() => setActiveTab("Clients")}
-            recentClients={recentClients.map((client) => ({
-              id: client.id,
-              name: client.name,
-              category: client.category,
-              reminderDate: formatReminderDate(client.reminderDate),
-              lastContact: client.lastContact,
-              priority: client.priority,
-            })).slice(0, 3)}
-            reminderKpis={dashboardReminderKpis}
-            stats={dashboardStats}
-            theme={theme}
-          />
-        ) : (
-          <ScrollView
-            contentContainerStyle={[
-              styles.container,
-              { paddingBottom: contentBottomPadding },
-            ]}
-            showsVerticalScrollIndicator={false}
-          >
-            <View
+        <View
+          style={[
+            styles.pageHeader,
+            isCompactPageHeader ? styles.pageHeaderCompact : null,
+            { backgroundColor: theme.colors.surface },
+          ]}
+        >
+          <View style={[styles.heroCopy, isCompactPageHeader ? styles.heroCopyCompact : null]}>
+            <Text style={[styles.heroEyebrow, { color: theme.colors.brand }]}>Asset Array</Text>
+            <Text
               style={[
-                styles.pageHeader,
-                isCompactPageHeader ? styles.pageHeaderCompact : null,
-                { backgroundColor: theme.colors.surface },
+                styles.pageHeaderTitle,
+                isCompactPageHeader ? styles.pageHeaderTitleCompact : null,
+                { color: theme.colors.textPrimary },
               ]}
             >
-              <View style={[styles.heroCopy, isCompactPageHeader ? styles.heroCopyCompact : null]}>
-                <Text style={[styles.heroEyebrow, { color: theme.colors.brand }]}>Asset Array</Text>
-                <Text
-                  style={[
-                    styles.pageHeaderTitle,
-                    isCompactPageHeader ? styles.pageHeaderTitleCompact : null,
-                    { color: theme.colors.textPrimary },
-                  ]}
-                >
-                  {activeTab === "Workspace" ? workspacePageTitle : activeTab}
-                </Text>
-              </View>
-              <View
+              {activeTab}
+            </Text>
+          </View>
+          <View
+            style={[
+              styles.heroActionRow,
+              isCompactPageHeader ? styles.heroActionRowCompact : null,
+            ]}
+          >
+            {activeTab !== "AI Research" ? (
+              <Pressable
                 style={[
-                  styles.heroActionRow,
-                  isCompactPageHeader ? styles.heroActionRowCompact : null,
+                  styles.secondaryButton,
+                  isCompactPageHeader ? styles.secondaryButtonCompact : null,
+                  { backgroundColor: theme.colors.surfaceStrong },
                 ]}
+                onPress={() => setActiveTab("AI Research")}
               >
-                {activeTab !== "AI Research" ? (
-                  <Pressable
-                    style={[
-                      styles.secondaryButton,
-                      isCompactPageHeader ? styles.secondaryButtonCompact : null,
-                      { backgroundColor: theme.colors.surfaceStrong },
-                    ]}
-                    onPress={() => setActiveTab("AI Research")}
-                  >
-                    <Text style={[styles.secondaryButtonText, { color: theme.colors.textPrimary }]}>
-                      AI Research
-                    </Text>
-                  </Pressable>
-                ) : null}
-                <Pressable
-                  style={[
-                    styles.secondaryButton,
-                    styles.logoutButton,
-                    isCompactPageHeader ? styles.secondaryButtonCompact : null,
-                  ]}
-                  onPress={() => void logoutFromBackend()}
-                >
-                  <Text style={[styles.secondaryButtonText, styles.logoutButtonText]}>Logout</Text>
-                </Pressable>
-              </View>
+                <Text style={[styles.secondaryButtonText, { color: theme.colors.textPrimary }]}>
+                  AI Research
+                </Text>
+              </Pressable>
+            ) : null}
+            <Pressable
+              style={[
+                styles.secondaryButton,
+                styles.logoutButton,
+                isCompactPageHeader ? styles.secondaryButtonCompact : null,
+              ]}
+              onPress={() => void logoutFromBackend()}
+            >
+              <Text style={[styles.secondaryButtonText, styles.logoutButtonText]}>Logout</Text>
+            </Pressable>
+          </View>
+        </View>
+
+        {activeTab === "AI Research" ? (
+          <View style={[styles.panel, styles.analyticsPanel]}>
+            <Text style={styles.panelTitle}>AI Research</Text>
+            <Text style={styles.panelSubtitle}>
+              Generate a structured market brief for a stock, company, mutual fund, ETF, sector, or market topic.
+            </Text>
+            <TextInput
+              value={aiResearchQuery}
+              onChangeText={setAiResearchQuery}
+              placeholder="e.g. Reliance Industries, Nifty IT, Gold ETF, banking sector"
+              placeholderTextColor="#7f90a8"
+              autoCapitalize="words"
+              style={styles.input}
+            />
+            <View style={styles.inlineActions}>
+              <Pressable
+                style={styles.primaryButton}
+                onPress={() => void runAiResearch()}
+                disabled={isAiResearchLoading}
+              >
+                <Text style={styles.primaryButtonText}>
+                  {isAiResearchLoading ? "Researching..." : "Generate Research"}
+                </Text>
+              </Pressable>
+              <Text style={styles.clientSubMeta}>{aiResearchState}</Text>
             </View>
 
-            {activeTab === "Workspace" ? (
-              renderWorkspaceContent()
-            ) : (
-              <>
-            {activeTab === "AI Research" ? (
-              <View style={[styles.panel, styles.analyticsPanel]}>
-                <Text style={styles.panelTitle}>AI Research</Text>
-                <Text style={styles.panelSubtitle}>
-                  Generate a structured market brief for a stock, company, mutual fund, ETF, sector, or market topic.
-                </Text>
-                <TextInput
-                  value={aiResearchQuery}
-                  onChangeText={setAiResearchQuery}
-                  placeholder="e.g. Reliance Industries, Nifty IT, Gold ETF, banking sector"
-                  placeholderTextColor="#7f90a8"
-                  autoCapitalize="words"
-                  style={styles.input}
-                />
-                <View style={styles.inlineActions}>
-                  <Pressable
-                    style={styles.primaryButton}
-                    onPress={() => void runAiResearch()}
-                    disabled={isAiResearchLoading}
+            {aiResearchResult ? (
+              <View style={styles.aiResearchResult}>
+                <View style={styles.aiResearchHeader}>
+                  <Text style={styles.sectionLabel}>Sentiment</Text>
+                  <Text
+                    style={[
+                      styles.sentimentPill,
+                      aiResearchResult.sentiment === "Bullish"
+                        ? styles.sentimentBullish
+                        : aiResearchResult.sentiment === "Bearish"
+                          ? styles.sentimentBearish
+                          : styles.sentimentNeutral,
+                    ]}
                   >
-                    <Text style={styles.primaryButtonText}>
-                      {isAiResearchLoading ? "Researching..." : "Generate Research"}
-                    </Text>
-                  </Pressable>
-                  <Text style={styles.clientSubMeta}>{aiResearchState}</Text>
+                    {aiResearchResult.sentiment}
+                  </Text>
                 </View>
 
-                {aiResearchResult ? (
-                  <View style={styles.aiResearchResult}>
-                    <View style={styles.aiResearchHeader}>
-                      <Text style={styles.sectionLabel}>Sentiment</Text>
-                      <Text
-                        style={[
-                          styles.sentimentPill,
-                          aiResearchResult.sentiment === "Bullish"
-                            ? styles.sentimentBullish
-                            : aiResearchResult.sentiment === "Bearish"
-                              ? styles.sentimentBearish
-                              : styles.sentimentNeutral,
-                        ]}
-                      >
-                        {aiResearchResult.sentiment}
+                <Text style={styles.sectionLabel}>Summary</Text>
+                <Text style={styles.detailBlock}>{aiResearchResult.summary}</Text>
+
+                <View style={styles.dualColumn}>
+                  <View style={styles.column}>
+                    <Text style={styles.sectionLabel}>Opportunities</Text>
+                    {aiResearchResult.opportunities.map((item) => (
+                      <Text key={item} style={styles.historyItem}>
+                        {item}
                       </Text>
-                    </View>
-
-                    <Text style={styles.sectionLabel}>Summary</Text>
-                    <Text style={styles.detailBlock}>{aiResearchResult.summary}</Text>
-
-                    <View style={styles.dualColumn}>
-                      <View style={styles.column}>
-                        <Text style={styles.sectionLabel}>Opportunities</Text>
-                        {aiResearchResult.opportunities.map((item) => (
-                          <Text key={item} style={styles.historyItem}>
-                            {item}
-                          </Text>
-                        ))}
-                      </View>
-                      <View style={styles.column}>
-                        <Text style={styles.sectionLabel}>Risks</Text>
-                        {aiResearchResult.risks.map((item) => (
-                          <Text key={item} style={styles.analyticsAlert}>
-                            {item}
-                          </Text>
-                        ))}
-                      </View>
-                    </View>
-
-                    <Text style={styles.sectionLabel}>Short-term outlook</Text>
-                    <Text style={styles.historyItem}>{aiResearchResult.shortTermOutlook}</Text>
-                    <Text style={styles.sectionLabel}>Long-term outlook</Text>
-                    <Text style={styles.historyItem}>{aiResearchResult.longTermOutlook}</Text>
+                    ))}
                   </View>
-                ) : (
-                  <View style={styles.emptyState}>
-                    <Text style={styles.emptyTitle}>Research ready</Text>
-                    <Text style={styles.emptyText}>
-                      Enter a topic and generate a structured advisor-ready view.
-                    </Text>
+                  <View style={styles.column}>
+                    <Text style={styles.sectionLabel}>Risks</Text>
+                    {aiResearchResult.risks.map((item) => (
+                      <Text key={item} style={styles.analyticsAlert}>
+                        {item}
+                      </Text>
+                    ))}
                   </View>
-                )}
+                </View>
+
+                <Text style={styles.sectionLabel}>Short-term outlook</Text>
+                <Text style={styles.historyItem}>{aiResearchResult.shortTermOutlook}</Text>
+                <Text style={styles.sectionLabel}>Long-term outlook</Text>
+                <Text style={styles.historyItem}>{aiResearchResult.longTermOutlook}</Text>
               </View>
-            ) : null}
+            ) : (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyTitle}>Research ready</Text>
+                <Text style={styles.emptyText}>
+                  Enter a topic and generate a structured advisor-ready view.
+                </Text>
+              </View>
+            )}
+          </View>
+        ) : null}
 
         {activeTab === "Portfolios" ? (
         <View style={[styles.panel, styles.analyticsPanel]}>
@@ -2796,9 +2587,102 @@ function AppContent() {
         </View>
         ) : null}
 
-        {activeTab === "Tools" ? (
+        {activeTab === "Workspace" ? (
+          <View style={styles.panel}>
+            <Text style={styles.panelTitle}>Daily market message</Text>
+            <Text style={styles.panelSubtitle}>
+              This message becomes your default update for direct outreach and campaigns.
+            </Text>
+            <TextInput
+              multiline
+              value={marketMessage}
+              onChangeText={(value) => {
+                setMarketMessage(value);
+                setBroadcastMessage(value);
+              }}
+              style={[styles.input, styles.messageInput]}
+            />
+          </View>
+        ) : null}
+
+        {activeTab === "Workspace" || activeTab === "Tools" ? (
           <View style={styles.dualColumn}>
-          <View style={styles.column}>
+          {activeTab === "Workspace" ? <View style={styles.column}>
+            <View style={[styles.panel, styles.calculatorPanel]}>
+              <Text style={styles.panelTitle}>AI market research</Text>
+              <Text style={styles.panelSubtitle}>
+                Run a real Gemini-powered brief for a stock, fund, sector, or macro topic and turn it into advisor-ready outreach.
+              </Text>
+              <TextInput
+                value={marketResearchNotes}
+                onChangeText={setMarketResearchNotes}
+                placeholder="e.g. Nifty IT, Reliance Industries, banking sector, gold ETF"
+                placeholderTextColor="#7f90a8"
+                style={styles.input}
+              />
+              <View style={styles.inlineActions}>
+                <Pressable
+                  style={styles.primaryButton}
+                  onPress={() => void runWorkspaceAiBrief()}
+                  disabled={isAiResearchLoading}
+                >
+                  <Text style={styles.primaryButtonText}>
+                    {isAiResearchLoading ? "Researching..." : "Generate Brief"}
+                  </Text>
+                </Pressable>
+                <Pressable style={styles.secondaryButton} onPress={useAiBriefAsDailyMessage}>
+                  <Text style={styles.secondaryButtonText}>Use for Broadcast</Text>
+                </Pressable>
+              </View>
+              <Text style={styles.detailBlock}>{aiResearchState}</Text>
+              {aiResearchResult ? (
+                <View style={styles.aiResearchResult}>
+                  <View style={styles.aiResearchHeader}>
+                    <Text style={styles.sectionLabel}>Live brief</Text>
+                    <Text
+                      style={[
+                        styles.sentimentPill,
+                        aiResearchResult.sentiment === "Bullish"
+                          ? styles.sentimentBullish
+                          : aiResearchResult.sentiment === "Bearish"
+                            ? styles.sentimentBearish
+                            : styles.sentimentNeutral,
+                      ]}
+                    >
+                      {aiResearchResult.sentiment}
+                    </Text>
+                  </View>
+                  <Text style={styles.historyItem}>{aiResearchResult.summary}</Text>
+                  <Text style={styles.sectionLabel}>Outlook</Text>
+                  <Text style={styles.historyItem}>
+                    Short term: {aiResearchResult.shortTermOutlook}
+                  </Text>
+                  <Text style={styles.historyItem}>
+                    Long term: {aiResearchResult.longTermOutlook}
+                  </Text>
+                  {aiResearchResult.opportunities.slice(0, 2).map((item, index) => (
+                    <Text key={`opp-${index}`} style={styles.historyItem}>
+                      Opportunity: {item}
+                    </Text>
+                  ))}
+                  {aiResearchResult.risks.slice(0, 2).map((item, index) => (
+                    <Text key={`risk-${index}`} style={styles.historyItem}>
+                      Risk: {item}
+                    </Text>
+                  ))}
+                </View>
+              ) : (
+                <View style={styles.emptyState}>
+                  <Text style={styles.emptyTitle}>No AI brief yet</Text>
+                  <Text style={styles.emptyText}>
+                    Run a topic through Gemini to generate a real market brief here.
+                  </Text>
+                </View>
+              )}
+            </View>
+          </View> : null}
+
+          {activeTab === "Tools" ? <View style={styles.column}>
             <View style={[styles.panel, styles.calculatorPanel]}>
               <Text style={styles.panelTitle}>Calculator hub</Text>
               <Text style={styles.panelSubtitle}>
@@ -3171,8 +3055,25 @@ function AppContent() {
                 </>
               ) : null}
             </View>
+          </View> : null}
           </View>
+        ) : null}
+
+        {activeTab === "Workspace" ? (
+        <View style={styles.panel}>
+          <Text style={styles.panelTitle}>Smart segmentation</Text>
+          <Text style={styles.panelSubtitle}>
+            Client mix snapshot for campaign targeting and advisor review.
+          </Text>
+          <View style={styles.categoryGrid}>
+            {categorySummary.map((item) => (
+              <View key={item.label} style={styles.categoryCard}>
+                <Text style={styles.categoryValue}>{item.value}</Text>
+                <Text style={styles.categoryLabel}>{item.label}</Text>
+              </View>
+            ))}
           </View>
+        </View>
         ) : null}
 
         {activeTab === "Clients" ? (
@@ -3291,9 +3192,6 @@ function AppContent() {
                       <Pressable
                         style={[styles.clientRow, active ? styles.clientRowActive : null]}
                         onPress={() => setSelectedClientId(client.id)}
-                        pressOpacity={0.98}
-                        pressScale={0.99}
-                        pressTranslateY={-4}
                       >
                         <View style={styles.clientRowMain}>
                           <Text style={styles.clientName}>{client.name}</Text>
@@ -3601,9 +3499,9 @@ function AppContent() {
         </View>
         ) : null}
 
-        {activeTab === "Tools" ? (
+        {activeTab === "Tools" || activeTab === "Workspace" ? (
         <View style={styles.dualColumn}>
-          <View style={styles.column}>
+          {activeTab === "Tools" ? <View style={styles.column}>
             <View style={styles.panel}>
               <Text style={styles.panelTitle}>Goal center</Text>
               <Text style={styles.panelSubtitle}>
@@ -3743,13 +3641,23 @@ function AppContent() {
                 ))
               )}
             </View>
-          </View>
+          </View> : null}
+
+        {activeTab === "Workspace" ? <View style={styles.column}>
+          <AdvisorMessagesScreen
+            advisorMessages={advisorMessages}
+            advisorMessageDraft={advisorMessageDraft}
+            onUpdateDraft={updateAdvisorMessageDraft}
+            onSaveDraft={saveAdvisorMessageDraftAction}
+            styles={styles}
+          />
+        </View> : null}
         </View>
         ) : null}
 
-        {activeTab === "Tools" ? (
+        {activeTab === "Tools" || activeTab === "Workspace" ? (
         <View style={styles.dualColumn}>
-          <View style={styles.column}>
+          {activeTab === "Tools" ? <View style={styles.column}>
             <View style={styles.panel}>
               <Text style={styles.panelTitle}>Document vault</Text>
               <Text style={styles.panelSubtitle}>
@@ -3821,7 +3729,43 @@ function AppContent() {
                 ))
               )}
             </View>
-          </View>
+          </View> : null}
+
+          {activeTab === "Workspace" ? <View style={styles.column}>
+            <View style={styles.panel}>
+              <Text style={styles.panelTitle}>Automated data aggregation</Text>
+              <Text style={styles.panelSubtitle}>
+                Linked account snapshot for banks, brokerages, cards, and retirement accounts.
+              </Text>
+              <View style={styles.analyticsSummaryRow}>
+                <View style={[styles.analyticsMetricCard, styles.analyticsBlue]}>
+                  <Text style={styles.analyticsMetricLabel}>Connected accounts</Text>
+                  <Text style={styles.analyticsMetricValue}>{aggregationSnapshot.connectedCount}</Text>
+                </View>
+                <View style={[styles.analyticsMetricCard, styles.analyticsGold]}>
+                  <Text style={styles.analyticsMetricLabel}>Needs review</Text>
+                  <Text style={styles.analyticsMetricValue}>{aggregationSnapshot.reviewCount}</Text>
+                </View>
+                <View style={[styles.analyticsMetricCard, styles.analyticsSlate]}>
+                  <Text style={styles.analyticsMetricLabel}>Total external value</Text>
+                  <Text style={styles.analyticsMetricValue}>
+                    {currencyDisplay(`${aggregationSnapshot.totalExternalValue}`)}
+                  </Text>
+                </View>
+              </View>
+              {connectedAccounts.slice(0, 2).map((account) => (
+                <View key={account.id} style={styles.analyticsListCard}>
+                  <Text style={styles.clientName}>{account.institution}</Text>
+                  <Text style={styles.clientMeta}>
+                    {account.accountType} | {account.status}
+                  </Text>
+                  <Text style={styles.clientSubMeta}>
+                    {currencyDisplay(account.currentValue)}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View> : null}
         </View>
         ) : null}
 
@@ -3880,11 +3824,83 @@ function AppContent() {
         </View>
         ) : null}
 
-          </>
-        )}
+        {activeTab === "Workspace" ? (
+        <View style={styles.panel}>
+          <Text style={styles.panelTitle}>Security and sync</Text>
+          <Text style={styles.panelSubtitle}>
+            Core lock, backup, and campaign controls for the advisor workspace.
+          </Text>
+          <View style={styles.toggleRow}>
+            <View style={styles.toggleCopy}>
+              <Text style={styles.toggleTitle}>Biometric unlock</Text>
+              <Text style={styles.toggleText}>
+                Use fingerprint or face authentication after PIN unlock.
+              </Text>
+            </View>
+            <Switch
+              value={biometricEnabled}
+              onValueChange={(value) => void toggleBiometric(value)}
+            />
+          </View>
+
+          <View style={styles.toggleRow}>
+            <View style={styles.toggleCopy}>
+              <Text style={styles.toggleTitle}>Dark mode</Text>
+              <Text style={styles.toggleText}>
+                Enable the darker workspace shell.
+              </Text>
+            </View>
+            <Switch
+              value={darkModeEnabled}
+              onValueChange={(value) => void toggleDarkMode(value)}
+            />
+          </View>
+
+          <View style={styles.toggleRow}>
+            <View style={styles.toggleCopy}>
+              <Text style={styles.toggleTitle}>Encrypted cloud backup</Text>
+              <Text style={styles.toggleText}>
+                Backend stores ciphertext only. Sync state: {syncState}
+              </Text>
+            </View>
+            <Pressable
+              style={styles.secondaryButton}
+              onPress={() => setIsSyncModalOpen(true)}
+            >
+              <Text style={styles.secondaryButtonText}>Configure</Text>
+            </Pressable>
+          </View>
+
+          <View style={styles.toggleRow}>
+            <View style={styles.toggleCopy}>
+              <Text style={styles.toggleTitle}>Bulk notification campaigns</Text>
+              <Text style={styles.toggleText}>
+                Run one campaign for selected clients. Status: {broadcastState}
+              </Text>
+            </View>
+            <Pressable
+              style={styles.secondaryButton}
+              onPress={() => setIsBroadcastModalOpen(true)}
+            >
+              <Text style={styles.secondaryButtonText}>Open</Text>
+            </Pressable>
+          </View>
+
+          <View style={styles.optionRow}>
+            <Pressable style={styles.darkChip} onPress={() => void syncToCloud()}>
+              <Text style={styles.darkChipText}>Push Backup</Text>
+            </Pressable>
+            <Pressable style={styles.darkChip} onPress={() => void restoreFromCloud()}>
+              <Text style={styles.darkChipText}>Restore Backup</Text>
+            </Pressable>
+            <Pressable style={styles.lightChip} onPress={() => void resetLock()}>
+              <Text style={styles.lightChipText}>Reset App Lock</Text>
+            </Pressable>
+          </View>
+        </View>
+        ) : null}
       </ScrollView>
       )}
-      </Animated.View>
 
       <BottomTabBar
         activeTab={visibleTabs.some((tab) => tab.key === activeTab) ? activeTab : "Dashboard"}
@@ -4290,9 +4306,6 @@ const styles = StyleSheet.create({
   screenDark: {
     backgroundColor: "#050916",
   },
-  screenTransition: {
-    flex: 1,
-  },
   container: {
     padding: 20,
     paddingBottom: 120,
@@ -4571,13 +4584,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     marginBottom: 12,
-  },
-  sectionHeader: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 12,
-    marginBottom: 6,
   },
   input: {
     backgroundColor: "#081327",

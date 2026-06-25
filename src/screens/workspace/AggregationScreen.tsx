@@ -1,6 +1,5 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { AnimatedPressable as Pressable } from "../../components/AnimatedPressable";
 
 type ConnectedAccount = {
   id: string;
@@ -20,7 +19,6 @@ interface AggregationScreenProps {
   connectedAccounts: ConnectedAccount[];
   aggregationSnapshot: AggregationSnapshot;
   currencyDisplay: (raw: string) => string;
-  onBack: () => void;
   styles: ReturnType<typeof StyleSheet.create>;
 }
 
@@ -28,17 +26,12 @@ export function AggregationScreen({
   connectedAccounts,
   aggregationSnapshot,
   currencyDisplay,
-  onBack,
   styles,
 }: AggregationScreenProps) {
   return (
+    <View style={styles.column}>
       <View style={styles.panel}>
-        <View style={styles.sectionHeader}>
         <Text style={styles.panelTitle}>Automated data aggregation</Text>
-          <Pressable onPress={onBack} style={styles.linkButton}>
-            <Text style={styles.linkButtonText}>Back</Text>
-          </Pressable>
-        </View>
         <Text style={styles.panelSubtitle}>
           Linked account snapshot for banks, brokerages, cards, and retirement accounts.
         </Text>
@@ -74,5 +67,6 @@ export function AggregationScreen({
           </View>
         ))}
       </View>
+    </View>
   );
 }

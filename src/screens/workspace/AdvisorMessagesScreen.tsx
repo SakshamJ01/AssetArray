@@ -1,6 +1,5 @@
 import React from "react";
-import { StyleSheet, Text, TextInput, View } from "react-native";
-import { AnimatedPressable as Pressable } from "../../components/AnimatedPressable";
+import { Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 type AdvisorMessage = {
   id: string;
@@ -20,7 +19,6 @@ type AdvisorMessageDraft = {
 interface AdvisorMessagesScreenProps {
   advisorMessages: AdvisorMessage[];
   advisorMessageDraft: AdvisorMessageDraft;
-  onBack: () => void;
   onUpdateDraft: <K extends keyof AdvisorMessageDraft>(
     key: K,
     value: AdvisorMessageDraft[K]
@@ -32,19 +30,14 @@ interface AdvisorMessagesScreenProps {
 export function AdvisorMessagesScreen({
   advisorMessages,
   advisorMessageDraft,
-  onBack,
   onUpdateDraft,
   onSaveDraft,
   styles,
 }: AdvisorMessagesScreenProps) {
   return (
+    <View style={styles.column}>
       <View style={styles.panel}>
-        <View style={styles.sectionHeader}>
         <Text style={styles.panelTitle}>Secure advisor portal</Text>
-          <Pressable onPress={onBack} style={styles.linkButton}>
-            <Text style={styles.linkButtonText}>Back</Text>
-          </Pressable>
-        </View>
         <Text style={styles.panelSubtitle}>
           Protected draft space for advisor notes, client updates, and report handoff.
         </Text>
@@ -94,5 +87,6 @@ export function AdvisorMessagesScreen({
           ))
         )}
       </View>
+    </View>
   );
 }

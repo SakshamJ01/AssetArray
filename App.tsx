@@ -30,6 +30,7 @@ import { BottomTabBar } from "./src/components/BottomTabBar";
 import { DashboardScreen } from "./src/components/DashboardScreen";
 import { AdvisorMessagesScreen } from "./src/screens/workspace/AdvisorMessagesScreen";
 import { AggregationScreen } from "./src/screens/workspace/AggregationScreen";
+import { setHapticsEnabled } from "./src/services/haptics";
 import {
   AiResearchResult,
   AuthUser,
@@ -56,7 +57,15 @@ type CashFlowFrequency = "Monthly" | "Quarterly" | "Yearly";
 type CashFlowMode = "Payout" | "Cumulative";
 type SipFrequency = "Monthly" | "Quarterly";
 type CalculatorTab = "Cash Flow" | "SIP" | "Goal Planner" | "Retirement";
-type AppTab = "Dashboard" | "Clients" | "Portfolios" | "Tools" | "Workspace" | "AI Research";
+type AppTab =
+  | "Dashboard"
+  | "Clients"
+  | "Portfolios"
+  | "Tools"
+  | "Workspace"
+  | "Settings"
+  | "AI Research";
+type AboutSheet = "Privacy Policy" | "Terms & Conditions";
 type AssetClass =
   | "Stocks"
   | "Bonds"
@@ -187,6 +196,10 @@ const CLOUD_SETTINGS_KEY = "asset_array_cloud_settings";
 const AUTH_SESSION_KEY = "asset_array_auth_session";
 const MARKET_MESSAGE_KEY = "asset_array_market_message";
 const DARK_MODE_KEY = "asset_array_dark_mode";
+const HAPTICS_KEY = "asset_array_haptics";
+const APP_VERSION = "1.0.1";
+const SUPPORT_EMAIL = "support@assetarray.app";
+const BUG_REPORT_EMAIL = "bugs@assetarray.app";
 const GOALS_KEY = "asset_array_goals";
 const ADVISOR_MESSAGES_KEY = "asset_array_advisor_messages";
 const VAULT_DOCUMENTS_KEY = "asset_array_vault_documents";
@@ -521,6 +534,10 @@ async function persistDarkMode(value: boolean) {
   await SecureStore.setItemAsync(DARK_MODE_KEY, JSON.stringify(value));
 }
 
+async function persistHaptics(value: boolean) {
+  await SecureStore.setItemAsync(HAPTICS_KEY, JSON.stringify(value));
+}
+
 async function persistCloudSettings(value: CloudSettings) {
   await SecureStore.setItemAsync(CLOUD_SETTINGS_KEY, JSON.stringify(value));
 }
@@ -561,6 +578,7 @@ function AppContent() {
   const [isReady, setIsReady] = useState(false);
   const [storedPin, setStoredPin] = useState<string | null>(null);
   const [darkModeEnabled, setDarkModeEnabled] = useState(systemColorScheme === "dark");
+  const [hapticsEnabled, setHapticsEnabledState] = useState(true);
   const [pinInput, setPinInput] = useState("");
   const [pinSetup, setPinSetup] = useState("");
   const [isUnlocked, setIsUnlocked] = useState(false);
@@ -579,6 +597,7 @@ function AppContent() {
   const [cloudSettings, setCloudSettings] = useState<CloudSettings>(emptyCloudSettings);
   const [syncState, setSyncState] = useState("Offline only");
   const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
+  const [aboutSheet, setAboutSheet] = useState<AboutSheet | null>(null);
   const [authSession, setAuthSession] = useState<AuthSession | null>(null);
   const [authPassword, setAuthPassword] = useState("");
   const [authState, setAuthState] = useState("Not connected");
@@ -649,6 +668,7 @@ function AppContent() {
           rawAdvisorMessages,
           rawVaultDocuments,
           rawAuthSession,
+          rawHaptics,
         ] = await Promise.all([
           SecureStore.getItemAsync(PIN_KEY),
           AsyncStorage.getItem(CLIENTS_KEY),
@@ -660,6 +680,7 @@ function AppContent() {
           AsyncStorage.getItem(ADVISOR_MESSAGES_KEY),
           AsyncStorage.getItem(VAULT_DOCUMENTS_KEY),
           SecureStore.getItemAsync(AUTH_SESSION_KEY),
+          SecureStore.getItemAsync(HAPTICS_KEY),
         ]);
 
         setStoredPin(pin);
@@ -673,6 +694,9 @@ function AppContent() {
         }
 
         setDarkModeEnabled(parseStoredJson(rawDarkMode, true));
+        const nextHapticsEnabled = parseStoredJson(rawHaptics, true);
+        setHapticsEnabledState(nextHapticsEnabled);
+        setHapticsEnabled(nextHapticsEnabled);
         setGoals(parseStoredJson(rawGoals, [] as Goal[]));
         setAdvisorMessages(parseStoredJson(rawAdvisorMessages, [] as AdvisorMessage[]));
         setVaultDocuments(parseStoredJson(rawVaultDocuments, [] as VaultDocument[]));
@@ -690,6 +714,8 @@ function AppContent() {
         setBiometricEnabled(false);
         setClients([]);
         setCloudSettings(emptyCloudSettings);
+        setHapticsEnabledState(true);
+        setHapticsEnabled(true);
         setGoals([]);
         setAdvisorMessages([]);
         setVaultDocuments([]);
@@ -1368,6 +1394,7 @@ function AppContent() {
       { key: "Portfolios" as AppTab, label: "Portfolios" },
       { key: "Tools" as AppTab, label: "Tools" },
       { key: "Workspace" as AppTab, label: "Workspace" },
+      { key: "Settings" as AppTab, label: "Settings" },
     ],
     []
   );
@@ -1531,6 +1558,41 @@ function AppContent() {
     );
   }
 
+  async function openSystemLink(url: string, errorTitle: string, errorMessage: string) {
+    const canOpen = await Linking.canOpenURL(url);
+
+    if (!canOpen) {
+      Alert.alert(errorTitle, errorMessage);
+      return;
+    }
+
+    await Linking.openURL(url);
+  }
+
+  function openPrivacyPolicy() {
+    setAboutSheet("Privacy Policy");
+  }
+
+  function openTermsAndConditions() {
+    setAboutSheet("Terms & Conditions");
+  }
+
+  async function contactSupport() {
+    await openSystemLink(
+      `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Asset Array Support")}`,
+      "Support unavailable",
+      "This device cannot open the support email composer."
+    );
+  }
+
+  async function reportBug() {
+    await openSystemLink(
+      `mailto:${BUG_REPORT_EMAIL}?subject=${encodeURIComponent("Asset Array Bug Report")}`,
+      "Bug reporting unavailable",
+      "This device cannot open the bug report email composer."
+    );
+  }
+
   async function toggleBiometric(value: boolean) {
     if (value && !biometricAvailable) {
       Alert.alert(
@@ -1547,6 +1609,12 @@ function AppContent() {
   async function toggleDarkMode(value: boolean) {
     setDarkModeEnabled(value);
     await persistDarkMode(value);
+  }
+
+  async function toggleHaptics(value: boolean) {
+    setHapticsEnabledState(value);
+    setHapticsEnabled(value);
+    await persistHaptics(value);
   }
 
   async function saveCloudSettingsAction() {
@@ -3824,80 +3892,130 @@ function AppContent() {
         </View>
         ) : null}
 
-        {activeTab === "Workspace" ? (
-        <View style={styles.panel}>
-          <Text style={styles.panelTitle}>Security and sync</Text>
-          <Text style={styles.panelSubtitle}>
-            Core lock, backup, and campaign controls for the advisor workspace.
-          </Text>
-          <View style={styles.toggleRow}>
-            <View style={styles.toggleCopy}>
-              <Text style={styles.toggleTitle}>Biometric unlock</Text>
-              <Text style={styles.toggleText}>
-                Use fingerprint or face authentication after PIN unlock.
+        {activeTab === "Settings" ? (
+          <>
+            <View style={[styles.panel, styles.settingsOverviewPanel]}>
+              <Text style={styles.panelTitle}>Settings</Text>
+              <Text style={styles.panelSubtitle}>
+                Manage security, sync, campaign controls, and app preferences from one place.
               </Text>
+              <View style={styles.settingsStatusGrid}>
+                <View style={styles.settingsStatusItem}>
+                  <Text style={styles.settingsStatusLabel}>Backend</Text>
+                  <Text style={styles.settingsStatusValue}>{authState}</Text>
+                </View>
+                <View style={styles.settingsStatusItem}>
+                  <Text style={styles.settingsStatusLabel}>Cloud sync</Text>
+                  <Text style={styles.settingsStatusValue}>{syncState}</Text>
+                </View>
+              </View>
             </View>
-            <Switch
-              value={biometricEnabled}
-              onValueChange={(value) => void toggleBiometric(value)}
-            />
-          </View>
 
-          <View style={styles.toggleRow}>
-            <View style={styles.toggleCopy}>
-              <Text style={styles.toggleTitle}>Dark mode</Text>
-              <Text style={styles.toggleText}>
-                Enable the darker workspace shell.
+            <View style={styles.panel}>
+              <Text style={styles.settingsSectionTitle}>Security</Text>
+              <View style={styles.settingsRow}>
+                <View style={styles.toggleCopy}>
+                  <Text style={styles.toggleTitle}>Biometric unlock</Text>
+                  <Text style={styles.toggleText}>
+                    Use fingerprint or face authentication after PIN unlock.
+                  </Text>
+                </View>
+                <Switch
+                  value={biometricEnabled}
+                  onValueChange={(value) => void toggleBiometric(value)}
+                />
+              </View>
+              <View style={styles.settingsRow}>
+                <View style={styles.toggleCopy}>
+                  <Text style={styles.toggleTitle}>Vibration feedback</Text>
+                  <Text style={styles.toggleText}>
+                    Turn tap vibration on or off for tabs and app actions.
+                  </Text>
+                </View>
+                <Switch
+                  value={hapticsEnabled}
+                  onValueChange={(value) => void toggleHaptics(value)}
+                />
+              </View>
+              <Pressable style={styles.settingsActionRow} onPress={() => void resetLock()}>
+                <View style={styles.toggleCopy}>
+                  <Text style={styles.toggleTitle}>Reset app lock</Text>
+                  <Text style={styles.toggleText}>Remove the saved PIN and lock the workspace.</Text>
+                </View>
+                <Text style={styles.settingsActionText}>Reset</Text>
+              </Pressable>
+            </View>
+
+            <View style={styles.panel}>
+              <Text style={styles.settingsSectionTitle}>Appearance</Text>
+              <View style={styles.settingsRow}>
+                <View style={styles.toggleCopy}>
+                  <Text style={styles.toggleTitle}>Dark mode</Text>
+                  <Text style={styles.toggleText}>Enable the darker workspace shell.</Text>
+                </View>
+                <Switch
+                  value={darkModeEnabled}
+                  onValueChange={(value) => void toggleDarkMode(value)}
+                />
+              </View>
+            </View>
+
+            <View style={styles.panel}>
+              <Text style={styles.settingsSectionTitle}>Cloud sync</Text>
+              <Text style={styles.panelSubtitle}>
+                Backend stores ciphertext only. Current status: {syncState}
               </Text>
+              <View style={styles.settingsButtonRow}>
+                <Pressable
+                  style={styles.secondaryButton}
+                  onPress={() => setIsSyncModalOpen(true)}
+                >
+                  <Text style={styles.secondaryButtonText}>Configure</Text>
+                </Pressable>
+                <Pressable style={styles.darkChip} onPress={() => void syncToCloud()}>
+                  <Text style={styles.darkChipText}>Push Backup</Text>
+                </Pressable>
+                <Pressable style={styles.darkChip} onPress={() => void restoreFromCloud()}>
+                  <Text style={styles.darkChipText}>Restore Backup</Text>
+                </Pressable>
+              </View>
             </View>
-            <Switch
-              value={darkModeEnabled}
-              onValueChange={(value) => void toggleDarkMode(value)}
-            />
-          </View>
 
-          <View style={styles.toggleRow}>
-            <View style={styles.toggleCopy}>
-              <Text style={styles.toggleTitle}>Encrypted cloud backup</Text>
-              <Text style={styles.toggleText}>
-                Backend stores ciphertext only. Sync state: {syncState}
-              </Text>
+            <View style={styles.panel}>
+              <Text style={styles.settingsSectionTitle}>Campaigns</Text>
+              <Pressable
+                style={styles.settingsActionRow}
+                onPress={() => setIsBroadcastModalOpen(true)}
+              >
+                <View style={styles.toggleCopy}>
+                  <Text style={styles.toggleTitle}>Bulk notification campaigns</Text>
+                  <Text style={styles.toggleText}>
+                    Run one campaign for selected clients. Status: {broadcastState}
+                  </Text>
+                </View>
+                <Text style={styles.settingsActionText}>Open</Text>
+              </Pressable>
             </View>
-            <Pressable
-              style={styles.secondaryButton}
-              onPress={() => setIsSyncModalOpen(true)}
-            >
-              <Text style={styles.secondaryButtonText}>Configure</Text>
-            </Pressable>
-          </View>
 
-          <View style={styles.toggleRow}>
-            <View style={styles.toggleCopy}>
-              <Text style={styles.toggleTitle}>Bulk notification campaigns</Text>
-              <Text style={styles.toggleText}>
-                Run one campaign for selected clients. Status: {broadcastState}
-              </Text>
+            <View style={styles.panel}>
+              <Text style={styles.settingsSectionTitle}>About and support</Text>
+              <Text style={styles.panelSubtitle}>Asset Array version {APP_VERSION}</Text>
+              <View style={styles.settingsButtonRow}>
+                <Pressable style={styles.secondaryButton} onPress={openPrivacyPolicy}>
+                  <Text style={styles.secondaryButtonText}>Privacy Policy</Text>
+                </Pressable>
+                <Pressable style={styles.secondaryButton} onPress={openTermsAndConditions}>
+                  <Text style={styles.secondaryButtonText}>Terms & Conditions</Text>
+                </Pressable>
+                <Pressable style={styles.darkChip} onPress={() => void contactSupport()}>
+                  <Text style={styles.darkChipText}>Contact Support</Text>
+                </Pressable>
+                <Pressable style={styles.darkChip} onPress={() => void reportBug()}>
+                  <Text style={styles.darkChipText}>Report Bug</Text>
+                </Pressable>
+              </View>
             </View>
-            <Pressable
-              style={styles.secondaryButton}
-              onPress={() => setIsBroadcastModalOpen(true)}
-            >
-              <Text style={styles.secondaryButtonText}>Open</Text>
-            </Pressable>
-          </View>
-
-          <View style={styles.optionRow}>
-            <Pressable style={styles.darkChip} onPress={() => void syncToCloud()}>
-              <Text style={styles.darkChipText}>Push Backup</Text>
-            </Pressable>
-            <Pressable style={styles.darkChip} onPress={() => void restoreFromCloud()}>
-              <Text style={styles.darkChipText}>Restore Backup</Text>
-            </Pressable>
-            <Pressable style={styles.lightChip} onPress={() => void resetLock()}>
-              <Text style={styles.lightChipText}>Reset App Lock</Text>
-            </Pressable>
-          </View>
-        </View>
+          </>
         ) : null}
       </ScrollView>
       )}
@@ -4281,6 +4399,39 @@ function AppContent() {
                 onPress={() => void runBroadcastCampaign()}
               >
                 <Text style={styles.primaryButtonText}>Send to Selected</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={Boolean(aboutSheet)} transparent animationType="slide">
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>{aboutSheet || "About Asset Array"}</Text>
+            {aboutSheet === "Privacy Policy" ? (
+              <Text style={styles.detailBlock}>
+                Asset Array stores advisor and client records locally on-device and only sends encrypted
+                cloud backups or authenticated service requests when you explicitly trigger them. Sensitive
+                data such as PIN lock settings, login tokens, and privacy controls remain protected with
+                secure local storage. Before public launch, replace this in-app policy summary with your
+                final legal privacy policy URL and approved compliance text.
+              </Text>
+            ) : aboutSheet === "Terms & Conditions" ? (
+              <Text style={styles.detailBlock}>
+                Asset Array is an advisor workspace tool for client tracking, portfolio visibility,
+                communication workflows, and research support. You are responsible for validating any
+                market content, campaign output, or portfolio commentary before sharing it with clients.
+                Before store submission, replace this in-app summary with your final legal terms and
+                regulated business disclosures.
+              </Text>
+            ) : null}
+            <View style={styles.modalActions}>
+              <Pressable
+                style={styles.primaryButton}
+                onPress={() => setAboutSheet(null)}
+              >
+                <Text style={styles.primaryButtonText}>Close</Text>
               </Pressable>
             </View>
           </View>
@@ -5014,6 +5165,71 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 19,
     marginTop: 6,
+  },
+  settingsOverviewPanel: {
+    backgroundColor: "#0b1b38",
+    borderColor: "#294b79",
+  },
+  settingsStatusGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+  settingsStatusItem: {
+    backgroundColor: "#09172d",
+    borderColor: "#244164",
+    borderRadius: 14,
+    borderWidth: 1,
+    flexGrow: 1,
+    flexBasis: 150,
+    padding: 12,
+  },
+  settingsStatusLabel: {
+    color: "#8fa9cd",
+    fontSize: 12,
+    fontWeight: "700",
+    marginBottom: 5,
+    textTransform: "uppercase",
+  },
+  settingsStatusValue: {
+    color: "#edf5ff",
+    fontSize: 14,
+    fontWeight: "700",
+    lineHeight: 19,
+  },
+  settingsSectionTitle: {
+    color: "#ecf3ff",
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 10,
+  },
+  settingsRow: {
+    alignItems: "center",
+    borderBottomColor: "#1b3355",
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    gap: 16,
+    justifyContent: "space-between",
+    paddingVertical: 14,
+  },
+  settingsActionRow: {
+    alignItems: "center",
+    borderBottomColor: "#1b3355",
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    gap: 16,
+    justifyContent: "space-between",
+    paddingVertical: 14,
+  },
+  settingsActionText: {
+    color: "#bfd5f3",
+    fontSize: 14,
+    fontWeight: "800",
+  },
+  settingsButtonRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
   },
   toggleRow: {
     flexDirection: "row",

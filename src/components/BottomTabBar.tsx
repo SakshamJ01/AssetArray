@@ -21,6 +21,8 @@ function getTabLabel(label: string) {
       return "Portfolio";
     case "Workspace":
       return "More";
+    case "Settings":
+      return "Settings";
     default:
       return label;
   }
@@ -38,6 +40,8 @@ function getTabIcon(label: string) {
       return "calculator";
     case "Workspace":
       return "ellipsis-horizontal-circle";
+    case "Settings":
+      return "settings";
     default:
       return "ellipse";
   }

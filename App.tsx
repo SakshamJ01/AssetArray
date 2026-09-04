@@ -290,8 +290,10 @@ const emptyHoldingDraft: HoldingDraft = {
   notes: "",
 };
 
+const DEFAULT_BACKEND_ENDPOINT = "https://assetarray.onrender.com";
+
 const emptyCloudSettings: CloudSettings = {
-  endpoint: "",
+  endpoint: DEFAULT_BACKEND_ENDPOINT,
   ownerName: "",
   authUsername: "",
 };
@@ -738,7 +740,11 @@ function AppContent() {
         setStoredPin(pin);
         setBiometricEnabled(parseStoredJson(rawBiometric, false));
         setClients(parseStoredJson(rawClients, [] as Client[]));
-        setCloudSettings(parseStoredJson(rawCloudSettings, emptyCloudSettings));
+        const loadedCloudSettings = parseStoredJson(rawCloudSettings, emptyCloudSettings);
+        if (!loadedCloudSettings.endpoint || !loadedCloudSettings.endpoint.trim() || loadedCloudSettings.endpoint.includes("localhost") || loadedCloudSettings.endpoint.includes("127.0.0.1")) {
+          loadedCloudSettings.endpoint = DEFAULT_BACKEND_ENDPOINT;
+        }
+        setCloudSettings(loadedCloudSettings);
 
         if (storedMessage) {
           setMarketMessage(storedMessage);

@@ -13,3 +13,4 @@ yarn-error.log*
 *.log
 backend/tmp-server.err.log
 backend/tmp-server.out.log
+.firebase/

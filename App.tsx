@@ -101,6 +101,9 @@ import { AssetAllocationBar } from "./src/components/AssetAllocationBar";
 import { storageService } from "./src/platform/storage";
 import { localAuth } from "./src/platform/auth";
 import { BillingPackage } from "./src/platform/billing";
+import { GlobalStyleInjector } from "./src/components/GlobalStyleInjector";
+import { LiveMarketTicker } from "./src/components/LiveMarketTicker";
+import { ScreenTransition } from "./src/components/ScreenTransition";
 
 type Channel = "Phone" | "SMS" | "Email" | "WhatsApp";
 type Category = "HNI" | "Retail" | "Family Office" | "Trader" | "Long Term";
@@ -2729,7 +2732,13 @@ function AppContent() {
           />
         )}
         <View style={{ flex: 1, height: "100%", overflow: "hidden" }}>
-      {activeTab === "Dashboard" ? (
+          <LiveMarketTicker
+            theme={theme}
+            onRefresh={() => void refreshLiveMarketPrices()}
+            isRefreshing={isMarketRefreshing}
+          />
+          <ScreenTransition triggerKey={activeTab}>
+            {activeTab === "Dashboard" ? (
         <DashboardScreen
           analytics={dashboardAnalytics}
           contentBottomPadding={contentBottomPadding}
@@ -3220,6 +3229,7 @@ function AppContent() {
         ) : null}
       </ScrollView>
       )}
+          </ScreenTransition>
         </View>
       </View>
 
@@ -3343,6 +3353,7 @@ function AppContent() {
 export default function App() {
   return (
     <SafeAreaProvider>
+      <GlobalStyleInjector />
       <AppContent />
     </SafeAreaProvider>
   );

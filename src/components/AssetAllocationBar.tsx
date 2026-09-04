@@ -1,5 +1,5 @@
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import React, { useEffect, useRef } from "react";
+import { View, Text, StyleSheet, Animated, Easing } from "react-native";
 import { AppTheme } from "../theme";
 
 interface AssetAllocationBarProps {
@@ -85,18 +85,32 @@ export const AssetAllocationBar: React.FC<AssetAllocationBarProps> = ({
   theme,
 }) => {
   const segments = parseAllocation(allocationString);
+  const animProgress = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    animProgress.setValue(0);
+    Animated.timing(animProgress, {
+      toValue: 1,
+      duration: 420,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+  }, [allocationString, animProgress]);
 
   return (
     <View style={styles.container}>
       {/* Segmented Progress Bar */}
       <View style={[styles.barContainer, { backgroundColor: "rgba(255, 255, 255, 0.06)" }]}>
         {segments.map((seg, idx) => (
-          <View
+          <Animated.View
             key={`${seg.name}-${idx}`}
             style={[
               styles.segment,
               {
-                width: `${seg.percent}%`,
+                width: animProgress.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: ["0%", `${seg.percent}%`],
+                }),
                 backgroundColor: seg.color,
                 borderTopLeftRadius: idx === 0 ? 6 : 0,
                 borderBottomLeftRadius: idx === 0 ? 6 : 0,

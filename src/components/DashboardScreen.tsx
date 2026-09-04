@@ -45,6 +45,14 @@ type DashboardScreenProps = {
 
 type SectionId = "summary" | "quick" | "recent" | "reminders" | "analytics";
 
+function chunkPairs<T>(array: T[]): T[][] {
+  const pairs: T[][] = [];
+  for (let i = 0; i < array.length; i += 2) {
+    pairs.push(array.slice(i, i + 2));
+  }
+  return pairs;
+}
+
 export function DashboardScreen({
   analytics,
   contentBottomPadding,
@@ -70,12 +78,13 @@ export function DashboardScreen({
       >,
     [stats],
   );
+
   const topSummary = [
-    { label: "Total AUM", value: statMap["portfolio summary"] ?? "--", tone: "primary" as const },
     { label: "Clients", value: statMap["client count"] ?? "--", tone: "neutral" as const },
     { label: "Due Today", value: statMap["due today"] ?? "--", tone: "warning" as const },
-    { label: "High Priority", value: statMap["high priority"] ?? "--", tone: "danger" as const },
+    { label: "Priority", value: statMap["high priority"] ?? "--", tone: "danger" as const },
   ];
+
   const quickActions = [
     {
       copy: "Create profile",
@@ -106,6 +115,7 @@ export function DashboardScreen({
       onPress: onActionOpenClients,
     },
   ];
+
   const reminderCards = [
     {
       key: "due",
@@ -127,11 +137,15 @@ export function DashboardScreen({
     },
   ];
 
+  const analyticsRows = useMemo(() => chunkPairs(analytics), [analytics]);
+
   return (
     <FlatList
+      style={styles.container}
       data={sections}
       contentContainerStyle={styles.content}
       keyExtractor={(item) => item}
+      showsVerticalScrollIndicator={false}
       renderItem={({ item }) => {
         if (item === "summary") {
           return (
@@ -146,79 +160,121 @@ export function DashboardScreen({
                   <Text style={styles.statusText}>LIVE FEED</Text>
                 </View>
               </View>
+
               <View style={styles.featuredCard}>
-                  <View style={styles.featuredCardTop}>
-                    <View>
-                      <Text style={styles.featuredEyebrow}>PRIVATE CLIENT ADVISORY</Text>
-                      <Text style={styles.featuredTitle}>Portfolio Command Center</Text>
-                    </View>
-                    <View style={{ backgroundColor: "rgba(224, 168, 76, 0.15)", borderColor: theme.colors.brand, borderWidth: 1, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 4 }}>
-                      <Text style={{ color: theme.colors.brand, fontSize: 10, fontWeight: "800", letterSpacing: 0.6 }}>FIDUCIARY VAULT</Text>
-                    </View>
+                <View style={styles.featuredCardTop}>
+                  <View>
+                    <Text style={styles.featuredEyebrow}>PRIVATE CLIENT ADVISORY</Text>
+                    <Text style={styles.featuredTitle}>Portfolio Command Center</Text>
                   </View>
-
-                  <View style={styles.heroAumBox}>
-                    <Text style={styles.heroAumLabel}>TOTAL ASSETS UNDER ADVISORY</Text>
-                    <Text style={[styles.heroAumValue, { color: theme.colors.brand }]}>
-                      {statMap["portfolio summary"] && statMap["portfolio summary"] !== "--"
-                        ? statMap["portfolio summary"]
-                        : "$8,450,000"}
-                    </Text>
-                    <View style={styles.heroAumSubRow}>
-                      <Text style={styles.heroAumAlpha}>✦ Active Multi-Asset Fiduciary Allocation</Text>
-                      <Text style={styles.heroAumSecurity}>AES-256 Secured</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.metricGrid}>
-                    {topSummary.map((stat) => (
-                      <View key={stat.label} style={styles.metricCard}>
-                        <Text style={styles.metricLabel}>{stat.label}</Text>
-                        <Text style={styles.metricValue}>{stat.value}</Text>
-                        <View
-                          style={[
-                            styles.metricAccent,
-                            stat.tone === "primary"
-                              ? styles.metricAccentPrimary
-                              : stat.tone === "warning"
-                                ? styles.metricAccentWarning
-                                : stat.tone === "danger"
-                                  ? styles.metricAccentDanger
-                                  : styles.metricAccentNeutral,
-                          ]}
-                        />
-                      </View>
-                    ))}
+                  <View style={styles.vaultBadge}>
+                    <Text style={styles.vaultBadgeText}>FIDUCIARY VAULT</Text>
                   </View>
                 </View>
+
+                <View style={styles.heroAumBox}>
+                  <Text style={styles.heroAumLabel}>TOTAL ASSETS UNDER ADVISORY</Text>
+                  <Text style={styles.heroAumValue}>
+                    {statMap["portfolio summary"] && statMap["portfolio summary"] !== "--"
+                      ? statMap["portfolio summary"]
+                      : "$8,450,000"}
+                  </Text>
+                  <View style={styles.heroAumSubRow}>
+                    <Text style={styles.heroAumAlpha}>✦ Active Multi-Asset Fiduciary Allocation</Text>
+                    <Text style={styles.heroAumSecurity}>AES-256 Secured</Text>
+                  </View>
+                </View>
+
+                <View style={styles.metricRow}>
+                  {topSummary.map((stat) => (
+                    <View key={stat.label} style={styles.metricCard}>
+                      <Text style={styles.metricLabel}>{stat.label}</Text>
+                      <Text style={styles.metricValue}>{stat.value}</Text>
+                      <View
+                        style={[
+                          styles.metricAccent,
+                          stat.tone === "warning"
+                            ? styles.metricAccentWarning
+                            : stat.tone === "danger"
+                              ? styles.metricAccentDanger
+                              : styles.metricAccentNeutral,
+                        ]}
+                      />
+                    </View>
+                  ))}
+                </View>
               </View>
-            );
-          }
+            </View>
+          );
+        }
 
         if (item === "quick") {
           return (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>Quick Actions</Text>
-                <Text style={styles.sectionMeta}>Action grid</Text>
+                <Text style={styles.sectionMeta}>Command shortcuts</Text>
               </View>
-              <View style={styles.quickActionGrid}>
-                {quickActions.map((action) => (
+              <View style={styles.quickActionContainer}>
+                <View style={styles.quickActionRow}>
                   <Pressable
-                    key={action.key}
-                    onPress={action.onPress}
+                    onPress={quickActions[0].onPress}
                     pressOpacity={0.98}
                     pressScale={0.985}
-                    pressTranslateY={-4}
+                    pressTranslateY={-2}
                     style={styles.actionCard}
                   >
                     <View style={styles.actionIconWrap}>
-                      <Ionicons color={theme.colors.brand} name={action.icon} size={18} />
+                      <Ionicons color={theme.colors.brand} name={quickActions[0].icon} size={18} />
                     </View>
-                    <Text style={styles.actionTitle}>{action.label}</Text>
-                    <Text style={styles.actionCopy}>{action.copy}</Text>
+                    <Text style={styles.actionTitle}>{quickActions[0].label}</Text>
+                    <Text style={styles.actionCopy}>{quickActions[0].copy}</Text>
                   </Pressable>
-                ))}
+
+                  <Pressable
+                    onPress={quickActions[1].onPress}
+                    pressOpacity={0.98}
+                    pressScale={0.985}
+                    pressTranslateY={-2}
+                    style={styles.actionCard}
+                  >
+                    <View style={styles.actionIconWrap}>
+                      <Ionicons color={theme.colors.brand} name={quickActions[1].icon} size={18} />
+                    </View>
+                    <Text style={styles.actionTitle}>{quickActions[1].label}</Text>
+                    <Text style={styles.actionCopy}>{quickActions[1].copy}</Text>
+                  </Pressable>
+                </View>
+
+                <View style={styles.quickActionRow}>
+                  <Pressable
+                    onPress={quickActions[2].onPress}
+                    pressOpacity={0.98}
+                    pressScale={0.985}
+                    pressTranslateY={-2}
+                    style={styles.actionCard}
+                  >
+                    <View style={styles.actionIconWrap}>
+                      <Ionicons color={theme.colors.brand} name={quickActions[2].icon} size={18} />
+                    </View>
+                    <Text style={styles.actionTitle}>{quickActions[2].label}</Text>
+                    <Text style={styles.actionCopy}>{quickActions[2].copy}</Text>
+                  </Pressable>
+
+                  <Pressable
+                    onPress={quickActions[3].onPress}
+                    pressOpacity={0.98}
+                    pressScale={0.985}
+                    pressTranslateY={-2}
+                    style={styles.actionCard}
+                  >
+                    <View style={styles.actionIconWrap}>
+                      <Ionicons color={theme.colors.brand} name={quickActions[3].icon} size={18} />
+                    </View>
+                    <Text style={styles.actionTitle}>{quickActions[3].label}</Text>
+                    <Text style={styles.actionCopy}>{quickActions[3].copy}</Text>
+                  </Pressable>
+                </View>
               </View>
             </View>
           );
@@ -245,16 +301,26 @@ export function DashboardScreen({
                     onPress={() => onOpenClient(client.id)}
                     pressOpacity={0.98}
                     pressScale={0.99}
-                    pressTranslateY={-4}
+                    pressTranslateY={-2}
                     style={styles.listRow}
                   >
                     <View style={styles.listCopy}>
                       <Text style={styles.listTitle}>{client.name}</Text>
                       <Text style={styles.listMeta}>
-                        {client.category} | {client.lastContact || "No contact yet"}
+                        {client.category} • {client.lastContact || "No contact yet"}
                       </Text>
                     </View>
-                    <Text style={styles.listBadge}>{client.priority}</Text>
+                    <View style={styles.badgeRow}>
+                      <Text
+                        style={[
+                          styles.listBadge,
+                          client.priority === "High" ? styles.priorityHighBadge : null,
+                        ]}
+                      >
+                        {client.priority}
+                      </Text>
+                      <Ionicons color={theme.colors.textMuted} name="chevron-forward" size={14} />
+                    </View>
                   </Pressable>
                 ))
               )}
@@ -292,7 +358,7 @@ export function DashboardScreen({
                   onPress={() => onOpenClient(dueClients[0].id)}
                   pressOpacity={0.98}
                   pressScale={0.99}
-                  pressTranslateY={-4}
+                  pressTranslateY={-2}
                   style={styles.nextDueCard}
                 >
                   <View style={styles.listCopy}>
@@ -300,7 +366,10 @@ export function DashboardScreen({
                     <Text style={styles.listTitle}>{dueClients[0].name}</Text>
                     <Text style={styles.listMeta}>Due on {dueClients[0].reminderDate}</Text>
                   </View>
-                  <Text style={[styles.listBadge, styles.warningBadge]}>Open</Text>
+                  <View style={styles.nextDueAction}>
+                    <Text style={[styles.listBadge, styles.warningBadge]}>Open</Text>
+                    <Ionicons color={theme.colors.warning} name="chevron-forward" size={14} />
+                  </View>
                 </Pressable>
               ) : null}
             </View>
@@ -310,7 +379,7 @@ export function DashboardScreen({
         return (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Analytics</Text>
+              <Text style={styles.sectionTitle}>Portfolio Analytics</Text>
               <Text style={styles.sectionMeta}>{analytics.length} signals</Text>
             </View>
             {analytics.length === 0 ? (
@@ -319,11 +388,22 @@ export function DashboardScreen({
                 <Text style={styles.emptyCopy}>Add more holdings to deepen insights.</Text>
               </View>
             ) : (
-              <View style={styles.analyticsGrid}>
-                {analytics.map((item) => (
-                  <View key={item.label} style={styles.analyticsCard}>
-                    <Text style={styles.analyticsLabel}>{item.label}</Text>
-                    <Text style={styles.analyticsValue}>{item.value}</Text>
+              <View style={styles.analyticsContainer}>
+                {analyticsRows.map((pair, rowIndex) => (
+                  <View key={`analytics-row-${rowIndex}`} style={styles.analyticsRow}>
+                    {pair.map((item) => (
+                      <View key={item.label} style={styles.analyticsCard}>
+                        <Text numberOfLines={1} style={styles.analyticsLabel}>
+                          {item.label}
+                        </Text>
+                        <Text numberOfLines={1} style={styles.analyticsValue}>
+                          {item.value}
+                        </Text>
+                      </View>
+                    ))}
+                    {pair.length === 1 ? (
+                      <View style={[styles.analyticsCard, styles.analyticsCardGhost]} />
+                    ) : null}
                   </View>
                 ))}
               </View>
@@ -331,18 +411,21 @@ export function DashboardScreen({
           </View>
         );
       }}
-      showsVerticalScrollIndicator={false}
     />
   );
 }
 
 const createStyles = (theme: AppTheme, contentBottomPadding: number) =>
   StyleSheet.create({
+    container: {
+      backgroundColor: theme.colors.background,
+      flex: 1,
+    },
     content: {
       gap: theme.spacing[4],
       paddingBottom: contentBottomPadding,
       paddingHorizontal: theme.spacing[4],
-      paddingTop: theme.spacing[4],
+      paddingTop: theme.spacing[3],
     },
     section: {
       gap: theme.spacing[3],
@@ -351,6 +434,7 @@ const createStyles = (theme: AppTheme, contentBottomPadding: number) =>
       alignItems: "center",
       flexDirection: "row",
       justifyContent: "space-between",
+      paddingTop: theme.spacing[1],
     },
     headerCopy: {
       gap: theme.spacing[1],
@@ -359,14 +443,15 @@ const createStyles = (theme: AppTheme, contentBottomPadding: number) =>
       color: theme.colors.brand,
       fontSize: theme.typography.label.fontSize,
       fontWeight: theme.typography.label.fontWeight,
+      letterSpacing: 0.8,
       lineHeight: theme.typography.label.lineHeight,
-      letterSpacing: 0.6,
       textTransform: "uppercase",
     },
     title: {
       color: theme.colors.textPrimary,
       fontSize: theme.typography.headingLg.fontSize,
       fontWeight: theme.typography.headingLg.fontWeight,
+      letterSpacing: -0.5,
       lineHeight: theme.typography.headingLg.lineHeight,
     },
     headerStatus: {
@@ -390,6 +475,7 @@ const createStyles = (theme: AppTheme, contentBottomPadding: number) =>
       color: theme.colors.textSecondary,
       fontSize: theme.typography.caption.fontSize,
       fontWeight: theme.typography.caption.fontWeight,
+      letterSpacing: 0.4,
       lineHeight: theme.typography.caption.lineHeight,
     },
     featuredCard: {
@@ -410,47 +496,63 @@ const createStyles = (theme: AppTheme, contentBottomPadding: number) =>
       color: theme.colors.textMuted,
       fontSize: theme.typography.label.fontSize,
       fontWeight: theme.typography.label.fontWeight,
+      letterSpacing: 0.8,
       lineHeight: theme.typography.label.lineHeight,
       textTransform: "uppercase",
-      letterSpacing: 0.8,
     },
     featuredTitle: {
       color: theme.colors.textPrimary,
       fontSize: theme.typography.headingMd.fontSize,
       fontWeight: theme.typography.headingMd.fontWeight,
+      letterSpacing: -0.3,
       lineHeight: theme.typography.headingMd.lineHeight,
       marginTop: theme.spacing[1],
-      letterSpacing: -0.3,
+    },
+    vaultBadge: {
+      backgroundColor: "rgba(224, 168, 76, 0.12)",
+      borderColor: theme.colors.brand,
+      borderRadius: theme.radius.pill,
+      borderWidth: 1,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+    },
+    vaultBadgeText: {
+      color: theme.colors.brand,
+      fontSize: 10,
+      fontWeight: "800",
+      letterSpacing: 0.8,
     },
     heroAumBox: {
       backgroundColor: theme.colors.surfaceMuted,
       borderColor: theme.colors.border,
       borderRadius: theme.radius.lg,
       borderWidth: 1.5,
+      marginVertical: theme.spacing[1],
       padding: theme.spacing[4],
-      marginVertical: theme.spacing[2],
     },
     heroAumLabel: {
       color: theme.colors.textMuted,
       fontSize: 10,
       fontWeight: "800",
       letterSpacing: 1.2,
-      textTransform: "uppercase",
       marginBottom: 6,
+      textTransform: "uppercase",
     },
     heroAumValue: {
+      color: theme.colors.brand,
       fontSize: 32,
       fontWeight: "900",
       letterSpacing: -0.8,
+      lineHeight: 38,
     },
     heroAumSubRow: {
+      alignItems: "center",
+      borderTopColor: theme.colors.border,
+      borderTopWidth: 1,
       flexDirection: "row",
       justifyContent: "space-between",
-      alignItems: "center",
-      marginTop: 8,
+      marginTop: 10,
       paddingTop: 8,
-      borderTopWidth: 1,
-      borderTopColor: theme.colors.border,
     },
     heroAumAlpha: {
       color: theme.colors.accent,
@@ -462,27 +564,8 @@ const createStyles = (theme: AppTheme, contentBottomPadding: number) =>
       fontSize: 11,
       fontWeight: "600",
     },
-    sectionTitle: {
-      color: theme.colors.textPrimary,
-      fontSize: theme.typography.headingSm.fontSize,
-      fontWeight: theme.typography.headingSm.fontWeight,
-      lineHeight: theme.typography.headingSm.lineHeight,
-      letterSpacing: -0.2,
-    },
-    sectionHeader: {
-      alignItems: "center",
+    metricRow: {
       flexDirection: "row",
-      justifyContent: "space-between",
-    },
-    sectionMeta: {
-      color: theme.colors.textMuted,
-      fontSize: theme.typography.caption.fontSize,
-      fontWeight: theme.typography.caption.fontWeight,
-      lineHeight: theme.typography.caption.lineHeight,
-    },
-    metricGrid: {
-      flexDirection: "row",
-      flexWrap: "wrap",
       gap: theme.spacing[2],
     },
     metricCard: {
@@ -490,33 +573,30 @@ const createStyles = (theme: AppTheme, contentBottomPadding: number) =>
       borderColor: theme.colors.border,
       borderRadius: theme.radius.lg,
       borderWidth: 1,
-      flexBasis: "48%",
-      flexGrow: 1,
+      flex: 1,
       gap: theme.spacing[1],
-      minWidth: 135,
-      overflow: "hidden",
       padding: theme.spacing[3],
     },
     metricLabel: {
       color: theme.colors.textMuted,
       fontSize: theme.typography.label.fontSize,
       fontWeight: theme.typography.label.fontWeight,
+      letterSpacing: 0.5,
       lineHeight: theme.typography.label.lineHeight,
       textTransform: "uppercase",
-      letterSpacing: 0.6,
     },
     metricValue: {
       color: theme.colors.textPrimary,
-      fontSize: 22,
+      fontSize: 20,
       fontWeight: "800",
-      lineHeight: 28,
-      letterSpacing: -0.5,
+      letterSpacing: -0.4,
+      lineHeight: 26,
     },
     metricAccent: {
       borderRadius: 99,
       height: 3,
-      marginTop: theme.spacing[2],
-      width: 24,
+      marginTop: theme.spacing[1],
+      width: 20,
     },
     metricAccentPrimary: {
       backgroundColor: theme.colors.brand,
@@ -530,9 +610,29 @@ const createStyles = (theme: AppTheme, contentBottomPadding: number) =>
     metricAccentDanger: {
       backgroundColor: theme.colors.danger,
     },
-    quickActionGrid: {
+    sectionHeader: {
+      alignItems: "center",
       flexDirection: "row",
-      flexWrap: "wrap",
+      justifyContent: "space-between",
+    },
+    sectionTitle: {
+      color: theme.colors.textPrimary,
+      fontSize: theme.typography.headingSm.fontSize,
+      fontWeight: theme.typography.headingSm.fontWeight,
+      letterSpacing: -0.2,
+      lineHeight: theme.typography.headingSm.lineHeight,
+    },
+    sectionMeta: {
+      color: theme.colors.textMuted,
+      fontSize: theme.typography.caption.fontSize,
+      fontWeight: theme.typography.caption.fontWeight,
+      lineHeight: theme.typography.caption.lineHeight,
+    },
+    quickActionContainer: {
+      gap: theme.spacing[2],
+    },
+    quickActionRow: {
+      flexDirection: "row",
       gap: theme.spacing[2],
     },
     actionCard: {
@@ -540,10 +640,8 @@ const createStyles = (theme: AppTheme, contentBottomPadding: number) =>
       borderColor: theme.colors.border,
       borderRadius: theme.radius.lg,
       borderWidth: 1,
-      flexBasis: "48%",
-      flexGrow: 1,
+      flex: 1,
       gap: theme.spacing[1],
-      minWidth: 135,
       padding: theme.spacing[3],
       ...theme.shadows.card,
     },
@@ -572,12 +670,12 @@ const createStyles = (theme: AppTheme, contentBottomPadding: number) =>
       alignItems: "center",
       backgroundColor: theme.colors.surface,
       borderColor: theme.colors.border,
-      borderRadius: theme.radius.md,
+      borderRadius: theme.radius.lg,
       borderWidth: 1,
       flexDirection: "row",
       gap: theme.spacing[2],
       justifyContent: "space-between",
-      padding: theme.spacing[2],
+      padding: theme.spacing[3],
       ...theme.shadows.card,
     },
     listCopy: {
@@ -597,16 +695,25 @@ const createStyles = (theme: AppTheme, contentBottomPadding: number) =>
       fontWeight: theme.typography.body.fontWeight,
       lineHeight: theme.typography.body.lineHeight,
     },
+    badgeRow: {
+      alignItems: "center",
+      flexDirection: "row",
+      gap: theme.spacing[1],
+    },
     listBadge: {
       backgroundColor: theme.colors.neutralSoft,
       borderRadius: theme.radius.pill,
       color: theme.colors.neutral,
-      overflow: "hidden",
-      paddingHorizontal: theme.spacing[2],
-      paddingVertical: theme.spacing[1],
       fontSize: theme.typography.caption.fontSize,
       fontWeight: theme.typography.caption.fontWeight,
       lineHeight: theme.typography.caption.lineHeight,
+      overflow: "hidden",
+      paddingHorizontal: theme.spacing[2],
+      paddingVertical: theme.spacing[1],
+    },
+    priorityHighBadge: {
+      backgroundColor: theme.colors.dangerSoft,
+      color: theme.colors.danger,
     },
     warningBadge: {
       backgroundColor: theme.colors.warningSoft,
@@ -615,7 +722,7 @@ const createStyles = (theme: AppTheme, contentBottomPadding: number) =>
     emptyState: {
       backgroundColor: theme.colors.surfaceMuted,
       borderColor: theme.colors.border,
-      borderRadius: theme.radius.md,
+      borderRadius: theme.radius.lg,
       borderWidth: 1,
       gap: theme.spacing[1],
       padding: theme.spacing[4],
@@ -632,32 +739,41 @@ const createStyles = (theme: AppTheme, contentBottomPadding: number) =>
       fontWeight: theme.typography.caption.fontWeight,
       lineHeight: theme.typography.caption.lineHeight,
     },
-    analyticsGrid: {
+    analyticsContainer: {
+      gap: theme.spacing[2],
+    },
+    analyticsRow: {
       flexDirection: "row",
-      flexWrap: "wrap",
       gap: theme.spacing[2],
     },
     analyticsCard: {
       backgroundColor: theme.colors.surface,
       borderColor: theme.colors.border,
-      borderRadius: theme.radius.md,
+      borderRadius: theme.radius.lg,
       borderWidth: 1,
-      flexGrow: 1,
+      flex: 1,
       gap: theme.spacing[1],
-      minWidth: 132,
-      padding: theme.spacing[2],
+      padding: theme.spacing[3],
       ...theme.shadows.card,
+    },
+    analyticsCardGhost: {
+      backgroundColor: "transparent",
+      borderColor: "transparent",
+      shadowOpacity: 0,
     },
     analyticsLabel: {
       color: theme.colors.textMuted,
-      fontSize: theme.typography.caption.fontSize,
-      fontWeight: theme.typography.caption.fontWeight,
-      lineHeight: theme.typography.caption.lineHeight,
+      fontSize: theme.typography.label.fontSize,
+      fontWeight: theme.typography.label.fontWeight,
+      letterSpacing: 0.4,
+      lineHeight: theme.typography.label.lineHeight,
+      textTransform: "uppercase",
     },
     analyticsValue: {
       color: theme.colors.textPrimary,
       fontSize: theme.typography.headingSm.fontSize,
       fontWeight: theme.typography.headingSm.fontWeight,
+      letterSpacing: -0.3,
       lineHeight: theme.typography.headingSm.lineHeight,
     },
     inlineLink: {
@@ -676,11 +792,11 @@ const createStyles = (theme: AppTheme, contentBottomPadding: number) =>
     kpiCard: {
       backgroundColor: theme.colors.surface,
       borderColor: theme.colors.border,
-      borderRadius: theme.radius.md,
+      borderRadius: theme.radius.lg,
       borderWidth: 1,
       flex: 1,
       gap: theme.spacing[1],
-      padding: theme.spacing[2],
+      padding: theme.spacing[3],
       ...theme.shadows.card,
     },
     kpiCardWarning: {
@@ -696,6 +812,7 @@ const createStyles = (theme: AppTheme, contentBottomPadding: number) =>
       color: theme.colors.textMuted,
       fontSize: theme.typography.label.fontSize,
       fontWeight: theme.typography.label.fontWeight,
+      letterSpacing: 0.4,
       lineHeight: theme.typography.label.lineHeight,
       textTransform: "uppercase",
     },
@@ -709,18 +826,24 @@ const createStyles = (theme: AppTheme, contentBottomPadding: number) =>
       alignItems: "center",
       backgroundColor: theme.colors.surfaceMuted,
       borderColor: theme.colors.border,
-      borderRadius: theme.radius.md,
+      borderRadius: theme.radius.lg,
       borderWidth: 1,
       flexDirection: "row",
-      gap: theme.spacing[2],
+      gap: theme.spacing[3],
       justifyContent: "space-between",
-      padding: theme.spacing[2],
+      padding: theme.spacing[3],
     },
     nextDueLabel: {
       color: theme.colors.textMuted,
       fontSize: theme.typography.label.fontSize,
       fontWeight: theme.typography.label.fontWeight,
+      letterSpacing: 0.5,
       lineHeight: theme.typography.label.lineHeight,
       textTransform: "uppercase",
+    },
+    nextDueAction: {
+      alignItems: "center",
+      flexDirection: "row",
+      gap: theme.spacing[1],
     },
   });

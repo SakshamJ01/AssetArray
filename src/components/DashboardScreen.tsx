@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo } from "react";
-import { FlatList, StyleSheet, Text, View } from "react-native";
+import { FlatList, Image, StyleSheet, Text, View } from "react-native";
 import { AnimatedPressable as Pressable } from "./AnimatedPressable";
 import { AppTheme } from "../theme";
 
@@ -16,6 +16,7 @@ type DashboardClient = {
   reminderDate: string;
   lastContact: string;
   priority: string;
+  avatarUrl?: string;
 };
 
 type DashboardAnalytics = {
@@ -304,6 +305,13 @@ export function DashboardScreen({
                     pressTranslateY={-2}
                     style={styles.listRow}
                   >
+                    <View style={styles.clientAvatarWrap}>
+                      {client.avatarUrl ? (
+                        <Image source={{ uri: client.avatarUrl }} style={styles.clientAvatarImg} />
+                      ) : (
+                        <Text style={styles.clientAvatarText}>{client.name.slice(0, 2).toUpperCase()}</Text>
+                      )}
+                    </View>
                     <View style={styles.listCopy}>
                       <Text style={styles.listTitle}>{client.name}</Text>
                       <Text style={styles.listMeta}>
@@ -361,6 +369,13 @@ export function DashboardScreen({
                   pressTranslateY={-2}
                   style={styles.nextDueCard}
                 >
+                  <View style={styles.clientAvatarWrap}>
+                    {dueClients[0].avatarUrl ? (
+                      <Image source={{ uri: dueClients[0].avatarUrl }} style={styles.clientAvatarImg} />
+                    ) : (
+                      <Text style={styles.clientAvatarText}>{dueClients[0].name.slice(0, 2).toUpperCase()}</Text>
+                    )}
+                  </View>
                   <View style={styles.listCopy}>
                     <Text style={styles.nextDueLabel}>Next due follow-up</Text>
                     <Text style={styles.listTitle}>{dueClients[0].name}</Text>
@@ -693,6 +708,28 @@ const createStyles = (theme: AppTheme, contentBottomPadding: number) =>
       justifyContent: "space-between",
       padding: theme.spacing[3],
       ...theme.shadows.card,
+    },
+    clientAvatarWrap: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: "rgba(224, 168, 76, 0.15)",
+      borderWidth: 1,
+      borderColor: "rgba(224, 168, 76, 0.3)",
+      alignItems: "center",
+      justifyContent: "center",
+      overflow: "hidden",
+      flexShrink: 0,
+    },
+    clientAvatarImg: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+    },
+    clientAvatarText: {
+      color: theme.colors.brand,
+      fontSize: 14,
+      fontWeight: "800",
     },
     listCopy: {
       flex: 1,

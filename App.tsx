@@ -162,6 +162,7 @@ type Client = {
   lastContact: string;
   updateHistory: string[];
   portfolio: PortfolioHolding[];
+  avatarUrl?: string;
 };
 
 type ClientDraft = {
@@ -2581,6 +2582,7 @@ function AppContent() {
             reminderDate: formatReminderDate(client.reminderDate),
             lastContact: client.lastContact,
             priority: client.priority,
+            avatarUrl: client.avatarUrl,
           }))}
           onActionAddClient={openAddModal}
           onActionAiResearch={() => setActiveTab("AI Research")}
@@ -2603,6 +2605,7 @@ function AppContent() {
             reminderDate: formatReminderDate(client.reminderDate),
             lastContact: client.lastContact,
             priority: client.priority,
+            avatarUrl: client.avatarUrl,
           })).slice(0, 3)}
           reminderKpis={dashboardReminderKpis}
           stats={dashboardStats}

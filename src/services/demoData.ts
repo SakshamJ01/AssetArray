@@ -27,12 +27,14 @@ export interface DemoClient {
   lastContact: string;
   updateHistory: string[];
   portfolio: PortfolioHolding[];
+  avatarUrl?: string;
 }
 
 export const DEMO_CLIENTS: DemoClient[] = [
   {
     id: "demo-client-1",
     name: "Sophia Chen",
+    avatarUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80",
     phone: "+1 (415) 890-2341",
     email: "sophia.chen@chenventures.com",
     category: "Family Office",
@@ -111,6 +113,7 @@ export const DEMO_CLIENTS: DemoClient[] = [
   {
     id: "demo-client-2",
     name: "Marcus Vance",
+    avatarUrl: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200&auto=format&fit=crop&q=80",
     phone: "+1 (212) 555-0192",
     email: "marcus.vance@vanceholdings.org",
     category: "HNI",
@@ -177,6 +180,7 @@ export const DEMO_CLIENTS: DemoClient[] = [
   {
     id: "demo-client-3",
     name: "Elena Rostova",
+    avatarUrl: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&auto=format&fit=crop&q=80",
     phone: "+44 20 7946 0912",
     email: "elena.rostova@genevacap.ch",
     category: "Long Term",

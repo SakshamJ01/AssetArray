@@ -10,13 +10,13 @@ export const lightColors = {
   textSecondary: "#475569",
   textMuted: "#64748b",
   textOnBrand: "#ffffff",
-  brand: "#2563eb",
-  brandStrong: "#1d4ed8",
+  brand: "#b37e28", // Antique gold
+  brandStrong: "#94651b",
   accent: "#10b981",
   accentSoft: "#ecfdf5",
   danger: "#ef4444",
   dangerSoft: "#fef2f2",
-  warning: "#f59e0b",
+  warning: "#b37e28",
   warningSoft: "#fffbeb",
   neutral: "#64748b",
   neutralSoft: "#f1f5f9",
@@ -25,28 +25,28 @@ export const lightColors = {
 };
 
 export const darkColors = {
-  background: "#090d16",
-  backgroundMuted: "#0f172a",
-  surface: "#131c2e",
-  surfaceMuted: "#1a253c",
-  surfaceStrong: "#23324f",
-  border: "#1e293b",
-  borderStrong: "#334155",
-  textPrimary: "#f8fafc",
+  background: "#030712", // Rich obsidian black
+  backgroundMuted: "#080d1a",
+  surface: "#0d1424", // Velvet sapphire charcoal
+  surfaceMuted: "#131c30",
+  surfaceStrong: "#1b2742",
+  border: "rgba(224, 168, 76, 0.22)", // Subtle champagne gold border
+  borderStrong: "rgba(224, 168, 76, 0.45)",
+  textPrimary: "#ffffff",
   textSecondary: "#94a3b8",
   textMuted: "#64748b",
-  textOnBrand: "#ffffff",
-  brand: "#3b82f6",
-  brandStrong: "#2563eb",
+  textOnBrand: "#030712",
+  brand: "#e0a84c", // Radiant warm gold
+  brandStrong: "#c89134",
   accent: "#10b981",
   accentSoft: "rgba(16, 185, 129, 0.15)",
   danger: "#f43f5e",
   dangerSoft: "rgba(244, 63, 94, 0.15)",
-  warning: "#f59e0b",
-  warningSoft: "rgba(245, 158, 11, 0.15)",
+  warning: "#e0a84c",
+  warningSoft: "rgba(224, 168, 76, 0.15)",
   neutral: "#94a3b8",
-  neutralSoft: "#1e293b",
-  overlay: "rgba(0, 0, 0, 0.65)",
+  neutralSoft: "#131c30",
+  overlay: "rgba(0, 0, 0, 0.75)",
   shadow: "#000000",
 };
 

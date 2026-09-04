@@ -7,6 +7,7 @@ export interface PortfolioHoldingInput {
   quantity?: string;
   investedValue?: string;
   currentValue?: string;
+  targetWeight?: string;
 }
 
 export interface ClientInput {
@@ -14,6 +15,9 @@ export interface ClientInput {
   name: string;
   category: string;
   priority: string;
+  city?: string;
+  riskProfile?: string;
+  allocation?: string;
   notes?: string;
   portfolio?: PortfolioHoldingInput[];
 }

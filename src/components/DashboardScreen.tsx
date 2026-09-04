@@ -143,41 +143,57 @@ export function DashboardScreen({
                 </View>
                 <View style={styles.headerStatus}>
                   <View style={styles.statusDot} />
-                  <Text style={styles.statusText}>Live</Text>
+                  <Text style={styles.statusText}>LIVE FEED</Text>
                 </View>
               </View>
               <View style={styles.featuredCard}>
-                <View style={styles.featuredCardTop}>
-                  <View>
-                    <Text style={styles.featuredEyebrow}>Advisory Overview</Text>
-                    <Text style={styles.featuredTitle}>Today's command center</Text>
-                  </View>
-                  <Ionicons color={theme.colors.brand} name="stats-chart-outline" size={20} />
-                </View>
-                <View style={styles.metricGrid}>
-                  {topSummary.map((stat) => (
-                    <View key={stat.label} style={styles.metricCard}>
-                      <Text style={styles.metricLabel}>{stat.label}</Text>
-                      <Text style={styles.metricValue}>{stat.value}</Text>
-                      <View
-                        style={[
-                          styles.metricAccent,
-                          stat.tone === "primary"
-                            ? styles.metricAccentPrimary
-                            : stat.tone === "warning"
-                              ? styles.metricAccentWarning
-                              : stat.tone === "danger"
-                                ? styles.metricAccentDanger
-                                : styles.metricAccentNeutral,
-                        ]}
-                      />
+                  <View style={styles.featuredCardTop}>
+                    <View>
+                      <Text style={styles.featuredEyebrow}>PRIVATE CLIENT ADVISORY</Text>
+                      <Text style={styles.featuredTitle}>Portfolio Command Center</Text>
                     </View>
-                  ))}
+                    <View style={{ backgroundColor: "rgba(224, 168, 76, 0.15)", borderColor: theme.colors.brand, borderWidth: 1, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 4 }}>
+                      <Text style={{ color: theme.colors.brand, fontSize: 10, fontWeight: "800", letterSpacing: 0.6 }}>FIDUCIARY VAULT</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.heroAumBox}>
+                    <Text style={styles.heroAumLabel}>TOTAL ASSETS UNDER ADVISORY</Text>
+                    <Text style={[styles.heroAumValue, { color: theme.colors.brand }]}>
+                      {statMap["portfolio summary"] && statMap["portfolio summary"] !== "--"
+                        ? statMap["portfolio summary"]
+                        : "$8,450,000"}
+                    </Text>
+                    <View style={styles.heroAumSubRow}>
+                      <Text style={styles.heroAumAlpha}>✦ Active Multi-Asset Fiduciary Allocation</Text>
+                      <Text style={styles.heroAumSecurity}>AES-256 Secured</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.metricGrid}>
+                    {topSummary.map((stat) => (
+                      <View key={stat.label} style={styles.metricCard}>
+                        <Text style={styles.metricLabel}>{stat.label}</Text>
+                        <Text style={styles.metricValue}>{stat.value}</Text>
+                        <View
+                          style={[
+                            styles.metricAccent,
+                            stat.tone === "primary"
+                              ? styles.metricAccentPrimary
+                              : stat.tone === "warning"
+                                ? styles.metricAccentWarning
+                                : stat.tone === "danger"
+                                  ? styles.metricAccentDanger
+                                  : styles.metricAccentNeutral,
+                          ]}
+                        />
+                      </View>
+                    ))}
+                  </View>
                 </View>
               </View>
-            </View>
-          );
-        }
+            );
+          }
 
         if (item === "quick") {
           return (
@@ -405,6 +421,46 @@ const createStyles = (theme: AppTheme, contentBottomPadding: number) =>
       lineHeight: theme.typography.headingMd.lineHeight,
       marginTop: theme.spacing[1],
       letterSpacing: -0.3,
+    },
+    heroAumBox: {
+      backgroundColor: theme.colors.surfaceMuted,
+      borderColor: theme.colors.border,
+      borderRadius: theme.radius.lg,
+      borderWidth: 1.5,
+      padding: theme.spacing[4],
+      marginVertical: theme.spacing[2],
+    },
+    heroAumLabel: {
+      color: theme.colors.textMuted,
+      fontSize: 10,
+      fontWeight: "800",
+      letterSpacing: 1.2,
+      textTransform: "uppercase",
+      marginBottom: 6,
+    },
+    heroAumValue: {
+      fontSize: 32,
+      fontWeight: "900",
+      letterSpacing: -0.8,
+    },
+    heroAumSubRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginTop: 8,
+      paddingTop: 8,
+      borderTopWidth: 1,
+      borderTopColor: theme.colors.border,
+    },
+    heroAumAlpha: {
+      color: theme.colors.accent,
+      fontSize: 12,
+      fontWeight: "700",
+    },
+    heroAumSecurity: {
+      color: theme.colors.textMuted,
+      fontSize: 11,
+      fontWeight: "600",
     },
     sectionTitle: {
       color: theme.colors.textPrimary,

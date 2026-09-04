@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   FlatList,
+  Image,
   Linking,
   Modal,
   Pressable,
@@ -27,6 +28,31 @@ import {
 import * as Font from "expo-font";
 import { Ionicons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
+
+if (Platform.OS === "web" && typeof document !== "undefined") {
+  const fontStyleId = "expo-vector-icons-web-fonts";
+  if (!document.getElementById(fontStyleId)) {
+    const iconFontStyles = `
+      @font-face {
+        font-family: 'Ionicons';
+        src: url('https://cdn.jsdelivr.net/npm/@expo/vector-icons@15.0.3/build/vendor/react-native-vector-icons/Fonts/Ionicons.ttf') format('truetype');
+      }
+      @font-face {
+        font-family: 'Feather';
+        src: url('https://cdn.jsdelivr.net/npm/@expo/vector-icons@15.0.3/build/vendor/react-native-vector-icons/Fonts/Feather.ttf') format('truetype');
+      }
+      @font-face {
+        font-family: 'MaterialIcons';
+        src: url('https://cdn.jsdelivr.net/npm/@expo/vector-icons@15.0.3/build/vendor/react-native-vector-icons/Fonts/MaterialIcons.ttf') format('truetype');
+      }
+    `;
+    const style = document.createElement("style");
+    style.id = fontStyleId;
+    style.type = "text/css";
+    style.appendChild(document.createTextNode(iconFontStyles));
+    document.head.appendChild(style);
+  }
+}
 import { BottomTabBar } from "./src/components/BottomTabBar";
 import { DesktopSidebar } from "./src/components/DesktopSidebar";
 import { DashboardScreen } from "./src/components/DashboardScreen";
@@ -712,6 +738,11 @@ function AppContent() {
 
   useEffect(() => {
     async function load() {
+      try {
+        await Font.loadAsync(Ionicons.font);
+      } catch (fontErr) {
+        console.warn("Ionicons font load notice:", fontErr);
+      }
       try {
         const [
           pin,
@@ -3644,14 +3675,25 @@ function AppContent() {
                         style={[styles.clientRow, active ? styles.clientRowActive : null]}
                         onPress={() => setSelectedClientId(client.id)}
                       >
-                        <View style={styles.clientRowMain}>
-                          <Text style={styles.clientName}>{client.name}</Text>
-                          <Text style={styles.clientMeta}>
-                            {client.category} | {client.priority} | {client.preferredChannel}
-                          </Text>
-                          <Text style={styles.clientSubMeta}>
-                            Follow-up: {formatReminderDate(client.reminderDate)}
-                          </Text>
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 10, flex: 1 }}>
+                          {client.avatarUrl ? (
+                            <Image source={{ uri: client.avatarUrl }} style={styles.clientListAvatar} />
+                          ) : (
+                            <View style={styles.clientListAvatarPlaceholder}>
+                              <Text style={styles.clientListAvatarText}>
+                                {client.name.slice(0, 2).toUpperCase()}
+                              </Text>
+                            </View>
+                          )}
+                          <View style={styles.clientRowMain}>
+                            <Text style={styles.clientName}>{client.name}</Text>
+                            <Text style={styles.clientMeta}>
+                              {client.category} | {client.priority} | {client.preferredChannel}
+                            </Text>
+                            <Text style={styles.clientSubMeta}>
+                              Follow-up: {formatReminderDate(client.reminderDate)}
+                            </Text>
+                          </View>
                         </View>
                         {isReminderDue(client.reminderDate) ? (
                           <View style={styles.dueBadge}>
@@ -3671,14 +3713,27 @@ function AppContent() {
               <Text style={styles.panelTitle}>Client details</Text>
               {selectedClient ? (
                 <>
-                  <Text style={styles.detailName}>{selectedClient.name}</Text>
-                  <Text style={styles.detailLine}>{selectedClient.phone}</Text>
-                  <Text style={styles.detailLine}>
-                    {selectedClient.email || "No email saved"}
-                  </Text>
-                  <Text style={styles.detailLine}>
-                    {selectedClient.city || "Location not saved"}
-                  </Text>
+                  <View style={styles.clientDetailHeader}>
+                    {selectedClient.avatarUrl ? (
+                      <Image source={{ uri: selectedClient.avatarUrl }} style={styles.clientDetailAvatar} />
+                    ) : (
+                      <View style={styles.clientDetailAvatarPlaceholder}>
+                        <Text style={styles.clientDetailAvatarText}>
+                          {selectedClient.name.slice(0, 2).toUpperCase()}
+                        </Text>
+                      </View>
+                    )}
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.detailName}>{selectedClient.name}</Text>
+                      <Text style={styles.detailLine}>{selectedClient.phone}</Text>
+                      <Text style={styles.detailLine}>
+                        {selectedClient.email || "No email saved"}
+                      </Text>
+                      <Text style={styles.detailLine}>
+                        {selectedClient.city || "Location not saved"}
+                      </Text>
+                    </View>
+                  </View>
 
                   <View style={styles.tagRow}>
                     {[selectedClient.category, selectedClient.priority, selectedClient.preferredChannel].map(
@@ -6046,5 +6101,55 @@ const styles = StyleSheet.create({
   modalSecondaryText: {
     color: "#bfd3ef",
     fontWeight: "700",
+  },
+  clientDetailHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    marginBottom: 14,
+  },
+  clientListAvatar: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    borderWidth: 1,
+    borderColor: "rgba(224, 168, 76, 0.35)",
+  },
+  clientListAvatarPlaceholder: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "rgba(224, 168, 76, 0.15)",
+    borderWidth: 1,
+    borderColor: "rgba(224, 168, 76, 0.35)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  clientListAvatarText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#E0A84C",
+  },
+  clientDetailAvatar: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    borderWidth: 2,
+    borderColor: "#E0A84C",
+  },
+  clientDetailAvatarPlaceholder: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: "rgba(224, 168, 76, 0.15)",
+    borderWidth: 2,
+    borderColor: "#E0A84C",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  clientDetailAvatarText: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: "#E0A84C",
   },
 });

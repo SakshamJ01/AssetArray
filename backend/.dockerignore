@@ -1,0 +1,23 @@
+# Dependencies — reinstalled inside container
+node_modules
+
+# Secrets — never ship to the image
+.env
+.env.local
+.env.production
+
+# Local data & dev artifacts
+data/
+scripts/
+tmp-*.log
+tmp-*.err.log
+*.log
+
+# Expo web artifacts (frontend — not part of backend)
+.expo/
+dist/
+
+# Dev tooling
+.git
+.gitignore
+*.md

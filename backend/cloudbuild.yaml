@@ -1,0 +1,23 @@
+steps:
+  # Build the container image and deploy to Cloud Run in a single step.
+  # Cloud Build's gcloud builder handles the docker build + push + deploy pipeline.
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - asset-array-backend
+      - --source
+      - .
+      - --region
+      - us-central1
+      - --platform
+      - managed
+      - --quiet
+
+# Only trigger on changes inside the backend/ directory (set in GCP console trigger)
+# Timeout: 10 minutes should be more than enough
+timeout: "600s"
+
+options:
+  logging: CLOUD_LOGGING_ONLY

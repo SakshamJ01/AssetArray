@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: asset-array-backend
+    env: node
+    rootDir: backend
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: MONGO_URI
+        sync: false
+      - key: MONGO_DB_NAME
+        value: asset_array
+      - key: AUTH_REQUIRED
+        value: "true"
+      - key: CORS_ORIGIN
+        value: "*"
+      - key: TOKEN_SECRET
+        sync: false
+      - key: REFRESH_SECRET
+        sync: false
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash

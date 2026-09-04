@@ -1,0 +1,12 @@
+{
+  "projects": {
+    "default": "asset-array"
+  },
+  "targets": {
+    "asset-array": {
+      "hosting": {
+        "asset-array": ["asset-array"]
+      }
+    }
+  }
+}

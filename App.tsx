@@ -4464,9 +4464,9 @@ function AppContent() {
         />
       )}
 
-      <Modal visible={isEditorOpen} transparent animationType="slide">
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalCard}>
+      <Modal visible={isEditorOpen} transparent animationType={isDesktop ? "fade" : "slide"}>
+        <View style={[styles.modalBackdrop, isDesktop && styles.modalBackdropCenter]}>
+          <View style={[styles.modalCard, isDesktop && styles.modalCardCenter]}>
             <Text style={styles.modalTitle}>
               {editorMode === "add" ? "Add client" : "Edit client"}
             </Text>
@@ -4617,9 +4617,9 @@ function AppContent() {
         </View>
       </Modal>
 
-      <Modal visible={isPortfolioModalOpen} transparent animationType="slide">
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalCard}>
+      <Modal visible={isPortfolioModalOpen} transparent animationType={isDesktop ? "fade" : "slide"}>
+        <View style={[styles.modalBackdrop, isDesktop && styles.modalBackdropCenter]}>
+          <View style={[styles.modalCard, isDesktop && styles.modalCardCenter]}>
             <Text style={styles.modalTitle}>
               {portfolioMode === "add" ? "Add portfolio item" : "Edit portfolio item"}
             </Text>
@@ -4712,9 +4712,9 @@ function AppContent() {
         </View>
       </Modal>
 
-      <Modal visible={isSyncModalOpen} transparent animationType="slide">
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalCard}>
+      <Modal visible={isSyncModalOpen} transparent animationType={isDesktop ? "fade" : "slide"}>
+        <View style={[styles.modalBackdrop, isDesktop && styles.modalBackdropCenter]}>
+          <View style={[styles.modalCard, isDesktop && styles.modalCardCenter]}>
             <Text style={styles.modalTitle}>Encrypted cloud sync</Text>
             <Text style={styles.panelSubtitle}>
               Asset Array encrypts data on-device before it leaves your phone.
@@ -4778,9 +4778,9 @@ function AppContent() {
         </View>
       </Modal>
 
-      <Modal visible={isBroadcastModalOpen} transparent animationType="slide">
-        <View style={styles.modalBackdrop}>
-          <View style={[styles.modalCard, { height: "84%", paddingBottom: Math.max(insets.bottom, 16) }]}>
+      <Modal visible={isBroadcastModalOpen} transparent animationType={isDesktop ? "fade" : "slide"}>
+        <View style={[styles.modalBackdrop, isDesktop && styles.modalBackdropCenter]}>
+          <View style={[styles.modalCard, isDesktop && styles.modalCardCenter, { height: "84%", paddingBottom: Math.max(insets.bottom, 16) }]}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
               <View style={{ flex: 1, paddingRight: 8 }}>
                 <Text style={styles.modalTitle}>Broadcast Center</Text>
@@ -4966,9 +4966,9 @@ function AppContent() {
         </View>
       </Modal>
 
-      <Modal visible={Boolean(aboutSheet)} transparent animationType="slide">
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalCard}>
+      <Modal visible={Boolean(aboutSheet)} transparent animationType={isDesktop ? "fade" : "slide"}>
+        <View style={[styles.modalBackdrop, isDesktop && styles.modalBackdropCenter]}>
+          <View style={[styles.modalCard, isDesktop && styles.modalCardCenter]}>
             <Text style={styles.modalTitle}>{aboutSheet || "About Asset Array"}</Text>
             {aboutSheet === "Privacy Policy" ? (
               <Text style={styles.detailBlock}>
@@ -5967,6 +5967,11 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     backgroundColor: "rgba(0, 0, 0, 0.65)",
   },
+  modalBackdropCenter: {
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 24,
+  },
   modalCard: {
     maxHeight: "90%",
     backgroundColor: "#111a2e",
@@ -5975,6 +5980,20 @@ const styles = StyleSheet.create({
     padding: 24,
     borderWidth: 1,
     borderColor: "#1c2842",
+  },
+  modalCardCenter: {
+    width: "100%",
+    maxWidth: 580,
+    maxHeight: "85%",
+    borderRadius: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    borderColor: "rgba(224, 168, 76, 0.18)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 24 },
+    shadowOpacity: 0.55,
+    shadowRadius: 40,
+    elevation: 20,
   },
   modalTitle: {
     color: "#eaf3ff",

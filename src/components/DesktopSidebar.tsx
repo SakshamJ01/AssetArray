@@ -140,6 +140,24 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
         </Pressable>
       </View>
 
+      {/* Keyboard Shortcut Legend */}
+      <View style={styles.shortcutLegend}>
+        <Text style={styles.shortcutLegendHeader}>KEYBOARD SHORTCUTS</Text>
+        {([
+          ["⌘ K", "Clients"],
+          ["⌘ B", "Broadcast"],
+          ["⌘ L", "Lock Desk"],
+          ["Esc", "Close Panel"],
+        ] as const).map(([key, desc]) => (
+          <View key={key} style={styles.shortcutRow}>
+            <View style={styles.kbdBadge}>
+              <Text style={styles.kbdText}>{key}</Text>
+            </View>
+            <Text style={styles.shortcutDesc}>{desc}</Text>
+          </View>
+        ))}
+      </View>
+
       {/* Pro Membership Banner */}
       <Pressable
         style={styles.proBanner}
@@ -417,5 +435,46 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 8,
     backgroundColor: "rgba(255, 255, 255, 0.04)",
+  },
+  shortcutLegend: {
+    paddingTop: 14,
+    paddingHorizontal: 4,
+    paddingBottom: 14,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255, 255, 255, 0.06)",
+    gap: 7,
+  },
+  shortcutLegendHeader: {
+    fontSize: 9,
+    fontWeight: "800" as const,
+    color: "#334155",
+    letterSpacing: 1.4,
+    marginBottom: 4,
+  },
+  shortcutRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 10,
+  },
+  kbdBadge: {
+    paddingVertical: 2,
+    paddingHorizontal: 7,
+    borderRadius: 5,
+    backgroundColor: "rgba(224, 168, 76, 0.07)",
+    borderWidth: 1,
+    borderColor: "rgba(224, 168, 76, 0.22)",
+    minWidth: 44,
+    alignItems: "center" as const,
+  },
+  kbdText: {
+    fontSize: 10,
+    fontWeight: "700" as const,
+    color: "#E0A84C",
+    fontFamily: Platform.select({ ios: "Courier New", android: "monospace", default: "monospace" }),
+  },
+  shortcutDesc: {
+    fontSize: 11,
+    color: "#475569",
+    fontWeight: "500" as const,
   },
 });

@@ -2206,15 +2206,20 @@ function AppContent() {
     if (!cloudSettings.endpoint.trim()) {
       Alert.alert(
         "Cloud setup needed",
-        "Configure your backend URL before running a broadcast campaign."
+        "Configure your backend URL in Settings > Cloud Sync before running a broadcast campaign.",
+        [
+          { text: "Cancel", style: "cancel" },
+          { text: "Configure URL", onPress: () => setIsSyncModalOpen(true) },
+        ]
       );
       return;
     }
 
-    if (!broadcastTargets.length) {
+    const effectiveTargets = broadcastTargets.length > 0 ? broadcastTargets : clients;
+    if (!effectiveTargets.length) {
       Alert.alert(
-        "No clients selected",
-        "Select at least one client in the Clients tab before sending a bulk update."
+        "No clients found",
+        "Add at least one client before sending a bulk notification campaign."
       );
       return;
     }
@@ -2231,11 +2236,17 @@ function AppContent() {
         setBroadcastState("Backend login required");
         Alert.alert(
           "Backend login required",
-          "Sign in to the backend before running a broadcast campaign."
+          "Sign in to the backend in Settings > Cloud Sync before running a broadcast campaign.",
+          [
+            { text: "Cancel", style: "cancel" },
+            { text: "Sign In to Cloud", onPress: () => setIsSyncModalOpen(true) },
+          ]
         );
         return;
       }
-      const validTargets = broadcastPreview.eligible;
+      const validTargets = broadcastPreview.eligible.length > 0
+        ? broadcastPreview.eligible
+        : effectiveTargets.filter((c) => Boolean(resolveBroadcastContact(c, broadcastChannel)));
 
       if (!validTargets.length) {
         setBroadcastState("No valid recipients");
@@ -2453,7 +2464,12 @@ function AppContent() {
           }))}
           onActionAddClient={openAddModal}
           onActionAiResearch={() => setActiveTab("AI Research")}
-          onActionBroadcast={() => setIsBroadcastModalOpen(true)}
+          onActionBroadcast={() => {
+            if (selectedClientIds.length === 0 && clients.length > 0) {
+              setSelectedClientIds(clients.map((client) => client.id));
+            }
+            setIsBroadcastModalOpen(true);
+          }}
           onActionOpenClients={() => setActiveTab("Clients")}
           onOpenClient={(clientId) => {
             setSelectedClientId(clientId);
@@ -4625,6 +4641,22 @@ function AppContent() {
               autoCapitalize="none"
               style={styles.input}
             />
+            {!cloudSettings.endpoint.trim() ? (
+              <Pressable
+                style={{ alignSelf: "flex-start", marginTop: 4, marginBottom: 8 }}
+                onPress={() =>
+                  setCloudSettings((current) => ({
+                    ...current,
+                    endpoint: "http://10.18.66.247:4000",
+                    authUsername: current.authUsername || "admin",
+                  }))
+                }
+              >
+                <Text style={{ color: theme.colors.brand, fontSize: 12, fontWeight: "700" }}>
+                  ✦ Auto-fill Local Backend (http://10.18.66.247:4000)
+                </Text>
+              </Pressable>
+            ) : null}
             <Text style={styles.detailBlock}>Auth status: {authState}</Text>
             {authSession ? (
               <Pressable style={styles.linkButton} onPress={() => void logoutFromBackend()}>
@@ -4689,7 +4721,27 @@ function AppContent() {
             <Text style={styles.detailBlock}>
               Ready: {broadcastPreview.eligible.length} | Skipped: {broadcastPreview.skipped.length}
             </Text>
-            <Text style={styles.sectionLabel}>Selected clients</Text>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 8, marginBottom: 4 }}>
+              <Text style={styles.sectionLabel}>
+                Selected clients ({broadcastTargets.length}/{clients.length})
+              </Text>
+              {clients.length > 0 ? (
+                <Pressable
+                  onPress={() => {
+                    if (selectedClientIds.length === clients.length) {
+                      setSelectedClientIds([]);
+                    } else {
+                      setSelectedClientIds(clients.map((c) => c.id));
+                    }
+                  }}
+                  style={{ paddingVertical: 2, paddingHorizontal: 6 }}
+                >
+                  <Text style={{ color: theme.colors.brand, fontSize: 12, fontWeight: "700" }}>
+                    {selectedClientIds.length === clients.length ? "Deselect All" : "Select All"}
+                  </Text>
+                </Pressable>
+              ) : null}
+            </View>
             {broadcastTargets.length === 0 ? (
               <Text style={styles.detailBlock}>No clients selected yet.</Text>
             ) : (

@@ -105,6 +105,7 @@ import { GlobalStyleInjector } from "./src/components/GlobalStyleInjector";
 import { LiveMarketTicker } from "./src/components/LiveMarketTicker";
 import { ScreenTransition } from "./src/components/ScreenTransition";
 import { CurrencyCode, loadCurrencyPreference, saveCurrencyPreference } from "./src/services/currency";
+import { realTimeMarket } from "./src/services/realTimeMarket";
 
 type Channel = "Phone" | "SMS" | "Email" | "WhatsApp";
 type Category = "HNI" | "Retail" | "Family Office" | "Trader" | "Long Term";
@@ -677,6 +678,45 @@ function AppContent() {
 
   useEffect(() => {
     void loadCurrencyPreference().then((c) => setActiveCurrency(c));
+  }, []);
+
+  // Continuous real-time portfolio valuation sync when securities tick
+  useEffect(() => {
+    const unsubscribe = realTimeMarket.subscribe((instruments) => {
+      setClients((prevClients) => {
+        if (!prevClients || prevClients.length === 0) return prevClients;
+        let anyHoldingChanged = false;
+
+        const nextClients = prevClients.map((client) => {
+          if (!client.portfolio || client.portfolio.length === 0) return client;
+          let clientChanged = false;
+
+          const nextPortfolio = client.portfolio.map((holding) => {
+            const symbolKey = (holding.ticker || holding.assetName).toUpperCase().trim();
+            const inst = instruments[symbolKey] || realTimeMarket.getInstrument(symbolKey);
+            if (inst) {
+              const qty = Number(holding.quantity) || 1;
+              const newCurrent = (inst.price * qty).toFixed(2);
+              if (newCurrent !== holding.currentValue) {
+                clientChanged = true;
+                return { ...holding, currentValue: newCurrent };
+              }
+            }
+            return holding;
+          });
+
+          if (clientChanged) {
+            anyHoldingChanged = true;
+            return { ...client, portfolio: nextPortfolio };
+          }
+          return client;
+        });
+
+        return anyHoldingChanged ? nextClients : prevClients;
+      });
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const cycleCurrency = () => {

@@ -114,6 +114,54 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = ({
             </Pressable>
           </View>
         </View>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            backgroundColor: "rgba(34, 197, 94, 0.08)",
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: "rgba(34, 197, 94, 0.28)",
+            paddingVertical: 9,
+            paddingHorizontal: 14,
+            marginTop: 14,
+            marginBottom: 6,
+          }}
+        >
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <View
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: 4,
+                backgroundColor: "#22c55e",
+                shadowColor: "#22c55e",
+                shadowRadius: 6,
+                shadowOpacity: 0.8,
+              }}
+            />
+            <Text
+              style={{
+                fontSize: 11,
+                fontWeight: "800",
+                color: "#22c55e",
+                letterSpacing: 0.5,
+              }}
+            >
+              REAL-TIME MARKET FEED ACTIVE • STREAMING (NSE / BSE / GLOBAL)
+            </Text>
+          </View>
+          <Text
+            style={{
+              fontSize: 10,
+              color: theme.colors.textSecondary,
+              fontWeight: "600",
+            }}
+          >
+            Live Stochastic Brownian Ticks • Auto-Syncing Portfolios
+          </Text>
+        </View>
 
         <View style={styles.analyticsSummaryRow}>
           <View style={[styles.analyticsMetricCard, styles.analyticsBlue]}>

@@ -1,3 +1,5 @@
+import { realTimeMarket, LiveInstrument } from "./realTimeMarket";
+
 export interface MarketQuote {
   symbol: string;
   name: string;
@@ -21,41 +23,66 @@ const DEFAULT_QUOTES: Record<string, MarketQuote> = {
   RELIANCE: { symbol: "RELIANCE", name: "Reliance Industries", price: 3015.00, currency: "INR", change24hPercent: -0.35, lastUpdated: new Date().toISOString(), category: "Equity" },
   INFY: { symbol: "INFY", name: "Infosys Ltd.", price: 1850.20, currency: "INR", change24hPercent: 1.15, lastUpdated: new Date().toISOString(), category: "Equity" },
   HDFCBANK: { symbol: "HDFCBANK", name: "HDFC Bank", price: 1640.00, currency: "INR", change24hPercent: 0.20, lastUpdated: new Date().toISOString(), category: "Equity" },
+  TCS: { symbol: "TCS", name: "Tata Consultancy Services", price: 4520.40, currency: "INR", change24hPercent: 1.35, lastUpdated: new Date().toISOString(), category: "Equity" },
+  ICICIBANK: { symbol: "ICICIBANK", name: "ICICI Bank Ltd", price: 1224.80, currency: "INR", change24hPercent: 0.81, lastUpdated: new Date().toISOString(), category: "Equity" },
 };
 
 let cachedQuotes: Record<string, MarketQuote> = { ...DEFAULT_QUOTES };
-let lastFetchTimestamp = 0;
-const CACHE_TTL_MS = 60_000;
+
+function instrumentToQuote(inst: LiveInstrument): MarketQuote {
+  let cat: MarketQuote["category"] = "Equity";
+  if (inst.exchange === "CRYPTO") cat = "Crypto";
+  else if (inst.exchange === "FX" || inst.exchange === "MCX") cat = "Fixed Income";
+  else if (inst.symbol.includes("NIFTY") || inst.symbol.includes("S&P") || inst.symbol.includes("NASDAQ")) cat = "Mutual Fund";
+
+  return {
+    symbol: inst.symbol,
+    name: inst.name,
+    price: inst.price,
+    currency: inst.currency,
+    change24hPercent: inst.changePercent,
+    lastUpdated: new Date(inst.lastUpdated).toISOString(),
+    category: cat,
+  };
+}
+
+// Auto-sync cachedQuotes whenever realTimeMarket emits live ticks
+realTimeMarket.subscribe((instruments) => {
+  Object.values(instruments).forEach((inst) => {
+    cachedQuotes[inst.symbol.toUpperCase()] = instrumentToQuote(inst);
+    // Aliases
+    if (inst.symbol === "NIFTY 50") cachedQuotes["NIFTY50"] = instrumentToQuote(inst);
+    if (inst.symbol === "BTC/USD") cachedQuotes["BTC"] = instrumentToQuote(inst);
+    if (inst.symbol === "ETH/USD") cachedQuotes["ETH"] = instrumentToQuote(inst);
+  });
+});
 
 export async function fetchLiveMarketQuotes(forceRefresh = false): Promise<Record<string, MarketQuote>> {
-  const nowMs = Date.now();
-  if (!forceRefresh && nowMs - lastFetchTimestamp < CACHE_TTL_MS && Object.keys(cachedQuotes).length > 0) {
-    return cachedQuotes;
+  if (forceRefresh) {
+    realTimeMarket.triggerManualSync();
   }
-
-  // Simulate live market fluctuation for realistic quotes
-  const now = new Date().toISOString();
-  const updated: Record<string, MarketQuote> = {};
-
-  Object.entries(cachedQuotes).forEach(([symbol, item]) => {
-    const randomDeltaPercent = (Math.random() * 2 - 0.9) * 0.5; // -0.45% to +0.55% fluctuation
-    const newPrice = Math.max(1, Number((item.price * (1 + randomDeltaPercent / 100)).toFixed(2)));
-    const newChange = Number((item.change24hPercent + randomDeltaPercent).toFixed(2));
-
-    updated[symbol] = {
-      ...item,
-      price: newPrice,
-      change24hPercent: newChange,
-      lastUpdated: now,
-    };
-  });
-
-  lastFetchTimestamp = nowMs;
-  cachedQuotes = updated;
-  return updated;
+  return cachedQuotes;
 }
 
 export function getQuoteForSymbol(symbol: string): MarketQuote | null {
   const upper = symbol.toUpperCase().trim();
+  const direct = realTimeMarket.getInstrument(upper);
+  if (direct) {
+    return instrumentToQuote(direct);
+  }
+  // Check common aliases
+  if (upper === "NIFTY" || upper === "NIFTY50") {
+    const nifty = realTimeMarket.getInstrument("NIFTY 50");
+    if (nifty) return instrumentToQuote(nifty);
+  }
+  if (upper === "BTC") {
+    const btc = realTimeMarket.getInstrument("BTC/USD");
+    if (btc) return instrumentToQuote(btc);
+  }
+  if (upper === "ETH") {
+    const eth = realTimeMarket.getInstrument("ETH/USD");
+    if (eth) return instrumentToQuote(eth);
+  }
   return cachedQuotes[upper] || null;
 }
+

@@ -1,26 +1,12 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { AppTheme } from "../theme";
 import { CurrencyCode, CURRENCY_REGISTRY } from "../services/currency";
-
-interface TickerItem {
-  symbol: string;
-  name: string;
-  price: string;
-  change: string;
-  isPositive: boolean;
-}
-
-const DEFAULT_TICKERS: TickerItem[] = [
-  { symbol: "NIFTY 50", name: "Nifty", price: "24,852.15", change: "+0.45%", isPositive: true },
-  { symbol: "S&P 500", name: "S&P", price: "5,648.40", change: "+0.82%", isPositive: true },
-  { symbol: "NASDAQ", name: "Nasdaq", price: "17,910.20", change: "+1.25%", isPositive: true },
-  { symbol: "GOLD", name: "Gold (oz)", price: "$2,504.60", change: "+0.32%", isPositive: true },
-  { symbol: "BTC/USD", name: "Bitcoin", price: "$64,250.00", change: "+2.10%", isPositive: true },
-  { symbol: "ETH/USD", name: "Ethereum", price: "$3,480.00", change: "-0.85%", isPositive: false },
-  { symbol: "RELIANCE", name: "RIL", price: "₹3,015.00", change: "-0.35%", isPositive: false },
-  { symbol: "INFY", name: "Infosys", price: "₹1,850.20", change: "+1.15%", isPositive: true },
-];
+import {
+  LiveInstrument,
+  realTimeMarket,
+} from "../services/realTimeMarket";
+import { LiveMarketDepthModal } from "./modals/LiveMarketDepthModal";
 
 export interface LiveMarketTickerProps {
   theme: AppTheme;
@@ -42,81 +28,186 @@ export const LiveMarketTicker: React.FC<LiveMarketTickerProps> = ({
     theme.colors.textPrimary === "#ffffff" ||
     theme.colors.textPrimary === "#FFFFFF";
 
-  return (
-    <View
-      style={[
-        styles.container,
-        {
-          backgroundColor: isDark ? "rgba(11, 19, 38, 0.75)" : "rgba(248, 250, 252, 0.95)",
-          borderColor: theme.colors.border,
-        },
-      ]}
-    >
-      <View style={styles.liveIndicatorRow}>
-        <View style={styles.liveDotWrapper}>
-          <View style={styles.liveDotPulse} />
-          <View style={styles.liveDot} />
-        </View>
-        <Text style={styles.liveLabel}>LIVE DESK</Text>
-      </View>
+  const [instruments, setInstruments] = useState<Record<string, LiveInstrument>>(() =>
+    realTimeMarket.getInstruments()
+  );
+  const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
+  const [flashMap, setFlashMap] = useState<Record<string, "up" | "down">>({});
+  const prevPricesRef = useRef<Record<string, number>>({});
+  const flashTimersRef = useRef<Record<string, any>>({});
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+  useEffect(() => {
+    // Initial prices record
+    const current = realTimeMarket.getInstruments();
+    const initialPrices: Record<string, number> = {};
+    Object.values(current).forEach((inst) => {
+      initialPrices[inst.symbol] = inst.price;
+    });
+    prevPricesRef.current = initialPrices;
+
+    // Subscribe to live tick engine
+    const unsubscribe = realTimeMarket.subscribe((updatedInstruments) => {
+      const newFlash: Record<string, "up" | "down"> = {};
+
+      Object.values(updatedInstruments).forEach((inst) => {
+        const oldPrice = prevPricesRef.current[inst.symbol];
+        if (oldPrice !== undefined && oldPrice !== inst.price) {
+          const dir = inst.price > oldPrice ? "up" : "down";
+          newFlash[inst.symbol] = dir;
+
+          // Clear timer if exists
+          if (flashTimersRef.current[inst.symbol]) {
+            clearTimeout(flashTimersRef.current[inst.symbol]);
+          }
+
+          // Reset flash after 850ms
+          flashTimersRef.current[inst.symbol] = setTimeout(() => {
+            setFlashMap((prev) => {
+              const copy = { ...prev };
+              delete copy[inst.symbol];
+              return copy;
+            });
+          }, 850);
+        }
+        prevPricesRef.current[inst.symbol] = inst.price;
+      });
+
+      if (Object.keys(newFlash).length > 0) {
+        setFlashMap((prev) => ({ ...prev, ...newFlash }));
+      }
+      setInstruments({ ...updatedInstruments });
+    });
+
+    return () => {
+      unsubscribe();
+      Object.values(flashTimersRef.current).forEach((timer) => clearTimeout(timer));
+    };
+  }, []);
+
+  const instrumentList = Object.values(instruments);
+
+  return (
+    <>
+      <View
+        style={[
+          styles.container,
+          {
+            backgroundColor: isDark ? "rgba(11, 19, 38, 0.85)" : "rgba(248, 250, 252, 0.96)",
+            borderColor: theme.colors.border,
+          },
+        ]}
       >
-        {DEFAULT_TICKERS.map((item, index) => (
-          <View key={`${item.symbol}-${index}`} style={styles.tickerItem}>
-            <Text style={[styles.symbolText, { color: theme.colors.textPrimary }]}>
-              {item.symbol}
-            </Text>
-            <Text style={[styles.priceText, { color: theme.colors.textSecondary }]}>
-              {item.price}
-            </Text>
-            <View
-              style={[
-                styles.changeBadge,
-                item.isPositive ? styles.changeBadgePositive : styles.changeBadgeNegative,
-              ]}
-            >
-              <Text
+        <Pressable
+          style={styles.liveIndicatorRow}
+          onPress={() => {
+            // Manual sync tick on clicking live indicator
+            realTimeMarket.triggerManualSync();
+          }}
+        >
+          <View style={styles.liveDotWrapper}>
+            <View style={styles.liveDotPulse} />
+            <View style={styles.liveDot} />
+          </View>
+          <Text style={styles.liveLabel}>LIVE TICK</Text>
+        </Pressable>
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {instrumentList.map((item) => {
+            const isPositive = item.change >= 0;
+            const flash = flashMap[item.symbol];
+            const currSymbol = item.currency === "INR" ? "₹" : "$";
+            const formattedPrice = `${currSymbol}${item.price.toLocaleString("en-IN", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}`;
+            const changeStr = `${isPositive ? "+" : ""}${item.changePercent.toFixed(2)}%`;
+
+            return (
+              <Pressable
+                key={item.symbol}
+                onPress={() => setSelectedSymbol(item.symbol)}
                 style={[
-                  styles.changeText,
-                  item.isPositive ? styles.changeTextPositive : styles.changeTextNegative,
+                  styles.tickerItem,
+                  flash === "up" && styles.tickerItemFlashUp,
+                  flash === "down" && styles.tickerItemFlashDown,
                 ]}
               >
-                {item.change}
-              </Text>
-            </View>
-          </View>
-        ))}
-      </ScrollView>
+                <Text
+                  style={[
+                    styles.symbolText,
+                    { color: theme.colors.textPrimary },
+                    flash === "up" && styles.flashTextUp,
+                    flash === "down" && styles.flashTextDown,
+                  ]}
+                >
+                  {item.symbol}
+                </Text>
+                <Text
+                  style={[
+                    styles.priceText,
+                    { color: theme.colors.textSecondary },
+                    flash === "up" && styles.flashPriceUp,
+                    flash === "down" && styles.flashPriceDown,
+                  ]}
+                >
+                  {formattedPrice}
+                </Text>
+                <View
+                  style={[
+                    styles.changeBadge,
+                    isPositive ? styles.changeBadgePositive : styles.changeBadgeNegative,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.changeText,
+                      isPositive ? styles.changeTextPositive : styles.changeTextNegative,
+                    ]}
+                  >
+                    {changeStr}
+                  </Text>
+                </View>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
 
-      {onCycleCurrency ? (
-        <Pressable
-          style={styles.currencyChip}
-          onPress={onCycleCurrency}
-        >
-          <Text style={styles.currencyChipText}>
-            {CURRENCY_REGISTRY[activeCurrency || "INR"]?.flag || "🇮🇳"}{" "}
-            {CURRENCY_REGISTRY[activeCurrency || "INR"]?.symbol || "₹"}{" "}
-            {activeCurrency || "INR"} ▾
-          </Text>
-        </Pressable>
-      ) : null}
+        {onCycleCurrency ? (
+          <Pressable style={styles.currencyChip} onPress={onCycleCurrency}>
+            <Text style={styles.currencyChipText}>
+              {CURRENCY_REGISTRY[activeCurrency || "INR"]?.flag || "🇮🇳"}{" "}
+              {CURRENCY_REGISTRY[activeCurrency || "INR"]?.symbol || "₹"}{" "}
+              {activeCurrency || "INR"} ▾
+            </Text>
+          </Pressable>
+        ) : null}
 
-      {onRefresh ? (
         <Pressable
           style={[styles.refreshChip, isRefreshing && styles.refreshChipActive]}
-          onPress={onRefresh}
+          onPress={() => {
+            realTimeMarket.triggerManualSync();
+            if (onRefresh) onRefresh();
+          }}
           disabled={isRefreshing}
         >
           <Text style={styles.refreshChipText}>
             {isRefreshing ? "Syncing..." : "⚡ Sync"}
           </Text>
         </Pressable>
-      ) : null}
-    </View>
+      </View>
+
+      {/* Level 2 Market Depth Terminal Modal */}
+      <LiveMarketDepthModal
+        visible={Boolean(selectedSymbol)}
+        symbol={selectedSymbol}
+        theme={theme}
+        onClose={() => setSelectedSymbol(null)}
+      />
+    </>
   );
 };
 
@@ -124,10 +215,10 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 7,
+    paddingVertical: 6,
     paddingHorizontal: 12,
     borderBottomWidth: 1,
-    height: 42,
+    height: 44,
     zIndex: 10,
   },
   liveIndicatorRow: {
@@ -135,7 +226,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingRight: 10,
     borderRightWidth: 1,
-    borderRightColor: "rgba(255, 255, 255, 0.08)",
+    borderRightColor: "rgba(255, 255, 255, 0.1)",
   },
   liveDotWrapper: {
     position: "relative",
@@ -153,10 +244,10 @@ const styles = StyleSheet.create({
   },
   liveDotPulse: {
     position: "absolute",
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: "rgba(34, 197, 94, 0.35)",
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "rgba(34, 197, 94, 0.4)",
   },
   liveLabel: {
     fontSize: 10,
@@ -168,12 +259,39 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 8,
-    gap: 16,
+    gap: 12,
   },
   tickerItem: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "transparent",
+  },
+  tickerItemFlashUp: {
+    backgroundColor: "rgba(34, 197, 94, 0.16)",
+    borderColor: "rgba(34, 197, 94, 0.4)",
+  },
+  tickerItemFlashDown: {
+    backgroundColor: "rgba(239, 68, 68, 0.16)",
+    borderColor: "rgba(239, 68, 68, 0.4)",
+  },
+  flashTextUp: {
+    color: "#4ade80",
+  },
+  flashTextDown: {
+    color: "#f87171",
+  },
+  flashPriceUp: {
+    color: "#4ade80",
+    fontWeight: "700",
+  },
+  flashPriceDown: {
+    color: "#f87171",
+    fontWeight: "700",
   },
   symbolText: {
     fontSize: 11,
@@ -182,7 +300,8 @@ const styles = StyleSheet.create({
   },
   priceText: {
     fontSize: 11,
-    fontWeight: "500",
+    fontWeight: "600",
+    fontVariant: ["tabular-nums"],
   },
   changeBadge: {
     paddingHorizontal: 5,
@@ -198,6 +317,7 @@ const styles = StyleSheet.create({
   changeText: {
     fontSize: 10,
     fontWeight: "700",
+    fontVariant: ["tabular-nums"],
   },
   changeTextPositive: {
     color: "#4ade80",

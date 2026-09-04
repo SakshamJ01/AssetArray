@@ -8,3 +8,4 @@ export * from "./StressTestModal";
 export * from "./MonteCarloModal";
 export * from "./StatementImportModal";
 export * from "./ClientPortalModal";
+export * from "./LiveMarketDepthModal";

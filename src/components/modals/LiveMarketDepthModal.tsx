@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
   Modal,
@@ -47,6 +47,8 @@ export const LiveMarketDepthModal: React.FC<LiveMarketDepthModalProps> = ({
   const [orderQty, setOrderQty] = useState<string>("50");
   const [orderSuccessMsg, setOrderSuccessMsg] = useState<string | null>(null);
   const [priceFlash, setPriceFlash] = useState<"up" | "down" | null>(null);
+  const flashTimerRef = useRef<any>(null);
+  const orderTimerRef = useRef<any>(null);
 
   // Subscribe to live market updates for this symbol
   useEffect(() => {
@@ -61,7 +63,8 @@ export const LiveMarketDepthModal: React.FC<LiveMarketDepthModalProps> = ({
         setInstrument((prev) => {
           if (prev && prev.price !== updated.price) {
             setPriceFlash(updated.price > prev.price ? "up" : "down");
-            setTimeout(() => setPriceFlash(null), 800);
+            if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+            flashTimerRef.current = setTimeout(() => setPriceFlash(null), 800);
           }
           return updated;
         });
@@ -70,6 +73,8 @@ export const LiveMarketDepthModal: React.FC<LiveMarketDepthModalProps> = ({
 
     return () => {
       unsubscribe();
+      if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+      if (orderTimerRef.current) clearTimeout(orderTimerRef.current);
     };
   }, [visible, symbol]);
 
@@ -114,7 +119,8 @@ export const LiveMarketDepthModal: React.FC<LiveMarketDepthModalProps> = ({
       )} (Total: ${currencySymbol}${totalVal})`
     );
 
-    setTimeout(() => {
+    if (orderTimerRef.current) clearTimeout(orderTimerRef.current);
+    orderTimerRef.current = setTimeout(() => {
       setOrderSuccessMsg(null);
     }, 3000);
   };

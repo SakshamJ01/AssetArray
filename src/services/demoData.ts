@@ -260,6 +260,28 @@ export const DEMO_CLIENTS: DemoClient[] = [
         currentValue: "76500",
         targetWeight: "15%",
         notes: "Real asset inflation-linked cash flows."
+      },
+      {
+        id: "hold-13",
+        assetName: "Reliance Industries Ltd",
+        assetClass: "Stocks",
+        ticker: "RELIANCE",
+        quantity: "250",
+        investedValue: "710000",
+        currentValue: "753750",
+        targetWeight: "20%",
+        notes: "Conglomerate growth & digital energy exposure."
+      },
+      {
+        id: "hold-14",
+        assetName: "Tata Consultancy Services",
+        assetClass: "Stocks",
+        ticker: "TCS",
+        quantity: "100",
+        investedValue: "420000",
+        currentValue: "452040",
+        targetWeight: "15%",
+        notes: "Global IT consultancy enterprise cash engine."
       }
     ]
   }

@@ -573,22 +573,23 @@ class RealTimeMarketService {
       // Round to proper exchange precision (0.05 on NSE, 0.01 for USD)
       const tickSize = inst.currency === "INR" && inst.price > 500 ? 0.05 : 0.01;
       const roundedPrice = Math.round(rawNewPrice / tickSize) * tickSize;
-      const newPrice = Number(roundedPrice.toFixed(inst.currency === "INR" && inst.price > 1000 ? 2 : 2));
+      const newPrice = Math.max(0.01, Number(roundedPrice.toFixed(2)));
 
       const direction: "up" | "down" | "flat" =
         newPrice > inst.price ? "up" : newPrice < inst.price ? "down" : "flat";
 
-      const change = Number((newPrice - inst.previousClose).toFixed(2));
-      const changePercent = Number(((change / inst.previousClose) * 100).toFixed(2));
+      const previousClose = inst.previousClose || inst.price || 1;
+      const change = Number((newPrice - previousClose).toFixed(2));
+      const changePercent = Number(((change / previousClose) * 100).toFixed(2));
       const dayHigh = Math.max(inst.dayHigh, newPrice);
       const dayLow = Math.min(inst.dayLow, newPrice);
       const addedVolume = Math.floor(Math.random() * 500) + 50;
 
       // Update depth entries realistically
-      const spread = (inst.price * 0.0004);
+      const spread = Math.max(0.01, inst.price * 0.0004);
       const newDepth: MarketDepthEntry = {
         bids: inst.depth.bids.map((b, i) => ({
-          price: Number((newPrice - spread * (i + 1)).toFixed(2)),
+          price: Math.max(0.01, Number((newPrice - spread * (i + 1)).toFixed(2))),
           quantity: Math.max(10, Math.round(b.quantity * (0.95 + Math.random() * 0.1))),
           orders: Math.max(1, Math.round(b.orders * (0.95 + Math.random() * 0.1))),
         })),

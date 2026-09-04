@@ -30,7 +30,7 @@ import { BottomTabBar } from "./src/components/BottomTabBar";
 import { DashboardScreen } from "./src/components/DashboardScreen";
 import { AdvisorMessagesScreen } from "./src/screens/workspace/AdvisorMessagesScreen";
 import { AggregationScreen } from "./src/screens/workspace/AggregationScreen";
-import { setHapticsEnabled } from "./src/services/haptics";
+import { setHapticsEnabled, triggerSuccessHaptic } from "./src/services/haptics";
 import {
   AiResearchResult,
   AuthUser,
@@ -55,6 +55,8 @@ import { exportClientPdfReport } from "./src/services/pdfReport";
 import { initializeRevenueCat, checkProStatus, getOfferings, purchasePackage, restorePurchases, resetDemoProStatus } from "./src/services/revenueCat";
 import { PaywallScreen } from "./src/screens/PaywallScreen";
 import { PurchasesPackage } from "react-native-purchases";
+import { DEMO_CLIENTS } from "./src/services/demoData";
+import { AssetAllocationBar } from "./src/components/AssetAllocationBar";
 
 type Channel = "Phone" | "SMS" | "Email" | "WhatsApp";
 type Category = "HNI" | "Retail" | "Family Office" | "Trader" | "Long Term";
@@ -1526,6 +1528,16 @@ function AppContent() {
     );
   }
 
+  async function seedDemoClients() {
+    const nonDemo = clients.filter((c) => !c.id.startsWith("demo-client-"));
+    const updated = [...(DEMO_CLIENTS as unknown as Client[]), ...nonDemo];
+    setClients(updated);
+    await persistClients(updated);
+    setSelectedClientId(updated[0].id);
+    await triggerSuccessHaptic();
+    Alert.alert("Demo Roster Loaded", "Loaded 3 institutional client portfolios with holdings for judge evaluation!");
+  }
+
   function toggleSelectedClient(clientId: string) {
     setSelectedClientIds((current) =>
       current.includes(clientId)
@@ -2479,6 +2491,21 @@ function AppContent() {
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 2 }}>
               <Text style={[styles.heroEyebrow, { color: theme.colors.brand }]}>Asset Array</Text>
               <SyncBadge isSyncing={isSyncing} />
+              <Pressable
+                onPress={() => setIsPaywallVisible(true)}
+                style={{
+                  paddingHorizontal: 8,
+                  paddingVertical: 2,
+                  borderRadius: 12,
+                  backgroundColor: isPro ? "rgba(224, 168, 76, 0.15)" : "rgba(255, 255, 255, 0.08)",
+                  borderWidth: 1,
+                  borderColor: isPro ? theme.colors.brand : "rgba(255, 255, 255, 0.15)",
+                }}
+              >
+                <Text style={{ fontSize: 10, fontWeight: "800", color: isPro ? theme.colors.brand : theme.colors.textSecondary }}>
+                  {isPro ? "👑 PRO" : "⚡ UPGRADE"}
+                </Text>
+              </Pressable>
             </View>
             <Text
               style={[
@@ -3444,8 +3471,16 @@ function AppContent() {
                 <View style={styles.emptyState}>
                   <Text style={styles.emptyTitle}>No matching clients</Text>
                   <Text style={styles.emptyText}>
-                    Adjust your filters or add a new client to grow the desk.
+                    Adjust your filters, add a client, or load the institutional showcase portfolio.
                   </Text>
+                  <Pressable
+                    style={[styles.primaryButton, { marginTop: 14, backgroundColor: theme.colors.brand }]}
+                    onPress={() => void seedDemoClients()}
+                  >
+                    <Text style={[styles.primaryButtonText, { color: "#050914", fontWeight: "800" }]}>
+                      ⚡ Load Demo Roster & Holdings (Judge Showcase)
+                    </Text>
+                  </Pressable>
                 </View>
               ) : (
                 filteredClients.map((client) => {
@@ -3522,7 +3557,8 @@ function AppContent() {
                   </Text>
 
                   <Text style={styles.sectionLabel}>Portfolio allocation</Text>
-                  <Text style={styles.detailBlock}>
+                  <AssetAllocationBar allocationString={selectedClient.allocation} theme={theme} />
+                  <Text style={[styles.detailBlock, { marginTop: 6 }]}>
                     {selectedClient.allocation || "Not saved"}
                   </Text>
 
@@ -4182,6 +4218,20 @@ function AppContent() {
                   {isPro ? "Reset" : "Activate"}
                 </Text>
               </Pressable>
+              <Pressable
+                style={styles.settingsActionRow}
+                onPress={() => void seedDemoClients()}
+              >
+                <View style={styles.toggleCopy}>
+                  <Text style={styles.toggleTitle}>⚡ Load Demo Roster (Judge Mode)</Text>
+                  <Text style={styles.toggleText}>
+                    Populate 3 institutional client portfolios with holdings for judging evaluation.
+                  </Text>
+                </View>
+                <Text style={[styles.settingsActionText, { color: theme.colors.brand }]}>
+                  Load
+                </Text>
+              </Pressable>
             </View>
 
             <View style={styles.panel}>
@@ -4727,6 +4777,7 @@ function AppContent() {
             if (success) {
               setIsPro(true);
               setIsPaywallVisible(false);
+              await triggerSuccessHaptic();
               Alert.alert("Welcome to Pro", "Thank you for subscribing to Pro Advisor!");
             }
             setIsPaywallLoading(false);
@@ -4737,6 +4788,7 @@ function AppContent() {
             if (success) {
               setIsPro(true);
               setIsPaywallVisible(false);
+              await triggerSuccessHaptic();
               Alert.alert("Purchases Restored", "Your Pro Advisor subscription has been restored.");
             } else {
               Alert.alert("Restore Failed", "No active subscription found.");

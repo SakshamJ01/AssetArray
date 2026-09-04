@@ -1,6 +1,6 @@
 # Asset Array 💼📈
 
-[![Version 2.0.0](https://img.shields.io/badge/Version-2.0.0-E0A84C?style=for-the-badge&logo=git&logoColor=white)](https://github.com/SakshamJ01/AssetArray)
+[![Version 2.2.0](https://img.shields.io/badge/Version-2.2.0-E0A84C?style=for-the-badge&logo=git&logoColor=white)](https://github.com/SakshamJ01/AssetArray)
 [![Live Web App](https://img.shields.io/badge/Live%20Web%20App-asset--array.web.app-E0A84C?style=for-the-badge&logo=firebase&logoColor=white)](https://asset-array.web.app)
 [![Live Backend API](https://img.shields.io/badge/API-assetarray.onrender.com-46E3B7?style=for-the-badge&logo=render&logoColor=black)](https://assetarray.onrender.com/api/health)
 [![Cloud Database](https://img.shields.io/badge/Database-MongoDB%20Atlas-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://cloud.mongodb.com)
@@ -9,12 +9,13 @@
 [![RevenueCat](https://img.shields.io/badge/Monetization-RevenueCat-orange.svg)](https://www.revenuecat.com/)
 [![Built with Expo](https://img.shields.io/badge/Built%20with-Expo%20%2F%20React%20Native-blue.svg)](https://expo.dev/)
 [![Gemini AI](https://img.shields.io/badge/AI-Google%20Gemini-8E75B2.svg)](https://ai.google.dev/)
+[![Tests Passing](https://img.shields.io/badge/Tests-41%20Passed-22c55e.svg)](https://github.com/SakshamJ01/AssetArray)
 
 ![Asset Array Hero Banner](assets/hero-thumbnail.jpg)
 
-**Asset Array** is an executive wealth management CRM, portfolio analyzer, and client reporting suite tailored for independent financial advisors, wealth managers, and family offices. 
+**Asset Array** is an institutional-grade wealth management CRM, real-time share market terminal, portfolio analyzer, and client reporting suite tailored for independent financial advisors, wealth managers, and family offices. 
 
-Built with a high-contrast obsidian & champagne gold luxury aesthetic (`#030712` / `#E0A84C`), client-side zero-knowledge AES-256 encryption, multi-user cloud synchronization, responsive cross-platform web/desktop support, and built-in subscription monetization powered by **RevenueCat** for **Shipathon 2026**.
+Engineered with a high-contrast obsidian & champagne gold luxury aesthetic, dual-mode Swiss Private Banking light theme, real-time stochastic share market streaming engine, client-side zero-knowledge AES-256 encryption, multi-user cloud synchronization, responsive cross-platform web/desktop support, and built-in subscription monetization powered by **RevenueCat** for **Shipathon 2026**.
 
 ---
 
@@ -30,20 +31,36 @@ Built with a high-contrast obsidian & champagne gold luxury aesthetic (`#030712`
 
 ## 🌟 Key Features
 
-### 🖥️ Universal Desktop & Web Experience
-- **Responsive Workspace:** Full-featured desktop layout (`≥1024px`) with an executive collapsible navigation sidebar, persistent key action bar, and responsive centered dialog modals.
-- **Keyboard Power Shortcuts:** Quick navigation via `⌘K` (Client Finder), `⌘B` (Broadcast Center), `⌘L` (Desk Lock), and `Esc` (Dismiss Modals).
-- **Mobile First Adaptation:** Automatically transforms into a bottom-sheet mobile app layout with bottom tabs and haptic feedback on smaller viewports.
+### ⚡ Real-Time Share Market Streaming Engine & Level-2 Terminal
+- **Authentic Multi-Asset Universe:** Streams live micro-ticks for **NSE/BSE Equities** (`RELIANCE`, `TCS`, `HDFCBANK`, `INFY`, `ICICIBANK`), **Global Indices** (`NIFTY 50`, `SENSEX`, `S&P 500`, `NASDAQ`), **Commodities** (`GOLD`), **Forex** (`USD/INR`), and **Crypto** (`BTC/USD`, `ETH/USD`).
+- **Exchange Precision Ticking:** Realistic Brownian stochastic movement matching exchange tick sizes (₹0.05 on NSE, $0.01 on USD).
+- **Interactive Level-2 Depth Terminal:** Top 5 Bids & Asks orderbook with real-time quantities, order counts, buy/sell volume pressure gauge, intraday 30-tick SVG sparkline, day high/low slider, and simulated trade desk.
+- **Micro-Flash Live Ticker:** Animated green/red micro-glow chips flashing on price ticks with 1-tap deep inspection.
+- **Continuous Portfolio Valuation Sync:** Client holdings (`currentValue = quote.price * quantity`) dynamically update in real time as market securities tick.
+
+### 🎲 Monte Carlo Wealth Simulator
+- **1,000 Path Stochastic Forecast:** Simulates portfolio growth under historical market volatility and drift to compute statistical goal success probabilities.
+- **Confidence Bands:** 10th (pessimistic), 50th (median), and 90th (optimistic) percentile trajectory paths.
+
+### 📄 1-Click Statement & CSV Importer
+- **Automated Ingestion:** Instant parsing of brokerage CSV and text statements.
+- **Smart Asset Classification:** Automatically categorizes parsed securities into Equities, Mutual Funds, Fixed Income, and Commodities.
+
+### 🤖 Conversational AI Wealth Copilot (Google Gemini)
+- **Context-Aware Portfolio Assistant:** Instant chat answering complex queries regarding asset exposure, rebalancing requirements, and risk distribution.
+- **One-Touch Prompts:** Pre-configured analysis shortcuts ("Analyze concentration risk", "Generate tax harvesting plan").
+
+### 🗺️ Dynamic Holdings Treemap / Heatmap
+- **Visual Allocation Studio:** Interactive area-proportional tiles showcasing portfolio weightings and returns.
+
+### 🛡️ Client Investor Shareable Portal
+- **Branded Read-Only Dossier:** Generate secure, client-facing portfolio dashboards for high-net-worth clients.
 
 ### 💎 Pro Advisor Monetization (RevenueCat)
 - **Native In-App Purchases:** Integrated via `react-native-purchases` supporting iOS App Store, Google Play, and RevenueCat Test Store sandbox.
 - **Conversion-Optimized Paywall:** High-converting modal UI highlighting Pro benefits (Monthly & Annual pricing tiers).
 - **Feature Gating:** Free tier vs. Pro tier access control gating AI Portfolio Co-Pilot and Unlimited Client PDF Exports.
 - **In-App Subscription Management:** Real-time plan status indicator, purchase restore, and a built-in sandbox reset toggle in Settings.
-
-### 🤖 AI Portfolio Co-Pilot (Google Gemini)
-- **Intelligent Rebalancing Briefs:** Generates institutional-grade asset allocation insights and risk commentary based on client holdings and risk profile.
-- **Client Communication Drafts:** Creates personalized, professional updates ready to dispatch via WhatsApp, Email, or SMS.
 
 ### 📄 Executive PDF Report Studio
 - **Print & Share Ready:** Generates high-resolution, branded PDF portfolio summary reports on-device using `expo-print` and `expo-sharing`.
@@ -64,32 +81,50 @@ Built with a high-contrast obsidian & champagne gold luxury aesthetic (`#030712`
 
 ```
 AssetArray/
-├── App.tsx                        # Root layout, navigation orchestration, and modal engine
-├── firebase.json                  # Firebase Hosting configuration with SPA rewrites
-├── render.yaml                    # Render.com Web Service Blueprint CI/CD
+├── App.tsx                              # Root layout, live ticker sync, navigation orchestration
+├── firebase.json                        # Firebase Hosting configuration with SPA rewrites
+├── render.yaml                          # Render.com Web Service Blueprint CI/CD
 ├── src/
 │   ├── components/
-│   │   ├── DesktopSidebar.tsx     # Executive desktop navigation sidebar & shortcuts
-│   │   ├── DashboardScreen.tsx    # Executive dashboard metrics, charts, and quick actions
-│   │   ├── BottomTabBar.tsx       # Mobile bottom navigation bar
-│   │   └── SyncBadge.tsx          # Real-time E2EE cloud sync indicator
+│   │   ├── DesktopSidebar.tsx           # Executive desktop navigation sidebar & shortcuts
+│   │   ├── DashboardScreen.tsx          # Executive dashboard metrics, charts, and quick actions
+│   │   ├── LiveMarketTicker.tsx         # Real-time ticking header with micro-flash animations
+│   │   ├── AiWealthCopilot.tsx          # Floating conversational AI copilot
+│   │   ├── BottomTabBar.tsx             # Mobile bottom navigation bar
+│   │   ├── charts/
+│   │   │   ├── HoldingsTreemap.tsx      # Interactive portfolio allocation treemap
+│   │   │   ├── PerformanceChart.tsx     # Historical portfolio trajectory chart
+│   │   │   └── Sparkline.tsx            # SVG micro-trend lines
+│   │   └── modals/
+│   │       ├── LiveMarketDepthModal.tsx # Level 2 Orderbook Depth Terminal
+│   │       ├── MonteCarloModal.tsx      # 1,000-run statistical simulation studio
+│   │       ├── StatementImportModal.tsx # 1-Click CSV/Statement parser
+│   │       ├── ClientPortalModal.tsx    # Shareable client investor portal
+│   │       ├── RebalanceModal.tsx       # Institutional portfolio rebalancing
+│   │       └── StressTestModal.tsx      # 2008 Crash, Tech Bubble & Rate Hike stress testing
 │   ├── screens/
-│   │   ├── PaywallScreen.tsx      # RevenueCat Pro Advisor Paywall UI
-│   │   └── workspace/             # Advisory messaging & client aggregation screens
+│   │   ├── ClientsScreen.tsx            # Search, filter, client dossier & report studio
+│   │   ├── PortfoliosScreen.tsx         # Unified portfolio analytics & live market feed
+│   │   ├── ToolsScreen.tsx              # SIP, Cash Flow, Retirement, Goal Center & Vault
+│   │   ├── WorkspaceScreen.tsx          # AI research brief, market message & aggregations
+│   │   ├── SettingsScreen.tsx           # Security, theme, cloud sync, and subscriptions
+│   │   └── PaywallScreen.tsx            # RevenueCat Pro Advisor Paywall UI
 │   ├── services/
-│   │   ├── revenueCat.ts          # RevenueCat SDK initialization & entitlements
-│   │   ├── secureSync.ts          # AES-256 cryptographic sync client
-│   │   ├── pdfReport.ts           # Executive PDF report generation
-│   │   ├── calculators.ts         # Pure financial models (SIP, Cash Flow, Goals)
-│   │   ├── aiAdvisor.ts           # Gemini AI portfolio analyzer
-│   │   └── marketData.ts          # Real-time market streaming feed
+│   │   ├── realTimeMarket.ts            # Stochastic Brownian market tick & depth engine
+│   │   ├── monteCarlo.ts                # Statistical path generation engine
+│   │   ├── statementParser.ts           # CSV/statement parsing & classification
+│   │   ├── revenueCat.ts                # RevenueCat SDK initialization & entitlements
+│   │   ├── secureSync.ts                # AES-256 cryptographic sync client
+│   │   ├── pdfReport.ts                 # Executive PDF report generation
+│   │   ├── calculators.ts               # Pure financial models (SIP, Cash Flow, Goals)
+│   │   └── aiAdvisor.ts                 # Gemini AI portfolio analyzer
 │   └── theme/
-│       └── colors.ts              # Executive obsidian & champagne gold palette
-├── backend/                       # Node.js + Express + MongoDB Atlas cloud API
-│   ├── server.js                  # REST API (Auth, E2EE Sync, AI Research, Audit Logs)
-│   ├── Dockerfile                 # Multi-stage production container
-│   └── package.json               # Backend dependencies
-└── __tests__/                     # Jest unit test suites
+│       └── colors.ts                    # Obsidian & Champagne Gold + Swiss Luxury Light palettes
+├── backend/                             # Node.js + Express + MongoDB Atlas cloud API
+│   ├── server.js                        # REST API (Auth, E2EE Sync, AI Research, Audit Logs)
+│   ├── Dockerfile                       # Multi-stage production container
+│   └── package.json                     # Backend dependencies
+└── __tests__/                           # 41 passing Jest unit tests across 9 suites
 ```
 
 ---
@@ -121,7 +156,12 @@ npm run deploy:web
 npm run deploy:preview
 ```
 
-### 3. Deploy Backend API
+### 3. Run Automated Tests
+```bash
+npm test
+```
+
+### 4. Deploy Backend API
 The backend is configured for continuous deployment on [Render.com](https://render.com) using the included `render.yaml` blueprint. Simply connect the repository to Render, configure your environment variables (`MONGO_URI`, `GEMINI_API_KEY`, etc.), and deployment runs automatically on push to `main`.
 
 ---
@@ -142,7 +182,7 @@ Asset Array is submitted for **Shipathon 2026 (Student Track)**:
 - **Track:** Student Track
 - **Monetization Engine:** RevenueCat (`react-native-purchases`)
 - **Offerings:** Pro Advisor Monthly & Annual Subscriptions
-- **Core Innovation:** Enterprise zero-knowledge client encryption, Gemini-powered wealth co-pilot, and institutional PDF reporting gated behind RevenueCat entitlements.
+- **Core Innovation:** Real-time share market streaming engine, Level-2 depth terminal, Monte Carlo wealth simulation, enterprise zero-knowledge client encryption, and Gemini-powered wealth co-pilot.
 
 ---
 

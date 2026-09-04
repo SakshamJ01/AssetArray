@@ -295,7 +295,7 @@ const DEFAULT_BACKEND_ENDPOINT = "https://assetarray.onrender.com";
 const emptyCloudSettings: CloudSettings = {
   endpoint: DEFAULT_BACKEND_ENDPOINT,
   ownerName: "",
-  authUsername: "",
+  authUsername: "admin",
 };
 
 const emptyGoalDraft: GoalDraft = {
@@ -741,8 +741,11 @@ function AppContent() {
         setBiometricEnabled(parseStoredJson(rawBiometric, false));
         setClients(parseStoredJson(rawClients, [] as Client[]));
         const loadedCloudSettings = parseStoredJson(rawCloudSettings, emptyCloudSettings);
-        if (!loadedCloudSettings.endpoint || !loadedCloudSettings.endpoint.trim() || loadedCloudSettings.endpoint.includes("localhost") || loadedCloudSettings.endpoint.includes("127.0.0.1")) {
+        if (!loadedCloudSettings.endpoint || !loadedCloudSettings.endpoint.trim() || loadedCloudSettings.endpoint.includes("localhost") || loadedCloudSettings.endpoint.includes("127.0.0.1") || loadedCloudSettings.endpoint.includes("192.168") || loadedCloudSettings.endpoint.includes("10.18")) {
           loadedCloudSettings.endpoint = DEFAULT_BACKEND_ENDPOINT;
+        }
+        if (!loadedCloudSettings.authUsername) {
+          loadedCloudSettings.authUsername = "admin";
         }
         setCloudSettings(loadedCloudSettings);
 
@@ -2472,11 +2475,27 @@ function AppContent() {
             onChangeText={(value) =>
               setCloudSettings((current) => ({ ...current, endpoint: value }))
             }
-            placeholder="Backend URL, e.g. http://192.168.1.10:4000"
+            placeholder="Backend URL (https://assetarray.onrender.com)"
             placeholderTextColor="#7f90a8"
             autoCapitalize="none"
             style={styles.authInput}
           />
+          {!cloudSettings.endpoint.trim() ? (
+            <Pressable
+              style={{ alignSelf: "flex-start", marginBottom: 12, marginTop: -4 }}
+              onPress={() =>
+                setCloudSettings((current) => ({
+                  ...current,
+                  endpoint: DEFAULT_BACKEND_ENDPOINT,
+                  authUsername: current.authUsername || "admin",
+                }))
+              }
+            >
+              <Text style={{ color: "#E0A84C", fontSize: 13, textDecorationLine: "underline" }}>
+                ✦ Auto-fill Cloud Backend ({DEFAULT_BACKEND_ENDPOINT})
+              </Text>
+            </Pressable>
+          ) : null}
           <TextInput
             value={cloudSettings.authUsername}
             onChangeText={(value) =>
@@ -4739,7 +4758,7 @@ function AppContent() {
               onChangeText={(value) =>
                 setCloudSettings((current) => ({ ...current, endpoint: value }))
               }
-              placeholder="Backend URL, e.g. http://192.168.1.10:4000"
+              placeholder="Backend URL (https://assetarray.onrender.com)"
               placeholderTextColor="#7f90a8"
               autoCapitalize="none"
               style={styles.input}
@@ -4750,13 +4769,13 @@ function AppContent() {
                 onPress={() =>
                   setCloudSettings((current) => ({
                     ...current,
-                    endpoint: "http://10.18.66.247:4000",
+                    endpoint: DEFAULT_BACKEND_ENDPOINT,
                     authUsername: current.authUsername || "admin",
                   }))
                 }
               >
                 <Text style={{ color: theme.colors.brand, fontSize: 12, fontWeight: "700" }}>
-                  ✦ Auto-fill Local Backend (http://10.18.66.247:4000)
+                  ✦ Auto-fill Cloud Backend ({DEFAULT_BACKEND_ENDPOINT})
                 </Text>
               </Pressable>
             ) : null}

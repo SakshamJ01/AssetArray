@@ -9,6 +9,8 @@
 [![Built with Expo](https://img.shields.io/badge/Built%20with-Expo%20%2F%20React%20Native-blue.svg)](https://expo.dev/)
 [![Gemini AI](https://img.shields.io/badge/AI-Google%20Gemini-8E75B2.svg)](https://ai.google.dev/)
 
+![Asset Array Hero Banner](assets/hero-thumbnail.jpg)
+
 **Asset Array** is an executive wealth management CRM, portfolio analyzer, and client reporting suite tailored for independent financial advisors, wealth managers, and family offices. 
 
 Built with a high-contrast obsidian & champagne gold luxury aesthetic (`#030712` / `#E0A84C`), client-side zero-knowledge AES-256 encryption, multi-user cloud synchronization, responsive cross-platform web/desktop support, and built-in subscription monetization powered by **RevenueCat** for **Shipathon 2026**.

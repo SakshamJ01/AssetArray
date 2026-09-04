@@ -81,7 +81,7 @@ export function DashboardScreen({
 
   const topSummary = [
     { label: "Clients", value: statMap["client count"] ?? "--", tone: "neutral" as const },
-    { label: "Due Today", value: statMap["due today"] ?? "--", tone: "warning" as const },
+    { label: "Due", value: statMap["due today"] ?? "--", tone: "warning" as const },
     { label: "Priority", value: statMap["high priority"] ?? "--", tone: "danger" as const },
   ];
 
@@ -163,12 +163,12 @@ export function DashboardScreen({
 
               <View style={styles.featuredCard}>
                 <View style={styles.featuredCardTop}>
-                  <View>
+                  <View style={styles.featuredHeaderLeft}>
                     <Text style={styles.featuredEyebrow}>PRIVATE CLIENT ADVISORY</Text>
-                    <Text style={styles.featuredTitle}>Portfolio Command Center</Text>
+                    <Text numberOfLines={1} style={styles.featuredTitle}>Portfolio Command</Text>
                   </View>
                   <View style={styles.vaultBadge}>
-                    <Text style={styles.vaultBadgeText}>FIDUCIARY VAULT</Text>
+                    <Text style={styles.vaultBadgeText}>FIDUCIARY</Text>
                   </View>
                 </View>
 
@@ -180,16 +180,16 @@ export function DashboardScreen({
                       : "$8,450,000"}
                   </Text>
                   <View style={styles.heroAumSubRow}>
-                    <Text style={styles.heroAumAlpha}>✦ Active Multi-Asset Fiduciary Allocation</Text>
-                    <Text style={styles.heroAumSecurity}>AES-256 Secured</Text>
+                    <Text numberOfLines={1} style={styles.heroAumAlpha}>✦ Active Advisory</Text>
+                    <Text numberOfLines={1} style={styles.heroAumSecurity}>🔒 AES-256</Text>
                   </View>
                 </View>
 
                 <View style={styles.metricRow}>
                   {topSummary.map((stat) => (
                     <View key={stat.label} style={styles.metricCard}>
-                      <Text style={styles.metricLabel}>{stat.label}</Text>
-                      <Text style={styles.metricValue}>{stat.value}</Text>
+                      <Text numberOfLines={1} style={styles.metricLabel}>{stat.label}</Text>
+                      <Text numberOfLines={1} style={styles.metricValue}>{stat.value}</Text>
                       <View
                         style={[
                           styles.metricAccent,
@@ -488,9 +488,14 @@ const createStyles = (theme: AppTheme, contentBottomPadding: number) =>
       ...theme.shadows.card,
     },
     featuredCardTop: {
-      alignItems: "flex-start",
+      alignItems: "center",
       flexDirection: "row",
+      gap: theme.spacing[2],
       justifyContent: "space-between",
+    },
+    featuredHeaderLeft: {
+      flex: 1,
+      minWidth: 0,
     },
     featuredEyebrow: {
       color: theme.colors.textMuted,
@@ -502,18 +507,20 @@ const createStyles = (theme: AppTheme, contentBottomPadding: number) =>
     },
     featuredTitle: {
       color: theme.colors.textPrimary,
-      fontSize: theme.typography.headingMd.fontSize,
+      fontSize: 18,
       fontWeight: theme.typography.headingMd.fontWeight,
       letterSpacing: -0.3,
-      lineHeight: theme.typography.headingMd.lineHeight,
+      lineHeight: 24,
       marginTop: theme.spacing[1],
     },
     vaultBadge: {
+      alignSelf: "center",
       backgroundColor: "rgba(224, 168, 76, 0.12)",
       borderColor: theme.colors.brand,
       borderRadius: theme.radius.pill,
       borderWidth: 1,
-      paddingHorizontal: 10,
+      flexShrink: 0,
+      paddingHorizontal: 8,
       paddingVertical: 4,
     },
     vaultBadgeText: {
@@ -550,17 +557,20 @@ const createStyles = (theme: AppTheme, contentBottomPadding: number) =>
       borderTopColor: theme.colors.border,
       borderTopWidth: 1,
       flexDirection: "row",
+      gap: theme.spacing[2],
       justifyContent: "space-between",
       marginTop: 10,
       paddingTop: 8,
     },
     heroAumAlpha: {
       color: theme.colors.accent,
+      flex: 1,
       fontSize: 12,
       fontWeight: "700",
     },
     heroAumSecurity: {
       color: theme.colors.textMuted,
+      flexShrink: 0,
       fontSize: 11,
       fontWeight: "600",
     },
@@ -569,30 +579,36 @@ const createStyles = (theme: AppTheme, contentBottomPadding: number) =>
       gap: theme.spacing[2],
     },
     metricCard: {
+      alignItems: "center",
       backgroundColor: theme.colors.surfaceMuted,
       borderColor: theme.colors.border,
       borderRadius: theme.radius.lg,
       borderWidth: 1,
       flex: 1,
       gap: theme.spacing[1],
-      padding: theme.spacing[3],
+      justifyContent: "center",
+      paddingHorizontal: theme.spacing[2],
+      paddingVertical: theme.spacing[3],
     },
     metricLabel: {
       color: theme.colors.textMuted,
-      fontSize: theme.typography.label.fontSize,
-      fontWeight: theme.typography.label.fontWeight,
-      letterSpacing: 0.5,
-      lineHeight: theme.typography.label.lineHeight,
+      fontSize: 10,
+      fontWeight: "800",
+      letterSpacing: 0.6,
+      lineHeight: 14,
+      textAlign: "center",
       textTransform: "uppercase",
     },
     metricValue: {
       color: theme.colors.textPrimary,
-      fontSize: 20,
+      fontSize: 22,
       fontWeight: "800",
       letterSpacing: -0.4,
-      lineHeight: 26,
+      lineHeight: 28,
+      textAlign: "center",
     },
     metricAccent: {
+      alignSelf: "center",
       borderRadius: 99,
       height: 3,
       marginTop: theme.spacing[1],

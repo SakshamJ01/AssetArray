@@ -4721,9 +4721,9 @@ function AppContent() {
 
       <Modal visible={isBroadcastModalOpen} transparent animationType="slide">
         <View style={styles.modalBackdrop}>
-          <View style={[styles.modalCard, { maxHeight: "88%", display: "flex", flexDirection: "column" }]}>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-              <View style={{ flex: 1 }}>
+          <View style={[styles.modalCard, { height: "84%", paddingBottom: Math.max(insets.bottom, 16) }]}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+              <View style={{ flex: 1, paddingRight: 8 }}>
                 <Text style={styles.modalTitle}>Broadcast Center</Text>
                 <Text style={styles.panelSubtitle}>
                   One-tap mass outreach to selected high-net-worth clients.
@@ -4739,8 +4739,9 @@ function AppContent() {
 
             <ScrollView
               showsVerticalScrollIndicator={false}
-              style={{ flex: 1 }}
-              contentContainerStyle={{ gap: 10, paddingBottom: 16 }}
+              style={{ flex: 1, minHeight: 320 }}
+              contentContainerStyle={{ gap: 12, paddingBottom: 20 }}
+              keyboardShouldPersistTaps="handled"
             >
               <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
                 <Text style={styles.inputLabel}>Dispatch Channel</Text>

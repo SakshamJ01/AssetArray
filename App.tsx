@@ -52,6 +52,9 @@ import { fetchLiveMarketQuotes, getQuoteForSymbol, MarketQuote } from "./src/ser
 import { analyzeClientPortfolioWithAI, ClientAiRecommendation } from "./src/services/aiAdvisor";
 import { useNetworkStatus } from "./src/services/network";
 import { exportClientPdfReport } from "./src/services/pdfReport";
+import { initializeRevenueCat, checkProStatus, getOfferings, purchasePackage, restorePurchases, resetDemoProStatus } from "./src/services/revenueCat";
+import { PaywallScreen } from "./src/screens/PaywallScreen";
+import { PurchasesPackage } from "react-native-purchases";
 
 type Channel = "Phone" | "SMS" | "Email" | "WhatsApp";
 type Category = "HNI" | "Retail" | "Family Office" | "Trader" | "Long Term";
@@ -616,6 +619,10 @@ function AppContent() {
   const [selectedAiClient, setSelectedAiClient] = useState<Client | null>(null);
   const [clientAiRecommendation, setClientAiRecommendation] = useState<ClientAiRecommendation | null>(null);
   const [isClientAiLoading, setIsClientAiLoading] = useState(false);
+  const [isPro, setIsPro] = useState(false);
+  const [isPaywallVisible, setIsPaywallVisible] = useState(false);
+  const [revenueCatPackages, setRevenueCatPackages] = useState<PurchasesPackage[]>([]);
+  const [isPaywallLoading, setIsPaywallLoading] = useState(false);
   const [isPortfolioModalOpen, setIsPortfolioModalOpen] = useState(false);
   const [portfolioMode, setPortfolioMode] = useState<"add" | "edit">("add");
   const [holdingDraft, setHoldingDraft] = useState<HoldingDraft>(emptyHoldingDraft);
@@ -735,6 +742,13 @@ function AppContent() {
         const hardware = await LocalAuthentication.hasHardwareAsync().catch(() => false);
         const enrolled = await LocalAuthentication.isEnrolledAsync().catch(() => false);
         setBiometricAvailable(hardware && enrolled);
+
+        await initializeRevenueCat();
+        const proStatus = await checkProStatus();
+        setIsPro(proStatus);
+        const pkgs = await getOfferings();
+        setRevenueCatPackages(pkgs);
+
         setIsReady(true);
       }
     }
@@ -1832,6 +1846,10 @@ function AppContent() {
   }
 
   async function runClientAiCoPilot(targetClient: Client) {
+    if (!isPro) {
+      setIsPaywallVisible(true);
+      return;
+    }
     if (!cloudSettings.endpoint.trim()) {
       Alert.alert("Backend URL needed", "Configure your backend URL before using AI Co-Pilot.");
       return;
@@ -3507,6 +3525,10 @@ function AppContent() {
                     <Pressable
                       style={styles.linkButton}
                       onPress={() => {
+                        if (!isPro) {
+                          setIsPaywallVisible(true);
+                          return;
+                        }
                         void exportClientPdfReport({
                           client: selectedClient,
                           advisorName: authSession?.user?.username || cloudSettings.ownerName || "Asset Array Advisor",
@@ -4079,7 +4101,54 @@ function AppContent() {
                   <Text style={styles.settingsStatusLabel}>Cloud sync</Text>
                   <Text style={styles.settingsStatusValue}>{syncState}</Text>
                 </View>
+                <View style={styles.settingsStatusItem}>
+                  <Text style={styles.settingsStatusLabel}>Plan</Text>
+                  <Text style={[styles.settingsStatusValue, { color: isPro ? theme.colors.brand : theme.colors.textSecondary }]}>
+                    {isPro ? "Pro ⭐" : "Free"}
+                  </Text>
+                </View>
               </View>
+            </View>
+
+            <View style={styles.panel}>
+              <Text style={styles.settingsSectionTitle}>Subscription (RevenueCat)</Text>
+              <View style={styles.settingsRow}>
+                <View style={styles.toggleCopy}>
+                  <Text style={styles.toggleTitle}>Current Plan</Text>
+                  <Text style={styles.toggleText}>
+                    {isPro ? "Pro Advisor (Active with AI & Unlimited Reports)" : "Free Plan (Gated AI & Reports)"}
+                  </Text>
+                </View>
+                <Pressable
+                  style={styles.darkChip}
+                  onPress={() => setIsPaywallVisible(true)}
+                >
+                  <Text style={styles.darkChipText}>View Paywall</Text>
+                </Pressable>
+              </View>
+              <Pressable
+                style={styles.settingsActionRow}
+                onPress={async () => {
+                  if (isPro) {
+                    await resetDemoProStatus();
+                    setIsPro(false);
+                    Alert.alert("Subscription Reset", "Switched back to Free Plan! You can now test the paywall triggers again.");
+                  } else {
+                    setIsPro(true);
+                    Alert.alert("Pro Activated", "Pro Advisor plan activated!");
+                  }
+                }}
+              >
+                <View style={styles.toggleCopy}>
+                  <Text style={styles.toggleTitle}>{isPro ? "Reset to Free Plan" : "Quick Activate Pro"}</Text>
+                  <Text style={styles.toggleText}>
+                    {isPro ? "Switch back to Free tier to test the paywall trigger again." : "Instantly activate Pro tier for testing."}
+                  </Text>
+                </View>
+                <Text style={[styles.settingsActionText, { color: isPro ? theme.colors.danger : theme.colors.brand }]}>
+                  {isPro ? "Reset" : "Activate"}
+                </Text>
+              </Pressable>
             </View>
 
             <View style={styles.panel}>
@@ -4607,6 +4676,42 @@ function AppContent() {
             </View>
           </View>
         </View>
+      </Modal>
+
+      <Modal
+        visible={isPaywallVisible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setIsPaywallVisible(false)}
+      >
+        <PaywallScreen
+          theme={theme}
+          packages={revenueCatPackages}
+          isLoading={isPaywallLoading}
+          onPurchase={async (pkg) => {
+            setIsPaywallLoading(true);
+            const success = await purchasePackage(pkg);
+            if (success) {
+              setIsPro(true);
+              setIsPaywallVisible(false);
+              Alert.alert("Welcome to Pro", "Thank you for subscribing to Pro Advisor!");
+            }
+            setIsPaywallLoading(false);
+          }}
+          onRestore={async () => {
+            setIsPaywallLoading(true);
+            const success = await restorePurchases();
+            if (success) {
+              setIsPro(true);
+              setIsPaywallVisible(false);
+              Alert.alert("Purchases Restored", "Your Pro Advisor subscription has been restored.");
+            } else {
+              Alert.alert("Restore Failed", "No active subscription found.");
+            }
+            setIsPaywallLoading(false);
+          }}
+          onClose={() => setIsPaywallVisible(false)}
+        />
       </Modal>
     </SafeAreaView>
   );

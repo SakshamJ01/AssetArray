@@ -495,8 +495,8 @@ app.get("/api/audit", requireAuth, requireRole(["advisor"]), async (_req, res) =
 app.post("/api/ai/research", requireAuth, async (req, res) => {
   const query = typeof req.body?.query === "string" ? req.body.query.trim() : "";
 
-  if (!query || query.length < 2 || query.length > 160) {
-    res.status(400).json({ error: "query is required and must be 2-160 characters." });
+  if (!query || query.length < 2 || query.length > 4000) {
+    res.status(400).json({ error: "query is required and must be 2-4000 characters." });
     return;
   }
 

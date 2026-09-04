@@ -1,4 +1,4 @@
-﻿import "react-native-get-random-values";
+import "react-native-get-random-values";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useMemo, useState } from "react";
 import {
@@ -47,6 +47,10 @@ import {
   sendBroadcastCampaign,
 } from "./src/services/secureSync";
 import { buildAppTheme } from "./src/theme";
+import { SyncBadge } from "./src/components/SyncBadge";
+import { fetchLiveMarketQuotes, getQuoteForSymbol, MarketQuote } from "./src/services/marketData";
+import { analyzeClientPortfolioWithAI, ClientAiRecommendation } from "./src/services/aiAdvisor";
+import { useNetworkStatus } from "./src/services/network";
 
 type Channel = "Phone" | "SMS" | "Email" | "WhatsApp";
 type Category = "HNI" | "Retail" | "Family Office" | "Trader" | "Long Term";
@@ -596,6 +600,7 @@ function AppContent() {
   const [filterMode, setFilterMode] = useState<FilterMode>("All");
   const [cloudSettings, setCloudSettings] = useState<CloudSettings>(emptyCloudSettings);
   const [syncState, setSyncState] = useState("Offline only");
+  const [isSyncing, setIsSyncing] = useState(false);
   const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
   const [aboutSheet, setAboutSheet] = useState<AboutSheet | null>(null);
   const [authSession, setAuthSession] = useState<AuthSession | null>(null);
@@ -606,6 +611,10 @@ function AppContent() {
   const [aiResearchResult, setAiResearchResult] = useState<AiResearchResult | null>(null);
   const [aiResearchState, setAiResearchState] = useState("Ready");
   const [isAiResearchLoading, setIsAiResearchLoading] = useState(false);
+  const [isMarketRefreshing, setIsMarketRefreshing] = useState(false);
+  const [selectedAiClient, setSelectedAiClient] = useState<Client | null>(null);
+  const [clientAiRecommendation, setClientAiRecommendation] = useState<ClientAiRecommendation | null>(null);
+  const [isClientAiLoading, setIsClientAiLoading] = useState(false);
   const [isPortfolioModalOpen, setIsPortfolioModalOpen] = useState(false);
   const [portfolioMode, setPortfolioMode] = useState<"add" | "edit">("add");
   const [holdingDraft, setHoldingDraft] = useState<HoldingDraft>(emptyHoldingDraft);
@@ -1784,6 +1793,76 @@ function AppContent() {
     await runAiResearchForQuery(marketResearchNotes.trim());
   }
 
+  async function refreshLiveMarketPrices() {
+    try {
+      setIsMarketRefreshing(true);
+      const quotes = await fetchLiveMarketQuotes();
+      
+      let updatedCount = 0;
+      setClients((prevClients) =>
+        prevClients.map((client) => {
+          if (!client.portfolio || client.portfolio.length === 0) return client;
+          const updatedPortfolio = client.portfolio.map((holding) => {
+            const symbolKey = (holding.ticker || holding.assetName).toUpperCase().trim();
+            const quote = quotes[symbolKey] || getQuoteForSymbol(symbolKey);
+            if (quote) {
+              updatedCount++;
+              const qty = Number(holding.quantity) || 1;
+              return {
+                ...holding,
+                currentValue: (quote.price * qty).toFixed(2),
+              };
+            }
+            return holding;
+          });
+          return { ...client, portfolio: updatedPortfolio };
+        })
+      );
+
+      Alert.alert(
+        "Market Prices Updated",
+        `Live market quotes fetched successfully. Updated ${updatedCount} holding valuation(s).`
+      );
+    } catch (err) {
+      Alert.alert("Market Fetch Error", "Unable to refresh live market prices.");
+    } finally {
+      setIsMarketRefreshing(false);
+    }
+  }
+
+  async function runClientAiCoPilot(targetClient: Client) {
+    if (!cloudSettings.endpoint.trim()) {
+      Alert.alert("Backend URL needed", "Configure your backend URL before using AI Co-Pilot.");
+      return;
+    }
+
+    try {
+      setIsClientAiLoading(true);
+      setSelectedAiClient(targetClient);
+      const accessToken = await refreshAccessTokenIfNeeded();
+      if (!accessToken) {
+        Alert.alert("Backend Login Required", "Please sign in to backend to use AI Co-Pilot.");
+        return;
+      }
+
+      const recommendation = await analyzeClientPortfolioWithAI({
+        endpoint: cloudSettings.endpoint,
+        client: targetClient,
+        accessToken,
+        onUnauthorized: refreshAccessTokenIfNeeded,
+      });
+
+      setClientAiRecommendation(recommendation);
+    } catch (err) {
+      Alert.alert(
+        "AI Co-Pilot Error",
+        err instanceof Error ? err.message : "Failed to analyze client portfolio."
+      );
+    } finally {
+      setIsClientAiLoading(false);
+    }
+  }
+
   function useAiBriefAsDailyMessage() {
     if (!aiResearchResult) {
       Alert.alert("Generate research first", "Create an AI brief before using it as your market message.");
@@ -2378,7 +2457,10 @@ function AppContent() {
           ]}
         >
           <View style={[styles.heroCopy, isCompactPageHeader ? styles.heroCopyCompact : null]}>
-            <Text style={[styles.heroEyebrow, { color: theme.colors.brand }]}>Asset Array</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 2 }}>
+              <Text style={[styles.heroEyebrow, { color: theme.colors.brand }]}>Asset Array</Text>
+              <SyncBadge isSyncing={isSyncing} />
+            </View>
             <Text
               style={[
                 styles.pageHeaderTitle,
@@ -2423,95 +2505,170 @@ function AppContent() {
         </View>
 
         {activeTab === "AI Research" ? (
-          <View style={[styles.panel, styles.analyticsPanel]}>
-            <Text style={styles.panelTitle}>AI Research</Text>
-            <Text style={styles.panelSubtitle}>
-              Generate a structured market brief for a stock, company, mutual fund, ETF, sector, or market topic.
-            </Text>
-            <TextInput
-              value={aiResearchQuery}
-              onChangeText={setAiResearchQuery}
-              placeholder="e.g. Reliance Industries, Nifty IT, Gold ETF, banking sector"
-              placeholderTextColor="#7f90a8"
-              autoCapitalize="words"
-              style={styles.input}
-            />
-            <View style={styles.inlineActions}>
-              <Pressable
-                style={styles.primaryButton}
-                onPress={() => void runAiResearch()}
-                disabled={isAiResearchLoading}
-              >
-                <Text style={styles.primaryButtonText}>
-                  {isAiResearchLoading ? "Researching..." : "Generate Research"}
-                </Text>
-              </Pressable>
-              <Text style={styles.clientSubMeta}>{aiResearchState}</Text>
-            </View>
+          <>
+            <View style={[styles.panel, styles.analyticsPanel]}>
+              <Text style={styles.panelTitle}>AI Research</Text>
+              <Text style={styles.panelSubtitle}>
+                Generate a structured market brief for a stock, company, mutual fund, ETF, sector, or market topic.
+              </Text>
+              <TextInput
+                value={aiResearchQuery}
+                onChangeText={setAiResearchQuery}
+                placeholder="e.g. Reliance Industries, Nifty IT, Gold ETF, banking sector"
+                placeholderTextColor="#7f90a8"
+                autoCapitalize="words"
+                style={styles.input}
+              />
+              <View style={styles.inlineActions}>
+                <Pressable
+                  style={styles.primaryButton}
+                  onPress={() => void runAiResearch()}
+                  disabled={isAiResearchLoading}
+                >
+                  <Text style={styles.primaryButtonText}>
+                    {isAiResearchLoading ? "Researching..." : "Generate Research"}
+                  </Text>
+                </Pressable>
+                <Text style={styles.clientSubMeta}>{aiResearchState}</Text>
+              </View>
 
-            {aiResearchResult ? (
-              <View style={styles.aiResearchResult}>
-                <View style={styles.aiResearchHeader}>
-                  <Text style={styles.sectionLabel}>Sentiment</Text>
-                  <Text
-                    style={[
-                      styles.sentimentPill,
-                      aiResearchResult.sentiment === "Bullish"
-                        ? styles.sentimentBullish
-                        : aiResearchResult.sentiment === "Bearish"
-                          ? styles.sentimentBearish
-                          : styles.sentimentNeutral,
-                    ]}
-                  >
-                    {aiResearchResult.sentiment}
+              {aiResearchResult ? (
+                <View style={styles.aiResearchResult}>
+                  <View style={styles.aiResearchHeader}>
+                    <Text style={styles.sectionLabel}>Sentiment</Text>
+                    <Text
+                      style={[
+                        styles.sentimentPill,
+                        aiResearchResult.sentiment === "Bullish"
+                          ? styles.sentimentBullish
+                          : aiResearchResult.sentiment === "Bearish"
+                            ? styles.sentimentBearish
+                            : styles.sentimentNeutral,
+                      ]}
+                    >
+                      {aiResearchResult.sentiment}
+                    </Text>
+                  </View>
+
+                  <Text style={styles.sectionLabel}>Summary</Text>
+                  <Text style={styles.detailBlock}>{aiResearchResult.summary}</Text>
+
+                  <View style={styles.dualColumn}>
+                    <View style={styles.column}>
+                      <Text style={styles.sectionLabel}>Opportunities</Text>
+                      {aiResearchResult.opportunities.map((item) => (
+                        <Text key={item} style={styles.historyItem}>
+                          {item}
+                        </Text>
+                      ))}
+                    </View>
+                    <View style={styles.column}>
+                      <Text style={styles.sectionLabel}>Risks</Text>
+                      {aiResearchResult.risks.map((item) => (
+                        <Text key={item} style={styles.analyticsAlert}>
+                          {item}
+                        </Text>
+                      ))}
+                    </View>
+                  </View>
+
+                  <Text style={styles.sectionLabel}>Short-term outlook</Text>
+                  <Text style={styles.historyItem}>{aiResearchResult.shortTermOutlook}</Text>
+                  <Text style={styles.sectionLabel}>Long-term outlook</Text>
+                  <Text style={styles.historyItem}>{aiResearchResult.longTermOutlook}</Text>
+                </View>
+              ) : (
+                <View style={styles.emptyState}>
+                  <Text style={styles.emptyTitle}>Research ready</Text>
+                  <Text style={styles.emptyText}>
+                    Enter a topic and generate a structured advisor-ready view.
                   </Text>
                 </View>
+              )}
+            </View>
 
-                <Text style={styles.sectionLabel}>Summary</Text>
-                <Text style={styles.detailBlock}>{aiResearchResult.summary}</Text>
+            <View style={[styles.panel, styles.analyticsPanel, { marginTop: 16 }]}>
+              <Text style={styles.panelTitle}>Client Portfolio Co-Pilot</Text>
+              <Text style={styles.panelSubtitle}>
+                Select a client to generate personalized rebalancing strategies, risk alerts, and custom advisory messages.
+              </Text>
 
-                <View style={styles.dualColumn}>
-                  <View style={styles.column}>
-                    <Text style={styles.sectionLabel}>Opportunities</Text>
-                    {aiResearchResult.opportunities.map((item) => (
-                      <Text key={item} style={styles.historyItem}>
-                        {item}
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: 12 }}>
+                {clients.map((c) => {
+                  const isSelected = selectedAiClient?.id === c.id;
+                  return (
+                    <Pressable
+                      key={c.id}
+                      style={[
+                        styles.darkChip,
+                        { marginRight: 8, backgroundColor: isSelected ? theme.colors.brand : theme.colors.surfaceStrong },
+                      ]}
+                      onPress={() => setSelectedAiClient(c)}
+                    >
+                      <Text style={[styles.darkChipText, { color: isSelected ? "#ffffff" : theme.colors.textPrimary }]}>
+                        {c.name} ({c.category})
                       </Text>
-                    ))}
-                  </View>
-                  <View style={styles.column}>
-                    <Text style={styles.sectionLabel}>Risks</Text>
-                    {aiResearchResult.risks.map((item) => (
-                      <Text key={item} style={styles.analyticsAlert}>
-                        {item}
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+
+              {selectedAiClient ? (
+                <View style={{ marginTop: 8 }}>
+                  <Pressable
+                    style={[styles.primaryButton, { alignSelf: "flex-start" }]}
+                    onPress={() => void runClientAiCoPilot(selectedAiClient)}
+                    disabled={isClientAiLoading}
+                  >
+                    <Text style={styles.primaryButtonText}>
+                      {isClientAiLoading ? "Analyzing Portfolio..." : `🤖 Analyze ${selectedAiClient.name}'s Portfolio`}
+                    </Text>
+                  </Pressable>
+
+                  {clientAiRecommendation ? (
+                    <View style={[styles.aiResearchResult, { marginTop: 16 }]}>
+                      <Text style={styles.sectionLabel}>Client Strategy & Sentiment</Text>
+                      <Text style={styles.detailBlock}>{clientAiRecommendation.analysis.summary}</Text>
+
+                      <Text style={styles.sectionLabel}>💬 Personal WhatsApp Message Draft</Text>
+                      <Text style={[styles.detailBlock, { fontStyle: "italic", backgroundColor: "rgba(37, 211, 102, 0.1)" }]}>
+                        {clientAiRecommendation.whatsappDraft}
                       </Text>
-                    ))}
-                  </View>
+
+                      <Text style={styles.sectionLabel}>📧 Professional Email Draft</Text>
+                      <Text style={[styles.detailBlock, { fontStyle: "italic" }]}>
+                        {clientAiRecommendation.emailDraft}
+                      </Text>
+                    </View>
+                  ) : null}
                 </View>
-
-                <Text style={styles.sectionLabel}>Short-term outlook</Text>
-                <Text style={styles.historyItem}>{aiResearchResult.shortTermOutlook}</Text>
-                <Text style={styles.sectionLabel}>Long-term outlook</Text>
-                <Text style={styles.historyItem}>{aiResearchResult.longTermOutlook}</Text>
-              </View>
-            ) : (
-              <View style={styles.emptyState}>
-                <Text style={styles.emptyTitle}>Research ready</Text>
-                <Text style={styles.emptyText}>
-                  Enter a topic and generate a structured advisor-ready view.
-                </Text>
-              </View>
-            )}
-          </View>
+              ) : (
+                <Text style={styles.clientSubMeta}>Select a client above to unlock AI Co-Pilot analysis.</Text>
+              )}
+            </View>
+          </>
         ) : null}
 
         {activeTab === "Portfolios" ? (
         <View style={[styles.panel, styles.analyticsPanel]}>
-          <Text style={styles.panelTitle}>Unified portfolio view & analytics</Text>
-          <Text style={styles.panelSubtitle}>
-            All tracked client portfolios in one place with performance, allocation,
-            and risk visibility.
-          </Text>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.panelTitle}>Unified portfolio view & analytics</Text>
+              <Text style={styles.panelSubtitle}>
+                All tracked client portfolios in one place with performance, allocation,
+                and risk visibility.
+              </Text>
+            </View>
+            <Pressable
+              style={[styles.primaryButton, { marginLeft: 12, paddingHorizontal: 14, paddingVertical: 8 }]}
+              onPress={() => void refreshLiveMarketPrices()}
+              disabled={isMarketRefreshing}
+            >
+              <Text style={styles.primaryButtonText}>
+                {isMarketRefreshing ? "Updating..." : "⚡ Refresh Prices"}
+              </Text>
+            </Pressable>
+          </View>
           <View style={styles.analyticsSummaryRow}>
             <View style={[styles.analyticsMetricCard, styles.analyticsBlue]}>
               <Text style={styles.analyticsMetricLabel}>Current value</Text>

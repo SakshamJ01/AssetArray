@@ -104,6 +104,7 @@ import { BillingPackage } from "./src/platform/billing";
 import { GlobalStyleInjector } from "./src/components/GlobalStyleInjector";
 import { LiveMarketTicker } from "./src/components/LiveMarketTicker";
 import { ScreenTransition } from "./src/components/ScreenTransition";
+import { CurrencyCode, loadCurrencyPreference, saveCurrencyPreference } from "./src/services/currency";
 
 type Channel = "Phone" | "SMS" | "Email" | "WhatsApp";
 type Category = "HNI" | "Retail" | "Family Office" | "Trader" | "Long Term";
@@ -672,6 +673,20 @@ function AppContent() {
   const [selectedAiClient, setSelectedAiClient] = useState<Client | null>(null);
   const [clientAiRecommendation, setClientAiRecommendation] = useState<ClientAiRecommendation | null>(null);
   const [isClientAiLoading, setIsClientAiLoading] = useState(false);
+  const [activeCurrency, setActiveCurrency] = useState<CurrencyCode>("INR");
+
+  useEffect(() => {
+    void loadCurrencyPreference().then((c) => setActiveCurrency(c));
+  }, []);
+
+  const cycleCurrency = () => {
+    const list: CurrencyCode[] = ["INR", "USD", "EUR", "GBP", "AED", "SGD"];
+    const nextIdx = (list.indexOf(activeCurrency) + 1) % list.length;
+    const nextCurr = list[nextIdx];
+    setActiveCurrency(nextCurr);
+    void saveCurrencyPreference(nextCurr);
+  };
+
   const [isPro, setIsPro] = useState(false);
   const [isPaywallVisible, setIsPaywallVisible] = useState(false);
   const [revenueCatPackages, setRevenueCatPackages] = useState<BillingPackage[]>([]);
@@ -2736,6 +2751,8 @@ function AppContent() {
             theme={theme}
             onRefresh={() => void refreshLiveMarketPrices()}
             isRefreshing={isMarketRefreshing}
+            activeCurrency={activeCurrency}
+            onCycleCurrency={cycleCurrency}
           />
           <ScreenTransition triggerKey={activeTab}>
             {activeTab === "Dashboard" ? (

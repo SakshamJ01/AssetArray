@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { AppTheme } from "../theme";
+import { CurrencyCode, CURRENCY_REGISTRY } from "../services/currency";
 
 interface TickerItem {
   symbol: string;
@@ -21,16 +22,20 @@ const DEFAULT_TICKERS: TickerItem[] = [
   { symbol: "INFY", name: "Infosys", price: "₹1,850.20", change: "+1.15%", isPositive: true },
 ];
 
-interface LiveMarketTickerProps {
+export interface LiveMarketTickerProps {
   theme: AppTheme;
   onRefresh?: () => void;
   isRefreshing?: boolean;
+  activeCurrency?: CurrencyCode;
+  onCycleCurrency?: () => void;
 }
 
 export const LiveMarketTicker: React.FC<LiveMarketTickerProps> = ({
   theme,
   onRefresh,
   isRefreshing = false,
+  activeCurrency = "INR",
+  onCycleCurrency,
 }) => {
   return (
     <View style={[styles.container, { backgroundColor: "rgba(11, 19, 38, 0.75)", borderColor: "rgba(224, 168, 76, 0.15)" }]}>
@@ -73,6 +78,19 @@ export const LiveMarketTicker: React.FC<LiveMarketTickerProps> = ({
           </View>
         ))}
       </ScrollView>
+
+      {onCycleCurrency ? (
+        <Pressable
+          style={styles.currencyChip}
+          onPress={onCycleCurrency}
+        >
+          <Text style={styles.currencyChipText}>
+            {CURRENCY_REGISTRY[activeCurrency || "INR"]?.flag || "🇮🇳"}{" "}
+            {CURRENCY_REGISTRY[activeCurrency || "INR"]?.symbol || "₹"}{" "}
+            {activeCurrency || "INR"} ▾
+          </Text>
+        </Pressable>
+      ) : null}
 
       {onRefresh ? (
         <Pressable
@@ -190,5 +208,20 @@ const styles = StyleSheet.create({
     color: "#E0A84C",
     fontSize: 11,
     fontWeight: "700",
+  },
+  currencyChip: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    backgroundColor: "rgba(255, 255, 255, 0.06)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.15)",
+    marginLeft: 6,
+  },
+  currencyChipText: {
+    color: "#F8FAFC",
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 0.3,
   },
 });

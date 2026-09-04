@@ -8,7 +8,7 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "build:web": "expo export -p web",
+    "build:web": "expo export -p web && node scripts/postbuild.js",
     "deploy:web": "npm run build:web && npx -y firebase-tools@latest deploy --only hosting",
     "deploy:preview": "npm run build:web && npx -y firebase-tools@latest hosting:channel:deploy preview",
     "typecheck": "tsc --noEmit",

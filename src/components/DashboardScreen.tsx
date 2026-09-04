@@ -4,6 +4,7 @@ import { FlatList, Image, StyleSheet, Text, View } from "react-native";
 import { AnimatedPressable as Pressable } from "./AnimatedPressable";
 import { AppTheme } from "../theme";
 import { getClientAvatar } from "../services/demoData";
+import { PerformanceChart } from "./charts";
 
 type DashboardMetric = {
   label: string;
@@ -206,6 +207,8 @@ export function DashboardScreen({
                   ))}
                 </View>
               </View>
+
+              <PerformanceChart theme={theme} />
             </View>
           );
         }

@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { AppTheme } from "../theme";
+import { PerformanceChart, Sparkline } from "../components/charts";
+import { RebalanceModal, StressTestModal } from "../components/modals";
 
 export interface PortfoliosScreenProps {
   theme: AppTheme;
@@ -36,6 +38,9 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = ({
   currencyDisplay,
   styles,
 }) => {
+  const [isRebalanceOpen, setIsRebalanceOpen] = useState(false);
+  const [isStressTestOpen, setIsStressTestOpen] = useState(false);
+
   return (
     <>
       <View style={[styles.panel, styles.analyticsPanel]}>
@@ -47,15 +52,51 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = ({
               and risk visibility.
             </Text>
           </View>
-          <Pressable
-            style={[styles.primaryButton, { marginLeft: 12, paddingHorizontal: 14, paddingVertical: 8 }]}
-            onPress={() => void refreshLiveMarketPrices()}
-            disabled={isMarketRefreshing}
-          >
-            <Text style={styles.primaryButtonText}>
-              {isMarketRefreshing ? "Updating..." : "⚡ Refresh Prices"}
-            </Text>
-          </Pressable>
+          <View style={{ flexDirection: "row", gap: 8, marginLeft: 12 }}>
+            <Pressable
+              style={[
+                styles.secondaryButton,
+                {
+                  paddingHorizontal: 12,
+                  paddingVertical: 8,
+                  backgroundColor: "rgba(224, 168, 76, 0.15)",
+                  borderColor: "rgba(224, 168, 76, 0.4)",
+                  borderWidth: 1,
+                },
+              ]}
+              onPress={() => setIsRebalanceOpen(true)}
+            >
+              <Text style={[styles.secondaryButtonText, { color: "#E0A84C", fontWeight: "700" }]}>
+                ⚖️ Rebalance
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.secondaryButton,
+                {
+                  paddingHorizontal: 12,
+                  paddingVertical: 8,
+                  backgroundColor: "rgba(239, 68, 68, 0.12)",
+                  borderColor: "rgba(239, 68, 68, 0.35)",
+                  borderWidth: 1,
+                },
+              ]}
+              onPress={() => setIsStressTestOpen(true)}
+            >
+              <Text style={[styles.secondaryButtonText, { color: "#F87171", fontWeight: "700" }]}>
+                🛡️ Stress Test
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[styles.primaryButton, { paddingHorizontal: 14, paddingVertical: 8 }]}
+              onPress={() => void refreshLiveMarketPrices()}
+              disabled={isMarketRefreshing}
+            >
+              <Text style={styles.primaryButtonText}>
+                {isMarketRefreshing ? "Updating..." : "⚡ Refresh Prices"}
+              </Text>
+            </Pressable>
+          </View>
         </View>
 
         <View style={styles.analyticsSummaryRow}>
@@ -91,6 +132,12 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = ({
             </Text>
           </View>
         </View>
+
+        <PerformanceChart
+          theme={theme}
+          title="Consolidated Portfolio Trajectory"
+          subtitle="Real-time multi-asset aggregate return curve"
+        />
 
         <View style={styles.dualColumn}>
           <View style={styles.column}>
@@ -142,14 +189,32 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = ({
               <Text style={styles.detailBlock}>No performance data available yet.</Text>
             ) : (
               unifiedPortfolioAnalytics.topPerformers.map((item) => (
-                <View key={`${item.clientId}-${item.id}`} style={styles.analyticsListCard}>
-                  <Text style={styles.clientName}>{item.assetName}</Text>
-                  <Text style={styles.clientMeta}>
-                    {item.clientName} | {item.assetClass}
-                  </Text>
-                  <Text style={styles.analyticsPositive}>
-                    {item.returnPct.toFixed(1)}% | {currencyDisplay(`${item.gainLoss}`)}
-                  </Text>
+                <View
+                  key={`${item.clientId}-${item.id}`}
+                  style={[
+                    styles.analyticsListCard,
+                    {
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    },
+                  ]}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.clientName}>{item.assetName}</Text>
+                    <Text style={styles.clientMeta}>
+                      {item.clientName} | {item.assetClass}
+                    </Text>
+                    <Text style={styles.analyticsPositive}>
+                      {item.returnPct.toFixed(1)}% | {currencyDisplay(`${item.gainLoss}`)}
+                    </Text>
+                  </View>
+                  <Sparkline
+                    data={[95, 96, 95.8, 98.2, 97.5, 100 + Math.max(1, item.returnPct)]}
+                    color="#10B981"
+                    width={56}
+                    height={22}
+                  />
                 </View>
               ))
             )}
@@ -161,20 +226,38 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = ({
               <Text style={styles.detailBlock}>No laggards detected yet.</Text>
             ) : (
               unifiedPortfolioAnalytics.laggards.map((item) => (
-                <View key={`${item.clientId}-${item.id}`} style={styles.analyticsListCard}>
-                  <Text style={styles.clientName}>{item.assetName}</Text>
-                  <Text style={styles.clientMeta}>
-                    {item.clientName} | {item.assetClass}
-                  </Text>
-                  <Text
-                    style={
-                      item.gainLoss >= 0
-                        ? styles.analyticsPositive
-                        : styles.analyticsNegative
-                    }
-                  >
-                    {item.returnPct.toFixed(1)}% | {currencyDisplay(`${item.gainLoss}`)}
-                  </Text>
+                <View
+                  key={`${item.clientId}-${item.id}`}
+                  style={[
+                    styles.analyticsListCard,
+                    {
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    },
+                  ]}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.clientName}>{item.assetName}</Text>
+                    <Text style={styles.clientMeta}>
+                      {item.clientName} | {item.assetClass}
+                    </Text>
+                    <Text
+                      style={
+                        item.gainLoss >= 0
+                          ? styles.analyticsPositive
+                          : styles.analyticsNegative
+                      }
+                    >
+                      {item.returnPct.toFixed(1)}% | {currencyDisplay(`${item.gainLoss}`)}
+                    </Text>
+                  </View>
+                  <Sparkline
+                    data={[105, 103, 104, 101.5, 100.8, 100 + item.returnPct]}
+                    color="#EF4444"
+                    width={56}
+                    height={22}
+                  />
                 </View>
               ))
             )}
@@ -252,6 +335,22 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = ({
           </View>
         </View>
       </View>
+
+      <RebalanceModal
+        visible={isRebalanceOpen}
+        onClose={() => setIsRebalanceOpen(false)}
+        holdings={unifiedPortfolioAnalytics.holdings}
+        theme={theme}
+        clientName="All Discretionary Portfolios"
+      />
+
+      <StressTestModal
+        visible={isStressTestOpen}
+        onClose={() => setIsStressTestOpen(false)}
+        holdings={unifiedPortfolioAnalytics.holdings}
+        theme={theme}
+        clientName="All Discretionary Portfolios"
+      />
     </>
   );
 };

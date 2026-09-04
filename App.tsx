@@ -51,6 +51,7 @@ import { SyncBadge } from "./src/components/SyncBadge";
 import { fetchLiveMarketQuotes, getQuoteForSymbol, MarketQuote } from "./src/services/marketData";
 import { analyzeClientPortfolioWithAI, ClientAiRecommendation } from "./src/services/aiAdvisor";
 import { useNetworkStatus } from "./src/services/network";
+import { exportClientPdfReport } from "./src/services/pdfReport";
 
 type Channel = "Phone" | "SMS" | "Email" | "WhatsApp";
 type Category = "HNI" | "Retail" | "Family Office" | "Trader" | "Long Term";
@@ -3503,6 +3504,19 @@ function AppContent() {
                   </View>
 
                   <View style={styles.inlineActions}>
+                    <Pressable
+                      style={styles.linkButton}
+                      onPress={() => {
+                        void exportClientPdfReport({
+                          client: selectedClient,
+                          advisorName: authSession?.user?.username || cloudSettings.ownerName || "Asset Array Advisor",
+                        });
+                      }}
+                    >
+                      <Text style={[styles.linkButtonText, { color: theme.colors.warning }]}>
+                        📄 Export PDF Report
+                      </Text>
+                    </Pressable>
                     <Pressable
                       style={styles.linkButton}
                       onPress={() => openEditModal(selectedClient)}

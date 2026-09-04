@@ -1831,6 +1831,71 @@ function AppContent() {
     }
   }
 
+  async function quickDemoLogin() {
+    const targetEndpoint = cloudSettings.endpoint.trim() || DEFAULT_BACKEND_ENDPOINT;
+    const targetUser = "admin";
+    const targetPass = "AssetArrayLocalAdmin2026";
+
+    setCloudSettings((c) => ({
+      ...c,
+      endpoint: targetEndpoint,
+      authUsername: targetUser,
+    }));
+    setAuthPassword(targetPass);
+
+    try {
+      setAuthState("Signing in as demo admin...");
+      await persistCloudSettings({
+        ...cloudSettings,
+        endpoint: targetEndpoint,
+        authUsername: targetUser,
+      });
+      const response = await loginAdvisor({
+        endpoint: targetEndpoint,
+        username: targetUser,
+        password: targetPass,
+      });
+      const session: AuthSession = {
+        user: response.user,
+        accessToken: response.accessToken,
+        refreshToken: response.refreshToken,
+        expiresAt: Date.now() + response.expiresIn * 1000,
+      };
+      setAuthSession(session);
+      await persistAuthSession(session);
+      setAuthPassword("");
+      setAuthState(`Connected as ${session.user.username}`);
+      setSyncState("Cloud sync configured + auth active");
+      Alert.alert("Login successful", `Signed in as ${session.user.username}.`);
+    } catch (error) {
+      setAuthState("Login failed");
+      Alert.alert(
+        "Backend Connection Notice",
+        (error instanceof Error ? error.message : "Unable to login.") +
+          "\n\nTip: If the Render cloud backend was asleep, please retry in 10-15 seconds, or tap 'Continue in Offline Mode'."
+      );
+    }
+  }
+
+  async function continueOffline() {
+    const offlineSession: AuthSession = {
+      user: {
+        id: "advisor-offline",
+        username: cloudSettings.ownerName.trim() || "Lead Advisor",
+        role: "advisor",
+        createdAt: new Date().toISOString(),
+        active: true,
+      },
+      accessToken: "offline-access-token",
+      refreshToken: "offline-refresh-token",
+      expiresAt: Date.now() + 86400 * 1000 * 30,
+    };
+    setAuthSession(offlineSession);
+    await persistAuthSession(offlineSession);
+    setAuthState("Offline mode active");
+    setSyncState("Local storage only");
+  }
+
   async function logoutFromBackend() {
     const session = authSession;
     if (session && cloudSettings.endpoint.trim()) {
@@ -2507,6 +2572,17 @@ function AppContent() {
               <Text style={styles.secondaryActionText}>Use biometric unlock</Text>
             </Pressable>
           ) : null}
+
+          {!needsSetup ? (
+            <Pressable
+              style={{ marginTop: 14, alignSelf: "center" }}
+              onPress={() => void resetLock()}
+            >
+              <Text style={{ color: "#7f90a8", fontSize: 13, textDecorationLine: "underline" }}>
+                Forgot PIN? Reset App Lock
+              </Text>
+            </Pressable>
+          ) : null}
         </View>
       </SafeAreaView>
     );
@@ -2522,6 +2598,35 @@ function AppContent() {
           <Text style={styles.authText}>
             Connect to the Asset Array backend before opening client records, cloud backup, and campaigns.
           </Text>
+
+          <Pressable
+            style={[styles.primaryButton, { backgroundColor: "#E0A84C", marginBottom: 10 }]}
+            onPress={() => void quickDemoLogin()}
+          >
+            <Text style={[styles.primaryButtonText, { color: "#030712", fontWeight: "800" }]}>
+              ⚡ 1-Click Sign In (Judge / Demo Admin)
+            </Text>
+          </Pressable>
+
+          <Pressable
+            style={[
+              styles.secondaryButton,
+              { width: "100%", justifyContent: "center", alignItems: "center", marginBottom: 8 },
+            ]}
+            onPress={() => void continueOffline()}
+          >
+            <Text style={[styles.secondaryButtonText, { color: "#E0A84C" }]}>
+              Continue in Offline Mode (Demo)
+            </Text>
+          </Pressable>
+
+          <View style={{ flexDirection: "row", alignItems: "center", marginVertical: 12, width: "100%" }}>
+            <View style={{ flex: 1, height: 1, backgroundColor: "rgba(255,255,255,0.12)" }} />
+            <Text style={{ color: "#7f90a8", paddingHorizontal: 10, fontSize: 11, fontWeight: "600" }}>
+              OR SIGN IN MANUALLY
+            </Text>
+            <View style={{ flex: 1, height: 1, backgroundColor: "rgba(255,255,255,0.12)" }} />
+          </View>
 
           <TextInput
             value={cloudSettings.endpoint}
@@ -2554,7 +2659,7 @@ function AppContent() {
             onChangeText={(value) =>
               setCloudSettings((current) => ({ ...current, authUsername: value }))
             }
-            placeholder="Username"
+            placeholder="Username (e.g. admin)"
             placeholderTextColor="#7f90a8"
             autoCapitalize="none"
             style={styles.authInput}
@@ -2562,11 +2667,14 @@ function AppContent() {
           <TextInput
             value={authPassword}
             onChangeText={setAuthPassword}
-            placeholder="Password"
+            placeholder="Password (e.g. AssetArrayLocalAdmin2026)"
             placeholderTextColor="#7f90a8"
             secureTextEntry
             style={styles.authInput}
           />
+          <Text style={{ color: "#7f90a8", fontSize: 11, marginBottom: 12 }}>
+            Demo credentials: admin / AssetArrayLocalAdmin2026
+          </Text>
 
           <Pressable style={styles.primaryButton} onPress={() => void loginToBackend()}>
             <Text style={styles.primaryButtonText}>

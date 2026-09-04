@@ -2,9 +2,9 @@
   "expo": {
     "name": "Asset Array",
     "slug": "asset-array",
-    "version": "1.5.0",
-    "orientation": "portrait",
-    "userInterfaceStyle": "light",
+    "version": "2.0.0",
+    "orientation": "default",
+    "userInterfaceStyle": "dark",
     "assetBundlePatterns": [
       "**/*"
     ],
@@ -12,7 +12,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#050914"
+      "backgroundColor": "#030712"
     },
     "ios": {
       "supportsTablet": true,
@@ -22,11 +22,17 @@
       "package": "com.assetarray.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#050914"
+        "backgroundColor": "#030712"
       }
     },
     "web": {
-      "bundler": "metro"
+      "favicon": "./assets/icon.png",
+      "bundler": "metro",
+      "name": "Asset Array | Private Wealth Management",
+      "shortName": "Asset Array",
+      "backgroundColor": "#030712",
+      "themeColor": "#E0A84C",
+      "description": "Enterprise multi-asset advisory platform with client-side zero-knowledge encryption, AI co-pilot, and fiduciary reporting."
     },
     "plugins": [
       "expo-secure-store",

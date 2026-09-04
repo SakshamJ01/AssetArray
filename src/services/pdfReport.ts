@@ -1,5 +1,4 @@
-import * as Print from "expo-print";
-import * as Sharing from "expo-sharing";
+import { documentExporter } from "../platform/export";
 import { ClientInput } from "./aiAdvisor";
 
 export interface GeneratePdfOptions {
@@ -344,10 +343,9 @@ export async function exportClientPdfReport({ client, advisorName = "Asset Array
 </html>
   `;
 
-  const { uri } = await Print.printToFileAsync({ html: htmlContent });
-  await Sharing.shareAsync(uri, {
-    UTI: ".pdf",
-    mimeType: "application/pdf",
-    dialogTitle: `Executive Portfolio Statement - ${client.name}`,
+  await documentExporter.exportHtmlReport({
+    html: htmlContent,
+    filename: `AssetArray-${client.name.replace(/\s+/g, "_")}.pdf`,
+    title: `Executive Portfolio Statement - ${client.name}`,
   });
 }

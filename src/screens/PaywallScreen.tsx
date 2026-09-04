@@ -8,13 +8,13 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { AppTheme } from "../theme";
-import { PurchasesPackage } from "react-native-purchases";
+import { BillingPackage } from "../platform/billing";
 
 interface PaywallScreenProps {
   theme: AppTheme;
-  packages: PurchasesPackage[];
+  packages: BillingPackage[];
   isLoading: boolean;
-  onPurchase: (pkg: PurchasesPackage) => void;
+  onPurchase: (pkg: BillingPackage) => void;
   onRestore: () => void;
   onClose: () => void;
 }

@@ -1,4 +1,4 @@
-import * as Haptics from "expo-haptics";
+import { hapticsAdapter } from "../platform/haptics";
 
 let hapticsEnabled = true;
 
@@ -19,35 +19,25 @@ async function runHaptic(effect: () => Promise<void>) {
 }
 
 export async function triggerSelectionHaptic() {
-  await runHaptic(() => Haptics.selectionAsync());
+  await runHaptic(() => hapticsAdapter.selection());
 }
 
 export async function triggerPrimaryActionHaptic() {
-  await runHaptic(() =>
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-  );
+  await runHaptic(() => hapticsAdapter.lightImpact());
 }
 
 export async function triggerCardPressHaptic() {
-  await runHaptic(() =>
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-  );
+  await runHaptic(() => hapticsAdapter.mediumImpact());
 }
 
 export async function triggerSuccessHaptic() {
-  await runHaptic(() =>
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-  );
+  await runHaptic(() => hapticsAdapter.successNotification());
 }
 
 export async function triggerWarningHaptic() {
-  await runHaptic(() =>
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning)
-  );
+  await runHaptic(() => hapticsAdapter.warningNotification());
 }
 
 export async function triggerErrorHaptic() {
-  await runHaptic(() =>
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
-  );
+  await runHaptic(() => hapticsAdapter.errorNotification());
 }

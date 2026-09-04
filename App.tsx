@@ -16,6 +16,7 @@ import {
   useColorScheme,
   useWindowDimensions,
   View,
+  Platform,
 } from "react-native";
 import {
   SafeAreaProvider,
@@ -23,11 +24,10 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
-import * as LocalAuthentication from "expo-local-authentication";
-import * as SecureStore from "expo-secure-store";
 import { Ionicons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
 import { BottomTabBar } from "./src/components/BottomTabBar";
+import { DesktopSidebar } from "./src/components/DesktopSidebar";
 import { DashboardScreen } from "./src/components/DashboardScreen";
 import { AdvisorMessagesScreen } from "./src/screens/workspace/AdvisorMessagesScreen";
 import { AggregationScreen } from "./src/screens/workspace/AggregationScreen";
@@ -55,9 +55,11 @@ import { useNetworkStatus } from "./src/services/network";
 import { exportClientPdfReport } from "./src/services/pdfReport";
 import { initializeRevenueCat, checkProStatus, getOfferings, purchasePackage, restorePurchases, resetDemoProStatus } from "./src/services/revenueCat";
 import { PaywallScreen } from "./src/screens/PaywallScreen";
-import { PurchasesPackage } from "react-native-purchases";
 import { DEMO_CLIENTS } from "./src/services/demoData";
 import { AssetAllocationBar } from "./src/components/AssetAllocationBar";
+import { storageService } from "./src/platform/storage";
+import { localAuth } from "./src/platform/auth";
+import { BillingPackage } from "./src/platform/billing";
 
 type Channel = "Phone" | "SMS" | "Email" | "WhatsApp";
 type Category = "HNI" | "Retail" | "Family Office" | "Trader" | "Long Term";
@@ -538,27 +540,27 @@ async function persistClients(clients: Client[]) {
 }
 
 async function persistBiometric(value: boolean) {
-  await SecureStore.setItemAsync(BIOMETRIC_KEY, JSON.stringify(value));
+  await storageService.setSecureItem(BIOMETRIC_KEY, JSON.stringify(value));
 }
 
 async function persistDarkMode(value: boolean) {
-  await SecureStore.setItemAsync(DARK_MODE_KEY, JSON.stringify(value));
+  await storageService.setSecureItem(DARK_MODE_KEY, JSON.stringify(value));
 }
 
 async function persistHaptics(value: boolean) {
-  await SecureStore.setItemAsync(HAPTICS_KEY, JSON.stringify(value));
+  await storageService.setSecureItem(HAPTICS_KEY, JSON.stringify(value));
 }
 
 async function persistCloudSettings(value: CloudSettings) {
-  await SecureStore.setItemAsync(CLOUD_SETTINGS_KEY, JSON.stringify(value));
+  await storageService.setSecureItem(CLOUD_SETTINGS_KEY, JSON.stringify(value));
 }
 
 async function persistAuthSession(value: AuthSession | null) {
   if (!value) {
-    await SecureStore.deleteItemAsync(AUTH_SESSION_KEY);
+    await storageService.removeSecureItem(AUTH_SESSION_KEY);
     return;
   }
-  await SecureStore.setItemAsync(AUTH_SESSION_KEY, JSON.stringify(value));
+  await storageService.setSecureItem(AUTH_SESSION_KEY, JSON.stringify(value));
 }
 
 async function persistGoals(goals: Goal[]) {
@@ -586,6 +588,7 @@ function AppContent() {
   const systemColorScheme = useColorScheme();
   const { width: windowWidth } = useWindowDimensions();
   const insets = useSafeAreaInsets();
+  const isDesktop = windowWidth >= 1024;
   const [isReady, setIsReady] = useState(false);
   const [storedPin, setStoredPin] = useState<string | null>(null);
   const [darkModeEnabled, setDarkModeEnabled] = useState(systemColorScheme === "dark");
@@ -624,7 +627,7 @@ function AppContent() {
   const [isClientAiLoading, setIsClientAiLoading] = useState(false);
   const [isPro, setIsPro] = useState(false);
   const [isPaywallVisible, setIsPaywallVisible] = useState(false);
-  const [revenueCatPackages, setRevenueCatPackages] = useState<PurchasesPackage[]>([]);
+  const [revenueCatPackages, setRevenueCatPackages] = useState<BillingPackage[]>([]);
   const [isPaywallLoading, setIsPaywallLoading] = useState(false);
   const [isPortfolioModalOpen, setIsPortfolioModalOpen] = useState(false);
   const [portfolioMode, setPortfolioMode] = useState<"add" | "edit">("add");
@@ -672,7 +675,36 @@ function AppContent() {
     [darkModeEnabled]
   );
   const isCompactPageHeader = windowWidth < 420;
-  const contentBottomPadding = insets.bottom + 100;
+  const contentBottomPadding = isDesktop ? 32 : insets.bottom + 100;
+
+  useEffect(() => {
+    if (Platform.OS !== "web" || typeof window === "undefined") return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setActiveTab("Clients");
+      } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "b") {
+        e.preventDefault();
+        if (selectedClientIds.length === 0 && clients.length > 0) {
+          setSelectedClientIds(clients.map((c) => c.id));
+        }
+        setIsBroadcastModalOpen(true);
+      } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "l") {
+        e.preventDefault();
+        setIsUnlocked(false);
+      } else if (e.key === "Escape") {
+        setIsEditorOpen(false);
+        setIsBroadcastModalOpen(false);
+        setIsSyncModalOpen(false);
+        setIsPortfolioModalOpen(false);
+        setAboutSheet(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [clients, selectedClientIds]);
 
   useEffect(() => {
     async function load() {
@@ -690,17 +722,17 @@ function AppContent() {
           rawAuthSession,
           rawHaptics,
         ] = await Promise.all([
-          SecureStore.getItemAsync(PIN_KEY),
+          storageService.getSecureItem(PIN_KEY),
           AsyncStorage.getItem(CLIENTS_KEY),
-          SecureStore.getItemAsync(BIOMETRIC_KEY),
-          SecureStore.getItemAsync(CLOUD_SETTINGS_KEY),
-          SecureStore.getItemAsync(MARKET_MESSAGE_KEY),
-          SecureStore.getItemAsync(DARK_MODE_KEY),
+          storageService.getSecureItem(BIOMETRIC_KEY),
+          storageService.getSecureItem(CLOUD_SETTINGS_KEY),
+          storageService.getSecureItem(MARKET_MESSAGE_KEY),
+          storageService.getSecureItem(DARK_MODE_KEY),
           AsyncStorage.getItem(GOALS_KEY),
           AsyncStorage.getItem(ADVISOR_MESSAGES_KEY),
           AsyncStorage.getItem(VAULT_DOCUMENTS_KEY),
-          SecureStore.getItemAsync(AUTH_SESSION_KEY),
-          SecureStore.getItemAsync(HAPTICS_KEY),
+          storageService.getSecureItem(AUTH_SESSION_KEY),
+          storageService.getSecureItem(HAPTICS_KEY),
         ]);
 
         setStoredPin(pin);
@@ -742,8 +774,8 @@ function AppContent() {
         setAuthSession(null);
         setAuthState("Not connected");
       } finally {
-        const hardware = await LocalAuthentication.hasHardwareAsync().catch(() => false);
-        const enrolled = await LocalAuthentication.isEnrolledAsync().catch(() => false);
+        const hardware = await localAuth.hasHardwareAsync().catch(() => false);
+        const enrolled = await localAuth.isEnrolledAsync().catch(() => false);
         setBiometricAvailable(hardware && enrolled);
 
         await initializeRevenueCat();
@@ -766,7 +798,7 @@ function AppContent() {
     }
 
     void persistClients(clients);
-    void SecureStore.setItemAsync(MARKET_MESSAGE_KEY, marketMessage);
+    void storageService.setSecureItem(MARKET_MESSAGE_KEY, marketMessage);
   }, [clients, isReady, isUnlocked, marketMessage]);
 
   useEffect(() => {
@@ -1427,7 +1459,7 @@ function AppContent() {
   );
 
   async function handleBiometricUnlock() {
-    const result = await LocalAuthentication.authenticateAsync({
+    const result = await localAuth.authenticateAsync({
       promptMessage: "Unlock Asset Array",
       cancelLabel: "Cancel",
       fallbackLabel: "Use PIN",
@@ -1445,7 +1477,7 @@ function AppContent() {
       return;
     }
 
-    await SecureStore.setItemAsync(PIN_KEY, pinSetup);
+    await storageService.setSecureItem(PIN_KEY, pinSetup);
     setStoredPin(pinSetup);
     setPinSetup("");
     setIsUnlocked(true);
@@ -2350,8 +2382,8 @@ function AppContent() {
   }
 
   async function resetLock() {
-    await SecureStore.deleteItemAsync(PIN_KEY);
-    await SecureStore.deleteItemAsync(BIOMETRIC_KEY);
+    await storageService.removeSecureItem(PIN_KEY);
+    await storageService.removeSecureItem(BIOMETRIC_KEY);
     setStoredPin(null);
     setPinInput("");
     setPinSetup("");
@@ -2488,6 +2520,29 @@ function AppContent() {
       ]}
     >
       <StatusBar style={darkModeEnabled ? "light" : "dark"} />
+      <View style={{ flex: 1, flexDirection: isDesktop ? "row" : "column", width: "100%", height: "100%" }}>
+        {isDesktop && (
+          <DesktopSidebar
+            activeTab={visibleTabs.some((tab) => tab.key === activeTab) ? activeTab : "Dashboard"}
+            advisorName={authSession?.user?.username || "Senior Wealth Advisor"}
+            dueClientsCount={dueClients.length}
+            isPro={isPro}
+            onChange={setActiveTab}
+            onLockDesk={() => setIsUnlocked(false)}
+            onOpenProModal={() => setIsPaywallVisible(true)}
+            onQuickAddClient={openAddModal}
+            onQuickBroadcast={() => {
+              if (selectedClientIds.length === 0 && clients.length > 0) {
+                setSelectedClientIds(clients.map((client) => client.id));
+              }
+              setIsBroadcastModalOpen(true);
+            }}
+            syncStatus={syncState}
+            tabs={visibleTabs}
+            theme={theme}
+          />
+        )}
+        <View style={{ flex: 1, height: "100%", overflow: "hidden" }}>
       {activeTab === "Dashboard" ? (
         <DashboardScreen
           analytics={dashboardAnalytics}
@@ -4396,14 +4451,18 @@ function AppContent() {
         ) : null}
       </ScrollView>
       )}
+        </View>
+      </View>
 
-      <BottomTabBar
-        activeTab={visibleTabs.some((tab) => tab.key === activeTab) ? activeTab : "Dashboard"}
-        bottomInset={insets.bottom}
-        onChange={setActiveTab}
-        tabs={visibleTabs}
-        theme={theme}
-      />
+      {!isDesktop && (
+        <BottomTabBar
+          activeTab={visibleTabs.some((tab) => tab.key === activeTab) ? activeTab : "Dashboard"}
+          bottomInset={insets.bottom}
+          onChange={setActiveTab}
+          tabs={visibleTabs}
+          theme={theme}
+        />
+      )}
 
       <Modal visible={isEditorOpen} transparent animationType="slide">
         <View style={styles.modalBackdrop}>

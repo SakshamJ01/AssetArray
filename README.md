@@ -1,5 +1,6 @@
 # Asset Array 💼📈
 
+[![Version 2.0.0](https://img.shields.io/badge/Version-2.0.0-E0A84C?style=for-the-badge&logo=git&logoColor=white)](https://github.com/SakshamJ01/AssetArray)
 [![Live Web App](https://img.shields.io/badge/Live%20Web%20App-asset--array.web.app-E0A84C?style=for-the-badge&logo=firebase&logoColor=white)](https://asset-array.web.app)
 [![Live Backend API](https://img.shields.io/badge/API-assetarray.onrender.com-46E3B7?style=for-the-badge&logo=render&logoColor=black)](https://assetarray.onrender.com/api/health)
 [![Cloud Database](https://img.shields.io/badge/Database-MongoDB%20Atlas-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://cloud.mongodb.com)

@@ -37,8 +37,21 @@ export const LiveMarketTicker: React.FC<LiveMarketTickerProps> = ({
   activeCurrency = "INR",
   onCycleCurrency,
 }) => {
+  const isDark =
+    theme.colors.background === "#030712" ||
+    theme.colors.textPrimary === "#ffffff" ||
+    theme.colors.textPrimary === "#FFFFFF";
+
   return (
-    <View style={[styles.container, { backgroundColor: "rgba(11, 19, 38, 0.75)", borderColor: "rgba(224, 168, 76, 0.15)" }]}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: isDark ? "rgba(11, 19, 38, 0.75)" : "rgba(248, 250, 252, 0.95)",
+          borderColor: theme.colors.border,
+        },
+      ]}
+    >
       <View style={styles.liveIndicatorRow}>
         <View style={styles.liveDotWrapper}>
           <View style={styles.liveDotPulse} />

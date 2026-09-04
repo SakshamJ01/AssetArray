@@ -47,16 +47,29 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
   isPro = true,
   onOpenProModal,
 }) => {
+  const isDark =
+    theme.colors.background === "#030712" ||
+    theme.colors.textPrimary === "#ffffff" ||
+    theme.colors.textPrimary === "#FFFFFF";
+
   return (
-    <View style={styles.sidebar}>
+    <View
+      style={[
+        styles.sidebar,
+        {
+          backgroundColor: isDark ? "#070D1B" : "#F4F6F9",
+          borderRightColor: theme.colors.border,
+        },
+      ]}
+    >
       {/* Brand & Monogram Header */}
       <View style={styles.brandContainer}>
         <View style={styles.brandIconWrap}>
-          <Ionicons name="diamond" size={20} color="#E0A84C" />
+          <Ionicons name="diamond" size={20} color={theme.colors.brand} />
         </View>
         <View style={styles.brandTextWrap}>
-          <Text style={styles.brandTitle}>ASSET ARRAY</Text>
-          <Text style={styles.brandSubtitle}>PRIVATE WEALTH</Text>
+          <Text style={[styles.brandTitle, { color: theme.colors.textPrimary }]}>ASSET ARRAY</Text>
+          <Text style={[styles.brandSubtitle, { color: theme.colors.brand }]}>PRIVATE WEALTH</Text>
         </View>
       </View>
 
@@ -186,7 +199,7 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
           </Text>
         </View>
         <View style={styles.advisorInfo}>
-          <Text style={styles.advisorNameText} numberOfLines={1}>
+          <Text style={[styles.advisorNameText, { color: theme.colors.textPrimary }]} numberOfLines={1}>
             {advisorName}
           </Text>
           <Text style={styles.advisorRoleText}>Managing Director</Text>

@@ -85,6 +85,8 @@ export interface SimpleHolding {
   currentValue: number;
   investedValue: number;
   quantity?: number;
+  ticker?: string;
+  symbol?: string;
 }
 
 export function calculateRebalance(

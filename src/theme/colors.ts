@@ -1,27 +1,27 @@
 export const lightColors = {
-  background: "#f8fafc",
-  backgroundMuted: "#f1f5f9",
-  surface: "#ffffff",
-  surfaceMuted: "#f8fafc",
-  surfaceStrong: "#edf2f7",
-  border: "#e2e8f0",
-  borderStrong: "#cbd5e1",
-  textPrimary: "#0f172a",
-  textSecondary: "#475569",
-  textMuted: "#64748b",
-  textOnBrand: "#ffffff",
-  brand: "#b37e28", // Antique gold
-  brandStrong: "#94651b",
-  accent: "#10b981",
-  accentSoft: "#ecfdf5",
-  danger: "#ef4444",
-  dangerSoft: "#fef2f2",
-  warning: "#b37e28",
-  warningSoft: "#fffbeb",
-  neutral: "#64748b",
-  neutralSoft: "#f1f5f9",
-  overlay: "rgba(15, 23, 42, 0.25)",
-  shadow: "#0f172a",
+  background: "#F8F9FA", // Luxurious cream ivory
+  backgroundMuted: "#F1F4F8",
+  surface: "#FFFFFF",
+  surfaceMuted: "#F8FAFC",
+  surfaceStrong: "#EEF2F6",
+  border: "rgba(179, 126, 40, 0.22)", // Warm antique gold hairline
+  borderStrong: "rgba(179, 126, 40, 0.42)",
+  textPrimary: "#0A0F1D", // Crisp midnight sapphire
+  textSecondary: "#334155",
+  textMuted: "#64748B",
+  textOnBrand: "#FFFFFF",
+  brand: "#B37E28", // Refined Swiss private bank gold
+  brandStrong: "#94651B",
+  accent: "#0D9488", // Deep emerald teal
+  accentSoft: "rgba(13, 148, 136, 0.12)",
+  danger: "#E11D48",
+  dangerSoft: "rgba(225, 29, 72, 0.10)",
+  warning: "#B37E28",
+  warningSoft: "rgba(179, 126, 40, 0.12)",
+  neutral: "#64748B",
+  neutralSoft: "#F1F5F9",
+  overlay: "rgba(15, 23, 42, 0.4)",
+  shadow: "rgba(15, 23, 42, 0.12)",
 };
 
 export const darkColors = {

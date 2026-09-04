@@ -15,6 +15,7 @@ import {
   FilterMode,
 } from "../types/wealth";
 import { AssetAllocationBar } from "../components/AssetAllocationBar";
+import { StatementImportModal, ClientPortalModal } from "../components/modals";
 
 export interface ClientsScreenProps {
   theme: AppTheme;
@@ -155,6 +156,8 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = ({
   styles,
 }) => {
   const [localSearch, setLocalSearch] = React.useState(searchQuery);
+  const [showImportModal, setShowImportModal] = React.useState(false);
+  const [showPortalModal, setShowPortalModal] = React.useState(false);
 
   React.useEffect(() => {
     setLocalSearch(searchQuery);
@@ -366,6 +369,22 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = ({
                 <View style={styles.inlineActions}>
                   <Pressable
                     style={styles.linkButton}
+                    onPress={() => setShowImportModal(true)}
+                  >
+                    <Text style={[styles.linkButtonText, { color: theme.colors.brand }]}>
+                      📊 Import Statement
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    style={styles.linkButton}
+                    onPress={() => setShowPortalModal(true)}
+                  >
+                    <Text style={[styles.linkButtonText, { color: theme.colors.brand }]}>
+                      🌐 Client Portal
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    style={styles.linkButton}
                     onPress={() => {
                       if (!isPro) {
                         setIsPaywallVisible(true);
@@ -465,6 +484,21 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = ({
           </View>
         </View>
       </View>
+
+      <StatementImportModal
+        visible={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        theme={theme}
+        clientName={selectedClient ? selectedClient.name : "Client Portfolio"}
+      />
+
+      <ClientPortalModal
+        visible={showPortalModal}
+        onClose={() => setShowPortalModal(false)}
+        theme={theme}
+        client={selectedClient}
+        advisorName={advisorName}
+      />
     </>
   );
 };

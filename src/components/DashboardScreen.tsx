@@ -5,6 +5,7 @@ import { AnimatedPressable as Pressable } from "./AnimatedPressable";
 import { AppTheme } from "../theme";
 import { getClientAvatar } from "../services/demoData";
 import { PerformanceChart } from "./charts";
+import { AiWealthCopilot } from "./AiWealthCopilot";
 
 type DashboardMetric = {
   label: string;
@@ -143,7 +144,8 @@ export function DashboardScreen({
   const analyticsRows = useMemo(() => chunkPairs(analytics), [analytics]);
 
   return (
-    <FlatList
+    <View style={{ flex: 1 }}>
+      <FlatList
       style={styles.container}
       data={sections}
       contentContainerStyle={styles.content}
@@ -423,6 +425,8 @@ export function DashboardScreen({
         );
       }}
     />
+      <AiWealthCopilot theme={theme} />
+    </View>
   );
 }
 

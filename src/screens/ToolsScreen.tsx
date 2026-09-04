@@ -16,6 +16,7 @@ import {
   VaultDocument,
   VaultDocumentDraft,
 } from "../types/wealth";
+import { MonteCarloModal } from "../components/modals/MonteCarloModal";
 
 export interface ToolsScreenProps {
   theme: AppTheme;
@@ -174,6 +175,13 @@ export const ToolsScreen: React.FC<ToolsScreenProps> = ({
   currencyDisplay,
   styles,
 }) => {
+  const [showMonteCarlo, setShowMonteCarlo] = React.useState(false);
+  const [monteCarloConfig, setMonteCarloConfig] = React.useState({
+    target: 100000000,
+    years: 15,
+    monthlySip: 100000,
+  });
+
   return (
     <>
       <View style={styles.dualColumn}>
@@ -447,26 +455,41 @@ export const ToolsScreen: React.FC<ToolsScreenProps> = ({
                   style={styles.input}
                 />
                 {goalPlannerResults.ready ? (
-                  <View style={styles.calculatorResultGrid}>
-                    <View style={[styles.miniStat, styles.calculatorStat]}>
-                      <Text style={styles.miniStatValue}>
-                        {currencyDisplay(`${goalPlannerResults.requiredMonthlySip}`)}
-                      </Text>
-                      <Text style={styles.miniStatLabel}>Required monthly SIP</Text>
+                  <>
+                    <View style={styles.calculatorResultGrid}>
+                      <View style={[styles.miniStat, styles.calculatorStat]}>
+                        <Text style={styles.miniStatValue}>
+                          {currencyDisplay(`${goalPlannerResults.requiredMonthlySip}`)}
+                        </Text>
+                        <Text style={styles.miniStatLabel}>Required monthly SIP</Text>
+                      </View>
+                      <View style={[styles.miniStat, styles.calculatorStat]}>
+                        <Text style={styles.miniStatValue}>
+                          {currencyDisplay(`${goalPlannerResults.totalInvested}`)}
+                        </Text>
+                        <Text style={styles.miniStatLabel}>Estimated invested</Text>
+                      </View>
+                      <View style={[styles.miniStat, styles.calculatorStat]}>
+                        <Text style={styles.miniStatValue}>
+                          {currencyDisplay(`${goalPlannerResults.estimatedGrowth}`)}
+                        </Text>
+                        <Text style={styles.miniStatLabel}>Expected growth</Text>
+                      </View>
                     </View>
-                    <View style={[styles.miniStat, styles.calculatorStat]}>
-                      <Text style={styles.miniStatValue}>
-                        {currencyDisplay(`${goalPlannerResults.totalInvested}`)}
-                      </Text>
-                      <Text style={styles.miniStatLabel}>Estimated invested</Text>
-                    </View>
-                    <View style={[styles.miniStat, styles.calculatorStat]}>
-                      <Text style={styles.miniStatValue}>
-                        {currencyDisplay(`${goalPlannerResults.estimatedGrowth}`)}
-                      </Text>
-                      <Text style={styles.miniStatLabel}>Expected growth</Text>
-                    </View>
-                  </View>
+                    <Pressable
+                      style={[styles.goldButton, { marginTop: 12 }]}
+                      onPress={() => {
+                        setMonteCarloConfig({
+                          target: Number(goalTargetAmount) || 100000000,
+                          years: Number(goalYears) || 15,
+                          monthlySip: goalPlannerResults.requiredMonthlySip || 50000,
+                        });
+                        setShowMonteCarlo(true);
+                      }}
+                    >
+                      <Text style={styles.goldButtonText}>Run Monte Carlo Goal Simulator (1,000 Paths)</Text>
+                    </Pressable>
+                  </>
                 ) : (
                   <View style={styles.emptyState}>
                     <Text style={styles.emptyTitle}>Goal planner ready</Text>
@@ -523,26 +546,41 @@ export const ToolsScreen: React.FC<ToolsScreenProps> = ({
                   style={styles.input}
                 />
                 {retirementResults.ready ? (
-                  <View style={styles.calculatorResultGrid}>
-                    <View style={[styles.miniStat, styles.calculatorStat]}>
-                      <Text style={styles.miniStatValue}>
-                        {currencyDisplay(`${retirementResults.futureMonthlyExpense}`)}
-                      </Text>
-                      <Text style={styles.miniStatLabel}>Future monthly expense</Text>
+                  <>
+                    <View style={styles.calculatorResultGrid}>
+                      <View style={[styles.miniStat, styles.calculatorStat]}>
+                        <Text style={styles.miniStatValue}>
+                          {currencyDisplay(`${retirementResults.futureMonthlyExpense}`)}
+                        </Text>
+                        <Text style={styles.miniStatLabel}>Future monthly expense</Text>
+                      </View>
+                      <View style={[styles.miniStat, styles.calculatorStat]}>
+                        <Text style={styles.miniStatValue}>
+                          {currencyDisplay(`${retirementResults.targetCorpus}`)}
+                        </Text>
+                        <Text style={styles.miniStatLabel}>Target corpus</Text>
+                      </View>
+                      <View style={[styles.miniStat, styles.calculatorStat]}>
+                        <Text style={styles.miniStatValue}>
+                          {currencyDisplay(`${retirementResults.requiredMonthlySip}`)}
+                        </Text>
+                        <Text style={styles.miniStatLabel}>Required monthly SIP</Text>
+                      </View>
                     </View>
-                    <View style={[styles.miniStat, styles.calculatorStat]}>
-                      <Text style={styles.miniStatValue}>
-                        {currencyDisplay(`${retirementResults.targetCorpus}`)}
-                      </Text>
-                      <Text style={styles.miniStatLabel}>Target corpus</Text>
-                    </View>
-                    <View style={[styles.miniStat, styles.calculatorStat]}>
-                      <Text style={styles.miniStatValue}>
-                        {currencyDisplay(`${retirementResults.requiredMonthlySip}`)}
-                      </Text>
-                      <Text style={styles.miniStatLabel}>Required monthly SIP</Text>
-                    </View>
-                  </View>
+                    <Pressable
+                      style={[styles.goldButton, { marginTop: 12 }]}
+                      onPress={() => {
+                        setMonteCarloConfig({
+                          target: retirementResults.targetCorpus || 100000000,
+                          years: Number(retirementYearsToRetire) || 15,
+                          monthlySip: retirementResults.requiredMonthlySip || 50000,
+                        });
+                        setShowMonteCarlo(true);
+                      }}
+                    >
+                      <Text style={styles.goldButtonText}>Run Monte Carlo Retirement Simulator (1,000 Paths)</Text>
+                    </Pressable>
+                  </>
                 ) : (
                   <View style={styles.emptyState}>
                     <Text style={styles.emptyTitle}>Retirement planner ready</Text>
@@ -778,6 +816,16 @@ export const ToolsScreen: React.FC<ToolsScreenProps> = ({
           </View>
         </View>
       </View>
+
+      <MonteCarloModal
+        visible={showMonteCarlo}
+        onClose={() => setShowMonteCarlo(false)}
+        theme={theme}
+        targetCorpus={monteCarloConfig.target}
+        years={monteCarloConfig.years}
+        monthlyContribution={monteCarloConfig.monthlySip}
+        clientName="Private Wealth Client"
+      />
     </>
   );
 };

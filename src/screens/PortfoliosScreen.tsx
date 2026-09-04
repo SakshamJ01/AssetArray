@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { AppTheme } from "../theme";
-import { PerformanceChart, Sparkline } from "../components/charts";
+import { PerformanceChart, Sparkline, HoldingsTreemap } from "../components/charts";
 import { RebalanceModal, StressTestModal } from "../components/modals";
 
 export interface PortfoliosScreenProps {
@@ -40,6 +40,22 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = ({
 }) => {
   const [isRebalanceOpen, setIsRebalanceOpen] = useState(false);
   const [isStressTestOpen, setIsStressTestOpen] = useState(false);
+  const [activeVisualization, setActiveVisualization] = useState<"both" | "chart" | "heatmap">("both");
+
+  const treemapHoldings = React.useMemo(() => {
+    if (unifiedPortfolioAnalytics.holdings && unifiedPortfolioAnalytics.holdings.length > 0) {
+      return unifiedPortfolioAnalytics.holdings;
+    }
+    return [
+      { symbol: "RELIANCE", assetName: "Reliance Industries", currentValue: 722600, investedValue: 580000, returnPct: 24.5, assetClass: "Equity" },
+      { symbol: "TCS", assetName: "Tata Consultancy Services", currentValue: 460800, investedValue: 390000, returnPct: 18.1, assetClass: "Equity" },
+      { symbol: "HDFCBANK", assetName: "HDFC Bank Ltd", currentValue: 648000, investedValue: 580000, returnPct: 11.7, assetClass: "Equity" },
+      { symbol: "INFY", assetName: "Infosys Technologies", currentValue: 525000, investedValue: 460000, returnPct: 14.1, assetClass: "Equity" },
+      { symbol: "GOLDBEES", assetName: "Sovereign Gold ETF", currentValue: 380000, investedValue: 310000, returnPct: 22.5, assetClass: "Commodities" },
+      { symbol: "US10Y", assetName: "Target Maturity Debt", currentValue: 410000, investedValue: 415000, returnPct: -1.2, assetClass: "Fixed Income" },
+      { symbol: "ICICIBANK", assetName: "ICICI Bank Ltd", currentValue: 381500, investedValue: 295000, returnPct: 29.3, assetClass: "Equity" },
+    ];
+  }, [unifiedPortfolioAnalytics.holdings]);
 
   return (
     <>
@@ -133,11 +149,71 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = ({
           </View>
         </View>
 
-        <PerformanceChart
-          theme={theme}
-          title="Consolidated Portfolio Trajectory"
-          subtitle="Real-time multi-asset aggregate return curve"
-        />
+        <View style={{ flexDirection: "row", gap: 8, marginVertical: 12 }}>
+          <Pressable
+            style={[
+              styles.optionChip,
+              activeVisualization === "both" && styles.optionChipActive,
+            ]}
+            onPress={() => setActiveVisualization("both")}
+          >
+            <Text
+              style={[
+                styles.optionChipText,
+                activeVisualization === "both" && styles.optionChipTextActive,
+              ]}
+            >
+              All Visualizations
+            </Text>
+          </Pressable>
+          <Pressable
+            style={[
+              styles.optionChip,
+              activeVisualization === "chart" && styles.optionChipActive,
+            ]}
+            onPress={() => setActiveVisualization("chart")}
+          >
+            <Text
+              style={[
+                styles.optionChipText,
+                activeVisualization === "chart" && styles.optionChipTextActive,
+              ]}
+            >
+              📈 Return Trajectory
+            </Text>
+          </Pressable>
+          <Pressable
+            style={[
+              styles.optionChip,
+              activeVisualization === "heatmap" && styles.optionChipActive,
+            ]}
+            onPress={() => setActiveVisualization("heatmap")}
+          >
+            <Text
+              style={[
+                styles.optionChipText,
+                activeVisualization === "heatmap" && styles.optionChipTextActive,
+              ]}
+            >
+              🗺️ Treemap Heatmap
+            </Text>
+          </Pressable>
+        </View>
+
+        {(activeVisualization === "both" || activeVisualization === "chart") && (
+          <PerformanceChart
+            theme={theme}
+            title="Consolidated Portfolio Trajectory"
+            subtitle="Real-time multi-asset aggregate return curve"
+          />
+        )}
+
+        {(activeVisualization === "both" || activeVisualization === "heatmap") && (
+          <HoldingsTreemap
+            holdings={treemapHoldings}
+            theme={theme}
+          />
+        )}
 
         <View style={styles.dualColumn}>
           <View style={styles.column}>

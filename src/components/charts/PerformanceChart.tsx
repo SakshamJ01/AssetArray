@@ -153,27 +153,66 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({
     if (onPeriodChange) onPeriodChange(p);
   };
 
+  const isDark =
+    theme.colors.background === "#030712" ||
+    theme.colors.textPrimary === "#ffffff" ||
+    theme.colors.textPrimary === "#FFFFFF";
+
+  const brandColor = theme.colors.brand || "#E0A84C";
+
   return (
-    <View style={styles.card}>
+    <View
+      style={[
+        styles.card,
+        {
+          backgroundColor: isDark ? "rgba(11, 19, 38, 0.75)" : "#FFFFFF",
+          borderColor: isDark ? "rgba(224, 168, 76, 0.22)" : "rgba(179, 126, 40, 0.25)",
+        },
+      ]}
+    >
       {/* Header with Title, Live AUM, and Delta Badge */}
       <View style={styles.header}>
         <View style={styles.headerTitles}>
-          <Text style={styles.title}>{title}</Text>
-          <Text style={styles.subtitle}>{subtitle}</Text>
+          <Text style={[styles.title, { color: isDark ? "#F8FAFC" : theme.colors.textPrimary }]}>{title}</Text>
+          <Text style={[styles.subtitle, { color: isDark ? "#94A3B8" : theme.colors.textSecondary }]}>{subtitle}</Text>
         </View>
 
         {/* Period Selector Tabs */}
-        <View style={styles.periodTabs}>
+        <View
+          style={[
+            styles.periodTabs,
+            {
+              backgroundColor: isDark
+                ? "rgba(255, 255, 255, 0.05)"
+                : "rgba(15, 23, 42, 0.05)",
+            },
+          ]}
+        >
           {(["1M", "3M", "YTD", "1Y", "ALL"] as ChartPeriod[]).map((p) => (
             <Pressable
               key={p}
               onPress={() => handlePeriodSelect(p)}
-              style={[styles.tab, period === p && styles.tabActive]}
+              style={[
+                styles.tab,
+                period === p && {
+                  backgroundColor: isDark
+                    ? "rgba(224, 168, 76, 0.25)"
+                    : "rgba(179, 126, 40, 0.18)",
+                  borderWidth: 1,
+                  borderColor: isDark
+                    ? "rgba(224, 168, 76, 0.45)"
+                    : "rgba(179, 126, 40, 0.45)",
+                },
+              ]}
             >
               <Text
                 style={[
                   styles.tabText,
-                  period === p && styles.tabTextActive,
+                  { color: isDark ? "#94A3B8" : theme.colors.textSecondary },
+                  period === p && {
+                    color: isDark ? "#F8FAFC" : theme.colors.brandStrong,
+                    fontWeight: "800",
+                  },
                 ]}
               >
                 {p}
@@ -186,9 +225,13 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({
       {/* Metric Value & Performance Badge */}
       <View style={styles.metricRow}>
         <View style={styles.valuationRow}>
-          <Text style={styles.currencyPrefix}>{currencyPrefix}</Text>
-          <Text style={styles.valuationValue}>{displayVal.toFixed(2)}</Text>
-          <Text style={styles.denominationLabel}>Cr</Text>
+          <Text style={[styles.currencyPrefix, { color: brandColor }]}>{currencyPrefix}</Text>
+          <Text style={[styles.valuationValue, { color: isDark ? "#F8FAFC" : theme.colors.textPrimary }]}>
+            {displayVal.toFixed(2)}
+          </Text>
+          <Text style={[styles.denominationLabel, { color: isDark ? "#94A3B8" : theme.colors.textSecondary }]}>
+            Cr
+          </Text>
         </View>
 
         <View
@@ -210,7 +253,9 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({
           </Text>
         </View>
 
-        <Text style={styles.scrubDateText}>{displayDate}</Text>
+        <Text style={[styles.scrubDateText, { color: isDark ? "#64748B" : theme.colors.textMuted }]}>
+          {displayDate}
+        </Text>
       </View>
 
       {/* SVG Interactive Canvas */}
@@ -242,11 +287,11 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({
               {/* @ts-ignore */}
               <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
                 {/* @ts-ignore */}
-                <stop offset="0%" stopColor="#E0A84C" stopOpacity="0.35" />
+                <stop offset="0%" stopColor={brandColor} stopOpacity={isDark ? "0.35" : "0.22"} />
                 {/* @ts-ignore */}
-                <stop offset="70%" stopColor="#E0A84C" stopOpacity="0.05" />
+                <stop offset="70%" stopColor={brandColor} stopOpacity={isDark ? "0.05" : "0.03"} />
                 {/* @ts-ignore */}
-                <stop offset="100%" stopColor="#030712" stopOpacity="0.0" />
+                <stop offset="100%" stopColor={isDark ? "#030712" : "#FFFFFF"} stopOpacity="0.0" />
               </linearGradient>
             </defs>
 
@@ -261,7 +306,7 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({
                   y1={yPos}
                   x2={chartWidth - paddingX}
                   y2={yPos}
-                  stroke="rgba(255, 255, 255, 0.06)"
+                  stroke={isDark ? "rgba(255, 255, 255, 0.06)" : "rgba(15, 23, 42, 0.06)"}
                   strokeDasharray="4 4"
                   strokeWidth="1"
                 />
@@ -277,7 +322,7 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({
             <path
               d={pathData}
               fill="none"
-              stroke="#E0A84C"
+              stroke={brandColor}
               strokeWidth="2.75"
               strokeLinecap="round"
             />
@@ -292,7 +337,8 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({
                   y1={paddingTop}
                   x2={points[hoverIndex].x}
                   y2={height - paddingBottom}
-                  stroke="rgba(224, 168, 76, 0.5)"
+                  stroke={brandColor}
+                  strokeOpacity="0.65"
                   strokeDasharray="3 3"
                   strokeWidth="1.5"
                 />
@@ -301,8 +347,8 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({
                   cx={points[hoverIndex].x}
                   cy={points[hoverIndex].y}
                   r="6"
-                  fill="#030712"
-                  stroke="#E0A84C"
+                  fill={isDark ? "#030712" : "#FFFFFF"}
+                  stroke={brandColor}
                   strokeWidth="2.5"
                 />
               </g>
@@ -315,7 +361,7 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({
                 key={`label-${idx}`}
                 x={pt.x}
                 y={height - 6}
-                fill="rgba(148, 163, 184, 0.75)"
+                fill={isDark ? "rgba(148, 163, 184, 0.75)" : "#64748B"}
                 fontSize="10"
                 fontWeight="600"
                 textAnchor="middle"
@@ -335,7 +381,7 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({
                     {
                       height: Math.max(10, height - pt.y - paddingBottom),
                       backgroundColor:
-                        hoverIndex === idx ? "#E0A84C" : "rgba(224, 168, 76, 0.65)",
+                        hoverIndex === idx ? brandColor : isDark ? "rgba(224, 168, 76, 0.65)" : "rgba(179, 126, 40, 0.65)",
                     },
                   ]}
                 />

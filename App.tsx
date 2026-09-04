@@ -24,6 +24,7 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
+import * as Font from "expo-font";
 import { Ionicons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
 import { BottomTabBar } from "./src/components/BottomTabBar";
@@ -793,6 +794,7 @@ function AppContent() {
         const pkgs = await getOfferings();
         setRevenueCatPackages(pkgs);
 
+        await Font.loadAsync(Ionicons.font).catch(() => {});
         setIsReady(true);
       }
     }

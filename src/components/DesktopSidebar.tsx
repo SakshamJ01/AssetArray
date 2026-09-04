@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet, Pressable, Platform } from "react-native";
+import { View, Text, StyleSheet, Pressable, Platform, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { AppTheme } from "../theme";
 
@@ -66,9 +66,14 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
         <Text style={styles.syncStatusText}>E2EE {syncStatus.toUpperCase()}</Text>
       </View>
 
-      {/* Navigation List */}
-      <View style={styles.navSection}>
-        <Text style={styles.sectionHeader}>WORKSPACE MODULES</Text>
+      <ScrollView
+        style={styles.scrollArea}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Navigation List */}
+        <View style={styles.navSection}>
+          <Text style={styles.sectionHeader}>WORKSPACE MODULES</Text>
         {tabs.map((tab) => {
           const isActive = activeTab === tab.key;
           const iconName = TAB_ICONS[tab.key] || "folder-outline";
@@ -171,6 +176,7 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
           Zero-Knowledge Client Encryption • AI Co-Pilot
         </Text>
       </Pressable>
+      </ScrollView>
 
       {/* Advisor Profile Footer with Lock Button */}
       <View style={styles.advisorFooter}>
@@ -203,12 +209,19 @@ const styles = StyleSheet.create({
     backgroundColor: "#070D1B",
     borderRightWidth: 1,
     borderRightColor: "rgba(224, 168, 76, 0.15)",
-    paddingVertical: 24,
+    paddingTop: 24,
+    paddingBottom: 16,
     paddingHorizontal: 16,
     display: "flex",
     flexDirection: "column",
-    justifyContent: "space-between",
     height: "100%",
+  },
+  scrollArea: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 16,
+    gap: 16,
   },
   brandContainer: {
     flexDirection: "row",
@@ -270,7 +283,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
   navSection: {
-    flex: 1,
     gap: 4,
   },
   sectionHeader: {

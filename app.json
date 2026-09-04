@@ -2,7 +2,7 @@
   "expo": {
     "name": "Asset Array",
     "slug": "asset-array",
-    "version": "1.0.1",
+    "version": "1.5.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "assetBundlePatterns": [

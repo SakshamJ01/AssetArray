@@ -8,6 +8,12 @@
     "assetBundlePatterns": [
       "**/*"
     ],
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#050914"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.assetarray.app"
@@ -15,7 +21,8 @@
     "android": {
       "package": "com.assetarray.app",
       "adaptiveIcon": {
-        "backgroundColor": "#102033"
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#050914"
       }
     },
     "web": {

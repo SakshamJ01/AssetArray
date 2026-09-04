@@ -2653,11 +2653,44 @@ function AppContent() {
                       <Text style={[styles.detailBlock, { fontStyle: "italic", backgroundColor: "rgba(37, 211, 102, 0.1)" }]}>
                         {clientAiRecommendation.whatsappDraft}
                       </Text>
+                      <Pressable
+                        style={[styles.primaryButton, { backgroundColor: "#25D366", marginTop: 8, marginBottom: 16 }]}
+                        onPress={() => {
+                          const cleanPhone = (selectedAiClient.phone || "").replace(/[^0-9+]/g, "");
+                          const encodedText = encodeURIComponent(clientAiRecommendation.whatsappDraft);
+                          const url = cleanPhone
+                            ? `whatsapp://send?phone=${cleanPhone}&text=${encodedText}`
+                            : `whatsapp://send?text=${encodedText}`;
+                          Linking.openURL(url).catch(() => {
+                            Alert.alert("WhatsApp not found", "Could not open WhatsApp on this device.");
+                          });
+                        }}
+                      >
+                        <Text style={[styles.primaryButtonText, { color: "#ffffff", fontWeight: "700" }]}>
+                          📲 Send to {selectedAiClient.name} via WhatsApp
+                        </Text>
+                      </Pressable>
 
                       <Text style={styles.sectionLabel}>📧 Professional Email Draft</Text>
                       <Text style={[styles.detailBlock, { fontStyle: "italic" }]}>
                         {clientAiRecommendation.emailDraft}
                       </Text>
+                      <Pressable
+                        style={[styles.primaryButton, { backgroundColor: "#2f6fff", marginTop: 8 }]}
+                        onPress={() => {
+                          const email = selectedAiClient.email || "";
+                          const subject = encodeURIComponent(`Portfolio Strategy & Allocation Review for ${selectedAiClient.name}`);
+                          const body = encodeURIComponent(clientAiRecommendation.emailDraft);
+                          const url = `mailto:${email}?subject=${subject}&body=${body}`;
+                          Linking.openURL(url).catch(() => {
+                            Alert.alert("Email client not found", "Could not open your default email app.");
+                          });
+                        }}
+                      >
+                        <Text style={[styles.primaryButtonText, { color: "#ffffff", fontWeight: "700" }]}>
+                          ✉️ Open Draft in Email Client
+                        </Text>
+                      </Pressable>
                     </View>
                   ) : null}
                 </View>

@@ -24,8 +24,15 @@ const DEFAULT_QUOTES: Record<string, MarketQuote> = {
 };
 
 let cachedQuotes: Record<string, MarketQuote> = { ...DEFAULT_QUOTES };
+let lastFetchTimestamp = 0;
+const CACHE_TTL_MS = 60_000;
 
-export async function fetchLiveMarketQuotes(): Promise<Record<string, MarketQuote>> {
+export async function fetchLiveMarketQuotes(forceRefresh = false): Promise<Record<string, MarketQuote>> {
+  const nowMs = Date.now();
+  if (!forceRefresh && nowMs - lastFetchTimestamp < CACHE_TTL_MS && Object.keys(cachedQuotes).length > 0) {
+    return cachedQuotes;
+  }
+
   // Simulate live market fluctuation for realistic quotes
   const now = new Date().toISOString();
   const updated: Record<string, MarketQuote> = {};
@@ -43,6 +50,7 @@ export async function fetchLiveMarketQuotes(): Promise<Record<string, MarketQuot
     };
   });
 
+  lastFetchTimestamp = nowMs;
   cachedQuotes = updated;
   return updated;
 }

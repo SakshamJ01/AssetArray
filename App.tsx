@@ -57,8 +57,14 @@ import { BottomTabBar } from "./src/components/BottomTabBar";
 import { DesktopSidebar } from "./src/components/DesktopSidebar";
 import { DashboardScreen } from "./src/components/DashboardScreen";
 import { AdvisorMessagesScreen } from "./src/screens/workspace/AdvisorMessagesScreen";
-import { AggregationScreen } from "./src/screens/workspace/AggregationScreen";
 import { setHapticsEnabled, triggerSuccessHaptic } from "./src/services/haptics";
+import {
+  ClientEditorModal,
+  HoldingEditorModal,
+  SyncConfigModal,
+  BroadcastModal,
+  AboutLegalModal,
+} from "./src/components/modals";
 import {
   AiResearchResult,
   AuthUser,
@@ -82,6 +88,14 @@ import { useNetworkStatus } from "./src/services/network";
 import { exportClientPdfReport } from "./src/services/pdfReport";
 import { initializeRevenueCat, checkProStatus, getOfferings, purchasePackage, restorePurchases, resetDemoProStatus } from "./src/services/revenueCat";
 import { PaywallScreen } from "./src/screens/PaywallScreen";
+import {
+  ClientsScreen,
+  PortfoliosScreen,
+  ToolsScreen,
+  WorkspaceScreen,
+  SettingsScreen,
+} from "./src/screens";
+import { PortfolioManagerSection } from "./src/components/PortfolioManagerSection";
 import { DEMO_CLIENTS, getClientAvatar } from "./src/services/demoData";
 import { AssetAllocationBar } from "./src/components/AssetAllocationBar";
 import { storageService } from "./src/platform/storage";
@@ -2905,1630 +2919,196 @@ function AppContent() {
         ) : null}
 
         {activeTab === "Portfolios" ? (
-        <View style={[styles.panel, styles.analyticsPanel]}>
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.panelTitle}>Unified portfolio view & analytics</Text>
-              <Text style={styles.panelSubtitle}>
-                All tracked client portfolios in one place with performance, allocation,
-                and risk visibility.
-              </Text>
-            </View>
-            <Pressable
-              style={[styles.primaryButton, { marginLeft: 12, paddingHorizontal: 14, paddingVertical: 8 }]}
-              onPress={() => void refreshLiveMarketPrices()}
-              disabled={isMarketRefreshing}
-            >
-              <Text style={styles.primaryButtonText}>
-                {isMarketRefreshing ? "Updating..." : "⚡ Refresh Prices"}
-              </Text>
-            </Pressable>
-          </View>
-          <View style={styles.analyticsSummaryRow}>
-            <View style={[styles.analyticsMetricCard, styles.analyticsBlue]}>
-              <Text style={styles.analyticsMetricLabel}>Current value</Text>
-              <Text style={styles.analyticsMetricValue}>
-                {currencyDisplay(`${unifiedPortfolioAnalytics.totalCurrent}`)}
-              </Text>
-            </View>
-            <View style={[styles.analyticsMetricCard, styles.analyticsSlate]}>
-              <Text style={styles.analyticsMetricLabel}>Invested value</Text>
-              <Text style={styles.analyticsMetricValue}>
-                {currencyDisplay(`${unifiedPortfolioAnalytics.totalInvested}`)}
-              </Text>
-            </View>
-            <View
-              style={[
-                styles.analyticsMetricCard,
-                unifiedPortfolioAnalytics.totalGainLoss >= 0
-                  ? styles.analyticsGreen
-                  : styles.analyticsRed,
-              ]}
-            >
-              <Text style={styles.analyticsMetricLabel}>Gain / loss</Text>
-              <Text style={styles.analyticsMetricValue}>
-                {currencyDisplay(`${unifiedPortfolioAnalytics.totalGainLoss}`)}
-              </Text>
-            </View>
-            <View style={[styles.analyticsMetricCard, styles.analyticsGold]}>
-              <Text style={styles.analyticsMetricLabel}>Tracked holdings</Text>
-              <Text style={styles.analyticsMetricValue}>
-                {unifiedPortfolioAnalytics.holdings.length}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.dualColumn}>
-            <View style={styles.column}>
-              <Text style={styles.sectionLabel}>Asset allocation</Text>
-              {unifiedPortfolioAnalytics.allocation.length === 0 ? (
-                <View style={styles.emptyState}>
-                  <Text style={styles.emptyTitle}>No portfolio analytics yet</Text>
-                  <Text style={styles.emptyText}>
-                    Add holdings to client portfolios to unlock allocation analytics.
-                  </Text>
-                </View>
-              ) : (
-                unifiedPortfolioAnalytics.allocation.map((item) => (
-                  <View key={item.assetClass} style={styles.allocationRow}>
-                    <View style={styles.allocationHeader}>
-                      <Text style={styles.clientName}>{item.assetClass}</Text>
-                      <Text style={styles.clientMeta}>{item.weight.toFixed(1)}%</Text>
-                    </View>
-                    <View style={styles.allocationBarTrack}>
-                      <View
-                        style={[
-                          styles.allocationBarFill,
-                          { width: `${Math.min(item.weight, 100)}%` },
-                        ]}
-                      />
-                    </View>
-                    <Text style={styles.clientSubMeta}>
-                      {currencyDisplay(`${item.currentValue}`)}
-                    </Text>
-                  </View>
-                ))
-              )}
-            </View>
-
-            <View style={styles.column}>
-              <Text style={styles.sectionLabel}>Risk flags</Text>
-              {unifiedPortfolioAnalytics.riskFlags.map((flag) => (
-                <Text key={flag} style={styles.analyticsAlert}>
-                  {flag}
-                </Text>
-              ))}
-            </View>
-          </View>
-
-          <View style={styles.dualColumn}>
-            <View style={styles.column}>
-              <Text style={styles.sectionLabel}>Top performers</Text>
-              {unifiedPortfolioAnalytics.topPerformers.length === 0 ? (
-                <Text style={styles.detailBlock}>No performance data available yet.</Text>
-              ) : (
-                unifiedPortfolioAnalytics.topPerformers.map((item) => (
-                  <View key={`${item.clientId}-${item.id}`} style={styles.analyticsListCard}>
-                    <Text style={styles.clientName}>{item.assetName}</Text>
-                    <Text style={styles.clientMeta}>
-                      {item.clientName} | {item.assetClass}
-                    </Text>
-                    <Text style={styles.analyticsPositive}>
-                      {item.returnPct.toFixed(1)}% | {currencyDisplay(`${item.gainLoss}`)}
-                    </Text>
-                  </View>
-                ))
-              )}
-            </View>
-
-            <View style={styles.column}>
-              <Text style={styles.sectionLabel}>Underperformers</Text>
-              {unifiedPortfolioAnalytics.laggards.length === 0 ? (
-                <Text style={styles.detailBlock}>No laggards detected yet.</Text>
-              ) : (
-                unifiedPortfolioAnalytics.laggards.map((item) => (
-                  <View key={`${item.clientId}-${item.id}`} style={styles.analyticsListCard}>
-                    <Text style={styles.clientName}>{item.assetName}</Text>
-                    <Text style={styles.clientMeta}>
-                      {item.clientName} | {item.assetClass}
-                    </Text>
-                    <Text
-                      style={
-                        item.gainLoss >= 0
-                          ? styles.analyticsPositive
-                          : styles.analyticsNegative
-                      }
-                    >
-                      {item.returnPct.toFixed(1)}% | {currencyDisplay(`${item.gainLoss}`)}
-                    </Text>
-                  </View>
-                ))
-              )}
-            </View>
-          </View>
-
-          <Text style={styles.sectionLabel}>Client portfolio snapshot</Text>
-          {unifiedPortfolioAnalytics.clientSummaries.length === 0 ? (
-            <Text style={styles.detailBlock}>No client portfolio summaries yet.</Text>
-          ) : (
-            unifiedPortfolioAnalytics.clientSummaries.map((item) => (
-              <View key={item.clientId} style={styles.analyticsListCard}>
-                <Text style={styles.clientName}>{item.clientName}</Text>
-                <Text style={styles.clientMeta}>
-                  {item.category} | {item.holdings} holding{item.holdings === 1 ? "" : "s"}
-                </Text>
-                <Text style={styles.clientSubMeta}>
-                  Current: {currencyDisplay(`${item.current}`)} | Invested:{" "}
-                  {currencyDisplay(`${item.invested}`)}
-                </Text>
-              </View>
-            ))
-          )}
-        </View>
-        ) : null}
-
-        {activeTab === "Workspace" ? (
-          <View style={styles.panel}>
-            <Text style={styles.panelTitle}>Daily market message</Text>
-            <Text style={styles.panelSubtitle}>
-              This message becomes your default update for direct outreach and campaigns.
-            </Text>
-            <TextInput
-              multiline
-              value={marketMessage}
-              onChangeText={(value) => {
-                setMarketMessage(value);
-                setBroadcastMessage(value);
-              }}
-              style={[styles.input, styles.messageInput]}
+          <>
+            <PortfoliosScreen
+              theme={theme}
+              unifiedPortfolioAnalytics={unifiedPortfolioAnalytics}
+              taxReporting={taxReporting}
+              isMarketRefreshing={isMarketRefreshing}
+              refreshLiveMarketPrices={refreshLiveMarketPrices}
+              currencyDisplay={currencyDisplay}
+              styles={styles}
             />
-          </View>
-        ) : null}
-
-        {activeTab === "Workspace" || activeTab === "Tools" ? (
-          <View style={styles.dualColumn}>
-          {activeTab === "Workspace" ? <View style={styles.column}>
-            <View style={[styles.panel, styles.calculatorPanel]}>
-              <Text style={styles.panelTitle}>AI market research</Text>
-              <Text style={styles.panelSubtitle}>
-                Run a real Gemini-powered brief for a stock, fund, sector, or macro topic and turn it into advisor-ready outreach.
-              </Text>
-              <TextInput
-                value={marketResearchNotes}
-                onChangeText={setMarketResearchNotes}
-                placeholder="e.g. Nifty IT, Reliance Industries, banking sector, gold ETF"
-                placeholderTextColor="#7f90a8"
-                style={styles.input}
-              />
-              <View style={styles.inlineActions}>
-                <Pressable
-                  style={styles.primaryButton}
-                  onPress={() => void runWorkspaceAiBrief()}
-                  disabled={isAiResearchLoading}
-                >
-                  <Text style={styles.primaryButtonText}>
-                    {isAiResearchLoading ? "Researching..." : "Generate Brief"}
-                  </Text>
-                </Pressable>
-                <Pressable style={styles.secondaryButton} onPress={useAiBriefAsDailyMessage}>
-                  <Text style={styles.secondaryButtonText}>Use for Broadcast</Text>
-                </Pressable>
-              </View>
-              <Text style={styles.detailBlock}>{aiResearchState}</Text>
-              {aiResearchResult ? (
-                <View style={styles.aiResearchResult}>
-                  <View style={styles.aiResearchHeader}>
-                    <Text style={styles.sectionLabel}>Live brief</Text>
-                    <Text
-                      style={[
-                        styles.sentimentPill,
-                        aiResearchResult.sentiment === "Bullish"
-                          ? styles.sentimentBullish
-                          : aiResearchResult.sentiment === "Bearish"
-                            ? styles.sentimentBearish
-                            : styles.sentimentNeutral,
-                      ]}
-                    >
-                      {aiResearchResult.sentiment}
-                    </Text>
-                  </View>
-                  <Text style={styles.historyItem}>{aiResearchResult.summary}</Text>
-                  <Text style={styles.sectionLabel}>Outlook</Text>
-                  <Text style={styles.historyItem}>
-                    Short term: {aiResearchResult.shortTermOutlook}
-                  </Text>
-                  <Text style={styles.historyItem}>
-                    Long term: {aiResearchResult.longTermOutlook}
-                  </Text>
-                  {aiResearchResult.opportunities.slice(0, 2).map((item, index) => (
-                    <Text key={`opp-${index}`} style={styles.historyItem}>
-                      Opportunity: {item}
-                    </Text>
-                  ))}
-                  {aiResearchResult.risks.slice(0, 2).map((item, index) => (
-                    <Text key={`risk-${index}`} style={styles.historyItem}>
-                      Risk: {item}
-                    </Text>
-                  ))}
-                </View>
-              ) : (
-                <View style={styles.emptyState}>
-                  <Text style={styles.emptyTitle}>No AI brief yet</Text>
-                  <Text style={styles.emptyText}>
-                    Run a topic through Gemini to generate a real market brief here.
-                  </Text>
-                </View>
-              )}
-            </View>
-          </View> : null}
-
-          {activeTab === "Tools" ? <View style={styles.column}>
-            <View style={[styles.panel, styles.calculatorPanel]}>
-              <Text style={styles.panelTitle}>Calculator hub</Text>
-              <Text style={styles.panelSubtitle}>
-                Use one clean tools tab to switch calculator types quickly.
-              </Text>
-              <View style={styles.optionRow}>
-                {CALCULATOR_TABS.map((tab) => {
-                  const active = activeCalculator === tab;
-                  return (
-                    <Pressable
-                      key={tab}
-                      style={[styles.optionChip, active ? styles.optionChipActive : null]}
-                      onPress={() => setActiveCalculator(tab)}
-                    >
-                      <Text
-                        style={[
-                          styles.optionChipText,
-                          active ? styles.optionChipTextActive : null,
-                        ]}
-                      >
-                        {tab}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-
-              {activeCalculator === "Cash Flow" ? (
-                <>
-                  <Text style={styles.sectionLabel}>Cash flow calculator</Text>
-                  <TextInput
-                    value={cashFlowAmount}
-                    onChangeText={setCashFlowAmount}
-                    placeholder="Investment amount"
-                    placeholderTextColor="#7f90a8"
-                    keyboardType="decimal-pad"
-                    style={styles.input}
-                  />
-                  <TextInput
-                    value={cashFlowRate}
-                    onChangeText={setCashFlowRate}
-                    placeholder="Annual interest rate (%)"
-                    placeholderTextColor="#7f90a8"
-                    keyboardType="decimal-pad"
-                    style={styles.input}
-                  />
-                  <TextInput
-                    value={cashFlowYears}
-                    onChangeText={setCashFlowYears}
-                    placeholder="Duration in years"
-                    placeholderTextColor="#7f90a8"
-                    keyboardType="decimal-pad"
-                    style={styles.input}
-                  />
-                  <Text style={styles.inputLabel}>Interest view</Text>
-                  <View style={styles.optionRow}>
-                    {CASH_FLOW_FREQUENCIES.map((option) => {
-                      const active = cashFlowFrequency === option;
-                      return (
-                        <Pressable
-                          key={option}
-                          style={[
-                            styles.optionChip,
-                            active ? styles.optionChipActive : null,
-                          ]}
-                          onPress={() => setCashFlowFrequency(option)}
-                        >
-                          <Text
-                            style={[
-                              styles.optionChipText,
-                              active ? styles.optionChipTextActive : null,
-                            ]}
-                          >
-                            {option}
-                          </Text>
-                        </Pressable>
-                      );
-                    })}
-                  </View>
-                  <Text style={styles.inputLabel}>Calculation type</Text>
-                  <View style={styles.optionRow}>
-                    {CASH_FLOW_MODES.map((option) => {
-                      const active = cashFlowMode === option;
-                      return (
-                        <Pressable
-                          key={option}
-                          style={[
-                            styles.optionChip,
-                            active ? styles.optionChipActive : null,
-                          ]}
-                          onPress={() => setCashFlowMode(option)}
-                        >
-                          <Text
-                            style={[
-                              styles.optionChipText,
-                              active ? styles.optionChipTextActive : null,
-                            ]}
-                          >
-                            {option}
-                          </Text>
-                        </Pressable>
-                      );
-                    })}
-                  </View>
-                  {cashFlowResults.ready ? (
-                    <View style={styles.calculatorResultGrid}>
-                      <View style={[styles.miniStat, styles.calculatorStat]}>
-                        <Text style={styles.miniStatValue}>
-                          {currencyDisplay(`${cashFlowResults.payoutPerPeriod}`)}
-                        </Text>
-                        <Text style={styles.miniStatLabel}>
-                          {cashFlowMode === "Payout"
-                            ? `${cashFlowFrequency} interest`
-                            : `${cashFlowFrequency} avg growth`}
-                        </Text>
-                      </View>
-                      <View style={[styles.miniStat, styles.calculatorStat]}>
-                        <Text style={styles.miniStatValue}>
-                          {currencyDisplay(`${cashFlowResults.annualInterest}`)}
-                        </Text>
-                        <Text style={styles.miniStatLabel}>Yearly interest</Text>
-                      </View>
-                      <View style={[styles.miniStat, styles.calculatorStat]}>
-                        <Text style={styles.miniStatValue}>
-                          {currencyDisplay(`${cashFlowResults.totalInterest}`)}
-                        </Text>
-                        <Text style={styles.miniStatLabel}>Total interest</Text>
-                      </View>
-                      <View style={[styles.miniStat, styles.calculatorStat]}>
-                        <Text style={styles.miniStatValue}>
-                          {currencyDisplay(`${cashFlowResults.maturityValue}`)}
-                        </Text>
-                        <Text style={styles.miniStatLabel}>
-                          {cashFlowMode === "Payout"
-                            ? "Principal at end"
-                            : "Maturity value"}
-                        </Text>
-                      </View>
-                    </View>
-                  ) : (
-                    <View style={styles.emptyState}>
-                      <Text style={styles.emptyTitle}>Calculator ready</Text>
-                      <Text style={styles.emptyText}>
-                        Add amount, rate, and duration to see the interest calculation here.
-                      </Text>
-                    </View>
-                  )}
-                </>
-              ) : null}
-
-              {activeCalculator === "SIP" ? (
-                <>
-                  <Text style={styles.sectionLabel}>SIP calculator</Text>
-                  <TextInput
-                    value={sipAmount}
-                    onChangeText={setSipAmount}
-                    placeholder="SIP amount per installment"
-                    placeholderTextColor="#7f90a8"
-                    keyboardType="decimal-pad"
-                    style={styles.input}
-                  />
-                  <TextInput
-                    value={sipRate}
-                    onChangeText={setSipRate}
-                    placeholder="Expected annual return (%)"
-                    placeholderTextColor="#7f90a8"
-                    keyboardType="decimal-pad"
-                    style={styles.input}
-                  />
-                  <TextInput
-                    value={sipYears}
-                    onChangeText={setSipYears}
-                    placeholder="Duration in years"
-                    placeholderTextColor="#7f90a8"
-                    keyboardType="decimal-pad"
-                    style={styles.input}
-                  />
-                  <Text style={styles.inputLabel}>SIP frequency</Text>
-                  <View style={styles.optionRow}>
-                    {SIP_FREQUENCIES.map((option) => {
-                      const active = sipFrequency === option;
-                      return (
-                        <Pressable
-                          key={option}
-                          style={[
-                            styles.optionChip,
-                            active ? styles.optionChipActive : null,
-                          ]}
-                          onPress={() => setSipFrequency(option)}
-                        >
-                          <Text
-                            style={[
-                              styles.optionChipText,
-                              active ? styles.optionChipTextActive : null,
-                            ]}
-                          >
-                            {option}
-                          </Text>
-                        </Pressable>
-                      );
-                    })}
-                  </View>
-                  {sipResults.ready ? (
-                    <View style={styles.calculatorResultGrid}>
-                      <View style={[styles.miniStat, styles.calculatorStat]}>
-                        <Text style={styles.miniStatValue}>
-                          {currencyDisplay(`${sipResults.totalInvested}`)}
-                        </Text>
-                        <Text style={styles.miniStatLabel}>Total invested</Text>
-                      </View>
-                      <View style={[styles.miniStat, styles.calculatorStat]}>
-                        <Text style={styles.miniStatValue}>
-                          {currencyDisplay(`${sipResults.estimatedReturns}`)}
-                        </Text>
-                        <Text style={styles.miniStatLabel}>Estimated returns</Text>
-                      </View>
-                      <View style={[styles.miniStat, styles.calculatorStat]}>
-                        <Text style={styles.miniStatValue}>
-                          {currencyDisplay(`${sipResults.maturityValue}`)}
-                        </Text>
-                        <Text style={styles.miniStatLabel}>Estimated maturity</Text>
-                      </View>
-                      <View style={[styles.miniStat, styles.calculatorStat]}>
-                        <Text style={styles.miniStatValue}>{sipResults.installments}</Text>
-                        <Text style={styles.miniStatLabel}>Installments</Text>
-                      </View>
-                    </View>
-                  ) : (
-                    <View style={styles.emptyState}>
-                      <Text style={styles.emptyTitle}>SIP calculator ready</Text>
-                      <Text style={styles.emptyText}>
-                        Add SIP amount, expected rate, and duration to see the projection here.
-                      </Text>
-                    </View>
-                  )}
-                </>
-              ) : null}
-
-              {activeCalculator === "Goal Planner" ? (
-                <>
-                  <Text style={styles.sectionLabel}>Goal planner</Text>
-                  <TextInput
-                    value={goalTargetAmount}
-                    onChangeText={setGoalTargetAmount}
-                    placeholder="Target amount"
-                    placeholderTextColor="#7f90a8"
-                    keyboardType="decimal-pad"
-                    style={styles.input}
-                  />
-                  <TextInput
-                    value={goalExpectedReturn}
-                    onChangeText={setGoalExpectedReturn}
-                    placeholder="Expected annual return (%)"
-                    placeholderTextColor="#7f90a8"
-                    keyboardType="decimal-pad"
-                    style={styles.input}
-                  />
-                  <TextInput
-                    value={goalYears}
-                    onChangeText={setGoalYears}
-                    placeholder="Years to goal"
-                    placeholderTextColor="#7f90a8"
-                    keyboardType="decimal-pad"
-                    style={styles.input}
-                  />
-                  {goalPlannerResults.ready ? (
-                    <View style={styles.calculatorResultGrid}>
-                      <View style={[styles.miniStat, styles.calculatorStat]}>
-                        <Text style={styles.miniStatValue}>
-                          {currencyDisplay(`${goalPlannerResults.requiredMonthlySip}`)}
-                        </Text>
-                        <Text style={styles.miniStatLabel}>Required monthly SIP</Text>
-                      </View>
-                      <View style={[styles.miniStat, styles.calculatorStat]}>
-                        <Text style={styles.miniStatValue}>
-                          {currencyDisplay(`${goalPlannerResults.totalInvested}`)}
-                        </Text>
-                        <Text style={styles.miniStatLabel}>Estimated invested</Text>
-                      </View>
-                      <View style={[styles.miniStat, styles.calculatorStat]}>
-                        <Text style={styles.miniStatValue}>
-                          {currencyDisplay(`${goalPlannerResults.estimatedGrowth}`)}
-                        </Text>
-                        <Text style={styles.miniStatLabel}>Expected growth</Text>
-                      </View>
-                    </View>
-                  ) : (
-                    <View style={styles.emptyState}>
-                      <Text style={styles.emptyTitle}>Goal planner ready</Text>
-                      <Text style={styles.emptyText}>
-                        Add target amount, return, and years to calculate the required SIP.
-                      </Text>
-                    </View>
-                  )}
-                </>
-              ) : null}
-
-              {activeCalculator === "Retirement" ? (
-                <>
-                  <Text style={styles.sectionLabel}>Retirement planner</Text>
-                  <TextInput
-                    value={retirementMonthlyExpense}
-                    onChangeText={setRetirementMonthlyExpense}
-                    placeholder="Current monthly expense"
-                    placeholderTextColor="#7f90a8"
-                    keyboardType="decimal-pad"
-                    style={styles.input}
-                  />
-                  <TextInput
-                    value={retirementInflation}
-                    onChangeText={setRetirementInflation}
-                    placeholder="Inflation (%)"
-                    placeholderTextColor="#7f90a8"
-                    keyboardType="decimal-pad"
-                    style={styles.input}
-                  />
-                  <TextInput
-                    value={retirementReturn}
-                    onChangeText={setRetirementReturn}
-                    placeholder="Expected return before retirement (%)"
-                    placeholderTextColor="#7f90a8"
-                    keyboardType="decimal-pad"
-                    style={styles.input}
-                  />
-                  <TextInput
-                    value={retirementYearsToRetire}
-                    onChangeText={setRetirementYearsToRetire}
-                    placeholder="Years to retirement"
-                    placeholderTextColor="#7f90a8"
-                    keyboardType="decimal-pad"
-                    style={styles.input}
-                  />
-                  <TextInput
-                    value={retirementYearsAfterRetire}
-                    onChangeText={setRetirementYearsAfterRetire}
-                    placeholder="Years after retirement"
-                    placeholderTextColor="#7f90a8"
-                    keyboardType="decimal-pad"
-                    style={styles.input}
-                  />
-                  {retirementResults.ready ? (
-                    <View style={styles.calculatorResultGrid}>
-                      <View style={[styles.miniStat, styles.calculatorStat]}>
-                        <Text style={styles.miniStatValue}>
-                          {currencyDisplay(`${retirementResults.futureMonthlyExpense}`)}
-                        </Text>
-                        <Text style={styles.miniStatLabel}>Future monthly expense</Text>
-                      </View>
-                      <View style={[styles.miniStat, styles.calculatorStat]}>
-                        <Text style={styles.miniStatValue}>
-                          {currencyDisplay(`${retirementResults.targetCorpus}`)}
-                        </Text>
-                        <Text style={styles.miniStatLabel}>Target corpus</Text>
-                      </View>
-                      <View style={[styles.miniStat, styles.calculatorStat]}>
-                        <Text style={styles.miniStatValue}>
-                          {currencyDisplay(`${retirementResults.requiredMonthlySip}`)}
-                        </Text>
-                        <Text style={styles.miniStatLabel}>Required monthly SIP</Text>
-                      </View>
-                    </View>
-                  ) : (
-                    <View style={styles.emptyState}>
-                      <Text style={styles.emptyTitle}>Retirement planner ready</Text>
-                      <Text style={styles.emptyText}>
-                        Add expense, inflation, returns, and timeline to estimate retirement corpus.
-                      </Text>
-                    </View>
-                  )}
-                </>
-              ) : null}
-            </View>
-          </View> : null}
-          </View>
+            <PortfolioManagerSection
+              selectedClient={selectedClient}
+              portfolioStats={portfolioStats}
+              currencyDisplay={currencyDisplay}
+              openAddHoldingModal={openAddHoldingModal}
+              openEditHoldingModal={openEditHoldingModal}
+              deleteHolding={deleteHolding}
+              dueClients={dueClients}
+              formatReminderDate={formatReminderDate}
+              setSelectedClientId={setSelectedClientId}
+              categorySummary={categorySummary}
+              isDesktop={isDesktop}
+              styles={styles}
+            />
+          </>
         ) : null}
 
         {activeTab === "Workspace" ? (
-        <View style={styles.panel}>
-          <Text style={styles.panelTitle}>Smart segmentation</Text>
-          <Text style={styles.panelSubtitle}>
-            Client mix snapshot for campaign targeting and advisor review.
-          </Text>
-          <View style={styles.categoryGrid}>
-            {categorySummary.map((item) => (
-              <View key={item.label} style={styles.categoryCard}>
-                <Text style={styles.categoryValue}>{item.value}</Text>
-                <Text style={styles.categoryLabel}>{item.label}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-        ) : null}
-
-        {activeTab === "Clients" ? (
-        <View style={styles.panel}>
-          <Text style={styles.panelTitle}>Search and filters</Text>
-          <TextInput
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholder="Search by name, email, phone, city, or risk profile"
-            placeholderTextColor="#7f90a8"
-            style={styles.input}
-          />
-          <Text style={styles.inputLabel}>Client category</Text>
-          <View style={styles.optionRow}>
-            {CATEGORY_FILTER_OPTIONS.map((category) => {
-              const active = categoryFilter === category;
-              return (
-                <Pressable
-                  key={category}
-                  style={[styles.optionChip, active ? styles.optionChipActive : null]}
-                  onPress={() => setCategoryFilter(category)}
-                >
-                  <Text
-                    style={[
-                      styles.optionChipText,
-                      active ? styles.optionChipTextActive : null,
-                    ]}
-                  >
-                    {category}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-          <Text style={styles.inputLabel}>Focus mode</Text>
-          <View style={styles.optionRow}>
-            {(["All", "Due", "High Priority"] as const).map((mode) => {
-              const active = filterMode === mode;
-              return (
-                <Pressable
-                  key={mode}
-                  style={[styles.optionChip, active ? styles.optionChipActive : null]}
-                  onPress={() => setFilterMode(mode)}
-                >
-                  <Text
-                    style={[
-                      styles.optionChipText,
-                      active ? styles.optionChipTextActive : null,
-                    ]}
-                  >
-                    {mode}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
-        ) : null}
-
-        {activeTab === "Clients" ? (
-        <View style={styles.broadcastStrip}>
-          <Text style={styles.broadcastStripText}>
-            {selectedClientIds.length} client{selectedClientIds.length === 1 ? "" : "s"} selected for bulk campaign.
-          </Text>
-          <View style={styles.inlineActions}>
-            <Pressable style={styles.linkButton} onPress={selectAllVisibleClients}>
-              <Text style={styles.linkButtonText}>Select Visible</Text>
-            </Pressable>
-            <Pressable style={styles.linkButton} onPress={clearSelectedClients}>
-              <Text style={styles.linkButtonText}>Clear</Text>
-            </Pressable>
-            <Pressable
-              style={styles.linkButton}
-              onPress={() => setIsBroadcastModalOpen(true)}
-            >
-              <Text style={styles.linkButtonText}>Send Bulk Update</Text>
-            </Pressable>
-          </View>
-        </View>
-        ) : null}
-
-        {activeTab === "Clients" ? (
-        <View style={[styles.dualColumn, isDesktop && { flexDirection: "row", alignItems: "flex-start" }]}>
-          <View style={styles.column}>
-            <View style={styles.panel}>
-              <Text style={styles.panelTitle}>Client list</Text>
-              <Text style={styles.panelSubtitle}>
-                {filteredClients.length} visible client{filteredClients.length === 1 ? "" : "s"} in this view.
-              </Text>
-              {filteredClients.length === 0 ? (
-                <View style={styles.emptyState}>
-                  <Text style={styles.emptyTitle}>No matching clients</Text>
-                  <Text style={styles.emptyText}>
-                    Adjust your filters, add a client, or load the institutional showcase portfolio.
-                  </Text>
-                  <Pressable
-                    style={[styles.primaryButton, { marginTop: 14, backgroundColor: theme.colors.brand }]}
-                    onPress={() => void seedDemoClients()}
-                  >
-                    <Text style={[styles.primaryButtonText, { color: "#050914", fontWeight: "800" }]}>
-                      ⚡ Load Demo Roster & Holdings (Judge Showcase)
-                    </Text>
-                  </Pressable>
-                </View>
-              ) : (
-                filteredClients.map((client) => {
-                  const active = selectedClientId === client.id;
-                  const selected = selectedClientIds.includes(client.id);
-                  return (
-                    <View key={client.id} style={styles.clientRowShell}>
-                      <Pressable
-                        style={[styles.selectorPill, selected ? styles.selectorPillActive : null]}
-                        onPress={() => toggleSelectedClient(client.id)}
-                      >
-                        <Text
-                          style={[
-                            styles.selectorPillText,
-                            selected ? styles.selectorPillTextActive : null,
-                          ]}
-                        >
-                          {selected ? "Selected" : "Select"}
-                        </Text>
-                      </Pressable>
-                      <Pressable
-                        style={[styles.clientRow, active ? styles.clientRowActive : null]}
-                        onPress={() => setSelectedClientId(client.id)}
-                      >
-                        <View style={{ flexDirection: "row", alignItems: "center", gap: 10, flex: 1 }}>
-                          <Image
-                            source={{ uri: getClientAvatar(client) }}
-                            style={styles.clientListAvatar}
-                          />
-                          <View style={styles.clientRowMain}>
-                            <Text style={styles.clientName}>{client.name}</Text>
-                            <Text style={styles.clientMeta}>
-                              {client.category} | {client.priority} | {client.preferredChannel}
-                            </Text>
-                            <Text style={styles.clientSubMeta}>
-                              Follow-up: {formatReminderDate(client.reminderDate)}
-                            </Text>
-                          </View>
-                        </View>
-                        {isReminderDue(client.reminderDate) ? (
-                          <View style={styles.dueBadge}>
-                            <Text style={styles.dueBadgeText}>Due</Text>
-                          </View>
-                        ) : null}
-                      </Pressable>
-                    </View>
-                  );
-                })
-              )}
-            </View>
-          </View>
-
-          <View style={styles.column}>
-            <View style={styles.panel}>
-              <Text style={styles.panelTitle}>Client details</Text>
-              {selectedClient ? (
-                <>
-                  <View style={styles.clientDetailHeader}>
-                    <Image
-                      source={{ uri: getClientAvatar(selectedClient) }}
-                      style={styles.clientDetailAvatar}
-                    />
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.detailName}>{selectedClient.name}</Text>
-                      <Text style={styles.detailLine}>{selectedClient.phone}</Text>
-                      <Text style={styles.detailLine}>
-                        {selectedClient.email || "No email saved"}
-                      </Text>
-                      <Text style={styles.detailLine}>
-                        {selectedClient.city || "Location not saved"}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.tagRow}>
-                    {[selectedClient.category, selectedClient.priority, selectedClient.preferredChannel].map(
-  (tag, index) => (
-    <View key={`${tag}-${index}`} style={styles.tag}>
-      <Text style={styles.tagText}>{tag}</Text>
-    </View>
-  )
-)}
-                  </View>
-
-                  <Text style={styles.sectionLabel}>Risk profile</Text>
-                  <Text style={styles.detailBlock}>
-                    {selectedClient.riskProfile || "Not assigned"}
-                  </Text>
-
-                  <Text style={styles.sectionLabel}>Portfolio allocation</Text>
-                  <AssetAllocationBar allocationString={selectedClient.allocation} theme={theme} />
-                  <Text style={[styles.detailBlock, { marginTop: 6 }]}>
-                    {selectedClient.allocation || "Not saved"}
-                  </Text>
-
-                  <Text style={styles.sectionLabel}>Watchlist</Text>
-                  <Text style={styles.detailBlock}>
-                    {selectedClient.watchlist.join(", ") || "No watchlist saved"}
-                  </Text>
-
-                  <Text style={styles.sectionLabel}>Private notes</Text>
-                  <Text style={styles.detailBlock}>
-                    {selectedClient.notes || "No notes added yet"}
-                  </Text>
-
-                  <Text style={styles.sectionLabel}>Next reminder</Text>
-                  <Text style={styles.detailBlock}>
-                    {formatReminderDate(selectedClient.reminderDate)}
-                  </Text>
-
-                  <Text style={styles.sectionLabel}>Quick contact</Text>
-                  <View style={styles.optionRow}>
-                    {CHANNEL_OPTIONS.map((channel) => (
-                      <Pressable
-                        key={channel}
-                        style={styles.darkChip}
-                        onPress={() => void contactClient(selectedClient, channel)}
-                      >
-                        <Text style={styles.darkChipText}>{channel}</Text>
-                      </Pressable>
-                    ))}
-                  </View>
-
-                  <View style={styles.inlineActions}>
-                    <Pressable
-                      style={styles.linkButton}
-                      onPress={() => {
-                        if (!isPro) {
-                          setIsPaywallVisible(true);
-                          return;
-                        }
-                        void exportClientPdfReport({
-                          client: selectedClient,
-                          advisorName: authSession?.user?.username || cloudSettings.ownerName || "Asset Array Advisor",
-                        });
-                      }}
-                    >
-                      <Text style={[styles.linkButtonText, { color: theme.colors.warning }]}>
-                        📄 Export PDF Report
-                      </Text>
-                    </Pressable>
-                    <Pressable
-                      style={styles.linkButton}
-                      onPress={() => openEditModal(selectedClient)}
-                    >
-                      <Text style={styles.linkButtonText}>Edit Client</Text>
-                    </Pressable>
-                    <Pressable
-                      style={styles.linkButton}
-                      onPress={() => deleteClient(selectedClient)}
-                    >
-                      <Text style={[styles.linkButtonText, styles.linkDanger]}>Delete</Text>
-                    </Pressable>
-                  </View>
-                  <Text style={styles.sectionLabel}>Recent update history</Text>
-                  {selectedClient.updateHistory.length === 0 ? (
-                    <Text style={styles.detailBlock}>No updates shared yet.</Text>
-                  ) : (
-                    (selectedClient.updateHistory || []).map((item, index) => (
-                      <Text key={`history-${selectedClient.id}-${index}`} style={styles.historyItem}>
-                        {item}
-                      </Text>
-                    ))
-                  )}
-                </>
-              ) : (
-                <View style={styles.emptyState}>
-                  <Text style={styles.emptyTitle}>Select a client</Text>
-                  <Text style={styles.emptyText}>
-                    Review profile details, reminders, and communication history here.
-                  </Text>
-                </View>
-              )}
-            </View>
-          </View>
-        </View>
-        ) : null}
-
-        {activeTab === "Clients" || activeTab === "Portfolios" ? (
-        <View style={[styles.dualColumn, isDesktop && { flexDirection: "row", alignItems: "flex-start" }]}>
-          <View style={styles.column}>
-            <View style={styles.panel}>
-              <Text style={styles.panelTitle}>Portfolio manager</Text>
-              {selectedClient ? (
-                <>
-                  <Text style={styles.panelSubtitle}>
-                    Add, rename, edit, or remove any holding in {selectedClient.name}'s
-                    current portfolio.
-                  </Text>
-                  <View style={styles.statRow}>
-                    <View style={styles.miniStat}>
-                      <Text style={styles.miniStatValue}>{portfolioStats.holdings}</Text>
-                      <Text style={styles.miniStatLabel}>Holdings</Text>
-                    </View>
-                    <View style={styles.miniStat}>
-                      <Text style={styles.miniStatValue}>
-                        {currencyDisplay(`${portfolioStats.invested}`)}
-                      </Text>
-                      <Text style={styles.miniStatLabel}>Invested</Text>
-                    </View>
-                    <View style={styles.miniStat}>
-                      <Text style={styles.miniStatValue}>
-                        {currencyDisplay(`${portfolioStats.current}`)}
-                      </Text>
-                      <Text style={styles.miniStatLabel}>Current</Text>
-                    </View>
-                  </View>
-                  <Pressable style={styles.goldButton} onPress={openAddHoldingModal}>
-                    <Text style={styles.goldButtonText}>+ Add Holding</Text>
-                  </Pressable>
-                  {selectedClient.portfolio.length === 0 ? (
-                    <View style={styles.emptyState}>
-                      <Text style={styles.emptyTitle}>No holdings yet</Text>
-                      <Text style={styles.emptyText}>
-                        Add stocks, funds, or any asset names you want to track and rename later.
-                      </Text>
-                    </View>
-                  ) : (
-                    selectedClient.portfolio.map((holding) => (
-                      <View key={holding.id} style={styles.holdingCard}>
-                        <Text style={styles.holdingTitle}>
-                          {holding.assetName}
-                          {holding.ticker ? ` (${holding.ticker})` : ""}
-                        </Text>
-                        <Text style={styles.holdingMeta}>
-                          Class: {holding.assetClass ?? "Stocks"}
-                        </Text>
-                        <Text style={styles.holdingMeta}>
-                          Qty: {holding.quantity || "-"} | Target: {holding.targetWeight || "-"}
-                        </Text>
-                        <Text style={styles.holdingMeta}>
-                          Invested: {holding.investedValue ? currencyDisplay(holding.investedValue) : "-"}
-                        </Text>
-                        <Text style={styles.holdingMeta}>
-                          Current: {holding.currentValue ? currencyDisplay(holding.currentValue) : "-"}
-                        </Text>
-                        {holding.notes ? (
-                          <Text style={styles.holdingNote}>{holding.notes}</Text>
-                        ) : null}
-                        <View style={styles.inlineActions}>
-                          <Pressable
-                            style={styles.linkButton}
-                            onPress={() => openEditHoldingModal(holding)}
-                          >
-                            <Text style={styles.linkButtonText}>Edit / Rename</Text>
-                          </Pressable>
-                          <Pressable
-                            style={styles.linkButton}
-                            onPress={() => deleteHolding(holding)}
-                          >
-                            <Text style={[styles.linkButtonText, styles.linkDanger]}>
-                              Remove
-                            </Text>
-                          </Pressable>
-                        </View>
-                      </View>
-                    ))
-                  )}
-                </>
-              ) : (
-                <View style={styles.emptyState}>
-                  <Text style={styles.emptyTitle}>Select a client first</Text>
-                  <Text style={styles.emptyText}>
-                    The portfolio manager opens for the client you are currently viewing.
-                  </Text>
-                </View>
-              )}
-            </View>
-          </View>
-
-          <View style={styles.column}>
-            <View style={styles.panel}>
-              <Text style={styles.panelTitle}>Follow-up reminders</Text>
-              {dueClients.length === 0 ? (
-                <Text style={styles.detailBlock}>
-                  No client follow-ups are due today.
-                </Text>
-              ) : (
-                dueClients.map((client) => (
-                  <View key={client.id} style={styles.reminderRow}>
-                    <View style={styles.clientRowMain}>
-                      <Text style={styles.clientName}>{client.name}</Text>
-                      <Text style={styles.clientSubMeta}>
-                        Due on {formatReminderDate(client.reminderDate)}
-                      </Text>
-                    </View>
-                    <Pressable
-                      style={styles.slimButton}
-                      onPress={() => setSelectedClientId(client.id)}
-                    >
-                      <Text style={styles.slimButtonText}>Open</Text>
-                    </Pressable>
-                  </View>
-                ))
-              )}
-            </View>
-
-            <View style={styles.panel}>
-              <Text style={styles.panelTitle}>Client categories</Text>
-              <View style={styles.categoryGrid}>
-                {categorySummary.map((item) => (
-                  <View key={item.label} style={styles.categoryCard}>
-                    <Text style={styles.categoryValue}>{item.value}</Text>
-                    <Text style={styles.categoryLabel}>{item.label}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          </View>
-        </View>
-        ) : null}
-
-        {activeTab === "Clients" ? (
-        <View style={styles.dualColumn}>
-          <View style={styles.column}>
-            <View style={styles.panel}>
-              <Text style={styles.panelTitle}>Client insight engine</Text>
-              <Text style={styles.panelSubtitle}>
-                Quick advisory insights and a personalized message draft for the selected client.
-              </Text>
-              {selectedClient ? (
-                <>
-                  {selectedClientInsights.map((item) => (
-                    <Text key={item} style={styles.historyItem}>
-                      {item}
-                    </Text>
-                  ))}
-                  <Text style={styles.sectionLabel}>Personalised client message</Text>
-                  <Text style={styles.historyItem}>{selectedClientMessageDraft}</Text>
-                </>
-              ) : (
-                <View style={styles.emptyState}>
-                  <Text style={styles.emptyTitle}>Select a client first</Text>
-                  <Text style={styles.emptyText}>
-                    The insight engine summarizes the selected client using profile and portfolio data.
-                  </Text>
-                </View>
-              )}
-            </View>
-          </View>
-
-          <View style={styles.column}>
-            <View style={styles.panel}>
-              <Text style={styles.panelTitle}>Report studio</Text>
-              <Text style={styles.panelSubtitle}>
-                PDF-ready report draft content that can be moved into an export workflow.
-              </Text>
-              {selectedClient ? (
-                <Text style={styles.reportBlock}>{selectedClientReportDraft}</Text>
-              ) : (
-                <View style={styles.emptyState}>
-                  <Text style={styles.emptyTitle}>No report target selected</Text>
-                  <Text style={styles.emptyText}>
-                    Select a client first to generate a report draft.
-                  </Text>
-                </View>
-              )}
-            </View>
-          </View>
-        </View>
-        ) : null}
-
-        {activeTab === "Tools" || activeTab === "Workspace" ? (
-        <View style={styles.dualColumn}>
-          {activeTab === "Tools" ? <View style={styles.column}>
-            <View style={styles.panel}>
-              <Text style={styles.panelTitle}>Goal center</Text>
-              <Text style={styles.panelSubtitle}>
-                Retirement, education, emergency, and wealth goals ko track karo with progress visibility.
-              </Text>
-              <View style={styles.analyticsSummaryRow}>
-                <View style={[styles.analyticsMetricCard, styles.analyticsGold]}>
-                  <Text style={styles.analyticsMetricLabel}>Target corpus</Text>
-                  <Text style={styles.analyticsMetricValue}>
-                    {currencyDisplay(`${goalCenterStats.totalTarget}`)}
-                  </Text>
-                </View>
-                <View style={[styles.analyticsMetricCard, styles.analyticsBlue]}>
-                  <Text style={styles.analyticsMetricLabel}>Current progress</Text>
-                  <Text style={styles.analyticsMetricValue}>
-                    {currencyDisplay(`${goalCenterStats.totalCurrent}`)}
-                  </Text>
-                </View>
-                <View style={[styles.analyticsMetricCard, styles.analyticsRed]}>
-                  <Text style={styles.analyticsMetricLabel}>Urgent goals</Text>
-                  <Text style={styles.analyticsMetricValue}>{goalCenterStats.urgentGoals}</Text>
-                </View>
-              </View>
-              <TextInput
-                value={goalDraft.title}
-                onChangeText={(value) => updateGoalDraft("title", value)}
-                placeholder="Goal name"
-                placeholderTextColor="#7f90a8"
-                style={styles.input}
-              />
-              <View style={styles.optionRow}>
-                {GOAL_TYPE_OPTIONS.map((option) => {
-                  const active = goalDraft.goalType === option;
-                  return (
-                    <Pressable
-                      key={option}
-                      style={[styles.optionChip, active ? styles.optionChipActive : null]}
-                      onPress={() => updateGoalDraft("goalType", option)}
-                    >
-                      <Text
-                        style={[
-                          styles.optionChipText,
-                          active ? styles.optionChipTextActive : null,
-                        ]}
-                      >
-                        {option}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-              <TextInput
-                value={goalDraft.targetAmount}
-                onChangeText={(value) => updateGoalDraft("targetAmount", value)}
-                placeholder="Target amount"
-                placeholderTextColor="#7f90a8"
-                keyboardType="decimal-pad"
-                style={styles.input}
-              />
-              <TextInput
-                value={goalDraft.currentAmount}
-                onChangeText={(value) => updateGoalDraft("currentAmount", value)}
-                placeholder="Current amount"
-                placeholderTextColor="#7f90a8"
-                keyboardType="decimal-pad"
-                style={styles.input}
-              />
-              <TextInput
-                value={goalDraft.targetYear}
-                onChangeText={(value) => updateGoalDraft("targetYear", value)}
-                placeholder="Target year"
-                placeholderTextColor="#7f90a8"
-                keyboardType="number-pad"
-                style={styles.input}
-              />
-              <TextInput
-                value={goalDraft.monthlyContribution}
-                onChangeText={(value) => updateGoalDraft("monthlyContribution", value)}
-                placeholder="Monthly contribution"
-                placeholderTextColor="#7f90a8"
-                keyboardType="decimal-pad"
-                style={styles.input}
-              />
-              <View style={styles.optionRow}>
-                {GOAL_PRIORITY_OPTIONS.map((option) => {
-                  const active = goalDraft.priority === option;
-                  return (
-                    <Pressable
-                      key={option}
-                      style={[styles.optionChip, active ? styles.optionChipActive : null]}
-                      onPress={() => updateGoalDraft("priority", option)}
-                    >
-                      <Text
-                        style={[
-                          styles.optionChipText,
-                          active ? styles.optionChipTextActive : null,
-                        ]}
-                      >
-                        {option}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-              <Pressable style={styles.goldButton} onPress={saveGoalFromDraft}>
-                <Text style={styles.goldButtonText}>Add Goal</Text>
-              </Pressable>
-              {goalCenterStats.rows.length === 0 ? (
-                <View style={styles.emptyState}>
-                  <Text style={styles.emptyTitle}>No goals added yet</Text>
-                  <Text style={styles.emptyText}>
-                    Add target-based goals and track funding progress here.
-                  </Text>
-                </View>
-              ) : (
-                goalCenterStats.rows.map((goal) => (
-                  <View key={goal.id} style={styles.analyticsListCard}>
-                    <Text style={styles.clientName}>{goal.title}</Text>
-                    <Text style={styles.clientMeta}>
-                      {goal.goalType} | {goal.priority} | Target year {goal.targetYear}
-                    </Text>
-                    <Text style={styles.clientSubMeta}>
-                      Current {currencyDisplay(goal.currentAmount)} / Target {currencyDisplay(goal.targetAmount)}
-                    </Text>
-                    <View style={styles.allocationBarTrack}>
-                      <View
-                        style={[
-                          styles.allocationBarFill,
-                          { width: `${Math.min(goal.progress, 100)}%` },
-                        ]}
-                      />
-                    </View>
-                    <Text style={styles.clientSubMeta}>
-                      Progress {goal.progress.toFixed(1)}% | Gap {currencyDisplay(`${goal.gap}`)}
-                    </Text>
-                  </View>
-                ))
-              )}
-            </View>
-          </View> : null}
-
-        {activeTab === "Workspace" ? <View style={styles.column}>
-          <AdvisorMessagesScreen
+          <WorkspaceScreen
+            theme={theme}
+            marketMessage={marketMessage}
+            setMarketMessage={setMarketMessage}
+            setBroadcastMessage={setBroadcastMessage}
+            marketResearchNotes={marketResearchNotes}
+            setMarketResearchNotes={setMarketResearchNotes}
+            runWorkspaceAiBrief={runWorkspaceAiBrief}
+            useAiBriefAsDailyMessage={useAiBriefAsDailyMessage}
+            isAiResearchLoading={isAiResearchLoading}
+            aiResearchState={aiResearchState}
+            aiResearchResult={aiResearchResult}
+            categorySummary={categorySummary}
             advisorMessages={advisorMessages}
             advisorMessageDraft={advisorMessageDraft}
-            onUpdateDraft={updateAdvisorMessageDraft}
-            onSaveDraft={saveAdvisorMessageDraftAction}
+            updateAdvisorMessageDraft={updateAdvisorMessageDraft}
+            saveAdvisorMessageDraftAction={saveAdvisorMessageDraftAction}
+            aggregationSnapshot={aggregationSnapshot}
+            connectedAccounts={connectedAccounts}
+            currencyDisplay={currencyDisplay}
             styles={styles}
           />
-        </View> : null}
-        </View>
         ) : null}
 
-        {activeTab === "Tools" || activeTab === "Workspace" ? (
-        <View style={styles.dualColumn}>
-          {activeTab === "Tools" ? <View style={styles.column}>
-            <View style={styles.panel}>
-              <Text style={styles.panelTitle}>Document vault</Text>
-              <Text style={styles.panelSubtitle}>
-                Secure document metadata storage for reports, KYC, tax files, and review packs.
-              </Text>
-              <TextInput
-                value={vaultDocumentDraft.clientName}
-                onChangeText={(value) =>
-                  setVaultDocumentDraft((current) => ({ ...current, clientName: value }))
-                }
-                placeholder="Client name"
-                placeholderTextColor="#7f90a8"
-                style={styles.input}
-              />
-              <TextInput
-                value={vaultDocumentDraft.fileName}
-                onChangeText={(value) =>
-                  setVaultDocumentDraft((current) => ({ ...current, fileName: value }))
-                }
-                placeholder="Document file name"
-                placeholderTextColor="#7f90a8"
-                style={styles.input}
-              />
-              <View style={styles.optionRow}>
-                {(["Report", "KYC", "Tax", "Review"] as const).map((option) => {
-                  const active = vaultDocumentDraft.category === option;
-                  return (
-                    <Pressable
-                      key={option}
-                      style={[styles.optionChip, active ? styles.optionChipActive : null]}
-                      onPress={() =>
-                        setVaultDocumentDraft((current) => ({
-                          ...current,
-                          category: option,
-                        }))
-                      }
-                    >
-                      <Text
-                        style={[
-                          styles.optionChipText,
-                          active ? styles.optionChipTextActive : null,
-                        ]}
-                      >
-                        {option}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-              <Pressable style={styles.goldButton} onPress={saveVaultDocumentDraftAction}>
-                <Text style={styles.goldButtonText}>Add to Vault</Text>
-              </Pressable>
-              {(vaultDocuments || []).length === 0 ? (
-                <View style={styles.emptyState}>
-                  <Text style={styles.emptyTitle}>Vault is empty</Text>
-                  <Text style={styles.emptyText}>
-                    Store report, KYC, tax, and review document entries here.
-                  </Text>
-                </View>
-              ) : (
-                (vaultDocuments || []).slice(0, 5).map((doc) => (
-                  <View key={doc.id} style={styles.analyticsListCard}>
-                    <Text style={styles.clientName}>{doc.fileName}</Text>
-                    <Text style={styles.clientMeta}>
-                      {doc.clientName} | {doc.category} | {doc.status}
-                    </Text>
-                    <Text style={styles.clientSubMeta}>{doc.date}</Text>
-                  </View>
-                ))
-              )}
-            </View>
-          </View> : null}
-
-          {activeTab === "Workspace" ? <View style={styles.column}>
-            <View style={styles.panel}>
-              <Text style={styles.panelTitle}>Automated data aggregation</Text>
-              <Text style={styles.panelSubtitle}>
-                Linked account snapshot for banks, brokerages, cards, and retirement accounts.
-              </Text>
-              <View style={styles.analyticsSummaryRow}>
-                <View style={[styles.analyticsMetricCard, styles.analyticsBlue]}>
-                  <Text style={styles.analyticsMetricLabel}>Connected accounts</Text>
-                  <Text style={styles.analyticsMetricValue}>{aggregationSnapshot.connectedCount}</Text>
-                </View>
-                <View style={[styles.analyticsMetricCard, styles.analyticsGold]}>
-                  <Text style={styles.analyticsMetricLabel}>Needs review</Text>
-                  <Text style={styles.analyticsMetricValue}>{aggregationSnapshot.reviewCount}</Text>
-                </View>
-                <View style={[styles.analyticsMetricCard, styles.analyticsSlate]}>
-                  <Text style={styles.analyticsMetricLabel}>Total external value</Text>
-                  <Text style={styles.analyticsMetricValue}>
-                    {currencyDisplay(`${aggregationSnapshot.totalExternalValue}`)}
-                  </Text>
-                </View>
-              </View>
-              {connectedAccounts.slice(0, 2).map((account) => (
-                <View key={account.id} style={styles.analyticsListCard}>
-                  <Text style={styles.clientName}>{account.institution}</Text>
-                  <Text style={styles.clientMeta}>
-                    {account.accountType} | {account.status}
-                  </Text>
-                  <Text style={styles.clientSubMeta}>
-                    {currencyDisplay(account.currentValue)}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          </View> : null}
-        </View>
+        {activeTab === "Tools" ? (
+          <ToolsScreen
+            theme={theme}
+            activeCalculator={activeCalculator}
+            setActiveCalculator={setActiveCalculator}
+            cashFlowAmount={cashFlowAmount}
+            setCashFlowAmount={setCashFlowAmount}
+            cashFlowRate={cashFlowRate}
+            setCashFlowRate={setCashFlowRate}
+            cashFlowYears={cashFlowYears}
+            setCashFlowYears={setCashFlowYears}
+            cashFlowFrequency={cashFlowFrequency}
+            setCashFlowFrequency={setCashFlowFrequency}
+            cashFlowMode={cashFlowMode}
+            setCashFlowMode={setCashFlowMode}
+            cashFlowResults={cashFlowResults}
+            sipAmount={sipAmount}
+            setSipAmount={setSipAmount}
+            sipRate={sipRate}
+            setSipRate={setSipRate}
+            sipYears={sipYears}
+            setSipYears={setSipYears}
+            sipFrequency={sipFrequency}
+            setSipFrequency={setSipFrequency}
+            sipResults={sipResults}
+            goalTargetAmount={goalTargetAmount}
+            setGoalTargetAmount={setGoalTargetAmount}
+            goalExpectedReturn={goalExpectedReturn}
+            setGoalExpectedReturn={setGoalExpectedReturn}
+            goalYears={goalYears}
+            setGoalYears={setGoalYears}
+            goalPlannerResults={goalPlannerResults}
+            retirementMonthlyExpense={retirementMonthlyExpense}
+            setRetirementMonthlyExpense={setRetirementMonthlyExpense}
+            retirementInflation={retirementInflation}
+            setRetirementInflation={setRetirementInflation}
+            retirementReturn={retirementReturn}
+            setRetirementReturn={setRetirementReturn}
+            retirementYearsToRetire={retirementYearsToRetire}
+            setRetirementYearsToRetire={setRetirementYearsToRetire}
+            retirementYearsAfterRetire={retirementYearsAfterRetire}
+            setRetirementYearsAfterRetire={setRetirementYearsAfterRetire}
+            retirementResults={retirementResults}
+            goalDraft={goalDraft}
+            updateGoalDraft={updateGoalDraft}
+            saveGoalFromDraft={saveGoalFromDraft}
+            goalCenterStats={goalCenterStats}
+            vaultDocumentDraft={vaultDocumentDraft}
+            setVaultDocumentDraft={setVaultDocumentDraft}
+            saveVaultDocumentDraftAction={saveVaultDocumentDraftAction}
+            vaultDocuments={vaultDocuments}
+            currencyDisplay={currencyDisplay}
+            styles={styles}
+          />
         ) : null}
 
-        {activeTab === "Portfolios" ? (
-        <View style={styles.dualColumn}>
-          {activeTab === "Portfolios" ? <View style={styles.column}>
-            <View style={styles.panel}>
-              <Text style={styles.panelTitle}>Tax optimization & reporting</Text>
-              <Text style={styles.panelSubtitle}>
-                Unrealized gain/loss snapshot and tax-aware review notes based on tracked holdings.
-              </Text>
-              <View style={styles.analyticsSummaryRow}>
-                <View style={[styles.analyticsMetricCard, styles.analyticsGreen]}>
-                  <Text style={styles.analyticsMetricLabel}>Unrealized gains</Text>
-                  <Text style={styles.analyticsMetricValue}>
-                    {currencyDisplay(`${taxReporting.unrealizedGain}`)}
-                  </Text>
-                </View>
-                <View style={[styles.analyticsMetricCard, styles.analyticsRed]}>
-                  <Text style={styles.analyticsMetricLabel}>Unrealized losses</Text>
-                  <Text style={styles.analyticsMetricValue}>
-                    {currencyDisplay(`${Math.abs(taxReporting.unrealizedLoss)}`)}
-                  </Text>
-                </View>
-              </View>
-              {taxReporting.taxHints.map((hint) => (
-                <Text key={hint} style={styles.analyticsAlert}>
-                  {hint}
-                </Text>
-              ))}
-              <Text style={styles.sectionLabel}>Tax-sensitive holdings</Text>
-              {taxReporting.taxSensitiveHoldings.length === 0 ? (
-                <Text style={styles.detailBlock}>No tax-sensitive holdings detected yet.</Text>
-              ) : (
-                taxReporting.taxSensitiveHoldings.map((holding) => (
-                  <View key={`${holding.clientId}-${holding.id}`} style={styles.analyticsListCard}>
-                    <Text style={styles.clientName}>{holding.assetName}</Text>
-                    <Text style={styles.clientMeta}>
-                      {holding.clientName} | {holding.assetClass}
-                    </Text>
-                    <Text
-                      style={
-                        holding.gainLoss >= 0
-                          ? styles.analyticsPositive
-                          : styles.analyticsNegative
-                      }
-                    >
-                      {currencyDisplay(`${holding.gainLoss}`)} | {holding.returnPct.toFixed(1)}%
-                    </Text>
-                  </View>
-                ))
-              )}
-            </View>
-          </View> : null}
-
-        </View>
+        {activeTab === "Clients" ? (
+          <>
+            <ClientsScreen
+              theme={theme}
+              isDesktop={isDesktop}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              categoryFilter={categoryFilter}
+              setCategoryFilter={setCategoryFilter}
+              filterMode={filterMode}
+              setFilterMode={setFilterMode}
+              selectedClientIds={selectedClientIds}
+              selectAllVisibleClients={selectAllVisibleClients}
+              clearSelectedClients={clearSelectedClients}
+              setIsBroadcastModalOpen={setIsBroadcastModalOpen}
+              filteredClients={filteredClients}
+              selectedClientId={selectedClientId}
+              setSelectedClientId={setSelectedClientId}
+              toggleSelectedClient={toggleSelectedClient}
+              selectedClient={selectedClient}
+              getClientAvatar={getClientAvatar}
+              formatReminderDate={formatReminderDate}
+              isReminderDue={isReminderDue}
+              contactClient={contactClient}
+              isPro={isPro}
+              setIsPaywallVisible={setIsPaywallVisible}
+              exportClientPdfReport={exportClientPdfReport}
+              advisorName={authSession?.user?.username || cloudSettings.ownerName || "Asset Array Advisor"}
+              openEditModal={openEditModal}
+              deleteClient={deleteClient}
+              seedDemoClients={seedDemoClients}
+              selectedClientInsights={selectedClientInsights}
+              selectedClientMessageDraft={selectedClientMessageDraft}
+              selectedClientReportDraft={selectedClientReportDraft}
+              styles={styles}
+            />
+            <PortfolioManagerSection
+              selectedClient={selectedClient}
+              portfolioStats={portfolioStats}
+              currencyDisplay={currencyDisplay}
+              openAddHoldingModal={openAddHoldingModal}
+              openEditHoldingModal={openEditHoldingModal}
+              deleteHolding={deleteHolding}
+              dueClients={dueClients}
+              formatReminderDate={formatReminderDate}
+              setSelectedClientId={setSelectedClientId}
+              categorySummary={categorySummary}
+              isDesktop={isDesktop}
+              styles={styles}
+            />
+          </>
         ) : null}
 
         {activeTab === "Settings" ? (
-          <>
-            <View style={[styles.panel, styles.settingsOverviewPanel]}>
-              <Text style={styles.panelTitle}>Settings</Text>
-              <Text style={styles.panelSubtitle}>
-                Manage security, sync, campaign controls, and app preferences from one place.
-              </Text>
-              <View style={styles.settingsStatusGrid}>
-                <View style={styles.settingsStatusItem}>
-                  <Text style={styles.settingsStatusLabel}>Backend</Text>
-                  <Text style={styles.settingsStatusValue}>{authState}</Text>
-                </View>
-                <View style={styles.settingsStatusItem}>
-                  <Text style={styles.settingsStatusLabel}>Cloud sync</Text>
-                  <Text style={styles.settingsStatusValue}>{syncState}</Text>
-                </View>
-                <View style={styles.settingsStatusItem}>
-                  <Text style={styles.settingsStatusLabel}>Plan</Text>
-                  <Text style={[styles.settingsStatusValue, { color: isPro ? theme.colors.brand : theme.colors.textSecondary }]}>
-                    {isPro ? "Pro ⭐" : "Free"}
-                  </Text>
-                </View>
-              </View>
-            </View>
-
-            <View style={styles.panel}>
-              <Text style={styles.settingsSectionTitle}>Subscription (RevenueCat)</Text>
-              <View style={styles.settingsRow}>
-                <View style={styles.toggleCopy}>
-                  <Text style={styles.toggleTitle}>Current Plan</Text>
-                  <Text style={styles.toggleText}>
-                    {isPro ? "Pro Advisor (Active with AI & Unlimited Reports)" : "Free Plan (Gated AI & Reports)"}
-                  </Text>
-                </View>
-                <Pressable
-                  style={styles.darkChip}
-                  onPress={() => setIsPaywallVisible(true)}
-                >
-                  <Text style={styles.darkChipText}>View Paywall</Text>
-                </Pressable>
-              </View>
-              <Pressable
-                style={styles.settingsActionRow}
-                onPress={async () => {
-                  if (isPro) {
-                    await resetDemoProStatus();
-                    setIsPro(false);
-                    Alert.alert("Subscription Reset", "Switched back to Free Plan! You can now test the paywall triggers again.");
-                  } else {
-                    setIsPro(true);
-                    Alert.alert("Pro Activated", "Pro Advisor plan activated!");
-                  }
-                }}
-              >
-                <View style={styles.toggleCopy}>
-                  <Text style={styles.toggleTitle}>{isPro ? "Reset to Free Plan" : "Quick Activate Pro"}</Text>
-                  <Text style={styles.toggleText}>
-                    {isPro ? "Switch back to Free tier to test the paywall trigger again." : "Instantly activate Pro tier for testing."}
-                  </Text>
-                </View>
-                <Text style={[styles.settingsActionText, { color: isPro ? theme.colors.danger : theme.colors.brand }]}>
-                  {isPro ? "Reset" : "Activate"}
-                </Text>
-              </Pressable>
-              <Pressable
-                style={styles.settingsActionRow}
-                onPress={() => void seedDemoClients()}
-              >
-                <View style={styles.toggleCopy}>
-                  <Text style={styles.toggleTitle}>⚡ Load Demo Roster (Judge Mode)</Text>
-                  <Text style={styles.toggleText}>
-                    Populate 3 institutional client portfolios with holdings for judging evaluation.
-                  </Text>
-                </View>
-                <Text style={[styles.settingsActionText, { color: theme.colors.brand }]}>
-                  Load
-                </Text>
-              </Pressable>
-            </View>
-
-            <View style={styles.panel}>
-              <Text style={styles.settingsSectionTitle}>Security</Text>
-              <View style={styles.settingsRow}>
-                <View style={styles.toggleCopy}>
-                  <Text style={styles.toggleTitle}>Biometric unlock</Text>
-                  <Text style={styles.toggleText}>
-                    Use fingerprint or face authentication after PIN unlock.
-                  </Text>
-                </View>
-                <Switch
-                  value={biometricEnabled}
-                  onValueChange={(value) => void toggleBiometric(value)}
-                />
-              </View>
-              <View style={styles.settingsRow}>
-                <View style={styles.toggleCopy}>
-                  <Text style={styles.toggleTitle}>Vibration feedback</Text>
-                  <Text style={styles.toggleText}>
-                    Turn tap vibration on or off for tabs and app actions.
-                  </Text>
-                </View>
-                <Switch
-                  value={hapticsEnabled}
-                  onValueChange={(value) => void toggleHaptics(value)}
-                />
-              </View>
-              <Pressable style={styles.settingsActionRow} onPress={() => void resetLock()}>
-                <View style={styles.toggleCopy}>
-                  <Text style={styles.toggleTitle}>Reset app lock</Text>
-                  <Text style={styles.toggleText}>Remove the saved PIN and lock the workspace.</Text>
-                </View>
-                <Text style={styles.settingsActionText}>Reset</Text>
-              </Pressable>
-            </View>
-
-            <View style={styles.panel}>
-              <Text style={styles.settingsSectionTitle}>Appearance</Text>
-              <View style={styles.settingsRow}>
-                <View style={styles.toggleCopy}>
-                  <Text style={styles.toggleTitle}>Dark mode</Text>
-                  <Text style={styles.toggleText}>Enable the darker workspace shell.</Text>
-                </View>
-                <Switch
-                  value={darkModeEnabled}
-                  onValueChange={(value) => void toggleDarkMode(value)}
-                />
-              </View>
-            </View>
-
-            <View style={styles.panel}>
-              <Text style={styles.settingsSectionTitle}>Cloud sync</Text>
-              <Text style={styles.panelSubtitle}>
-                Backend stores ciphertext only. Current status: {syncState}
-              </Text>
-              <View style={styles.settingsButtonRow}>
-                <Pressable
-                  style={styles.secondaryButton}
-                  onPress={() => setIsSyncModalOpen(true)}
-                >
-                  <Text style={styles.secondaryButtonText}>Configure</Text>
-                </Pressable>
-                <Pressable style={styles.darkChip} onPress={() => void syncToCloud()}>
-                  <Text style={styles.darkChipText}>Push Backup</Text>
-                </Pressable>
-                <Pressable style={styles.darkChip} onPress={() => void restoreFromCloud()}>
-                  <Text style={styles.darkChipText}>Restore Backup</Text>
-                </Pressable>
-              </View>
-            </View>
-
-            <View style={styles.panel}>
-              <Text style={styles.settingsSectionTitle}>Campaigns</Text>
-              <Pressable
-                style={styles.settingsActionRow}
-                onPress={() => setIsBroadcastModalOpen(true)}
-              >
-                <View style={styles.toggleCopy}>
-                  <Text style={styles.toggleTitle}>Bulk notification campaigns</Text>
-                  <Text style={styles.toggleText}>
-                    Run one campaign for selected clients. Status: {broadcastState}
-                  </Text>
-                </View>
-                <Text style={styles.settingsActionText}>Open</Text>
-              </Pressable>
-            </View>
-
-            <View style={styles.panel}>
-              <Text style={styles.settingsSectionTitle}>About and support</Text>
-              <Text style={styles.panelSubtitle}>Asset Array version {APP_VERSION}</Text>
-              <View style={styles.settingsButtonRow}>
-                <Pressable style={styles.secondaryButton} onPress={openPrivacyPolicy}>
-                  <Text style={styles.secondaryButtonText}>Privacy Policy</Text>
-                </Pressable>
-                <Pressable style={styles.secondaryButton} onPress={openTermsAndConditions}>
-                  <Text style={styles.secondaryButtonText}>Terms & Conditions</Text>
-                </Pressable>
-                <Pressable style={styles.darkChip} onPress={() => void contactSupport()}>
-                  <Text style={styles.darkChipText}>Contact Support</Text>
-                </Pressable>
-                <Pressable style={styles.darkChip} onPress={() => void reportBug()}>
-                  <Text style={styles.darkChipText}>Report Bug</Text>
-                </Pressable>
-              </View>
-            </View>
-          </>
+          <SettingsScreen
+            theme={theme}
+            authState={authState}
+            syncState={syncState}
+            isPro={isPro}
+            setIsPro={setIsPro}
+            resetDemoProStatus={resetDemoProStatus}
+            setIsPaywallVisible={setIsPaywallVisible}
+            seedDemoClients={seedDemoClients}
+            biometricEnabled={biometricEnabled}
+            toggleBiometric={toggleBiometric}
+            hapticsEnabled={hapticsEnabled}
+            toggleHaptics={toggleHaptics}
+            resetLock={resetLock}
+            darkModeEnabled={darkModeEnabled}
+            toggleDarkMode={toggleDarkMode}
+            setIsSyncModalOpen={setIsSyncModalOpen}
+            syncToCloud={syncToCloud}
+            restoreFromCloud={restoreFromCloud}
+            setIsBroadcastModalOpen={setIsBroadcastModalOpen}
+            broadcastState={broadcastState}
+            appVersion={APP_VERSION}
+            openPrivacyPolicy={openPrivacyPolicy}
+            openTermsAndConditions={openTermsAndConditions}
+            contactSupport={contactSupport}
+            reportBug={reportBug}
+            styles={styles}
+          />
         ) : null}
       </ScrollView>
       )}
@@ -4545,540 +3125,71 @@ function AppContent() {
         />
       )}
 
-      <Modal visible={isEditorOpen} transparent animationType={isDesktop ? "fade" : "slide"}>
-        <View style={[styles.modalBackdrop, isDesktop && styles.modalBackdropCenter]}>
-          <View style={[styles.modalCard, isDesktop && styles.modalCardCenter]}>
-            <Text style={styles.modalTitle}>
-              {editorMode === "add" ? "Add client" : "Edit client"}
-            </Text>
-            <ScrollView showsVerticalScrollIndicator={false}>
-              <TextInput
-                value={draft.name}
-                onChangeText={(value) => updateDraft("name", value)}
-                placeholder="Client name"
-                placeholderTextColor="#7f90a8"
-                style={styles.input}
-              />
-              <TextInput
-                value={draft.phone}
-                onChangeText={(value) => updateDraft("phone", value)}
-                placeholder="Phone number"
-                placeholderTextColor="#7f90a8"
-                keyboardType="phone-pad"
-                style={styles.input}
-              />
-              <TextInput
-                value={draft.email}
-                onChangeText={(value) => updateDraft("email", value)}
-                placeholder="Email address"
-                placeholderTextColor="#7f90a8"
-                autoCapitalize="none"
-                keyboardType="email-address"
-                style={styles.input}
-              />
-              <TextInput
-                value={draft.city}
-                onChangeText={(value) => updateDraft("city", value)}
-                placeholder="City"
-                placeholderTextColor="#7f90a8"
-                style={styles.input}
-              />
-              <Text style={styles.inputLabel}>Category</Text>
-              <View style={styles.optionRow}>
-                {CATEGORY_OPTIONS.map((option) => {
-                  const active = draft.category === option;
-                  return (
-                    <Pressable
-                      key={option}
-                      style={[styles.optionChip, active ? styles.optionChipActive : null]}
-                      onPress={() => updateDraft("category", option)}
-                    >
-                      <Text
-                        style={[
-                          styles.optionChipText,
-                          active ? styles.optionChipTextActive : null,
-                        ]}
-                      >
-                        {option}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-              <TextInput
-                value={draft.riskProfile}
-                onChangeText={(value) => updateDraft("riskProfile", value)}
-                placeholder="Risk profile"
-                placeholderTextColor="#7f90a8"
-                style={styles.input}
-              />
-              <TextInput
-                value={draft.allocation}
-                onChangeText={(value) => updateDraft("allocation", value)}
-                placeholder="Allocation summary"
-                placeholderTextColor="#7f90a8"
-                style={styles.input}
-              />
-              <Text style={styles.inputLabel}>Priority</Text>
-              <View style={styles.optionRow}>
-                {PRIORITY_OPTIONS.map((option) => {
-                  const active = draft.priority === option;
-                  return (
-                    <Pressable
-                      key={option}
-                      style={[styles.optionChip, active ? styles.optionChipActive : null]}
-                      onPress={() => updateDraft("priority", option)}
-                    >
-                      <Text
-                        style={[
-                          styles.optionChipText,
-                          active ? styles.optionChipTextActive : null,
-                        ]}
-                      >
-                        {option}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-              <Text style={styles.inputLabel}>Preferred contact channel</Text>
-              <View style={styles.optionRow}>
-                {CHANNEL_OPTIONS.map((option) => {
-                  const active = draft.preferredChannel === option;
-                  return (
-                    <Pressable
-                      key={option}
-                      style={[styles.optionChip, active ? styles.optionChipActive : null]}
-                      onPress={() => updateDraft("preferredChannel", option)}
-                    >
-                      <Text
-                        style={[
-                          styles.optionChipText,
-                          active ? styles.optionChipTextActive : null,
-                        ]}
-                      >
-                        {option}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-              <TextInput
-                value={draft.watchlist}
-                onChangeText={(value) => updateDraft("watchlist", value)}
-                placeholder="Watchlist, comma separated"
-                placeholderTextColor="#7f90a8"
-                style={styles.input}
-              />
-              <TextInput
-                value={draft.reminderDate}
-                onChangeText={(value) => updateDraft("reminderDate", value)}
-                placeholder="Next reminder date (YYYY-MM-DD)"
-                placeholderTextColor="#7f90a8"
-                style={styles.input}
-              />
-              <TextInput
-                value={draft.notes}
-                onChangeText={(value) => updateDraft("notes", value)}
-                placeholder="Private notes"
-                placeholderTextColor="#7f90a8"
-                multiline
-                style={[styles.input, styles.notesInput]}
-              />
-            </ScrollView>
-            <View style={styles.modalActions}>
-              <Pressable style={styles.modalSecondary} onPress={closeEditor}>
-                <Text style={styles.modalSecondaryText}>Cancel</Text>
-              </Pressable>
-              <Pressable style={styles.primaryButton} onPress={submitDraft}>
-                <Text style={styles.primaryButtonText}>Save Client</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <ClientEditorModal
+        visible={isEditorOpen}
+        isDesktop={isDesktop}
+        editorMode={editorMode}
+        draft={draft}
+        updateDraft={updateDraft}
+        onClose={closeEditor}
+        onSubmit={submitDraft}
+        theme={theme}
+      />
 
-      <Modal visible={isPortfolioModalOpen} transparent animationType={isDesktop ? "fade" : "slide"}>
-        <View style={[styles.modalBackdrop, isDesktop && styles.modalBackdropCenter]}>
-          <View style={[styles.modalCard, isDesktop && styles.modalCardCenter]}>
-            <Text style={styles.modalTitle}>
-              {portfolioMode === "add" ? "Add portfolio item" : "Edit portfolio item"}
-            </Text>
-            <ScrollView showsVerticalScrollIndicator={false}>
-              <TextInput
-                value={holdingDraft.assetName}
-                onChangeText={(value) => updateHoldingDraft("assetName", value)}
-                placeholder="Asset name"
-                placeholderTextColor="#7f90a8"
-                style={styles.input}
-              />
-              <Text style={styles.inputLabel}>Asset class</Text>
-              <View style={styles.optionRow}>
-                {ASSET_CLASS_OPTIONS.map((option) => {
-                  const active = holdingDraft.assetClass === option;
-                  return (
-                    <Pressable
-                      key={option}
-                      style={[styles.optionChip, active ? styles.optionChipActive : null]}
-                      onPress={() => updateHoldingDraft("assetClass", option)}
-                    >
-                      <Text
-                        style={[
-                          styles.optionChipText,
-                          active ? styles.optionChipTextActive : null,
-                        ]}
-                      >
-                        {option}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-              <TextInput
-                value={holdingDraft.ticker}
-                onChangeText={(value) => updateHoldingDraft("ticker", value)}
-                placeholder="Ticker or label"
-                placeholderTextColor="#7f90a8"
-                style={styles.input}
-              />
-              <TextInput
-                value={holdingDraft.quantity}
-                onChangeText={(value) => updateHoldingDraft("quantity", value)}
-                placeholder="Quantity"
-                placeholderTextColor="#7f90a8"
-                keyboardType="decimal-pad"
-                style={styles.input}
-              />
-              <TextInput
-                value={holdingDraft.investedValue}
-                onChangeText={(value) => updateHoldingDraft("investedValue", value)}
-                placeholder="Invested value"
-                placeholderTextColor="#7f90a8"
-                keyboardType="decimal-pad"
-                style={styles.input}
-              />
-              <TextInput
-                value={holdingDraft.currentValue}
-                onChangeText={(value) => updateHoldingDraft("currentValue", value)}
-                placeholder="Current value"
-                placeholderTextColor="#7f90a8"
-                keyboardType="decimal-pad"
-                style={styles.input}
-              />
-              <TextInput
-                value={holdingDraft.targetWeight}
-                onChangeText={(value) => updateHoldingDraft("targetWeight", value)}
-                placeholder="Target weight, e.g. 15%"
-                placeholderTextColor="#7f90a8"
-                style={styles.input}
-              />
-              <TextInput
-                value={holdingDraft.notes}
-                onChangeText={(value) => updateHoldingDraft("notes", value)}
-                placeholder="Holding notes"
-                placeholderTextColor="#7f90a8"
-                multiline
-                style={[styles.input, styles.notesInput]}
-              />
-            </ScrollView>
-            <View style={styles.modalActions}>
-              <Pressable style={styles.modalSecondary} onPress={closeHoldingModal}>
-                <Text style={styles.modalSecondaryText}>Cancel</Text>
-              </Pressable>
-              <Pressable style={styles.primaryButton} onPress={saveHolding}>
-                <Text style={styles.primaryButtonText}>Save Holding</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <HoldingEditorModal
+        visible={isPortfolioModalOpen}
+        isDesktop={isDesktop}
+        portfolioMode={portfolioMode}
+        holdingDraft={holdingDraft}
+        updateHoldingDraft={updateHoldingDraft}
+        onClose={closeHoldingModal}
+        onSave={saveHolding}
+        theme={theme}
+      />
 
-      <Modal visible={isSyncModalOpen} transparent animationType={isDesktop ? "fade" : "slide"}>
-        <View style={[styles.modalBackdrop, isDesktop && styles.modalBackdropCenter]}>
-          <View style={[styles.modalCard, isDesktop && styles.modalCardCenter]}>
-            <Text style={styles.modalTitle}>Encrypted cloud sync</Text>
-            <Text style={styles.panelSubtitle}>
-              Asset Array encrypts data on-device before it leaves your phone.
-            </Text>
-            <TextInput
-              value={cloudSettings.ownerName}
-              onChangeText={(value) =>
-                setCloudSettings((current) => ({ ...current, ownerName: value }))
-              }
-              placeholder="Owner name"
-              placeholderTextColor="#7f90a8"
-              style={styles.input}
-            />
-            <TextInput
-              value={cloudSettings.endpoint}
-              onChangeText={(value) =>
-                setCloudSettings((current) => ({ ...current, endpoint: value }))
-              }
-              placeholder="Backend URL (https://assetarray.onrender.com)"
-              placeholderTextColor="#7f90a8"
-              autoCapitalize="none"
-              style={styles.input}
-            />
-            {!cloudSettings.endpoint.trim() ? (
-              <Pressable
-                style={{ alignSelf: "flex-start", marginTop: 4, marginBottom: 8 }}
-                onPress={() =>
-                  setCloudSettings((current) => ({
-                    ...current,
-                    endpoint: DEFAULT_BACKEND_ENDPOINT,
-                    authUsername: current.authUsername || "admin",
-                  }))
-                }
-              >
-                <Text style={{ color: theme.colors.brand, fontSize: 12, fontWeight: "700" }}>
-                  ✦ Auto-fill Cloud Backend ({DEFAULT_BACKEND_ENDPOINT})
-                </Text>
-              </Pressable>
-            ) : null}
-            <Text style={styles.detailBlock}>Auth status: {authState}</Text>
-            {authSession ? (
-              <Pressable style={styles.linkButton} onPress={() => void logoutFromBackend()}>
-                <Text style={styles.linkButtonText}>Sign Out</Text>
-              </Pressable>
-            ) : null}
-            <View style={styles.modalActions}>
-              <Pressable
-                style={styles.modalSecondary}
-                onPress={() => setIsSyncModalOpen(false)}
-              >
-                <Text style={styles.modalSecondaryText}>Cancel</Text>
-              </Pressable>
-              <Pressable
-                style={styles.primaryButton}
-                onPress={() => void saveCloudSettingsAction()}
-              >
-                <Text style={styles.primaryButtonText}>Save Sync Settings</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <SyncConfigModal
+        visible={isSyncModalOpen}
+        isDesktop={isDesktop}
+        cloudSettings={cloudSettings}
+        setCloudSettings={setCloudSettings}
+        defaultBackendEndpoint={DEFAULT_BACKEND_ENDPOINT}
+        authState={authState}
+        authSession={authSession}
+        onLogout={() => void logoutFromBackend()}
+        onClose={() => setIsSyncModalOpen(false)}
+        onSave={() => void saveCloudSettingsAction()}
+        theme={theme}
+      />
 
-      <Modal visible={isBroadcastModalOpen} transparent animationType={isDesktop ? "fade" : "slide"}>
-        <View style={[styles.modalBackdrop, isDesktop && styles.modalBackdropCenter]}>
-          <View style={[styles.modalCard, isDesktop && styles.modalCardCenter, { height: "84%", paddingBottom: Math.max(insets.bottom, 16) }]}>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-              <View style={{ flex: 1, paddingRight: 8 }}>
-                <Text style={styles.modalTitle}>Broadcast Center</Text>
-                <Text style={styles.panelSubtitle}>
-                  One-tap mass outreach to selected high-net-worth clients.
-                </Text>
-              </View>
-              <Pressable
-                onPress={() => setIsBroadcastModalOpen(false)}
-                style={{ padding: 4 }}
-              >
-                <Ionicons name="close-circle" size={26} color={theme.colors.textMuted} />
-              </Pressable>
-            </View>
+      <BroadcastModal
+        visible={isBroadcastModalOpen}
+        isDesktop={isDesktop}
+        insetsBottom={insets.bottom}
+        onClose={() => setIsBroadcastModalOpen(false)}
+        onSend={() => void runBroadcastCampaign()}
+        broadcastChannel={broadcastChannel}
+        setBroadcastChannel={setBroadcastChannel}
+        broadcastMessage={broadcastMessage}
+        setBroadcastMessage={setBroadcastMessage}
+        clients={clients}
+        selectedClientIds={selectedClientIds}
+        setSelectedClientIds={setSelectedClientIds}
+        toggleSelectedClient={toggleSelectedClient}
+        broadcastPreview={broadcastPreview}
+        broadcastTargets={broadcastTargets}
+        resolveBroadcastContact={resolveBroadcastContact}
+        authSession={authSession}
+        cloudSettings={cloudSettings}
+        theme={theme}
+      />
 
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              style={{ flex: 1, minHeight: 320 }}
-              contentContainerStyle={{ gap: 12, paddingBottom: 20 }}
-              keyboardShouldPersistTaps="handled"
-            >
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-                <Text style={styles.inputLabel}>Dispatch Channel</Text>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: authSession && cloudSettings.endpoint.trim() ? theme.colors.accent : theme.colors.brand }} />
-                  <Text style={{ fontSize: 11, fontWeight: "700", color: authSession && cloudSettings.endpoint.trim() ? theme.colors.accent : theme.colors.brand }}>
-                    {authSession && cloudSettings.endpoint.trim() ? "Cloud Sync Active" : "Direct Device Dispatch"}
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.optionRow}>
-                {BROADCAST_CHANNEL_OPTIONS.map((option) => {
-                  const active = broadcastChannel === option;
-                  return (
-                    <Pressable
-                      key={option}
-                      style={[styles.optionChip, active ? styles.optionChipActive : null]}
-                      onPress={() => setBroadcastChannel(option)}
-                    >
-                      <Text
-                        style={[
-                          styles.optionChipText,
-                          active ? styles.optionChipTextActive : null,
-                        ]}
-                      >
-                        {option === "WhatsApp" ? "💬 WhatsApp" : option === "SMS" ? "📱 SMS" : option === "Email" ? "✉️ Email" : "✦ Preferred"}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-
-              <Text style={styles.inputLabel}>Advisory Brief</Text>
-              <TextInput
-                value={broadcastMessage}
-                onChangeText={setBroadcastMessage}
-                placeholder="Enter advisory brief for selected clients..."
-                placeholderTextColor="#7f90a8"
-                multiline
-                style={[styles.input, styles.messageInput, { minHeight: 70, maxHeight: 110 }]}
-              />
-
-              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                <Text style={styles.detailBlock}>
-                  Ready: {broadcastPreview.eligible.length} | Skipped: {broadcastPreview.skipped.length}
-                </Text>
-                {clients.length > 0 ? (
-                  <Pressable
-                    onPress={() => {
-                      if (selectedClientIds.length === clients.length) {
-                        setSelectedClientIds([]);
-                      } else {
-                        setSelectedClientIds(clients.map((c) => c.id));
-                      }
-                    }}
-                    style={{ paddingVertical: 4, paddingHorizontal: 8, backgroundColor: "rgba(224, 168, 76, 0.12)", borderRadius: 8 }}
-                  >
-                    <Text style={{ color: theme.colors.brand, fontSize: 11, fontWeight: "700" }}>
-                      {selectedClientIds.length === clients.length ? "Deselect All" : "Select All"}
-                    </Text>
-                  </Pressable>
-                ) : null}
-              </View>
-
-              <Text style={styles.sectionLabel}>
-                Targeted Clients ({broadcastTargets.length}/{clients.length})
-              </Text>
-
-              {clients.length === 0 ? (
-                <Text style={styles.detailBlock}>No clients found. Add clients in the Clients tab.</Text>
-              ) : (
-                <View style={{ gap: 8 }}>
-                  {clients.map((client) => {
-                    const isSelected = selectedClientIds.includes(client.id);
-                    const contact = resolveBroadcastContact(client, broadcastChannel);
-                    return (
-                      <Pressable
-                        key={client.id}
-                        onPress={() => toggleSelectedClient(client.id)}
-                        style={[
-                          styles.historyItem,
-                          {
-                            flexDirection: "row",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            paddingVertical: 10,
-                            paddingHorizontal: 12,
-                            borderRadius: 10,
-                            backgroundColor: isSelected ? "rgba(224, 168, 76, 0.08)" : "rgba(255, 255, 255, 0.02)",
-                            borderColor: isSelected ? theme.colors.brand : theme.colors.border,
-                            borderWidth: 1,
-                          },
-                        ]}
-                      >
-                        <View style={{ flexDirection: "row", alignItems: "center", gap: 10, flex: 1 }}>
-                          <Ionicons
-                            name={isSelected ? "checkbox" : "square-outline"}
-                            size={20}
-                            color={isSelected ? theme.colors.brand : theme.colors.textMuted}
-                          />
-                          <View style={{ flex: 1 }}>
-                            <Text style={{ color: theme.colors.textPrimary, fontWeight: "700", fontSize: 14 }}>
-                              {client.name}
-                            </Text>
-                            <Text style={{ color: theme.colors.textMuted, fontSize: 11, marginTop: 2 }}>
-                              {client.category} • Preferred: {client.preferredChannel}
-                            </Text>
-                          </View>
-                        </View>
-                        <View style={{ alignItems: "flex-end" }}>
-                          <Text
-                            style={{
-                              color: contact ? theme.colors.textSecondary : theme.colors.danger,
-                              fontSize: 12,
-                              fontWeight: contact ? "500" : "700",
-                            }}
-                          >
-                            {contact || "Missing contact"}
-                          </Text>
-                          {isSelected && contact ? (
-                            <View style={{ flexDirection: "row", alignItems: "center", gap: 3, marginTop: 2 }}>
-                              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: theme.colors.accent }} />
-                              <Text style={{ color: theme.colors.accent, fontSize: 10, fontWeight: "700" }}>Ready</Text>
-                            </View>
-                          ) : null}
-                        </View>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-              )}
-
-              {broadcastPreview.skipped.length > 0 ? (
-                <>
-                  <Text style={styles.sectionLabel}>Needs attention</Text>
-                  {broadcastPreview.skipped.map((client) => (
-                    <Text key={`skip-${client.id}`} style={styles.analyticsAlert}>
-                      {client.name}: {client.reason}
-                    </Text>
-                  ))}
-                </>
-              ) : null}
-            </ScrollView>
-
-            <View style={[styles.modalActions, { paddingTop: 10, borderTopWidth: 1, borderTopColor: theme.colors.border }]}>
-              <Pressable
-                style={styles.modalSecondary}
-                onPress={() => setIsBroadcastModalOpen(false)}
-              >
-                <Text style={styles.modalSecondaryText}>Cancel</Text>
-              </Pressable>
-              <Pressable
-                style={[styles.primaryButton, { flex: 2 }]}
-                onPress={() => void runBroadcastCampaign()}
-              >
-                <Text style={styles.primaryButtonText}>
-                  {authSession && cloudSettings.endpoint.trim() ? "🚀 Dispatch Campaign" : "📱 Send via App"}
-                </Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      <Modal visible={Boolean(aboutSheet)} transparent animationType={isDesktop ? "fade" : "slide"}>
-        <View style={[styles.modalBackdrop, isDesktop && styles.modalBackdropCenter]}>
-          <View style={[styles.modalCard, isDesktop && styles.modalCardCenter]}>
-            <Text style={styles.modalTitle}>{aboutSheet || "About Asset Array"}</Text>
-            {aboutSheet === "Privacy Policy" ? (
-              <Text style={styles.detailBlock}>
-                Asset Array stores advisor and client records locally on-device and only sends encrypted
-                cloud backups or authenticated service requests when you explicitly trigger them. Sensitive
-                data such as PIN lock settings, login tokens, and privacy controls remain protected with
-                secure local storage. Before public launch, replace this in-app policy summary with your
-                final legal privacy policy URL and approved compliance text.
-              </Text>
-            ) : aboutSheet === "Terms & Conditions" ? (
-              <Text style={styles.detailBlock}>
-                Asset Array is an advisor workspace tool for client tracking, portfolio visibility,
-                communication workflows, and research support. You are responsible for validating any
-                market content, campaign output, or portfolio commentary before sharing it with clients.
-                Before store submission, replace this in-app summary with your final legal terms and
-                regulated business disclosures.
-              </Text>
-            ) : null}
-            <View style={styles.modalActions}>
-              <Pressable
-                style={styles.primaryButton}
-                onPress={() => setAboutSheet(null)}
-              >
-                <Text style={styles.primaryButtonText}>Close</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <AboutLegalModal
+        visible={Boolean(aboutSheet)}
+        isDesktop={isDesktop}
+        aboutSheet={aboutSheet}
+        onClose={() => setAboutSheet(null)}
+        theme={theme}
+      />
 
       <Modal
         visible={isPaywallVisible}

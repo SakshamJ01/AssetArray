@@ -3,6 +3,7 @@ import React, { useMemo } from "react";
 import { FlatList, Image, StyleSheet, Text, View } from "react-native";
 import { AnimatedPressable as Pressable } from "./AnimatedPressable";
 import { AppTheme } from "../theme";
+import { getClientAvatar } from "../services/demoData";
 
 type DashboardMetric = {
   label: string;
@@ -306,11 +307,7 @@ export function DashboardScreen({
                     style={styles.listRow}
                   >
                     <View style={styles.clientAvatarWrap}>
-                      {client.avatarUrl ? (
-                        <Image source={{ uri: client.avatarUrl }} style={styles.clientAvatarImg} />
-                      ) : (
-                        <Text style={styles.clientAvatarText}>{client.name.slice(0, 2).toUpperCase()}</Text>
-                      )}
+                      <Image source={{ uri: getClientAvatar(client) }} style={styles.clientAvatarImg} />
                     </View>
                     <View style={styles.listCopy}>
                       <Text style={styles.listTitle}>{client.name}</Text>
@@ -370,11 +367,7 @@ export function DashboardScreen({
                   style={styles.nextDueCard}
                 >
                   <View style={styles.clientAvatarWrap}>
-                    {dueClients[0].avatarUrl ? (
-                      <Image source={{ uri: dueClients[0].avatarUrl }} style={styles.clientAvatarImg} />
-                    ) : (
-                      <Text style={styles.clientAvatarText}>{dueClients[0].name.slice(0, 2).toUpperCase()}</Text>
-                    )}
+                    <Image source={{ uri: getClientAvatar(dueClients[0]) }} style={styles.clientAvatarImg} />
                   </View>
                   <View style={styles.listCopy}>
                     <Text style={styles.nextDueLabel}>Next due follow-up</Text>

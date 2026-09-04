@@ -82,7 +82,7 @@ import { useNetworkStatus } from "./src/services/network";
 import { exportClientPdfReport } from "./src/services/pdfReport";
 import { initializeRevenueCat, checkProStatus, getOfferings, purchasePackage, restorePurchases, resetDemoProStatus } from "./src/services/revenueCat";
 import { PaywallScreen } from "./src/screens/PaywallScreen";
-import { DEMO_CLIENTS } from "./src/services/demoData";
+import { DEMO_CLIENTS, getClientAvatar } from "./src/services/demoData";
 import { AssetAllocationBar } from "./src/components/AssetAllocationBar";
 import { storageService } from "./src/platform/storage";
 import { localAuth } from "./src/platform/auth";
@@ -772,7 +772,12 @@ function AppContent() {
 
         setStoredPin(pin);
         setBiometricEnabled(parseStoredJson(rawBiometric, false));
-        setClients(parseStoredJson(rawClients, [] as Client[]));
+        const loadedClients = parseStoredJson(rawClients, [] as Client[]);
+        const enrichedClients = (loadedClients.length > 0 ? loadedClients : DEMO_CLIENTS).map((c) => ({
+          ...c,
+          avatarUrl: getClientAvatar(c),
+        }));
+        setClients(enrichedClients);
         const loadedCloudSettings = parseStoredJson(rawCloudSettings, emptyCloudSettings);
         if (!loadedCloudSettings.endpoint || !loadedCloudSettings.endpoint.trim() || loadedCloudSettings.endpoint.includes("localhost") || loadedCloudSettings.endpoint.includes("127.0.0.1") || loadedCloudSettings.endpoint.includes("192.168") || loadedCloudSettings.endpoint.includes("10.18")) {
           loadedCloudSettings.endpoint = DEFAULT_BACKEND_ENDPOINT;
@@ -2613,7 +2618,7 @@ function AppContent() {
             reminderDate: formatReminderDate(client.reminderDate),
             lastContact: client.lastContact,
             priority: client.priority,
-            avatarUrl: client.avatarUrl,
+            avatarUrl: getClientAvatar(client),
           }))}
           onActionAddClient={openAddModal}
           onActionAiResearch={() => setActiveTab("AI Research")}
@@ -2636,7 +2641,7 @@ function AppContent() {
             reminderDate: formatReminderDate(client.reminderDate),
             lastContact: client.lastContact,
             priority: client.priority,
-            avatarUrl: client.avatarUrl,
+            avatarUrl: getClientAvatar(client),
           })).slice(0, 3)}
           reminderKpis={dashboardReminderKpis}
           stats={dashboardStats}
@@ -2644,6 +2649,7 @@ function AppContent() {
         />
       ) : (
       <ScrollView
+        style={{ flex: 1 }}
         contentContainerStyle={[
           styles.container,
           { paddingBottom: contentBottomPadding },
@@ -3630,7 +3636,7 @@ function AppContent() {
         ) : null}
 
         {activeTab === "Clients" ? (
-        <View style={styles.dualColumn}>
+        <View style={[styles.dualColumn, isDesktop && { flexDirection: "row", alignItems: "flex-start" }]}>
           <View style={styles.column}>
             <View style={styles.panel}>
               <Text style={styles.panelTitle}>Client list</Text>
@@ -3676,15 +3682,10 @@ function AppContent() {
                         onPress={() => setSelectedClientId(client.id)}
                       >
                         <View style={{ flexDirection: "row", alignItems: "center", gap: 10, flex: 1 }}>
-                          {client.avatarUrl ? (
-                            <Image source={{ uri: client.avatarUrl }} style={styles.clientListAvatar} />
-                          ) : (
-                            <View style={styles.clientListAvatarPlaceholder}>
-                              <Text style={styles.clientListAvatarText}>
-                                {client.name.slice(0, 2).toUpperCase()}
-                              </Text>
-                            </View>
-                          )}
+                          <Image
+                            source={{ uri: getClientAvatar(client) }}
+                            style={styles.clientListAvatar}
+                          />
                           <View style={styles.clientRowMain}>
                             <Text style={styles.clientName}>{client.name}</Text>
                             <Text style={styles.clientMeta}>
@@ -3714,15 +3715,10 @@ function AppContent() {
               {selectedClient ? (
                 <>
                   <View style={styles.clientDetailHeader}>
-                    {selectedClient.avatarUrl ? (
-                      <Image source={{ uri: selectedClient.avatarUrl }} style={styles.clientDetailAvatar} />
-                    ) : (
-                      <View style={styles.clientDetailAvatarPlaceholder}>
-                        <Text style={styles.clientDetailAvatarText}>
-                          {selectedClient.name.slice(0, 2).toUpperCase()}
-                        </Text>
-                      </View>
-                    )}
+                    <Image
+                      source={{ uri: getClientAvatar(selectedClient) }}
+                      style={styles.clientDetailAvatar}
+                    />
                     <View style={{ flex: 1 }}>
                       <Text style={styles.detailName}>{selectedClient.name}</Text>
                       <Text style={styles.detailLine}>{selectedClient.phone}</Text>
@@ -3840,7 +3836,7 @@ function AppContent() {
         ) : null}
 
         {activeTab === "Clients" || activeTab === "Portfolios" ? (
-        <View style={styles.dualColumn}>
+        <View style={[styles.dualColumn, isDesktop && { flexDirection: "row", alignItems: "flex-start" }]}>
           <View style={styles.column}>
             <View style={styles.panel}>
               <Text style={styles.panelTitle}>Portfolio manager</Text>

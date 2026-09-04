@@ -4810,40 +4810,66 @@ function AppContent() {
               <Text style={styles.sectionLabel}>
                 Targeted Clients ({broadcastTargets.length}/{clients.length})
               </Text>
-              {broadcastTargets.length === 0 ? (
-                <Text style={styles.detailBlock}>No clients selected yet. Tap "Select All" above.</Text>
+
+              {clients.length === 0 ? (
+                <Text style={styles.detailBlock}>No clients found. Add clients in the Clients tab.</Text>
               ) : (
-                <View style={{ gap: 6 }}>
-                  {broadcastTargets.map((client) => {
+                <View style={{ gap: 8 }}>
+                  {clients.map((client) => {
+                    const isSelected = selectedClientIds.includes(client.id);
                     const contact = resolveBroadcastContact(client, broadcastChannel);
                     return (
-                      <View
+                      <Pressable
                         key={client.id}
+                        onPress={() => toggleSelectedClient(client.id)}
                         style={[
                           styles.historyItem,
                           {
                             flexDirection: "row",
                             justifyContent: "space-between",
                             alignItems: "center",
-                            paddingVertical: 6,
-                            paddingHorizontal: 10,
-                            borderRadius: 8,
-                            backgroundColor: "rgba(255, 255, 255, 0.03)",
+                            paddingVertical: 10,
+                            paddingHorizontal: 12,
+                            borderRadius: 10,
+                            backgroundColor: isSelected ? "rgba(224, 168, 76, 0.08)" : "rgba(255, 255, 255, 0.02)",
+                            borderColor: isSelected ? theme.colors.brand : theme.colors.border,
+                            borderWidth: 1,
                           },
                         ]}
                       >
-                        <Text style={{ color: theme.colors.textPrimary, fontWeight: "700", fontSize: 13 }}>
-                          {client.name}
-                        </Text>
-                        <Text
-                          style={{
-                            color: contact ? theme.colors.textSecondary : theme.colors.danger,
-                            fontSize: 12,
-                          }}
-                        >
-                          {contact || "Missing contact"}
-                        </Text>
-                      </View>
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 10, flex: 1 }}>
+                          <Ionicons
+                            name={isSelected ? "checkbox" : "square-outline"}
+                            size={20}
+                            color={isSelected ? theme.colors.brand : theme.colors.textMuted}
+                          />
+                          <View style={{ flex: 1 }}>
+                            <Text style={{ color: theme.colors.textPrimary, fontWeight: "700", fontSize: 14 }}>
+                              {client.name}
+                            </Text>
+                            <Text style={{ color: theme.colors.textMuted, fontSize: 11, marginTop: 2 }}>
+                              {client.category} • Preferred: {client.preferredChannel}
+                            </Text>
+                          </View>
+                        </View>
+                        <View style={{ alignItems: "flex-end" }}>
+                          <Text
+                            style={{
+                              color: contact ? theme.colors.textSecondary : theme.colors.danger,
+                              fontSize: 12,
+                              fontWeight: contact ? "500" : "700",
+                            }}
+                          >
+                            {contact || "Missing contact"}
+                          </Text>
+                          {isSelected && contact ? (
+                            <View style={{ flexDirection: "row", alignItems: "center", gap: 3, marginTop: 2 }}>
+                              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: theme.colors.accent }} />
+                              <Text style={{ color: theme.colors.accent, fontSize: 10, fontWeight: "700" }}>Ready</Text>
+                            </View>
+                          ) : null}
+                        </View>
+                      </Pressable>
                     );
                   })}
                 </View>

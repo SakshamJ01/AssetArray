@@ -26,8 +26,15 @@ const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
 const rateLimitMap = new Map();
 const authAttemptMap = new Map();
-const mongo = new MongoClient(MONGO_URI);
+const mongo = new MongoClient(MONGO_URI, {
+  serverSelectionTimeoutMS: 5000,
+  connectTimeoutMS: 10000,
+  socketTimeoutMS: 30000,
+});
 const gemini = GEMINI_API_KEY ? new GoogleGenAI({ apiKey: GEMINI_API_KEY }) : null;
+
+let isDbConnected = false;
+let isConnecting = false;
 
 let usersCol;
 let sessionsCol;
@@ -212,12 +219,17 @@ function buildBroadcastDeliveries(clients, campaignChannel) {
 }
 
 async function audit(action, meta) {
-  await auditCol.insertOne({
-    id: crypto.randomUUID(),
-    action,
-    date: new Date().toISOString(),
-    ...meta,
-  });
+  if (!auditCol) return;
+  try {
+    await auditCol.insertOne({
+      id: crypto.randomUUID(),
+      action,
+      date: new Date().toISOString(),
+      ...meta,
+    });
+  } catch (err) {
+    console.warn(`[Audit] Failed to record audit log: ${err.message}`);
+  }
 }
 
 function getClientIp(req) {
@@ -344,54 +356,79 @@ function requireRole(roles) {
   };
 }
 
+function requireDb(_req, res, next) {
+  if (!isDbConnected || !usersCol) {
+    res.status(503).json({
+      error: "Database initializing or reconnecting. Please retry in a few moments.",
+      retryAfterSeconds: 5,
+    });
+    return;
+  }
+  next();
+}
+
 async function initMongo() {
   validateStartupSecurity();
-  await mongo.connect();
-  const db = mongo.db(MONGO_DB_NAME);
-  usersCol = db.collection("users");
-  sessionsCol = db.collection("refresh_sessions");
-  syncCol = db.collection("encrypted_sync_blobs");
-  broadcastsCol = db.collection("broadcast_campaigns");
-  auditCol = db.collection("audit_logs");
-  aiResearchCol = db.collection("ai_research_history");
-  advisorTasksCol = db.collection("advisor_tasks");
-  advisorActivityCol = db.collection("advisor_activity");
-  advisorDecisionsCol = db.collection("advisor_decisions");
+  if (isDbConnected || isConnecting) return;
+  isConnecting = true;
 
-  await Promise.all([
-    usersCol.createIndex({ id: 1 }, { unique: true }),
-    usersCol.createIndex({ username: 1 }, { unique: true }),
-    sessionsCol.createIndex({ id: 1 }, { unique: true }),
-    sessionsCol.createIndex({ userId: 1 }),
-    sessionsCol.createIndex({ expiresAt: 1 }),
-    syncCol.createIndex({ ownerId: 1 }, { unique: true }),
-    broadcastsCol.createIndex({ campaignId: 1 }, { unique: true }),
-    broadcastsCol.createIndex({ createdAt: -1 }),
-    auditCol.createIndex({ date: -1 }),
-    aiResearchCol.createIndex({ timestamp: -1 }),
-    aiResearchCol.createIndex({ userId: 1, timestamp: -1 }),
-    advisorTasksCol.createIndex({ id: 1 }, { unique: true }),
-    advisorTasksCol.createIndex({ userId: 1, canonicalKey: 1 }),
-    advisorActivityCol.createIndex({ userId: 1, timestamp: -1 }),
-    advisorDecisionsCol.createIndex({ userId: 1, createdAt: -1 }),
-  ]);
+  try {
+    console.log(`[MongoDB] Attempting connection to: ${MONGO_DB_NAME}...`);
+    await mongo.connect();
+    const db = mongo.db(MONGO_DB_NAME);
+    usersCol = db.collection("users");
+    sessionsCol = db.collection("refresh_sessions");
+    syncCol = db.collection("encrypted_sync_blobs");
+    broadcastsCol = db.collection("broadcast_campaigns");
+    auditCol = db.collection("audit_logs");
+    aiResearchCol = db.collection("ai_research_history");
+    advisorTasksCol = db.collection("advisor_tasks");
+    advisorActivityCol = db.collection("advisor_activity");
+    advisorDecisionsCol = db.collection("advisor_decisions");
 
-  const adminUsername = process.env.ADMIN_USERNAME || "admin";
-  const adminPassword = process.env.ADMIN_PASSWORD || "ChangeMeNow123!";
-  
+    await Promise.allSettled([
+      usersCol.createIndex({ id: 1 }, { unique: true }),
+      usersCol.createIndex({ username: 1 }, { unique: true }),
+      sessionsCol.createIndex({ id: 1 }, { unique: true }),
+      sessionsCol.createIndex({ userId: 1 }),
+      sessionsCol.createIndex({ expiresAt: 1 }),
+      syncCol.createIndex({ ownerId: 1 }, { unique: true }),
+      broadcastsCol.createIndex({ campaignId: 1 }, { unique: true }),
+      broadcastsCol.createIndex({ createdAt: -1 }),
+      auditCol.createIndex({ date: -1 }),
+      aiResearchCol.createIndex({ timestamp: -1 }),
+      aiResearchCol.createIndex({ userId: 1, timestamp: -1 }),
+      advisorTasksCol.createIndex({ id: 1 }, { unique: true }),
+      advisorTasksCol.createIndex({ userId: 1, canonicalKey: 1 }),
+      advisorActivityCol.createIndex({ userId: 1, timestamp: -1 }),
+      advisorDecisionsCol.createIndex({ userId: 1, createdAt: -1 }),
+    ]);
 
-const existing = await usersCol.findOne({ username: adminUsername });
+    const adminUsername = process.env.ADMIN_USERNAME || "admin";
+    const adminPassword = process.env.ADMIN_PASSWORD || "ChangeMeNow123!";
+    
+    const existing = await usersCol.findOne({ username: adminUsername });
+    if (!existing) {
+      await usersCol.insertOne({
+        id: "advisor-admin",
+        username: adminUsername,
+        role: "advisor",
+        passwordHash: hashPassword(adminPassword),
+        createdAt: new Date().toISOString(),
+        active: true,
+      });
+    }
 
-
-  if (!existing) {
-    await usersCol.insertOne({
-      id: "advisor-admin",
-      username: adminUsername,
-      role: "advisor",
-      passwordHash: hashPassword(adminPassword),
-      createdAt: new Date().toISOString(),
-      active: true,
-    });
+    isDbConnected = true;
+    console.log(`[MongoDB] Connected successfully to database: ${MONGO_DB_NAME}`);
+  } catch (err) {
+    isDbConnected = false;
+    console.warn(`[MongoDB] Connection failed (${err.name || "Error"}): ${err.message}. Backend running in resilient mode; will retry.`);
+    setTimeout(() => {
+      initMongo().catch(() => {});
+    }, 10_000);
+  } finally {
+    isConnecting = false;
   }
 }
 
@@ -401,13 +438,14 @@ app.get("/api/health", (_req, res) => {
   res.json({
     status: "ok",
     app: "Asset Array backend",
+    version: "3.3.1",
     authRequired: AUTH_REQUIRED,
-    db: "mongodb",
+    db: isDbConnected ? "connected" : "connecting",
     date: new Date().toISOString(),
   });
 });
 
-app.post("/api/auth/login", async (req, res) => {
+app.post("/api/auth/login", requireDb, async (req, res) => {
   try {
     const { username, password } = req.body || {};
     if (!username || !password) {
@@ -452,7 +490,7 @@ app.post("/api/auth/login", async (req, res) => {
   }
 });
 
-app.post("/api/auth/refresh", async (req, res) => {
+app.post("/api/auth/refresh", requireDb, async (req, res) => {
   try {
     const { refreshToken } = req.body || {};
     const payload = verifyToken(refreshToken, REFRESH_SECRET);
@@ -478,7 +516,7 @@ app.post("/api/auth/refresh", async (req, res) => {
   }
 });
 
-app.post("/api/auth/logout", requireAuth, async (req, res) => {
+app.post("/api/auth/logout", requireAuth, requireDb, async (req, res) => {
   try {
     const { refreshToken } = req.body || {};
     const payload = verifyToken(refreshToken, REFRESH_SECRET);
@@ -495,7 +533,7 @@ app.post("/api/auth/logout", requireAuth, async (req, res) => {
   }
 });
 
-app.get("/api/auth/me", requireAuth, async (req, res) => {
+app.get("/api/auth/me", requireAuth, requireDb, async (req, res) => {
   const user = await usersCol.findOne({ id: req.user.id });
   if (!user) {
     res.status(404).json({ error: "User not found." });
@@ -504,7 +542,7 @@ app.get("/api/auth/me", requireAuth, async (req, res) => {
   res.json({ ok: true, user: sanitizeUser(user) });
 });
 
-app.get("/api/audit", requireAuth, requireRole(["advisor"]), async (_req, res) => {
+app.get("/api/audit", requireAuth, requireRole(["advisor"]), requireDb, async (_req, res) => {
   const logs = await auditCol.find({}).sort({ date: -1 }).limit(200).toArray();
   res.json({ ok: true, total: logs.length, logs });
 });
@@ -571,7 +609,7 @@ app.post("/api/ai/research", requireAuth, async (req, res) => {
   }
 });
 
-app.post("/api/sync", requireAuth, async (req, res) => {
+app.post("/api/sync", requireAuth, requireDb, async (req, res) => {
   const { ownerId, ciphertext, updatedAt } = req.body || {};
   if (!ownerId || !ciphertext) {
     res.status(400).json({ error: "ownerId and ciphertext are required." });
@@ -600,7 +638,7 @@ app.post("/api/sync", requireAuth, async (req, res) => {
   res.json({ ok: true, ownerId, updatedAt: nextUpdatedAt });
 });
 
-app.get("/api/sync/:ownerId", requireAuth, async (req, res) => {
+app.get("/api/sync/:ownerId", requireAuth, requireDb, async (req, res) => {
   // Enforce server-side ownership: non-admin users cannot read other users' sync data
   if (req.user.role !== "admin" && req.params.ownerId !== req.user.id && req.params.ownerId !== req.user.username) {
     res.status(403).json({ error: "Forbidden: You cannot access sync data for another owner." });
@@ -615,7 +653,7 @@ app.get("/api/sync/:ownerId", requireAuth, async (req, res) => {
   res.json({ ciphertext: record.ciphertext, updatedAt: record.updatedAt });
 });
 
-app.post("/api/broadcast", requireAuth, async (req, res) => {
+app.post("/api/broadcast", requireAuth, requireDb, async (req, res) => {
   const { ownerName, channel, message, clients, createdAt } = req.body || {};
   if (!message || !Array.isArray(clients) || clients.length === 0) {
     res.status(400).json({ error: "message and at least one client are required." });
@@ -660,7 +698,7 @@ app.post("/api/broadcast", requireAuth, async (req, res) => {
   });
 });
 
-app.get("/api/broadcast/history", requireAuth, async (req, res) => {
+app.get("/api/broadcast/history", requireAuth, requireDb, async (req, res) => {
   const limit = Math.min(Math.max(Number(req.query.limit || 10), 1), 25);
   const campaigns = await broadcastsCol
     .find({})
@@ -1424,13 +1462,16 @@ app.use((error, _req, res, _next) => {
 });
 
 async function start() {
-  await initMongo();
   app.listen(port, "0.0.0.0", () => {
-  console.log(`Asset Array backend running on port ${port} (MongoDB: ${MONGO_DB_NAME})`);
-});
+    console.log(`Asset Array backend running on port ${port} (Database: ${MONGO_DB_NAME})`);
+  });
+
+  initMongo().catch((error) => {
+    console.warn("[MongoDB] Initial connection deferred:", error.message);
+  });
 }
 
 start().catch((error) => {
-  console.error("Failed to start backend:", error);
+  console.error("Fatal backend error:", error);
   process.exit(1);
 });

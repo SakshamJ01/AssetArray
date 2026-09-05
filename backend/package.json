@@ -1,6 +1,6 @@
 {
   "name": "asset-array-backend",
-  "version": "3.1.0",
+  "version": "3.3.1",
   "private": true,
   "main": "server.js",
   "scripts": {

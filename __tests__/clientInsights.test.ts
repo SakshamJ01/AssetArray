@@ -68,12 +68,28 @@ describe("Client Insight Engine & Historical Snapshots", () => {
       lastContact: "",
     };
 
-    // Seed snapshots with tech concentration jump from 18.1% to 27.4% (+9.3 pts)
+    // Seed snapshots with tech concentration jump from 18.1% to 27.4% (+9.3 pts) in demo mode
+    mockClient.portfolio = [
+      {
+        id: "h1",
+        ticker: "TCS",
+        assetName: "Tata Consultancy Services",
+        quantity: "100",
+        investedValue: "300000",
+        currentValue: "350000",
+        assetClass: "Stocks",
+        sector: "Technology",
+        targetWeight: "15",
+        notes: "",
+      },
+    ];
+
     await snapshotStore.seedBaselineSnapshotsIfEmpty("client_test", {
       techExposure: 27.4,
       healthScore: 72,
       drawdown: 9.3,
       cashWeight: 14.2,
+      forceDemo: true,
     });
 
     const insights = await insightEngine.evaluateClientInsights(mockClient);
@@ -115,5 +131,76 @@ describe("Client Insight Engine & Historical Snapshots", () => {
     expect(explanation.whyItMatters).toBeTruthy();
     expect(explanation.advisorQuestions.length).toBeGreaterThan(0);
     expect(explanation.possibleActions.length).toBeGreaterThan(0);
+  });
+
+  it("never seeds synthetic baseline snapshots for real clients", async () => {
+    // Attempt to seed without isDemo/forceDemo
+    await snapshotStore.seedBaselineSnapshotsIfEmpty("real_client_123");
+    const snapshots = await snapshotStore.getSnapshots("real_client_123");
+    expect(snapshots.length).toBe(0);
+  });
+
+  it("deduplicates snapshots with same entity, metric and value within 1 hour", async () => {
+    const now = new Date().toISOString();
+    const snap1 = await snapshotStore.recordSnapshot({
+      entityId: "client_dedup",
+      entityType: "PORTFOLIO",
+      metric: "total_aum",
+      value: 5000000,
+      timestamp: now,
+    });
+
+    const snap2 = await snapshotStore.recordSnapshot({
+      entityId: "client_dedup",
+      entityType: "PORTFOLIO",
+      metric: "total_aum",
+      value: 5000000,
+      timestamp: now,
+    });
+
+    expect(snap1.id).toBe(snap2.id);
+    const list = await snapshotStore.getSnapshots("client_dedup", "total_aum");
+    expect(list.length).toBe(1);
+  });
+
+  it("returns INSUFFICIENT_HISTORY for a new client with only 1 snapshot", async () => {
+    const newClient: Client = {
+      id: "real_new_client",
+      name: "Ananya Sharma",
+      phone: "+91 98111 22233",
+      email: "ananya@example.com",
+      city: "Delhi",
+      category: "Retail",
+      priority: "Medium",
+      preferredChannel: "Email",
+      reminderDate: new Date().toISOString(),
+      notes: "",
+      riskProfile: "Moderate",
+      allocation: "Stocks 50%, Bonds 50%",
+      watchlist: [],
+      updateHistory: [],
+      portfolio: [
+        {
+          id: "h_new",
+          ticker: "RELIANCE",
+          assetName: "Reliance Industries",
+          quantity: "50",
+          investedValue: "140000",
+          currentValue: "150000",
+          assetClass: "Stocks",
+          targetWeight: "10",
+          notes: "",
+        },
+      ],
+      lastContact: "",
+    };
+
+    // Record one snapshot
+    await snapshotStore.recordPortfolioEventSnapshots(newClient);
+
+    const insights = await insightEngine.evaluateClientInsights(newClient);
+    expect(insights.length).toBe(1);
+    expect(insights[0].type).toBe("INSUFFICIENT_HISTORY");
+    expect(insights[0].evidence.confidence).toBe("INSUFFICIENT_DATA");
   });
 });

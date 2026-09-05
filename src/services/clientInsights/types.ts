@@ -9,12 +9,13 @@ export interface HistoricalSnapshot {
   id: string;
   entityId: string; // e.g. clientId or goalId
   entityType: SnapshotEntityType;
-  metric: string; // e.g. "total_aum", "health_score", "equity_weight", "goal_probability", "drawdown_pct", "cash_pct"
+  metric: string; // e.g. "total_aum", "health_score", "sector_concentration_tech", "goal_probability", "drawdown_pct", "cash_weight_pct"
   value: number;
   metadata?: Record<string, any>;
   timestamp: string;
   source: string;
   methodologyVersion: string;
+  isDemo?: boolean;
 }
 
 export type InsightType =
@@ -28,7 +29,10 @@ export type InsightType =
   | "TAX_OPPORTUNITY"
   | "LIQUIDITY_CHANGE"
   | "DATA_QUALITY"
-  | "SERVICE_GAP";
+  | "SERVICE_GAP"
+  | "INSUFFICIENT_HISTORY";
+
+export type InsightConfidence = "HIGH" | "MEDIUM" | "LOW" | "INSUFFICIENT_DATA";
 
 export interface InsightEvidence {
   current: number;
@@ -37,8 +41,9 @@ export interface InsightEvidence {
   unit?: string;
   periodDays: number;
   source: string;
-  confidence: "HIGH" | "MEDIUM" | "LOW";
+  confidence: InsightConfidence;
   threshold?: number;
+  isDemo?: boolean;
 }
 
 export interface InsightExplanation {
@@ -59,4 +64,5 @@ export interface ClientInsight {
   severity: "CRITICAL" | "HIGH" | "MEDIUM" | "INFO";
   detectedAt: string;
   explanation?: InsightExplanation;
+  isDemo?: boolean;
 }

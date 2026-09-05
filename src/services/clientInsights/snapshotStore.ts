@@ -40,18 +40,36 @@ export class SnapshotStore {
     timestamp?: string;
     metadata?: Record<string, any>;
     source?: string;
+    isDemo?: boolean;
   }): Promise<HistoricalSnapshot> {
     const list = await this.load();
+    const targetTimestamp = params.timestamp ? new Date(params.timestamp).getTime() : Date.now();
+    const roundedValue = Number(params.value.toFixed(4));
+
+    // Deduplication: same entity, same metric, same value within a 1-hour window
+    const DEDUP_WINDOW_MS = 60 * 60 * 1000;
+    const existingDuplicate = list.find(
+      (s) =>
+        s.entityId === params.entityId &&
+        s.metric === params.metric &&
+        Math.abs(s.value - roundedValue) < 0.0001 &&
+        Math.abs(new Date(s.timestamp).getTime() - targetTimestamp) < DEDUP_WINDOW_MS
+    );
+    if (existingDuplicate) {
+      return existingDuplicate;
+    }
+
     const snapshot: HistoricalSnapshot = {
       id: `snap_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       entityId: params.entityId,
       entityType: params.entityType,
       metric: params.metric,
-      value: Number(params.value.toFixed(4)),
+      value: roundedValue,
       metadata: params.metadata,
       timestamp: params.timestamp || new Date().toISOString(),
       source: params.source || "Portfolio Calculation Engine",
       methodologyVersion: this.METHODOLOGY_VERSION,
+      isDemo: Boolean(params.isDemo),
     };
 
     list.unshift(snapshot);
@@ -120,14 +138,89 @@ export class SnapshotStore {
     };
   }
 
+  /**
+   * Records genuine historical snapshots from real portfolio updates / transactions / valuations.
+   * Called on actual application events (portfolio save, import, valuation refresh).
+   */
+  public async recordPortfolioEventSnapshots(
+    client: { id: string; portfolio?: any[] },
+    source = "Portfolio Valuation Event"
+  ): Promise<void> {
+    const holdings = client.portfolio || [];
+    if (holdings.length === 0) return;
+
+    const now = new Date().toISOString();
+    const totalCurrent = holdings.reduce((sum, h) => sum + (parseFloat(h.currentValue) || 0), 0);
+    const totalInvested = holdings.reduce((sum, h) => sum + (parseFloat(h.investedValue) || 0), 0);
+
+    if (totalCurrent > 0) {
+      await this.recordSnapshot({
+        entityId: client.id,
+        entityType: "PORTFOLIO",
+        metric: "total_aum",
+        value: totalCurrent,
+        timestamp: now,
+        source,
+      });
+
+      // Calculate tech exposure
+      const techHoldings = holdings.filter((h) => {
+        const sector = (h.sector || h.category || "").toLowerCase();
+        const name = (h.assetName || h.ticker || "").toLowerCase();
+        return sector.includes("tech") || name.includes("tcs") || name.includes("infosys") || name.includes("wipro");
+      });
+      const techVal = techHoldings.reduce((sum, h) => sum + (parseFloat(h.currentValue) || 0), 0);
+      const techPct = Number(((techVal / totalCurrent) * 100).toFixed(1));
+
+      await this.recordSnapshot({
+        entityId: client.id,
+        entityType: "PORTFOLIO",
+        metric: "sector_concentration_tech",
+        value: techPct,
+        timestamp: now,
+        source,
+      });
+
+      // Calculate cash weight
+      const cashHoldings = holdings.filter((h) => {
+        const assetClass = (h.assetClass || h.category || "").toLowerCase();
+        const name = (h.assetName || h.ticker || "").toLowerCase();
+        return assetClass.includes("cash") || assetClass.includes("liquid") || name.includes("liquid") || name.includes("cash");
+      });
+      const cashVal = cashHoldings.reduce((sum, h) => sum + (parseFloat(h.currentValue) || 0), 0);
+      const cashPct = Number(((cashVal / totalCurrent) * 100).toFixed(1));
+
+      await this.recordSnapshot({
+        entityId: client.id,
+        entityType: "PORTFOLIO",
+        metric: "cash_weight_pct",
+        value: cashPct,
+        timestamp: now,
+        source,
+      });
+
+      // Calculate drawdown if underwater
+      const gainLoss = totalCurrent - totalInvested;
+      const drawdownPct = totalInvested > 0 && gainLoss < 0 ? Math.abs(Number(((gainLoss / totalInvested) * 100).toFixed(1))) : 0;
+      await this.recordSnapshot({
+        entityId: client.id,
+        entityType: "PORTFOLIO",
+        metric: "drawdown_pct",
+        value: drawdownPct,
+        timestamp: now,
+        source,
+      });
+    }
+  }
+
   public async clear(): Promise<void> {
     this.cache = [];
     await AsyncStorage.removeItem(SNAPSHOTS_STORAGE_KEY);
   }
 
   /**
-   * Ensures baseline historical snapshots exist for a client so genuine change detection
-   * can be performed instead of showing zero insights.
+   * DEMO ONLY: Seeds synthetic baseline historical snapshots for explicitly designated demo clients.
+   * ABSOLUTE RULE: This must NEVER run for real production clients.
    */
   public async seedBaselineSnapshotsIfEmpty(
     clientId: string,
@@ -136,8 +229,15 @@ export class SnapshotStore {
       healthScore?: number;
       drawdown?: number;
       cashWeight?: number;
+      isDemo?: boolean;
+      forceDemo?: boolean;
     }
   ): Promise<void> {
+    // Strict Guard: Never seed synthetic baseline for real clients without explicit demo flag
+    if (!params?.isDemo && !params?.forceDemo) {
+      return;
+    }
+
     const existing = await this.getSnapshots(clientId);
     if (existing.length > 0) return;
 
@@ -153,7 +253,8 @@ export class SnapshotStore {
       metric: "sector_concentration_tech",
       value: prevTech,
       timestamp: new Date(now - 90 * dayMs).toISOString(),
-      source: "Portfolio Ledger 90D Close",
+      source: "DEMO DATA · SIMULATED HISTORY",
+      isDemo: true,
     });
     await this.recordSnapshot({
       entityId: clientId,
@@ -161,7 +262,8 @@ export class SnapshotStore {
       metric: "sector_concentration_tech",
       value: curTech,
       timestamp: new Date(now).toISOString(),
-      source: "Portfolio Calculation Engine",
+      source: "DEMO DATA · SIMULATED HISTORY",
+      isDemo: true,
     });
 
     // 2. Health Score: 30 days ago vs now
@@ -173,7 +275,8 @@ export class SnapshotStore {
       metric: "health_score",
       value: prevHealth,
       timestamp: new Date(now - 30 * dayMs).toISOString(),
-      source: "Monthly Health Diagnostic",
+      source: "DEMO DATA · SIMULATED HISTORY",
+      isDemo: true,
     });
     await this.recordSnapshot({
       entityId: clientId,
@@ -181,7 +284,8 @@ export class SnapshotStore {
       metric: "health_score",
       value: curHealth,
       timestamp: new Date(now).toISOString(),
-      source: "Diagnostic Health Engine",
+      source: "DEMO DATA · SIMULATED HISTORY",
+      isDemo: true,
     });
 
     // 3. Peak Drawdown: 30 days ago vs now
@@ -193,7 +297,8 @@ export class SnapshotStore {
       metric: "drawdown_pct",
       value: prevDD,
       timestamp: new Date(now - 30 * dayMs).toISOString(),
-      source: "Risk Analytics Engine",
+      source: "DEMO DATA · SIMULATED HISTORY",
+      isDemo: true,
     });
     await this.recordSnapshot({
       entityId: clientId,
@@ -201,7 +306,8 @@ export class SnapshotStore {
       metric: "drawdown_pct",
       value: curDD,
       timestamp: new Date(now).toISOString(),
-      source: "Stress Testing Engine",
+      source: "DEMO DATA · SIMULATED HISTORY",
+      isDemo: true,
     });
 
     // 4. Cash Drag: 60 days ago vs now
@@ -213,7 +319,8 @@ export class SnapshotStore {
       metric: "cash_weight_pct",
       value: prevCash,
       timestamp: new Date(now - 60 * dayMs).toISOString(),
-      source: "Treasury Ledger 60D Close",
+      source: "DEMO DATA · SIMULATED HISTORY",
+      isDemo: true,
     });
     await this.recordSnapshot({
       entityId: clientId,
@@ -221,7 +328,8 @@ export class SnapshotStore {
       metric: "cash_weight_pct",
       value: curCash,
       timestamp: new Date(now).toISOString(),
-      source: "Asset Allocation Engine",
+      source: "DEMO DATA · SIMULATED HISTORY",
+      isDemo: true,
     });
   }
 }

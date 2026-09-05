@@ -64,8 +64,15 @@ export const Client360Workspace: React.FC<Client360WorkspaceProps> = ({
     const load = async () => {
       setLoadingInsights(true);
       try {
-        // Ensure baseline snapshots exist for demo / active client
-        await snapshotStore.seedBaselineSnapshotsIfEmpty(client.id);
+        // Record genuine point-in-time snapshot for real client if holdings exist
+        await snapshotStore.recordPortfolioEventSnapshots(client, "Client 360 Diagnostic");
+
+        // ABSOLUTE RULE: Never inject synthetic baseline for real production clients.
+        // Only explicitly flagged demo clients receive simulated history.
+        if ((client as any).isDemo) {
+          await snapshotStore.seedBaselineSnapshotsIfEmpty(client.id, { isDemo: true });
+        }
+
         const evaluated = await insightEngine.evaluateClientInsights(client, goals);
         if (isMounted) {
           setInsights(evaluated);
@@ -516,8 +523,16 @@ export const Client360Workspace: React.FC<Client360WorkspaceProps> = ({
           insights.map((insight) => (
             <View key={insight.id} style={workspaceStyles.insightCard}>
               <View style={workspaceStyles.insightHeaderRow}>
-                <View style={workspaceStyles.insightBadge}>
-                  <Text style={workspaceStyles.insightBadgeText}>{insight.type}</Text>
+                <View style={[
+                  workspaceStyles.insightBadge,
+                  insight.isDemo ? { backgroundColor: "rgba(245, 158, 11, 0.15)", borderColor: "rgba(245, 158, 11, 0.3)" } : undefined
+                ]}>
+                  <Text style={[
+                    workspaceStyles.insightBadgeText,
+                    insight.isDemo ? { color: "#F59E0B" } : undefined
+                  ]}>
+                    {insight.isDemo ? "DEMO · " : ""}{insight.type}
+                  </Text>
                 </View>
                 <Text style={workspaceStyles.insightTitle}>{insight.title}</Text>
               </View>
@@ -564,7 +579,19 @@ export const Client360Workspace: React.FC<Client360WorkspaceProps> = ({
                 </View>
                 <View style={workspaceStyles.evidenceCell}>
                   <Text style={workspaceStyles.evidenceLabel}>CONFIDENCE</Text>
-                  <Text style={[workspaceStyles.evidenceValue, { color: "#10B981" }]}>
+                  <Text style={[
+                    workspaceStyles.evidenceValue,
+                    {
+                      color:
+                        insight.evidence.confidence === "HIGH"
+                          ? "#10B981"
+                          : insight.evidence.confidence === "MEDIUM"
+                          ? "#38BDF8"
+                          : insight.evidence.confidence === "LOW"
+                          ? "#F59E0B"
+                          : "#94A3B8",
+                    },
+                  ]}>
                     {insight.evidence.confidence}
                   </Text>
                 </View>

@@ -1,6 +1,7 @@
 /**
  * Institutional Gemini Provider
- * Genuine implementation using Google GenAI / backend SSE streaming proxy.
+ * Genuine implementation routed strictly through authenticated backend streaming proxy.
+ * Zero provider secrets exposed in frontend client bundle.
  */
 
 import { AiProvider, AiStreamCallbacks, AiTaskType, ProviderStatus, StreamContextPayload } from "../types";
@@ -9,15 +10,9 @@ import { buildTaskPrompt } from "../schemas";
 export class GeminiProvider implements AiProvider {
   readonly id = "gemini";
   readonly name = "Google Gemini (2.5 Flash / Pro)";
-  private apiKey: string | null;
   private backendUrl: string;
 
-  constructor(apiKey?: string, backendUrl?: string) {
-    this.apiKey =
-      apiKey ||
-      (typeof process !== "undefined"
-        ? (process.env?.EXPO_PUBLIC_GEMINI_API_KEY || process.env?.GEMINI_API_KEY || null)
-        : null);
+  constructor(backendUrl?: string) {
     this.backendUrl =
       backendUrl ||
       (typeof process !== "undefined" && process.env?.EXPO_PUBLIC_API_URL) ||
@@ -25,11 +20,11 @@ export class GeminiProvider implements AiProvider {
   }
 
   public getStatus(): ProviderStatus {
-    return (this.apiKey || this.backendUrl) ? "ONLINE" : "NOT_CONFIGURED";
+    return this.backendUrl ? "AVAILABLE" : "NOT_CONFIGURED";
   }
 
   public isConfigured(): boolean {
-    return Boolean(this.apiKey || this.backendUrl);
+    return Boolean(this.backendUrl);
   }
 
   public async streamResponse(
@@ -43,7 +38,7 @@ export class GeminiProvider implements AiProvider {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeout);
 
-    callbacks.onStateChange?.("CONNECTING", "Establishing connection to Gemini model...");
+    callbacks.onStateChange?.("CONNECTING", "Establishing connection to Gemini model via secure backend proxy...");
 
     try {
       const prompt = buildTaskPrompt(query, taskType, context);
@@ -55,6 +50,7 @@ export class GeminiProvider implements AiProvider {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          provider: "gemini",
           query: prompt,
           taskType,
           portfolioContext: {
@@ -74,7 +70,7 @@ export class GeminiProvider implements AiProvider {
       });
 
       if (!response.ok || !response.body) {
-        throw new Error(`Gemini stream failed with status ${response.status}`);
+        throw new Error(`Gemini proxy failed with status ${response.status}`);
       }
 
       const reader = response.body.getReader();
@@ -96,6 +92,9 @@ export class GeminiProvider implements AiProvider {
             const jsonStr = trimmed.replace(/^data:\s*/, "");
             try {
               const parsed = JSON.parse(jsonStr);
+              if (parsed.error) {
+                throw new Error(parsed.error);
+              }
               if (parsed.token) {
                 callbacks.onToken(parsed.token);
               }
@@ -111,8 +110,10 @@ export class GeminiProvider implements AiProvider {
                 });
                 return;
               }
-            } catch {
-              // Ignore partial chunk parsing
+            } catch (parseErr: any) {
+              if (parseErr.message && !parseErr.message.includes("JSON")) {
+                throw parseErr;
+              }
             }
           }
         }

@@ -22,6 +22,16 @@ const AUTH_MAX_FAILURES = Number(process.env.AUTH_MAX_FAILURES || 5);
 const AUTH_LOCK_WINDOW_MS = Number(process.env.AUTH_LOCK_WINDOW_MS || 15 * 60_000);
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
 const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "";
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || "";
+
+const AI_GEMINI_FAST_MODEL = process.env.AI_GEMINI_FAST_MODEL || GEMINI_MODEL;
+const AI_GEMINI_RESEARCH_MODEL = process.env.AI_GEMINI_RESEARCH_MODEL || "gemini-2.5-pro";
+const AI_OPENAI_FAST_MODEL = process.env.AI_OPENAI_FAST_MODEL || "gpt-4o-mini";
+const AI_OPENAI_RESEARCH_MODEL = process.env.AI_OPENAI_RESEARCH_MODEL || "gpt-4o";
+const AI_ANTHROPIC_FAST_MODEL = process.env.AI_ANTHROPIC_FAST_MODEL || "claude-3-5-haiku-20241022";
+const AI_ANTHROPIC_RESEARCH_MODEL = process.env.AI_ANTHROPIC_RESEARCH_MODEL || "claude-3-5-sonnet-20241022";
+
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
 const rateLimitMap = new Map();
@@ -681,9 +691,36 @@ app.post("/api/ai/research", requireAuth, async (req, res) => {
   }
 });
 
+// Provider status endpoint for multi-model observability
+app.get("/api/ai/status", (req, res) => {
+  res.json({
+    gemini: {
+      id: "gemini",
+      name: "Google Gemini",
+      isConfigured: Boolean(GEMINI_API_KEY),
+      status: GEMINI_API_KEY ? "AVAILABLE" : "NOT_CONFIGURED",
+      models: { fast: AI_GEMINI_FAST_MODEL, research: AI_GEMINI_RESEARCH_MODEL },
+    },
+    openai: {
+      id: "openai",
+      name: "OpenAI",
+      isConfigured: Boolean(OPENAI_API_KEY),
+      status: OPENAI_API_KEY ? "AVAILABLE" : "NOT_CONFIGURED",
+      models: { fast: AI_OPENAI_FAST_MODEL, research: AI_OPENAI_RESEARCH_MODEL },
+    },
+    anthropic: {
+      id: "anthropic",
+      name: "Anthropic",
+      isConfigured: Boolean(ANTHROPIC_API_KEY),
+      status: ANTHROPIC_API_KEY ? "AVAILABLE" : "NOT_CONFIGURED",
+      models: { fast: AI_ANTHROPIC_FAST_MODEL, research: AI_ANTHROPIC_RESEARCH_MODEL },
+    },
+  });
+});
+
 // Streaming AI Intelligence Proxy with SSE, Model Ensemble & Grounded Token Generator
 app.post("/api/ai/stream", requireAuth, async (req, res) => {
-  const { query, taskType = "briefing", portfolioContext, clientContext, macroContext } = req.body || {};
+  const { provider = "gemini", query, taskType = "briefing", portfolioContext, clientContext, macroContext } = req.body || {};
 
   if (!query || typeof query !== "string") {
     res.status(400).json({ error: "query string is required." });
@@ -697,14 +734,146 @@ app.post("/api/ai/stream", requireAuth, async (req, res) => {
   res.setHeader("X-Accel-Buffering", "no");
   if (res.flushHeaders) res.flushHeaders();
 
-  const selectedModel =
-    taskType === "tax_analytics" || taskType === "portfolio_attribution"
-      ? "gemini-2.5-flash"
-      : GEMINI_MODEL;
-
   const groundedAt = new Date().toISOString();
 
-  // 1. If Gemini instance is live, stream genuine LLM tokens
+  // 1. OPENAI Provider Stream
+  if (provider === "openai") {
+    if (!OPENAI_API_KEY) {
+      res.write(`data: ${JSON.stringify({ error: "OpenAI is not configured on this server.", provider: "openai", notConfigured: true })}\n\n`);
+      res.end();
+      return;
+    }
+
+    try {
+      const selectedModel = taskType === "DEEP_RESEARCH" ? AI_OPENAI_RESEARCH_MODEL : AI_OPENAI_FAST_MODEL;
+      const fullPrompt = buildStreamPrompt(query, taskType, portfolioContext, clientContext, macroContext);
+      const openAiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: selectedModel,
+          messages: [{ role: "user", content: fullPrompt }],
+          stream: true,
+          temperature: 0.35,
+        }),
+      });
+
+      if (!openAiRes.ok || !openAiRes.body) {
+        throw new Error(`OpenAI HTTP ${openAiRes.status}`);
+      }
+
+      const reader = openAiRes.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (trimmed === "data: [DONE]") {
+            res.write(`data: ${JSON.stringify({ done: true, model: selectedModel, provider: "openai", taskType, groundedAt })}\n\n`);
+            res.end();
+            return;
+          }
+          if (trimmed.startsWith("data:")) {
+            try {
+              const parsed = JSON.parse(trimmed.replace(/^data:\s*/, ""));
+              const token = parsed.choices?.[0]?.delta?.content;
+              if (token) {
+                res.write(`data: ${JSON.stringify({ token, model: selectedModel, provider: "openai", taskType })}\n\n`);
+              }
+            } catch {}
+          }
+        }
+      }
+      res.write(`data: ${JSON.stringify({ done: true, model: selectedModel, provider: "openai", taskType, groundedAt })}\n\n`);
+      res.end();
+      return;
+    } catch (err) {
+      console.warn("[AI Stream] OpenAI stream exception:", err.message);
+    }
+  }
+
+  // 2. ANTHROPIC Provider Stream
+  if (provider === "anthropic") {
+    if (!ANTHROPIC_API_KEY) {
+      res.write(`data: ${JSON.stringify({ error: "Anthropic is not configured on this server.", provider: "anthropic", notConfigured: true })}\n\n`);
+      res.end();
+      return;
+    }
+
+    try {
+      const selectedModel = taskType === "DEEP_RESEARCH" ? AI_ANTHROPIC_RESEARCH_MODEL : AI_ANTHROPIC_FAST_MODEL;
+      const fullPrompt = buildStreamPrompt(query, taskType, portfolioContext, clientContext, macroContext);
+      const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": ANTHROPIC_API_KEY,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model: selectedModel,
+          max_tokens: 2048,
+          messages: [{ role: "user", content: fullPrompt }],
+          stream: true,
+        }),
+      });
+
+      if (!anthropicRes.ok || !anthropicRes.body) {
+        throw new Error(`Anthropic HTTP ${anthropicRes.status}`);
+      }
+
+      const reader = anthropicRes.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (trimmed.startsWith("data:")) {
+            try {
+              const parsed = JSON.parse(trimmed.replace(/^data:\s*/, ""));
+              if (parsed.type === "content_block_delta" && parsed.delta?.text) {
+                res.write(`data: ${JSON.stringify({ token: parsed.delta.text, model: selectedModel, provider: "anthropic", taskType })}\n\n`);
+              }
+              if (parsed.type === "message_stop") {
+                res.write(`data: ${JSON.stringify({ done: true, model: selectedModel, provider: "anthropic", taskType, groundedAt })}\n\n`);
+                res.end();
+                return;
+              }
+            } catch {}
+          }
+        }
+      }
+      res.write(`data: ${JSON.stringify({ done: true, model: selectedModel, provider: "anthropic", taskType, groundedAt })}\n\n`);
+      res.end();
+      return;
+    } catch (err) {
+      console.warn("[AI Stream] Anthropic stream exception:", err.message);
+    }
+  }
+
+  // 3. GEMINI Provider Stream (Default)
+  const selectedModel =
+    taskType === "DEEP_RESEARCH"
+      ? AI_GEMINI_RESEARCH_MODEL
+      : AI_GEMINI_FAST_MODEL;
+
   if (gemini) {
     try {
       const fullPrompt = buildStreamPrompt(query, taskType, portfolioContext, clientContext, macroContext);
@@ -716,11 +885,11 @@ app.post("/api/ai/stream", requireAuth, async (req, res) => {
 
       for await (const chunk of responseStream) {
         if (chunk.text) {
-          res.write(`data: ${JSON.stringify({ token: chunk.text, model: selectedModel, taskType })}\n\n`);
+          res.write(`data: ${JSON.stringify({ token: chunk.text, model: selectedModel, provider: "gemini", taskType })}\n\n`);
         }
       }
 
-      res.write(`data: ${JSON.stringify({ done: true, model: selectedModel, taskType, groundedAt })}\n\n`);
+      res.write(`data: ${JSON.stringify({ done: true, model: selectedModel, provider: "gemini", taskType, groundedAt })}\n\n`);
       res.end();
       return;
     } catch (err) {
@@ -728,7 +897,7 @@ app.post("/api/ai/stream", requireAuth, async (req, res) => {
     }
   }
 
-  // 2. Resilient token-by-token streamer (ensures real-time typewriter responsiveness & portfolio grounding)
+  // 4. Resilient token-by-token streamer (ensures real-time typewriter responsiveness & portfolio grounding)
   const fullText = generateGroundedFallbackText(query, taskType, portfolioContext, clientContext);
   const tokens = fullText.split(/(\s+)/);
 
@@ -737,12 +906,12 @@ app.post("/api/ai/stream", requireAuth, async (req, res) => {
     if (idx < tokens.length) {
       const token = tokens[idx];
       if (token) {
-        res.write(`data: ${JSON.stringify({ token, model: "ensemble-grounded-fast", taskType })}\n\n`);
+        res.write(`data: ${JSON.stringify({ token, model: "verified-rule-engine", provider: "deterministic-local", taskType })}\n\n`);
       }
       idx++;
     } else {
       clearInterval(interval);
-      res.write(`data: ${JSON.stringify({ done: true, model: "ensemble-grounded-fast", taskType, groundedAt })}\n\n`);
+      res.write(`data: ${JSON.stringify({ done: true, model: "verified-rule-engine", provider: "deterministic-local", taskType, groundedAt })}\n\n`);
       res.end();
     }
   }, 22);

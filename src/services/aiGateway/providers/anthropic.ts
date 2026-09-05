@@ -1,6 +1,7 @@
 /**
  * Institutional Anthropic Provider
- * Direct streaming using Anthropic Messages API with Server-Sent Events (SSE).
+ * Genuine implementation routed strictly through authenticated backend streaming proxy.
+ * Zero provider secrets exposed in frontend client bundle.
  */
 
 import { AiProvider, AiStreamCallbacks, AiTaskType, ProviderStatus, StreamContextPayload } from "../types";
@@ -9,24 +10,21 @@ import { buildTaskPrompt } from "../schemas";
 export class AnthropicProvider implements AiProvider {
   readonly id = "anthropic";
   readonly name = "Anthropic (Claude 3.5 Sonnet / Haiku)";
-  private apiKey: string | null;
-  private baseUrl: string;
+  private backendUrl: string;
 
-  constructor(apiKey?: string, baseUrl = "https://api.anthropic.com/v1") {
-    this.apiKey =
-      apiKey ||
-      (typeof process !== "undefined"
-        ? (process.env?.EXPO_PUBLIC_ANTHROPIC_API_KEY || process.env?.ANTHROPIC_API_KEY || null)
-        : null);
-    this.baseUrl = baseUrl;
+  constructor(backendUrl?: string) {
+    this.backendUrl =
+      backendUrl ||
+      (typeof process !== "undefined" && process.env?.EXPO_PUBLIC_API_URL) ||
+      "https://assetarray.onrender.com";
   }
 
   public getStatus(): ProviderStatus {
-    return this.apiKey ? "ONLINE" : "NOT_CONFIGURED";
+    return this.backendUrl ? "AVAILABLE" : "NOT_CONFIGURED";
   }
 
   public isConfigured(): boolean {
-    return Boolean(this.apiKey);
+    return Boolean(this.backendUrl);
   }
 
   public async streamResponse(
@@ -36,18 +34,11 @@ export class AnthropicProvider implements AiProvider {
     callbacks: AiStreamCallbacks,
     options?: { timeoutMs?: number; signal?: AbortSignal }
   ): Promise<void> {
-    if (!this.apiKey) {
-      const err = new Error("Anthropic provider is NOT_CONFIGURED: Missing ANTHROPIC_API_KEY.");
-      callbacks.onStateChange?.("UNAVAILABLE", err.message);
-      callbacks.onError?.(err);
-      throw err;
-    }
-
     const timeout = options?.timeoutMs || 15000;
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeout);
 
-    callbacks.onStateChange?.("CONNECTING", "Connecting to Anthropic endpoint...");
+    callbacks.onStateChange?.("CONNECTING", "Connecting to Anthropic via secure backend proxy...");
 
     const modelName = taskType === "DEEP_RESEARCH" ? "claude-3-5-sonnet-20241022" : "claude-3-5-haiku-20241022";
     const prompt = buildTaskPrompt(query, taskType, context);
@@ -56,24 +47,31 @@ export class AnthropicProvider implements AiProvider {
     try {
       callbacks.onStateChange?.("STREAMING", `Streaming from ${modelName}...`);
 
-      const response = await fetch(`${this.baseUrl}/messages`, {
+      const response = await fetch(`${this.backendUrl}/api/ai/stream`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": this.apiKey,
-          "anthropic-version": "2023-06-01",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: modelName,
-          max_tokens: 2048,
-          messages: [{ role: "user", content: prompt }],
-          stream: true,
+          provider: "anthropic",
+          query: prompt,
+          taskType,
+          portfolioContext: {
+            totalAum: context?.totalAum,
+            healthScore: context?.healthScore,
+            criticalAlertsCount: context?.criticalAlertsCount,
+            taxLossAvailable: context?.taxLossAvailable,
+            topHoldings: context?.topHoldings,
+          },
+          clientContext: {
+            name: context?.clientName,
+            riskProfile: context?.riskProfile,
+          },
+          macroContext: context?.macroContext,
         }),
         signal: options?.signal || controller.signal,
       });
 
       if (!response.ok || !response.body) {
-        throw new Error(`Anthropic HTTP ${response.status}: Stream initiation failed.`);
+        throw new Error(`Anthropic proxy failed with status ${response.status}`);
       }
 
       const reader = response.body.getReader();
@@ -94,23 +92,28 @@ export class AnthropicProvider implements AiProvider {
             const jsonStr = trimmed.replace(/^data:\s*/, "");
             try {
               const parsed = JSON.parse(jsonStr);
-              if (parsed.type === "content_block_delta" && parsed.delta?.text) {
-                callbacks.onToken(parsed.delta.text);
+              if (parsed.error) {
+                throw new Error(parsed.error);
               }
-              if (parsed.type === "message_stop") {
+              if (parsed.token) {
+                callbacks.onToken(parsed.token);
+              }
+              if (parsed.done) {
                 clearTimeout(timer);
                 callbacks.onStateChange?.("COMPLETED");
                 callbacks.onComplete?.({
                   provider: this.id,
-                  model: modelName,
+                  model: parsed.model || modelName,
                   durationMs: Date.now() - startTime,
                   groundedAt: new Date().toISOString(),
                   taskType,
                 });
                 return;
               }
-            } catch {
-              // Ignore partial JSON
+            } catch (parseErr: any) {
+              if (parseErr.message && !parseErr.message.includes("JSON")) {
+                throw parseErr;
+              }
             }
           }
         }

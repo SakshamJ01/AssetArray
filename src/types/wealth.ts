@@ -223,3 +223,171 @@ export const emptyHoldingDraft: HoldingDraft = {
 export const defaultMessage =
   "Today's market update: stay selective, watch volatility, and review position sizing before entering fresh trades.";
 
+// --- Institutional Engine Models (AssetArray v3.0) ---
+
+export interface AttributionCategoryBreakdown {
+  category: string;
+  portfolioWeight: number; // e.g. 0.60 for 60%
+  benchmarkWeight: number; // e.g. 0.40 for 40%
+  portfolioReturn: number; // e.g. 0.12 for 12%
+  benchmarkReturn: number; // e.g. 0.08 for 8%
+  allocationEffect: number; // (wp - wb) * (Rb - R_total_b)
+  selectionEffect: number; // wb * (rp - Rb)
+  interactionEffect: number; // (wp - wb) * (rp - Rb)
+  totalActiveContribution: number;
+}
+
+export interface AttributionResult {
+  portfolioId: string;
+  benchmarkSymbol: string;
+  benchmarkName: string;
+  portfolioReturn: number;
+  benchmarkReturn: number;
+  totalActiveReturn: number; // portfolioReturn - benchmarkReturn
+  summary: {
+    allocationEffect: number;
+    selectionEffect: number;
+    interactionEffect: number;
+  };
+  breakdown: AttributionCategoryBreakdown[];
+  narrativeExplanation: string;
+}
+
+export interface HealthScoreFactors {
+  dataCompleteness: number; // 0 - 100
+  assetDiversification: number; // 0 - 100 (HHI / entropy based)
+  concentrationRisk: number; // 0 - 100 (100 = well balanced, lower = high concentration)
+  geographicAndCurrency: number; // 0 - 100
+  liabilityManagement: number; // 0 - 100
+}
+
+export interface HealthScoreResult {
+  portfolioId: string;
+  healthScore: number; // 0 - 100
+  grade: "Institutional" | "Balanced" | "Moderate Risk" | "High Fragility";
+  factors: HealthScoreFactors;
+  categoryDistribution: Record<string, number>;
+  recommendations: string[];
+}
+
+export interface IndianTaxLot {
+  holdingId: string;
+  assetName: string;
+  ticker: string;
+  assetClass: AssetClass;
+  investedValue: number;
+  currentValue: number;
+  unrealizedGainLoss: number;
+  holdingPeriodMonths: number;
+  isLongTerm: boolean; // >= 12 months for listed equity
+  applicableTaxRatePct: number; // 20% for STCG (Sec 111A), 12.5% for LTCG (Sec 112A)
+  isLossHarvestCandidate: boolean;
+  suggestedAction: "HARVEST_LOSS" | "HOLD" | "BOOK_PROFIT";
+  potentialTaxShield: number;
+  washSaleWarning: boolean;
+}
+
+export interface TaxHarvestReport {
+  portfolioId: string;
+  assessmentYear: string; // e.g. "AY 2026-27"
+  realizedGains: {
+    shortTerm: number;
+    longTerm: number;
+  };
+  unrealizedGains: {
+    shortTerm: number;
+    longTerm: number;
+  };
+  ltcgExemptionAvailable: number; // ₹1,25,000 threshold (Sec 112A)
+  ltcgExemptionUtilized: number;
+  harvestCandidates: IndianTaxLot[];
+  totalHarvestableLoss: number;
+  estimatedImmediateTaxSavings: number;
+  netTaxLiability: number;
+  statutoryDisclaimer: string;
+}
+
+export interface ScenarioShockParams {
+  name: string;
+  equityShockPct: number; // e.g. -20 for -20%
+  debtYieldBps: number; // e.g. +100 bps
+  commodityShockPct: number; // e.g. +30%
+  currencyDevaluationPct: number; // e.g. -5%
+  inflationShockPct: number; // e.g. +2%
+}
+
+export interface ScenarioDistributionPoint {
+  percentile: number; // e.g. 5, 25, 50, 75, 95
+  value: number;
+}
+
+export interface ScenarioResult {
+  portfolioId: string;
+  scenarioName: string;
+  initialValue: number;
+  projectedValue: number;
+  percentChange: number;
+  postShockVolatility: number;
+  postShockSharpe: number;
+  goalSuccessProbability: number;
+  valueDistribution: ScenarioDistributionPoint[];
+  advisoryCommentary: string;
+}
+
+export type SmartAlertCondition =
+  | "CONCENTRATION_BREACH"
+  | "DRAWDOWN_EVENT"
+  | "HEALTH_SCORE_DROP"
+  | "TAX_HARVEST_WINDOW"
+  | "REBALANCE_DRIFT"
+  | "GOAL_SHORTFALL";
+
+export interface SmartAlertRule {
+  id: string;
+  name: string;
+  condition: SmartAlertCondition;
+  thresholdValue: number;
+  enabled: boolean;
+}
+
+export interface SmartAlert {
+  id: string;
+  ruleId?: string;
+  clientId: string;
+  clientName: string;
+  condition: SmartAlertCondition;
+  title: string;
+  message: string;
+  severity: "critical" | "warning" | "info";
+  timestamp: string;
+  acknowledged: boolean;
+  actionableRoute?: string;
+}
+
+export interface CommitteeMemoResult {
+  memoId: string;
+  clientId: string;
+  anonymizedClientRef: string; // DPDP compliant: e.g. "Client Ref #AA-881"
+  date: string;
+  executiveSummary: string;
+  allocationAndHealth: string;
+  performanceAttribution: string;
+  stressTestingSummary: string;
+  fiduciaryRecommendations: string[];
+  fullMarkdownReport: string;
+}
+
+export interface NetWorthSnapshot {
+  userId: string;
+  date: string;
+  totalAssets: number;
+  totalLiabilities: number;
+  netWorth: number;
+  breakdown: {
+    cashAndBank: number;
+    investments: number;
+    realEstateAndOther: number;
+    loansAndLiabilities: number;
+  };
+}
+

@@ -6,6 +6,8 @@ import { AppTheme } from "../theme";
 import { getClientAvatar } from "../services/demoData";
 import { PerformanceChart } from "./charts";
 import { AiWealthCopilot } from "./AiWealthCopilot";
+import { SmartAlertsBanner } from "./SmartAlertsBanner";
+import { SmartAlert } from "../types/wealth";
 
 type DashboardMetric = {
   label: string;
@@ -72,7 +74,6 @@ export const DashboardScreen = React.memo(function DashboardScreen({
   stats,
   theme,
 }: DashboardScreenProps) {
-
   const styles = useMemo(() => createStyles(theme, contentBottomPadding), [contentBottomPadding, theme]);
   const sections: SectionId[] = ["summary", "quick", "recent", "reminders", "analytics"];
   const statMap = useMemo(
@@ -83,6 +84,38 @@ export const DashboardScreen = React.memo(function DashboardScreen({
       >,
     [stats],
   );
+
+  const [dismissedAlertIds, setDismissedAlertIds] = React.useState<string[]>([]);
+  const activeAlerts: SmartAlert[] = React.useMemo(() => {
+    const base: SmartAlert[] = [];
+    if (reminderKpis.overdue > 0) {
+      base.push({
+        id: "alert_overdue_fiduciary",
+        clientId: "overdue",
+        clientName: "Fiduciary Desk",
+        condition: "DRAWDOWN_EVENT",
+        title: "Overdue Portfolio Reviews",
+        message: `${reminderKpis.overdue} client mandates have overdue review dates. Complete scheduled fiduciary checks.`,
+        severity: "critical",
+        timestamp: new Date().toISOString(),
+        acknowledged: false,
+      });
+    }
+    if (reminderKpis.dueToday > 0) {
+      base.push({
+        id: "alert_due_today",
+        clientId: "due",
+        clientName: "Private Wealth",
+        condition: "TAX_HARVEST_WINDOW",
+        title: "Tax Review & Rebalancing Due",
+        message: `${reminderKpis.dueToday} client portfolios scheduled for year-end tax-loss harvesting and rebalancing today.`,
+        severity: "warning",
+        timestamp: new Date().toISOString(),
+        acknowledged: false,
+      });
+    }
+    return base.filter((a) => !dismissedAlertIds.includes(a.id));
+  }, [reminderKpis, dismissedAlertIds]);
 
   const topSummary = [
     { label: "Clients", value: statMap["client count"] ?? "--", tone: "neutral" as const },
@@ -166,6 +199,15 @@ export const DashboardScreen = React.memo(function DashboardScreen({
                   <Text style={styles.statusText}>LIVE FEED</Text>
                 </View>
               </View>
+
+              {activeAlerts.length > 0 && (
+                <SmartAlertsBanner
+                  theme={theme}
+                  alerts={activeAlerts}
+                  onDismissAlert={(id) => setDismissedAlertIds((prev) => [...prev, id])}
+                  onPressAlert={() => onActionOpenClients()}
+                />
+              )}
 
               <View style={styles.featuredCard}>
                 <View style={styles.featuredCardTop}>

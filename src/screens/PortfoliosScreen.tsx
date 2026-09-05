@@ -3,6 +3,13 @@ import { Pressable, Text, View } from "react-native";
 import { AppTheme } from "../theme";
 import { PerformanceChart, Sparkline, HoldingsTreemap } from "../components/charts";
 import { RebalanceModal, StressTestModal } from "../components/modals";
+import { HealthScoreCard } from "../components/HealthScoreCard";
+import { AttributionModal } from "../components/AttributionModal";
+import { TaxHarvestStudioModal } from "../components/TaxHarvestStudioModal";
+import { ScenarioSandboxModal } from "../components/ScenarioSandboxModal";
+import { CommitteeMemoModal } from "../components/CommitteeMemoModal";
+import { calculateHealthScore } from "../services/healthScore";
+import { Client } from "../types/wealth";
 
 export interface PortfoliosScreenProps {
   theme: AppTheme;
@@ -41,7 +48,38 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
 
   const [isRebalanceOpen, setIsRebalanceOpen] = useState(false);
   const [isStressTestOpen, setIsStressTestOpen] = useState(false);
+  const [isAttributionOpen, setIsAttributionOpen] = useState(false);
+  const [isTaxStudioOpen, setIsTaxStudioOpen] = useState(false);
+  const [isScenarioOpen, setIsScenarioOpen] = useState(false);
+  const [isMemoOpen, setIsMemoOpen] = useState(false);
   const [activeVisualization, setActiveVisualization] = useState<"both" | "chart" | "heatmap">("both");
+
+  const healthResult = React.useMemo(() => {
+    return calculateHealthScore(
+      unifiedPortfolioAnalytics.holdings || [],
+      0,
+      "unified-portfolio"
+    );
+  }, [unifiedPortfolioAnalytics.holdings]);
+
+  const unifiedClient: Client = React.useMemo(() => ({
+    id: "unified-discretionary",
+    name: "Unified Discretionary Wealth",
+    phone: "+919876543210",
+    email: "fiduciary@assetarray.com",
+    category: "Family Office",
+    riskProfile: "Balanced Wealth",
+    preferredChannel: "Email",
+    watchlist: [],
+    notes: "Unified cross-client portfolio mandate",
+    city: "Mumbai",
+    allocation: "Balanced Wealth",
+    reminderDate: new Date().toISOString(),
+    priority: "High",
+    lastContact: new Date().toISOString(),
+    updateHistory: [],
+    portfolio: unifiedPortfolioAnalytics.holdings || [],
+  }), [unifiedPortfolioAnalytics.holdings]);
 
   const treemapHoldings = React.useMemo(() => {
     if (unifiedPortfolioAnalytics.holdings && unifiedPortfolioAnalytics.holdings.length > 0) {
@@ -69,7 +107,7 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
               and risk visibility.
             </Text>
           </View>
-          <View style={{ flexDirection: "row", gap: 8, marginLeft: 12 }}>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginLeft: 12, justifyContent: "flex-end" }}>
             <Pressable
               style={[
                 styles.secondaryButton,
@@ -102,6 +140,74 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
             >
               <Text style={[styles.secondaryButtonText, { color: "#F87171", fontWeight: "700" }]}>
                 🛡️ Stress Test
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.secondaryButton,
+                {
+                  paddingHorizontal: 12,
+                  paddingVertical: 8,
+                  backgroundColor: "rgba(13, 148, 136, 0.12)",
+                  borderColor: "rgba(13, 148, 136, 0.4)",
+                  borderWidth: 1,
+                },
+              ]}
+              onPress={() => setIsAttributionOpen(true)}
+            >
+              <Text style={[styles.secondaryButtonText, { color: "#0D9488", fontWeight: "700" }]}>
+                📊 Attribution
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.secondaryButton,
+                {
+                  paddingHorizontal: 12,
+                  paddingVertical: 8,
+                  backgroundColor: "rgba(16, 185, 129, 0.12)",
+                  borderColor: "rgba(16, 185, 129, 0.4)",
+                  borderWidth: 1,
+                },
+              ]}
+              onPress={() => setIsTaxStudioOpen(true)}
+            >
+              <Text style={[styles.secondaryButtonText, { color: "#10B981", fontWeight: "700" }]}>
+                📑 Tax Harvest
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.secondaryButton,
+                {
+                  paddingHorizontal: 12,
+                  paddingVertical: 8,
+                  backgroundColor: "rgba(99, 102, 241, 0.12)",
+                  borderColor: "rgba(99, 102, 241, 0.4)",
+                  borderWidth: 1,
+                },
+              ]}
+              onPress={() => setIsScenarioOpen(true)}
+            >
+              <Text style={[styles.secondaryButtonText, { color: "#818CF8", fontWeight: "700" }]}>
+                🎯 What-If
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.secondaryButton,
+                {
+                  paddingHorizontal: 12,
+                  paddingVertical: 8,
+                  backgroundColor: "rgba(224, 168, 76, 0.18)",
+                  borderColor: "rgba(224, 168, 76, 0.5)",
+                  borderWidth: 1,
+                },
+              ]}
+              onPress={() => setIsMemoOpen(true)}
+            >
+              <Text style={[styles.secondaryButtonText, { color: "#E0A84C", fontWeight: "700" }]}>
+                📜 IC Memo
               </Text>
             </Pressable>
             <Pressable
@@ -197,6 +303,13 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
             </Text>
           </View>
         </View>
+
+        {/* AI Portfolio Health Score Diagnostic */}
+        <HealthScoreCard
+          theme={theme}
+          healthResult={healthResult}
+          onPressDetails={() => setIsAttributionOpen(true)}
+        />
 
         <View style={{ flexDirection: "row", gap: 8, marginVertical: 12 }}>
           <Pressable
@@ -475,6 +588,37 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
         holdings={unifiedPortfolioAnalytics.holdings}
         theme={theme}
         clientName="All Discretionary Portfolios"
+      />
+
+      <AttributionModal
+        visible={isAttributionOpen}
+        onClose={() => setIsAttributionOpen(false)}
+        holdings={unifiedPortfolioAnalytics.holdings}
+        theme={theme}
+        portfolioName="All Discretionary Portfolios"
+      />
+
+      <TaxHarvestStudioModal
+        visible={isTaxStudioOpen}
+        onClose={() => setIsTaxStudioOpen(false)}
+        holdings={unifiedPortfolioAnalytics.holdings}
+        theme={theme}
+        portfolioName="All Discretionary Portfolios"
+      />
+
+      <ScenarioSandboxModal
+        visible={isScenarioOpen}
+        onClose={() => setIsScenarioOpen(false)}
+        holdings={unifiedPortfolioAnalytics.holdings}
+        theme={theme}
+        portfolioName="All Discretionary Portfolios"
+      />
+
+      <CommitteeMemoModal
+        visible={isMemoOpen}
+        onClose={() => setIsMemoOpen(false)}
+        client={unifiedClient}
+        theme={theme}
       />
     </>
   );

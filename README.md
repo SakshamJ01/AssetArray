@@ -1,6 +1,6 @@
 # Asset Array 💼📈
 
-[![Version 2.2.0](https://img.shields.io/badge/Version-2.2.0-E0A84C?style=for-the-badge&logo=git&logoColor=white)](https://github.com/SakshamJ01/AssetArray)
+[![Version 3.0.0](https://img.shields.io/badge/Version-3.0.0-E0A84C?style=for-the-badge&logo=git&logoColor=white)](https://github.com/SakshamJ01/AssetArray)
 [![Live Web App](https://img.shields.io/badge/Live%20Web%20App-asset--array.web.app-E0A84C?style=for-the-badge&logo=firebase&logoColor=white)](https://asset-array.web.app)
 [![Live Backend API](https://img.shields.io/badge/API-assetarray.onrender.com-46E3B7?style=for-the-badge&logo=render&logoColor=black)](https://assetarray.onrender.com/api/health)
 [![Cloud Database](https://img.shields.io/badge/Database-MongoDB%20Atlas-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://cloud.mongodb.com)
@@ -9,13 +9,13 @@
 [![RevenueCat](https://img.shields.io/badge/Monetization-RevenueCat-orange.svg)](https://www.revenuecat.com/)
 [![Built with Expo](https://img.shields.io/badge/Built%20with-Expo%20%2F%20React%20Native-blue.svg)](https://expo.dev/)
 [![Gemini AI](https://img.shields.io/badge/AI-Google%20Gemini-8E75B2.svg)](https://ai.google.dev/)
-[![Tests Passing](https://img.shields.io/badge/Tests-41%20Passed-22c55e.svg)](https://github.com/SakshamJ01/AssetArray)
+[![Tests Passing](https://img.shields.io/badge/Tests-59%20Passed-22c55e.svg)](https://github.com/SakshamJ01/AssetArray)
 
 ![Asset Array Hero Banner](assets/hero-thumbnail.jpg)
 
 **Asset Array** is an institutional-grade wealth management CRM, real-time share market terminal, portfolio analyzer, and client reporting suite tailored for independent financial advisors, wealth managers, and family offices. 
 
-Engineered with a high-contrast obsidian & champagne gold luxury aesthetic, dual-mode Swiss Private Banking light theme, real-time stochastic share market streaming engine, client-side zero-knowledge AES-256 encryption, multi-user cloud synchronization, responsive cross-platform web/desktop support, and built-in subscription monetization powered by **RevenueCat** for **Shipathon 2026**.
+Engineered with a high-contrast obsidian & champagne gold luxury aesthetic, dual-mode Swiss Private Banking light theme, real-time stochastic share market streaming engine, client-side zero-knowledge AES-256 encryption, multi-user cloud synchronization, responsive cross-platform web/desktop support, and built-in subscription monetization powered by **RevenueCat**.
 
 ---
 
@@ -29,7 +29,34 @@ Engineered with a high-contrast obsidian & champagne gold luxury aesthetic, dual
 
 ---
 
-## 🌟 Key Features
+## 🌟 Version 3.0.0 Institutional Features
+
+### 🏛️ Brinson-Fachler Performance Attribution Engine
+- **Alpha Decomposition:** Mathematically breaks down active portfolio returns against benchmark indices (NIFTY 50, CRISIL Hybrid 65:35, S&P 500) into **Allocation Effect**, **Selection Effect**, and **Interaction Effect**.
+- **Plain-Language Explainability:** Plain-language synthesis explaining top alpha drivers and drag factors.
+
+### 🛡️ AI Portfolio Health Score Diagnostic (0–100 Multi-Pillar Index)
+- **5 Core Pillars:** Data Completeness, Asset Diversification (HHI-based entropy), Single-Asset Concentration Defense, Geographic & Currency Spread, and Liquidity & Debt Management.
+- **Institutional Ratings:** Categorizes portfolios into *Institutional*, *Balanced*, *Moderate Risk*, and *High Fragility* with prioritized action steps.
+
+### ⚖️ Indian Tax Intelligence & Loss Harvesting (Finance Act 2024 / FY 2025-26)
+- **Updated Capital Gains Thresholds:** Section 112A LTCG at 12.5% above ₹1,25,000 exemption limit; Section 111A STCG at 20.0%.
+- **1-Click Tax Harvest Action Plan:** Identifies loss positions, computes immediate cash tax shields, and provides 30-day fiduciary wash-sale protection guidance.
+
+### 🎯 What-If Macro Scenario Sandbox & Stress Testing
+- **Crisis Shock Templates:** Simulates historical shocks (2008 GFC Crunch, Tech Correction, 1970s Stagflation, Emerging Markets Liquidity Boom).
+- **Outcome Distribution:** Computes P5 (worst-case tail risk), P50 (median NAV), and P95 (resilience NAV) with post-shock Sharpe ratio shifts.
+
+### 📜 DPDP-Compliant AI Investment Committee Memorandum Studio
+- **Zero-Knowledge PII Tokenization:** Replaces client identifiers with deterministic tokens (e.g. `Client Ref #AA-881`) ensuring complete compliance with India's DPDP Act 2023.
+- **Structured Executive Report:** One-click generation of formal Investment Committee memos with executive summary, risk diagnostics, attribution analysis, and fiduciary action plans.
+
+### 🚨 Smart Alerts & Policy Violation Governance
+- **Real-Time Guardrails:** Monitors concentration breaches (>20% single position), large drawdowns, health score drops, and tax-loss harvesting windows.
+
+---
+
+## ⚡ Core Platform Capabilities
 
 ### ⚡ Real-Time Share Market Streaming Engine & Level-2 Terminal
 - **Authentic Multi-Asset Universe:** Streams live micro-ticks for **NSE/BSE Equities** (`RELIANCE`, `TCS`, `HDFCBANK`, `INFY`, `ICICIBANK`), **Global Indices** (`NIFTY 50`, `SENSEX`, `S&P 500`, `NASDAQ`), **Commodities** (`GOLD`), **Forex** (`USD/INR`), and **Crypto** (`BTC/USD`, `ETH/USD`).

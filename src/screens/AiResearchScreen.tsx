@@ -95,6 +95,50 @@ export const AiResearchScreen = React.memo(function AiResearchScreen({
             <Text style={styles.sectionLabel}>Summary</Text>
             <Text style={styles.detailBlock}>{aiResearchResult.summary}</Text>
 
+            {/* Research Retrieval Verification & Sources */}
+            <View
+              style={{
+                backgroundColor: (aiResearchResult as any).isWebResearch
+                  ? "rgba(16, 185, 129, 0.08)"
+                  : "rgba(245, 158, 11, 0.08)",
+                borderColor: (aiResearchResult as any).isWebResearch
+                  ? "rgba(16, 185, 129, 0.3)"
+                  : "rgba(245, 158, 11, 0.3)",
+                borderWidth: 1,
+                borderRadius: 8,
+                padding: 12,
+                marginVertical: 10,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 11,
+                  fontWeight: "700",
+                  color: (aiResearchResult as any).isWebResearch ? "#10B981" : "#F59E0B",
+                  textTransform: "uppercase",
+                  letterSpacing: 0.6,
+                }}
+              >
+                {(aiResearchResult as any).isWebResearch ? "✓ VERIFIED WEB RESEARCH" : "ℹ️ RESEARCH SOURCES DISCLOSURE"}
+              </Text>
+              <Text style={{ fontSize: 12, color: theme.colors.textSecondary, marginTop: 4, lineHeight: 17 }}>
+                {(aiResearchResult as any).disclosureNote ||
+                  "Research sources unavailable. This answer is not current web research."}
+              </Text>
+              {(aiResearchResult as any).sources && (aiResearchResult as any).sources.length > 0 && (
+                <View style={{ marginTop: 8, gap: 4 }}>
+                  <Text style={{ fontSize: 11, fontWeight: "600", color: theme.colors.textPrimary }}>
+                    Verified Sources:
+                  </Text>
+                  {(aiResearchResult as any).sources.map((s: any, idx: number) => (
+                    <Text key={s.id || idx} style={{ fontSize: 11, color: theme.colors.textSecondary }}>
+                      • [{s.sourceType}] {s.publisher} — {s.title} ({s.publishedAt})
+                    </Text>
+                  ))}
+                </View>
+              )}
+            </View>
+
             <View style={styles.dualColumn}>
               <View style={styles.column}>
                 <Text style={styles.sectionLabel}>Opportunities</Text>

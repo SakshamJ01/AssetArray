@@ -21,7 +21,12 @@ export const lightColors = {
   neutral: "#64748B",
   neutralSoft: "#F1F5F9",
   overlay: "rgba(15, 23, 42, 0.4)",
-  shadow: "rgba(15, 23, 42, 0.12)",
+  shadow: "rgba(15, 23, 42, 0.08)", // Softer shadow for human-centered executive feel
+  success: "#10B981",
+  successSoft: "rgba(16, 185, 129, 0.12)",
+  cardHover: "#F8FAFC",
+  cardElevation: "rgba(255, 255, 255, 0.92)",
+  borderSubtle: "rgba(179, 126, 40, 0.12)",
 };
 
 export const darkColors = {
@@ -32,6 +37,7 @@ export const darkColors = {
   surfaceStrong: "#1b2742",
   border: "rgba(224, 168, 76, 0.22)", // Subtle champagne gold border
   borderStrong: "rgba(224, 168, 76, 0.45)",
+  borderSubtle: "rgba(224, 168, 76, 0.12)",
   textPrimary: "#ffffff",
   textSecondary: "#94a3b8",
   textMuted: "#64748b",
@@ -47,7 +53,11 @@ export const darkColors = {
   neutral: "#94a3b8",
   neutralSoft: "#131c30",
   overlay: "rgba(0, 0, 0, 0.75)",
-  shadow: "#000000",
+  shadow: "rgba(0, 0, 0, 0.45)",
+  success: "#10B981",
+  successSoft: "rgba(16, 185, 129, 0.15)",
+  cardHover: "#121b30",
+  cardElevation: "rgba(13, 20, 36, 0.88)",
 };
 
 export type ThemeColors = typeof lightColors;

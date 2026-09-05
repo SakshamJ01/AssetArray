@@ -47,6 +47,8 @@ export const PriorityActionCard: React.FC<PriorityActionCardProps> = ({
         {
           backgroundColor: theme.colors.surface,
           borderColor: isCritical ? theme.colors.danger : theme.colors.border,
+          borderRadius: theme.radius.card || 14,
+          ...theme.shadows.card,
           opacity: isDone ? 0.65 : 1,
         },
       ]}
@@ -266,15 +268,9 @@ export const PriorityActionCard: React.FC<PriorityActionCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 12,
     borderWidth: 1,
     padding: 14,
     marginBottom: 12,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
   },
   headerRow: {
     flexDirection: "row",

@@ -11,12 +11,16 @@ import {
   View,
 } from "react-native";
 import { AppTheme } from "../theme";
+import { streamAiResponse } from "../services/aiStream";
 
 export interface AiChatMessage {
   id: string;
   sender: "ai" | "user";
   text: string;
   timestamp: string;
+  isStreaming?: boolean;
+  modelBadge?: string;
+  groundedAt?: string;
   actions?: { label: string; actionId: string }[];
 }
 
@@ -110,7 +114,7 @@ export const AiWealthCopilot: React.FC<AiWealthCopilotProps> = ({
 
   const handleSend = (textToSend?: string) => {
     const q = (textToSend || inputText).trim();
-    if (!q) return;
+    if (!q || isLoading) return;
 
     const userMsg: AiChatMessage = {
       id: `u-${Date.now()}`,
@@ -119,37 +123,72 @@ export const AiWealthCopilot: React.FC<AiWealthCopilotProps> = ({
       timestamp: "Just now",
     };
 
-    setMessages((prev) => [...prev, userMsg]);
+    const aiMsgId = `ai-${Date.now()}`;
+    const initialAiMsg: AiChatMessage = {
+      id: aiMsgId,
+      sender: "ai",
+      text: "",
+      timestamp: "Just now",
+      isStreaming: true,
+    };
+
+    setMessages((prev) => [...prev, userMsg, initialAiMsg]);
     setInputText("");
     setIsLoading(true);
 
-    // Look for preset prompt matches or synthesize institutional response
-    const matchedPrompt = QUICK_PROMPTS.find(
-      (p) =>
-        p.prompt.toLowerCase() === q.toLowerCase() ||
-        p.label.toLowerCase().includes(q.toLowerCase())
-    );
+    let taskType: "briefing" | "tax_analytics" | "portfolio_attribution" | "scenario_stress" = "briefing";
+    const lower = q.toLowerCase();
+    if (lower.includes("tax") || lower.includes("harvest")) {
+      taskType = "tax_analytics";
+    } else if (lower.includes("attribution") || lower.includes("alpha") || lower.includes("brinson")) {
+      taskType = "portfolio_attribution";
+    } else if (lower.includes("scenario") || lower.includes("stress") || lower.includes("shock")) {
+      taskType = "scenario_stress";
+    }
 
-    setTimeout(() => {
-      let replyText = "";
-      if (matchedPrompt) {
-        replyText = matchedPrompt.answer;
-      } else {
-        replyText = `**Institutional Wealth Analysis: "${q}"**\n\nBased on your current advisory mandate${
-          clientContext?.clientName ? ` for ${clientContext.clientName}` : ""
-        }:\n\n• **Strategic Alignment:** We recommend maintaining core allocation with strict adherence to the client's risk budget.\n• **Advisory Action:** Rebalance excess drift, evaluate potential tax offsets, and ensure cash reserves cover at least 6 months of scheduled liquidity requirements.\n• **Monitoring:** Flagged for inclusion in the upcoming quarterly investment committee review.`;
-      }
-
-      const aiMsg: AiChatMessage = {
-        id: `ai-${Date.now()}`,
-        sender: "ai",
-        text: replyText,
-        timestamp: "Just now",
-      };
-
-      setMessages((prev) => [...prev, aiMsg]);
-      setIsLoading(false);
-    }, 700);
+    streamAiResponse({
+      query: q,
+      taskType,
+      context: {
+        clientName: clientContext?.clientName,
+        totalAum: clientContext?.totalAum,
+        riskProfile: clientContext?.riskProfile,
+      },
+      onToken: (token) => {
+        setMessages((prev) =>
+          prev.map((m) => (m.id === aiMsgId ? { ...m, text: m.text + token } : m))
+        );
+      },
+      onComplete: (meta) => {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === aiMsgId
+              ? {
+                  ...m,
+                  isStreaming: false,
+                  modelBadge: meta.model,
+                  groundedAt: meta.groundedAt,
+                }
+              : m
+          )
+        );
+        setIsLoading(false);
+      },
+      onError: () => {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === aiMsgId
+              ? {
+                  ...m,
+                  isStreaming: false,
+                  text: m.text || "An unexpected error occurred while streaming response. Please retry.",
+                }
+              : m
+          )
+        );
+        setIsLoading(false);
+      },
+    });
   };
 
   return (
@@ -360,7 +399,22 @@ export const AiWealthCopilot: React.FC<AiWealthCopilotProps> = ({
                       ]}
                     >
                       {m.text}
+                      {m.isStreaming && (
+                        <Text style={{ color: brandColor, fontWeight: "800" }}>
+                          {" "}▌
+                        </Text>
+                      )}
                     </Text>
+                    {m.modelBadge && (
+                      <View style={{ flexDirection: "row", alignItems: "center", marginTop: 6, gap: 6 }}>
+                        <Text style={{ fontSize: 10, color: brandColor, fontWeight: "600" }}>
+                          ⚡ {m.modelBadge}
+                        </Text>
+                        <Text style={{ fontSize: 10, color: "#64748B" }}>
+                          • Grounded in Portfolio Data
+                        </Text>
+                      </View>
+                    )}
                     <Text
                       style={[
                         styles.messageTimestamp,
@@ -375,7 +429,7 @@ export const AiWealthCopilot: React.FC<AiWealthCopilotProps> = ({
                 </View>
               ))}
 
-              {isLoading && (
+              {isLoading && messages[messages.length - 1]?.text === "" && (
                 <View style={[styles.messageRow, styles.messageRowAi]}>
                   <View
                     style={[

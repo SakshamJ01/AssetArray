@@ -17,6 +17,13 @@ export type AppTheme = {
       shadowOffset: { width: number; height: number };
       elevation: number;
     };
+    cardHover: {
+      shadowColor: string;
+      shadowOpacity: number;
+      shadowRadius: number;
+      shadowOffset: { width: number; height: number };
+      elevation: number;
+    };
   };
 };
 
@@ -31,10 +38,17 @@ export function buildAppTheme(mode: ThemeMode): AppTheme {
     shadows: {
       card: {
         shadowColor: colors.shadow,
-        shadowOpacity: mode === "dark" ? 0.22 : 0.08,
-        shadowRadius: 10,
-        shadowOffset: { width: 0, height: 6 },
-        elevation: 4,
+        shadowOpacity: mode === "dark" ? 0.16 : 0.06,
+        shadowRadius: 12,
+        shadowOffset: { width: 0, height: 4 },
+        elevation: 2,
+      },
+      cardHover: {
+        shadowColor: colors.shadow,
+        shadowOpacity: mode === "dark" ? 0.24 : 0.12,
+        shadowRadius: 16,
+        shadowOffset: { width: 0, height: 8 },
+        elevation: 5,
       },
     },
   };

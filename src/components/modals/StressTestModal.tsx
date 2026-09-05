@@ -192,7 +192,7 @@ export const StressTestModal: React.FC<StressTestModalProps> = ({
 
             {/* Fiduciary Advisory Action Plan */}
             <View style={styles.commentaryCard}>
-              <Text style={styles.commentaryHeader}>FIDUCIARY COMMENTARY & ACTION PLAN</Text>
+              <Text style={styles.commentaryHeader}>ADVISORY COMMENTARY & ACTION PLAN</Text>
               <Text style={styles.commentaryBody}>
                 {result.fiduciaryRecommendation}
               </Text>

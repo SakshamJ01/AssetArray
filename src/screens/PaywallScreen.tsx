@@ -110,10 +110,10 @@ export const PaywallScreen: React.FC<PaywallScreenProps> = ({
             <Text style={styles.featureIcon}>🔒</Text>
             <View style={styles.featureTextWrapper}>
               <Text style={[styles.featureTitle, { color: theme.colors.textPrimary }]}>
-                Zero-Knowledge Encrypted Cloud Sync
+                Encrypted Cloud Sync
               </Text>
               <Text style={[styles.featureDesc, { color: theme.colors.textSecondary }]}>
-                Continuous multi-device AES-256 encrypted sync with automatic vault backups.
+                Continuous multi-device encrypted sync with automatic cloud backups.
               </Text>
             </View>
           </View>

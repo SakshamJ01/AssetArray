@@ -76,7 +76,7 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
       {/* Vault Sync Status Pill */}
       <View style={styles.syncStatusPill}>
         <View style={styles.syncDot} />
-        <Text style={styles.syncStatusText}>E2EE {syncStatus.toUpperCase()}</Text>
+        <Text style={styles.syncStatusText}>{syncStatus.toUpperCase()}</Text>
       </View>
 
       <ScrollView
@@ -183,10 +183,10 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
       >
         <View style={styles.proHeader}>
           <Ionicons name="shield-half-outline" size={16} color="#E0A84C" />
-          <Text style={styles.proBadge}>FIDUCIARY TIER</Text>
+          <Text style={styles.proBadge}>PRO TIER</Text>
         </View>
         <Text style={styles.proDescription}>
-          Zero-Knowledge Client Encryption • AI Co-Pilot
+          Encrypted Cloud Sync • AI Co-Pilot
         </Text>
       </Pressable>
       </ScrollView>

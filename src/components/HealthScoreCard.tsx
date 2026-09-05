@@ -49,7 +49,7 @@ export const HealthScoreCard: React.FC<HealthScoreCardProps> = ({
         <View style={styles.titleRow}>
           <Ionicons name="shield-checkmark" size={18} color={colors.brand} />
           <Text style={[styles.title, { color: colors.textPrimary }]}>
-            AI Portfolio Health Diagnostic
+            Portfolio Health Diagnostic
           </Text>
         </View>
         <View style={[styles.badge, { backgroundColor: gradeColor + "22", borderColor: gradeColor }]}>
@@ -108,7 +108,7 @@ export const HealthScoreCard: React.FC<HealthScoreCardProps> = ({
           style={[styles.detailsBtn, { borderColor: colors.border }]}
         >
           <Text style={[styles.detailsBtnText, { color: colors.brand }]}>
-            View Fiduciary Breakdown & Actions →
+            View Full Breakdown & Actions →
           </Text>
         </Pressable>
       )}

@@ -42,29 +42,21 @@ const QUICK_PROMPTS = [
     id: "concentration",
     label: "⚡ Concentration Risk Diagnostic",
     prompt: "Perform an institutional concentration risk audit across our client assets.",
-    answer:
-      "**Portfolio Risk Diagnostic: Low-to-Moderate Concentration**\n\n• **Single Asset Exposure:** Peak holding is capped at 26.2% (Reliance/Large Cap Core). Institutional guidelines recommend maintaining single-stock exposure under 30%.\n• **Sector Clustering:** 38% Financials, 24% Technology, 18% Energy/Commodities. Recommend trimming Financials by 5-8% into sovereign fixed income during the next quarterly review.\n• **Liquidity Profile:** 85% of assets reside in T+1 liquid instruments. Tail-risk exit capacity is rated **AAA**.",
   },
   {
     id: "rebalance_memo",
     label: "📝 Client Rebalancing Memo",
     prompt: "Draft an executive rebalancing memo for our private wealth client.",
-    answer:
-      "**Subject: Strategic Asset Allocation & Rebalancing Recommendation**\n\nDear Investor,\n\nFollowing our quarterly portfolio review, we observed that strong equity outperformance has shifted your equity allocation to 68% against your target mandate of 60%.\n\n**Recommended Actions:**\n1. Realize ₹18.5 Lakhs from large-cap equity outperformance.\n2. Reallocate proceeds into High-Yield Corporate Bonds (yield: 8.25% YTM) and Sovereign Gold Bonds.\n3. Review ₹4.2 Lakhs in short-term tax offsets to mitigate tax incidence.\n\nPlease reply 'CONFIRM' to authorize execution with your custodian.",
   },
   {
     id: "tax_shield",
     label: "🛡️ Tax Loss Harvesting & Impact Summary",
     prompt: "What is the tax-loss harvesting potential across active holdings?",
-    answer:
-      "**Capital Gains Tax Impact Analysis**\n\n• **Total Unrealized Short-Term Losses:** ₹6,45,000 available across underperforming mid-cap & international ETF tranches.\n• **Estimated Tax Impact (at 20% STCG):** **₹1,29,000 illustrative tax effect** (non-binding estimate).\n• **Execution Strategy:** Review potential loss realization prior to financial year-end and evaluate reallocating into correlated broad-market index ETFs while considering wash-sale and trading friction.",
   },
   {
     id: "macro_rates",
     label: "🌐 Macro Outlook & Rate Trajectory",
     prompt: "Provide an institutional macro commentary on RBI and Fed interest rate policy.",
-    answer:
-      "**Macro & Fixed Income Advisory Commentary**\n\n• **Central Bank Trajectory:** RBI and the US Federal Reserve are pivoting toward easing cycles. Benchmark 10Y G-Sec yields expected to soften from 6.95% toward 6.60%.\n• **Fixed Income Strategy:** Lock in current elevated yields via 5Y to 7Y target maturity bond funds and AAA corporate debt to capture capital appreciation as duration expands.\n• **Equities Positioning:** Overweight domestic consumption and infrastructure; maintain defensive allocations in gold as a geopolitical hedge.",
   },
 ];
 

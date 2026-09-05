@@ -684,7 +684,7 @@ export const MonteCarloModal: React.FC<MonteCarloModalProps> = ({
               ]}
             >
               <Text style={[styles.advisoryHeader, { color: brandColor }]}>
-                FIDUCIARY WEALTH MANAGEMENT TAKEAWAY
+                WEALTH MANAGEMENT TAKEAWAY
               </Text>
               <Text
                 style={[

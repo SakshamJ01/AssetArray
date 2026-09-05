@@ -84,6 +84,8 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({
   const [chartWidth, setChartWidth] = useState<number>(600);
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
 
+  const isUsingDefaults = dataByPeriod === DEFAULT_SERIES;
+
   const series = useMemo(() => dataByPeriod[period] || DEFAULT_SERIES[period], [
     dataByPeriod,
     period,
@@ -174,7 +176,14 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({
       <View style={styles.header}>
         <View style={styles.headerTitles}>
           <Text style={[styles.title, { color: isDark ? "#F8FAFC" : theme.colors.textPrimary }]}>{title}</Text>
-          <Text style={[styles.subtitle, { color: isDark ? "#94A3B8" : theme.colors.textSecondary }]}>{subtitle}</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <Text style={[styles.subtitle, { color: isDark ? "#94A3B8" : theme.colors.textSecondary }]}>{subtitle}</Text>
+            {isUsingDefaults && (
+              <View style={{ backgroundColor: "rgba(251, 146, 60, 0.18)", borderWidth: 1, borderColor: "rgba(251, 146, 60, 0.4)", borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2 }}>
+                <Text style={{ fontSize: 9, fontWeight: "800", color: "#FB923C", letterSpacing: 0.8 }}>SAMPLE DATA</Text>
+              </View>
+            )}
+          </View>
         </View>
 
         {/* Period Selector Tabs */}

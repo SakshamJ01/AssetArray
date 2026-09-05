@@ -196,7 +196,7 @@ export const DashboardScreen = React.memo(function DashboardScreen({
                 </View>
                 <View style={styles.headerStatus}>
                   <View style={styles.statusDot} />
-                  <Text style={styles.statusText}>LIVE FEED</Text>
+                  <Text style={styles.statusText}>DATA FEED</Text>
                 </View>
               </View>
 
@@ -216,7 +216,7 @@ export const DashboardScreen = React.memo(function DashboardScreen({
                     <Text numberOfLines={1} style={styles.featuredTitle}>Portfolio Command</Text>
                   </View>
                   <View style={styles.vaultBadge}>
-                    <Text style={styles.vaultBadgeText}>FIDUCIARY</Text>
+                    <Text style={styles.vaultBadgeText}>ADVISORY</Text>
                   </View>
                 </View>
 
@@ -225,11 +225,11 @@ export const DashboardScreen = React.memo(function DashboardScreen({
                   <Text style={styles.heroAumValue}>
                     {statMap["portfolio summary"] && statMap["portfolio summary"] !== "--"
                       ? statMap["portfolio summary"]
-                      : "$8,450,000"}
+                      : "--"}
                   </Text>
                   <View style={styles.heroAumSubRow}>
                     <Text numberOfLines={1} style={styles.heroAumAlpha}>✦ Active Advisory</Text>
-                    <Text numberOfLines={1} style={styles.heroAumSecurity}>🔒 AES-256</Text>
+                    <Text numberOfLines={1} style={styles.heroAumSecurity}>🔒 Secured</Text>
                   </View>
                 </View>
 

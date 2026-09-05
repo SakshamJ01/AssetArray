@@ -183,11 +183,11 @@ export const LiveMarketDepthModal: React.FC<LiveMarketDepthModalProps> = ({
                   ]}
                 >
                   <Text style={[styles.exchangeText, { color: brandColor }]}>
-                    {instrument.exchange} • LIVE FEED
+                    {instrument.exchange} • SIMULATED
                   </Text>
                 </View>
                 <View style={styles.livePulseDot} />
-                <Text style={styles.liveStatusText}>STREAMING</Text>
+                <Text style={styles.liveStatusText}>SIM TICKS</Text>
               </View>
 
               <Text

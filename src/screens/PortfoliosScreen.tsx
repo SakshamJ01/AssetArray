@@ -98,15 +98,7 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
     if (unifiedPortfolioAnalytics.holdings && unifiedPortfolioAnalytics.holdings.length > 0) {
       return unifiedPortfolioAnalytics.holdings;
     }
-    return [
-      { symbol: "RELIANCE", assetName: "Reliance Industries", currentValue: 722600, investedValue: 580000, returnPct: 24.5, assetClass: "Equity" },
-      { symbol: "TCS", assetName: "Tata Consultancy Services", currentValue: 460800, investedValue: 390000, returnPct: 18.1, assetClass: "Equity" },
-      { symbol: "HDFCBANK", assetName: "HDFC Bank Ltd", currentValue: 648000, investedValue: 580000, returnPct: 11.7, assetClass: "Equity" },
-      { symbol: "INFY", assetName: "Infosys Technologies", currentValue: 525000, investedValue: 460000, returnPct: 14.1, assetClass: "Equity" },
-      { symbol: "GOLDBEES", assetName: "Sovereign Gold ETF", currentValue: 380000, investedValue: 310000, returnPct: 22.5, assetClass: "Commodities" },
-      { symbol: "US10Y", assetName: "Target Maturity Debt", currentValue: 410000, investedValue: 415000, returnPct: -1.2, assetClass: "Fixed Income" },
-      { symbol: "ICICIBANK", assetName: "ICICI Bank Ltd", currentValue: 381500, investedValue: 295000, returnPct: 29.3, assetClass: "Equity" },
-    ];
+    return [];
   }, [unifiedPortfolioAnalytics.holdings]);
 
   return (
@@ -269,7 +261,7 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
                 letterSpacing: 0.5,
               }}
             >
-              REAL-TIME MARKET FEED ACTIVE • STREAMING (NSE / BSE / GLOBAL)
+              MARKET DATA FEED • SIMULATED TICKS
             </Text>
           </View>
           <Text
@@ -279,7 +271,7 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
               fontWeight: "600",
             }}
           >
-            Live Stochastic Brownian Ticks • Auto-Syncing Portfolios
+            Simulated Market Model • Portfolio Values Auto-Updated
           </Text>
         </View>
 

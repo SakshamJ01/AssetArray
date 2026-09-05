@@ -39,6 +39,7 @@ export interface TaxLotCalculationResult {
   unrealizedGainLoss: number;
   holdingPeriodMonths: number | null;
   isLongTerm: boolean | null;
+  dateVerificationStatus: "DATE_VERIFIED" | "DATE_MISSING" | "DATE_INVALID" | "LEGACY_ESTIMATE";
   quality: DataQualityState;
   warnings: string[];
 }
@@ -52,9 +53,10 @@ export interface HarvestOpportunity {
   quantity: number;
   acquiredAt: string;
   holdingPeriodMonths: number | null;
-  isLongTerm: boolean;
+  isLongTerm: boolean | null;
+  dateVerificationStatus: "DATE_VERIFIED" | "DATE_MISSING" | "DATE_INVALID" | "LEGACY_ESTIMATE";
   unrealizedLoss: number;
-  offsetCategory: "LTCG_ONLY" | "STCG_AND_LTCG";
+  offsetCategory: "LTCG_ONLY" | "STCG_AND_LTCG" | "UNVERIFIED";
   estimatedTaxImpact: number;
   confidence: DataQualityState;
   rationale: string;

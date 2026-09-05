@@ -101,7 +101,10 @@ export function calculateUnifiedNetWorth(params: {
     }
   });
 
-  // 2. Process connected accounts with anti-double-counting logic
+  // 2. Clone liabilities to prevent mutating caller's arguments
+  const activeLiabilities: LiabilityPosition[] = liabilities.map((l) => ({ ...l }));
+
+  // 3. Process connected accounts with anti-double-counting logic
   // CRITICAL: If a connected account is a Broker/Investment account and we already have portfolio holdings,
   // we do NOT add the broker account total value again on top of the holdings!
   const deduplicationAdjustments: { description: string; amount: number }[] = [];
@@ -125,8 +128,8 @@ export function calculateUnifiedNetWorth(params: {
       // Bank deposit: add to liquid cash & bank
       cashAndBank += accVal;
     } else if (acc.accountType === "Card") {
-      // Credit card balance: add to credit card liabilities
-      liabilities.push({
+      // Credit card balance: add to internal active liabilities without mutating caller
+      activeLiabilities.push({
         id: acc.id,
         name: `${acc.institution} Credit Card`,
         category: "Credit Card",
@@ -135,13 +138,13 @@ export function calculateUnifiedNetWorth(params: {
     }
   });
 
-  // 3. Process liabilities
+  // 4. Process liabilities from cloned array
   let loans = 0;
   let mortgages = 0;
   let creditCards = 0;
   let otherLiabilities = 0;
 
-  liabilities.forEach((l) => {
+  activeLiabilities.forEach((l) => {
     const val = Math.max(0, l.value || 0);
     if (l.category === "Loan") loans += val;
     else if (l.category === "Mortgage") mortgages += val;

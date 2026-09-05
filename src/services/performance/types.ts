@@ -28,6 +28,7 @@ export interface TWRResult {
   subPeriods: SubPeriodResult[];
   quality: PerformanceQuality;
   dataSource: DataProvenance;
+  twrMethod: "DAILY_SUBPERIOD_APPROXIMATION" | "EXACT_TIME_WEIGHTED" | "INSUFFICIENT_DATA";
   methodologyVersion: string;
   warnings: string[];
 }

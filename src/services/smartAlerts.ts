@@ -20,6 +20,9 @@ export interface InstitutionalSmartAlert extends SmartAlert {
   threshold?: number;
   status?: SmartAlertStatus;
   severity: SmartAlertSeverity;
+  snoozedUntil?: string | null;
+  resolvedAt?: string | null;
+  resolutionNote?: string | null;
   methodologyVersion?: string;
 }
 
@@ -71,8 +74,50 @@ export const INSTITUTIONAL_ALERT_RULES: SmartAlertRule[] = [
 export const DEFAULT_ALERT_RULES = INSTITUTIONAL_ALERT_RULES;
 
 /**
+ * Marks an alert as acknowledged by the advisor.
+ */
+export function acknowledgeAlert(alert: InstitutionalSmartAlert): InstitutionalSmartAlert {
+  return {
+    ...alert,
+    acknowledged: true,
+    status: "ACKNOWLEDGED",
+  };
+}
+
+/**
+ * Resolves an alert with an optional audit trail note.
+ */
+export function resolveAlert(
+  alert: InstitutionalSmartAlert,
+  resolutionNote?: string
+): InstitutionalSmartAlert {
+  return {
+    ...alert,
+    status: "RESOLVED",
+    acknowledged: true,
+    resolvedAt: new Date().toISOString(),
+    resolutionNote: resolutionNote || "Resolved by advisor review",
+  };
+}
+
+/**
+ * Snoozes an alert for a specified duration (default 24 hours).
+ */
+export function snoozeAlert(
+  alert: InstitutionalSmartAlert,
+  snoozeHours = 24
+): InstitutionalSmartAlert {
+  const snoozedUntil = new Date(Date.now() + snoozeHours * 60 * 60 * 1000).toISOString();
+  return {
+    ...alert,
+    status: "SNOOZED",
+    snoozedUntil,
+  };
+}
+
+/**
  * Suppresses duplicate alerts within a configurable time window (default 24 hours).
- * Prevents alert fatigue and spamming on continuous market evaluations.
+ * Respects SNOOZED, RESOLVED, and ACKNOWLEDGED states to prevent alert storms on market ticks.
  */
 export function suppressDuplicateAlerts(
   incomingAlerts: InstitutionalSmartAlert[],
@@ -83,16 +128,41 @@ export function suppressDuplicateAlerts(
   const nowMs = Date.now();
 
   return incomingAlerts.filter((incoming) => {
-    // A duplicate is an alert with identical ruleId and clientId created within windowMs
-    const duplicate = existingAlerts.find((existing) => {
-      if (existing.ruleId !== incoming.ruleId || existing.clientId !== incoming.clientId) {
+    // Find matching existing alert by ruleId and clientId (and position id if present)
+    const existing = existingAlerts.find((ex) => {
+      if (ex.ruleId !== incoming.ruleId || ex.clientId !== incoming.clientId) {
         return false;
       }
-      const existingTime = new Date(existing.createdAt || existing.timestamp).getTime();
-      return nowMs - existingTime < windowMs;
+      if (incoming.id && ex.id && incoming.id === ex.id) {
+        return true;
+      }
+      return true;
     });
 
-    return !duplicate;
+    if (!existing) return true;
+
+    // 1. If currently snoozed and snooze period has not expired, suppress
+    if (existing.status === "SNOOZED" && existing.snoozedUntil) {
+      if (new Date(existing.snoozedUntil).getTime() > nowMs) {
+        return false;
+      }
+    }
+
+    // 2. If resolved within cooldown window, suppress
+    if (existing.status === "RESOLVED" && existing.resolvedAt) {
+      const resolvedAgeMs = nowMs - new Date(existing.resolvedAt).getTime();
+      if (resolvedAgeMs < windowMs) {
+        return false;
+      }
+    }
+
+    // 3. If open or acknowledged within cooldown window, suppress duplicate
+    const existingTime = new Date(existing.createdAt || existing.timestamp).getTime();
+    if (nowMs - existingTime < windowMs) {
+      return false;
+    }
+
+    return true;
   });
 }
 

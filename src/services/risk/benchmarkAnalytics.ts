@@ -146,62 +146,90 @@ export function calculateBenchmarkAnalytics(
   const volB = Math.sqrt(sampleVarB) * Math.sqrt(factor);
 
   // Beta & Alpha
-  const beta = sampleVarB > 1e-12 ? sampleCov / sampleVarB : 1.0;
-  // Jensen's Alpha: Rp - [Rf + Beta * (Rb - Rf)]
-  const alpha = annReturnP - (rf + beta * (annReturnB - rf));
+  let beta: number | null = null;
+  let alpha: number | null = null;
+  if (volB > 1e-4 && sampleVarB > 1e-8 && isFinite(sampleCov)) {
+    beta = parseFloat((sampleCov / sampleVarB).toFixed(3));
+    // Jensen's Alpha: Rp - [Rf + Beta * (Rb - Rf)]
+    const rawAlpha = annReturnP - (rf + beta * (annReturnB - rf));
+    alpha = isFinite(rawAlpha) ? parseFloat(rawAlpha.toFixed(4)) : null;
+  } else {
+    warnings.push("Benchmark variance is zero; Beta and Jensen's Alpha are mathematically undefined.");
+  }
 
   // Tracking Error & Information Ratio
-  const trackingError = Math.sqrt(sampleVarDiff) * Math.sqrt(factor);
-  const informationRatio =
-    trackingError > 1e-8 ? activeReturn / trackingError : 0;
+  const trackingErrorVal = Math.sqrt(sampleVarDiff) * Math.sqrt(factor);
+  const trackingError = isFinite(trackingErrorVal) ? parseFloat(trackingErrorVal.toFixed(4)) : null;
+  let informationRatio: number | null = null;
+  if (trackingErrorVal > 1e-8 && isFinite(activeReturn)) {
+    informationRatio = parseFloat((activeReturn / trackingErrorVal).toFixed(3));
+  } else {
+    warnings.push("Tracking error is zero or undefined; Information Ratio cannot be computed.");
+  }
 
   // Sharpe Ratio: (Rp - Rf) / VolP
-  const sharpeRatio = volP > 1e-8 ? (annReturnP - rf) / volP : 0;
+  let sharpeRatio: number | null = null;
+  if (volP > 1e-8 && isFinite(annReturnP)) {
+    sharpeRatio = parseFloat(((annReturnP - rf) / volP).toFixed(3));
+  } else {
+    warnings.push("Portfolio volatility is zero; Sharpe Ratio is mathematically undefined.");
+  }
 
   // Downside Deviation & Sortino Ratio
-  const downsideDev = Math.sqrt(sumDownsideSq / n) * Math.sqrt(factor);
-  const sortinoRatio =
-    downsideDev > 1e-8 ? (annReturnP - rf) / downsideDev : 0;
+  const downsideDevVal = Math.sqrt(sumDownsideSq / n) * Math.sqrt(factor);
+  const downsideDeviation = isFinite(downsideDevVal) ? parseFloat(downsideDevVal.toFixed(4)) : null;
+  let sortinoRatio: number | null = null;
+  if (downsideDevVal > 1e-8 && isFinite(annReturnP)) {
+    sortinoRatio = parseFloat(((annReturnP - rf) / downsideDevVal).toFixed(3));
+  } else {
+    warnings.push("Downside deviation is zero; Sortino Ratio is mathematically undefined.");
+  }
 
   // R-squared
-  const correlation =
-    volP > 0 && volB > 0 ? sampleCov / (Math.sqrt(sampleVarP) * Math.sqrt(sampleVarB)) : 0;
-  const rSquared = Math.min(1.0, Math.max(0.0, correlation * correlation));
+  let rSquared: number | null = null;
+  if (volP > 0 && volB > 0 && isFinite(sampleCov)) {
+    const correlation = sampleCov / (Math.sqrt(sampleVarP) * Math.sqrt(sampleVarB));
+    if (isFinite(correlation)) {
+      rSquared = parseFloat(Math.min(1.0, Math.max(0.0, correlation * correlation)).toFixed(3));
+    }
+  }
 
   // Up/Down Capture
   let upCaptureRatio: number | null = null;
-  if (upCount > 0 && upCompB - 1 !== 0) {
-    upCaptureRatio = parseFloat(
-      (((upCompP - 1) / (upCompB - 1)) * 100).toFixed(2)
-    );
+  if (upCount > 0 && Math.abs(upCompB - 1) > 1e-6) {
+    const rawUp = ((upCompP - 1) / (upCompB - 1)) * 100;
+    if (isFinite(rawUp)) {
+      upCaptureRatio = parseFloat(rawUp.toFixed(2));
+    }
   }
 
   let downCaptureRatio: number | null = null;
-  if (downCount > 0 && downCompB - 1 !== 0) {
-    downCaptureRatio = parseFloat(
-      (((downCompP - 1) / (downCompB - 1)) * 100).toFixed(2)
-    );
+  if (downCount > 0 && Math.abs(downCompB - 1) > 1e-6) {
+    const rawDown = ((downCompP - 1) / (downCompB - 1)) * 100;
+    if (isFinite(rawDown)) {
+      downCaptureRatio = parseFloat(rawDown.toFixed(2));
+    }
   }
 
-  const quality = n >= 60 ? "HIGH" : n >= 20 ? "MEDIUM" : "LOW";
+  const quality = n >= 60 && warnings.length === 0 ? "HIGH" : n >= 20 ? "MEDIUM" : "LOW";
 
   return {
     observationCount: n,
-    portfolioAnnualizedReturn: parseFloat(annReturnP.toFixed(4)),
-    benchmarkAnnualizedReturn: parseFloat(annReturnB.toFixed(4)),
-    activeReturn: parseFloat(activeReturn.toFixed(4)),
-    portfolioVolatility: parseFloat(volP.toFixed(4)),
-    benchmarkVolatility: parseFloat(volB.toFixed(4)),
-    beta: parseFloat(beta.toFixed(3)),
-    alpha: parseFloat(alpha.toFixed(4)),
-    trackingError: parseFloat(trackingError.toFixed(4)),
-    informationRatio: parseFloat(informationRatio.toFixed(3)),
-    sharpeRatio: parseFloat(sharpeRatio.toFixed(3)),
-    sortinoRatio: parseFloat(sortinoRatio.toFixed(3)),
-    downsideDeviation: parseFloat(downsideDev.toFixed(4)),
+    portfolioAnnualizedReturn: isFinite(annReturnP) ? parseFloat(annReturnP.toFixed(4)) : null,
+    benchmarkAnnualizedReturn: isFinite(annReturnB) ? parseFloat(annReturnB.toFixed(4)) : null,
+    activeReturn: isFinite(activeReturn) ? parseFloat(activeReturn.toFixed(4)) : null,
+    portfolioVolatility: isFinite(volP) ? parseFloat(volP.toFixed(4)) : null,
+    benchmarkVolatility: isFinite(volB) ? parseFloat(volB.toFixed(4)) : null,
+    beta,
+    alpha,
+    trackingError,
+    informationRatio,
+    sharpeRatio,
+    sortinoRatio,
+    downsideDeviation,
     upCaptureRatio,
     downCaptureRatio,
-    rSquared: parseFloat(rSquared.toFixed(3)),
+    rSquared,
     quality,
     dataSource: "HISTORICAL",
     methodologyVersion: version,

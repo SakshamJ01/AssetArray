@@ -1,6 +1,6 @@
 import { TWRResult, ValuationPoint, SubPeriodResult } from "./types";
 
-export const TWR_METHODOLOGY_VERSION = "twr-subperiod-v1.1";
+export const TWR_METHODOLOGY_VERSION = "twr-gips-2020-v3.2";
 
 /**
  * Calculates Time-Weighted Return (TWR) using sub-period linking around external cash flows.
@@ -23,12 +23,13 @@ export function calculateTWR(
       subPeriods: [],
       quality: "INSUFFICIENT_DATA",
       dataSource: "HISTORICAL",
+      twrMethod: "INSUFFICIENT_DATA",
       methodologyVersion,
       warnings: ["At least two valuation dates are required to compute Time-Weighted Return."],
     };
   }
 
-  // Sort chronological
+  // Sort chronologically
   const sorted = [...valuations].sort(
     (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
   );
@@ -45,7 +46,9 @@ export function calculateTWR(
   let prevNav = sorted[0].nav;
 
   if (prevNav <= 0) {
-    warnings.push("Beginning valuation is non-positive; initial sub-period may be undefined.");
+    warnings.push(
+      "Beginning valuation is non-positive; sub-period return calculation requires an initial capital contribution."
+    );
   }
 
   for (let i = 1; i < sorted.length; i++) {
@@ -55,12 +58,15 @@ export function calculateTWR(
 
     let subReturn = 0;
     if (prevNav > 0) {
-      // Standard GIPS end-of-period cash flow formula:
+      // Standard GIPS end-of-period cash flow formula (GIPS 2020 2.A.24 approximation):
       // R_i = (V_end - CashFlow) / V_begin - 1
       subReturn = (pt.nav - cf) / prevNav - 1;
     } else if (cf > 0 && pt.nav > 0) {
-      // Inflow into empty portfolio
+      // Initial capital inflow into zero-balance portfolio
       subReturn = (pt.nav - cf) / cf;
+    } else {
+      subReturn = 0;
+      warnings.push(`Zero or negative NAV baseline encountered at ${prevPt.date}; sub-period return defaulted to 0.`);
     }
 
     // Guard against numeric anomalies
@@ -91,7 +97,9 @@ export function calculateTWR(
   }
 
   const quality =
-    sorted.length >= 12 && totalDays >= 30
+    sorted[0].nav <= 0 && (!sorted[1] || !(sorted[1].cashFlow && sorted[1].cashFlow > 0))
+      ? "INSUFFICIENT_DATA"
+      : sorted.length >= 12 && totalDays >= 30 && warnings.length === 0
       ? "HIGH"
       : sorted.length >= 4
       ? "MEDIUM"
@@ -104,6 +112,7 @@ export function calculateTWR(
     subPeriods,
     quality,
     dataSource: "HISTORICAL",
+    twrMethod: "DAILY_SUBPERIOD_APPROXIMATION",
     methodologyVersion,
     warnings,
   };

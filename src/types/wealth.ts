@@ -259,6 +259,11 @@ export interface AttributionResult {
   portfolioReturn: number;
   benchmarkReturn: number;
   totalActiveReturn: number; // portfolioReturn - benchmarkReturn
+  portfolioCurrency?: string;
+  benchmarkCurrency?: string;
+  fxTreatment?: "LOCAL_CURRENCY" | "UNHEDGED_BASE" | "FX_ADJUSTED";
+  returnType?: "TOTAL_RETURN" | "PRICE_RETURN";
+  isSimulated?: boolean;
   summary: {
     allocationEffect: number;
     selectionEffect: number;
@@ -301,7 +306,7 @@ export interface IndianTaxLot {
   isLongTerm: boolean; // >= 12 months for listed equity
   applicableTaxRatePct: number; // 20% for STCG (Sec 111A), 12.5% for LTCG (Sec 112A)
   isLossHarvestCandidate: boolean;
-  suggestedAction: "HARVEST_LOSS" | "HOLD" | "BOOK_PROFIT";
+  suggestedAction: "HARVEST_LOSS" | "HOLD" | "BOOK_PROFIT" | "VERIFY_DATE";
   potentialTaxShield: number;
   washSaleWarning: boolean;
 }
@@ -385,7 +390,9 @@ export type SmartAlertStatus =
   | "DONE"
   | "CANCELLED"
   | "ACTIVE"
-  | "ACKNOWLEDGED";
+  | "ACKNOWLEDGED"
+  | "RESOLVED"
+  | "SNOOZED";
 
 export interface SmartAlert {
   id: string;

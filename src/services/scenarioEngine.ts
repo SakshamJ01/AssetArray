@@ -204,38 +204,91 @@ export function compareScenarioSideBySide(
   const curLargest = getLargestWeight(baseHoldings, currentVal);
   const scnLargest = getLargestWeight(scenarioHoldings, scenarioVal);
 
-  // Approximate portfolio expected return based on asset class weights
-  const getExpectedReturn = (holdings: PortfolioHolding[], total: number) => {
-    if (total <= 0) return 0.08;
-    let weightedReturn = 0;
+  // Empirical risk and return model across asset classes
+  const getPortfolioRiskMetrics = (holdings: PortfolioHolding[], total: number) => {
+    if (total <= 0 || holdings.length === 0) {
+      return { expReturn: 0, vol: 0, sharpe: 0, maxDrawdown: 0, goalProb: 50 };
+    }
+
+    let wEq = 0;
+    let wDebt = 0;
+    let wAlt = 0;
+    let wCash = 0;
+
     holdings.forEach((h) => {
       const w = (Number(h.currentValue) || 0) / total;
       const cat = normalizeCategory(h.assetClass);
-      const r = cat === "Stocks" ? 0.13 : cat === "Bonds" ? 0.075 : cat === "Cash" ? 0.06 : 0.10;
-      weightedReturn += w * r;
+      if (cat === "Stocks" || cat === "Mutual Funds") wEq += w;
+      else if (cat === "Bonds") wDebt += w;
+      else if (cat === "Alternatives") wAlt += w;
+      else if (cat === "Cash") wCash += w;
     });
-    return parseFloat((weightedReturn * 100).toFixed(2));
+
+    const rEq = 0.13;
+    const rDebt = 0.075;
+    const rAlt = 0.10;
+    const rCash = 0.06;
+
+    const volEq = 0.18;
+    const volDebt = 0.06;
+    const volAlt = 0.15;
+    const volCash = 0.01;
+
+    const rhoEqDebt = 0.10;
+    const rhoEqAlt = 0.20;
+    const rhoDebtAlt = 0.05;
+
+    const weightedReturn = wEq * rEq + wDebt * rDebt + wAlt * rAlt + wCash * rCash;
+
+    const variance =
+      Math.pow(wEq * volEq, 2) +
+      Math.pow(wDebt * volDebt, 2) +
+      Math.pow(wAlt * volAlt, 2) +
+      Math.pow(wCash * volCash, 2) +
+      2 * (wEq * volEq * wDebt * volDebt * rhoEqDebt) +
+      2 * (wEq * volEq * wAlt * volAlt * rhoEqAlt) +
+      2 * (wDebt * volDebt * wAlt * volAlt * rhoDebtAlt);
+
+    const portfolioVol = Math.sqrt(Math.max(1e-6, variance));
+    const rf = 0.065; // 6.5% Indian risk-free rate
+    const sharpe = portfolioVol > 0 ? (weightedReturn - rf) / portfolioVol : 0;
+    const maxDrawdown = -Math.min(0.60, Math.max(0.05, 1.65 * portfolioVol * 0.9));
+
+    // Parametric CDF approximation against standard 7.0% real growth benchmark
+    const hurdle = 0.07;
+    const z = (weightedReturn - hurdle) / Math.max(0.01, portfolioVol);
+    const t = 1 / (1 + 0.2316419 * Math.abs(z));
+    const d = 0.3989423 * Math.exp((-z * z) / 2);
+    const cdf = 1 - d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+    const normalProb = z >= 0 ? cdf : 1 - cdf;
+    const goalProb = Math.min(99, Math.max(20, Math.round(normalProb * 100)));
+
+    return {
+      expReturn: parseFloat((weightedReturn * 100).toFixed(2)),
+      vol: parseFloat((portfolioVol * 100).toFixed(2)),
+      sharpe: parseFloat(sharpe.toFixed(2)),
+      maxDrawdown: parseFloat((maxDrawdown * 100).toFixed(2)),
+      goalProb,
+    };
   };
 
-  const curExpReturn = getExpectedReturn(baseHoldings, currentVal);
-  const scnExpReturn = getExpectedReturn(scenarioHoldings, scenarioVal);
+  const curMetrics = getPortfolioRiskMetrics(baseHoldings, currentVal);
+  const scnMetrics = getPortfolioRiskMetrics(scenarioHoldings, scenarioVal);
 
-  // Approximate volatility
-  const curVol = curLargest > 0.35 ? 18.5 : 13.8;
-  const scnVol = scnLargest > 0.35 ? 18.5 : 13.8;
+  const curExpReturn = curMetrics.expReturn;
+  const scnExpReturn = scnMetrics.expReturn;
 
-  // Approximate Sharpe
-  const rf = 6.5; // 6.5%
-  const curSharpe = parseFloat(((curExpReturn - rf) / curVol).toFixed(2));
-  const scnSharpe = parseFloat(((scnExpReturn - rf) / scnVol).toFixed(2));
+  const curVol = curMetrics.vol;
+  const scnVol = scnMetrics.vol;
 
-  // Max Drawdown estimate
-  const curDrawdown = curLargest > 0.4 ? -22.5 : -14.2;
-  const scnDrawdown = scnLargest > 0.4 ? -22.5 : -14.2;
+  const curSharpe = curMetrics.sharpe;
+  const scnSharpe = scnMetrics.sharpe;
 
-  // Goal success probability estimate
-  const curGoalProb = Math.min(99, Math.max(20, Math.round(curHealth.healthScore * 0.95)));
-  const scnGoalProb = Math.min(99, Math.max(20, Math.round(scnHealth.healthScore * 0.95)));
+  const curDrawdown = curMetrics.maxDrawdown;
+  const scnDrawdown = scnMetrics.maxDrawdown;
+
+  const curGoalProb = curMetrics.goalProb;
+  const scnGoalProb = scnMetrics.goalProb;
 
   // Estimated tax impact: if positions were sold down, compute capital gains tax
   let realizedGainsFromSales = 0;

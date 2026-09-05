@@ -66,6 +66,7 @@ export function calculateDrawdown(
 
         const ddDuration = Math.round((troughTime - peakTime) / (1000 * 60 * 60 * 24));
         const recDuration = Math.round((recTime - troughTime) / (1000 * 60 * 60 * 24));
+        const underwaterDuration = Math.round((recTime - peakTime) / (1000 * 60 * 60 * 24));
 
         if (recDuration > longestRecoveryDays) {
           longestRecoveryDays = recDuration;
@@ -82,7 +83,9 @@ export function calculateDrawdown(
           drawdownPercent: parseFloat((ddPct * 100).toFixed(2)),
           drawdownDurationDays: Math.max(0, ddDuration),
           recoveryDurationDays: Math.max(0, recDuration),
+          underwaterDurationDays: Math.max(0, underwaterDuration),
           isRecovered: true,
+          recoveryStatus: "RECOVERED",
         });
 
         inDrawdown = false;
@@ -124,7 +127,9 @@ export function calculateDrawdown(
   if (inDrawdown) {
     const peakTime = new Date(currentPeakDate).getTime();
     const troughTime = new Date(currentTroughDate).getTime();
+    const lastTime = new Date(sorted[sorted.length - 1].date).getTime();
     const ddDuration = Math.round((troughTime - peakTime) / (1000 * 60 * 60 * 24));
+    const underwaterDuration = Math.round((lastTime - peakTime) / (1000 * 60 * 60 * 24));
     const ddPct = (currentTroughNav - currentPeakNav) / currentPeakNav;
 
     episodes.push({
@@ -136,7 +141,9 @@ export function calculateDrawdown(
       drawdownPercent: parseFloat((ddPct * 100).toFixed(2)),
       drawdownDurationDays: Math.max(0, ddDuration),
       recoveryDurationDays: null,
+      underwaterDurationDays: Math.max(0, underwaterDuration),
       isRecovered: false,
+      recoveryStatus: "NOT_RECOVERED",
     });
   }
 

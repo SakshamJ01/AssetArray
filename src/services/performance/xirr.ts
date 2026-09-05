@@ -39,7 +39,8 @@ export function calculateXIRR(
     }
   });
 
-  if (endingValue > 0) {
+  // If endingValue is provided (>= 0), append as final positive valuation event
+  if (endingValue >= 0 && asOfDate) {
     allEvents.push({ date: new Date(asOfDate), amount: endingValue });
   }
 
@@ -59,6 +60,23 @@ export function calculateXIRR(
       quality: "INSUFFICIENT_DATA",
       methodologyVersion,
       warnings: ["At least one initial cash inflow and an ending valuation are required for XIRR."],
+    };
+  }
+
+  // Edge case: Total loss (endingValue === 0 and totalOutflows === 0)
+  if (endingValue === 0 && totalOutflows === 0) {
+    return {
+      xirr: -1.0,
+      annualizedPercent: -100.0,
+      totalInflows,
+      totalOutflows,
+      netInvested: totalInflows,
+      endingValue: 0,
+      iterations: 1,
+      converged: true,
+      quality: "HIGH",
+      methodologyVersion,
+      warnings: ["Complete capital loss detected (ending value is zero with no distributions)."],
     };
   }
 
@@ -152,8 +170,34 @@ export function calculateXIRR(
     };
   }
 
+  // Validate final NPV residual
+  const finalResidual = Math.abs(npv(rate));
+  const residualTolerance = Math.max(1e-4, totalInflows * 1e-5);
+  if (finalResidual > residualTolerance) {
+    warnings.push(
+      `Residual NPV (${finalResidual.toFixed(4)}) exceeds tolerance (${residualTolerance.toFixed(4)}); solution may be unstable.`
+    );
+  }
+
+  // Check sign changes in cash-flow sequence (Descartes' rule of signs)
+  let signChanges = 0;
+  for (let s = 1; s < allEvents.length; s++) {
+    if (
+      (allEvents[s].amount > 0 && allEvents[s - 1].amount < 0) ||
+      (allEvents[s].amount < 0 && allEvents[s - 1].amount > 0)
+    ) {
+      signChanges++;
+    }
+  }
+  if (signChanges > 1) {
+    warnings.push(
+      `Cash flow sequence has ${signChanges} sign changes; non-conventional cash flows may possess multiple internal rates of return.`
+    );
+  }
+
   const cleanRate = parseFloat(rate.toFixed(6));
   const annualizedPercent = parseFloat((rate * 100).toFixed(2));
+  const quality = warnings.length === 0 && finalResidual <= 1e-4 ? "HIGH" : "MEDIUM";
 
   return {
     xirr: cleanRate,
@@ -164,7 +208,7 @@ export function calculateXIRR(
     endingValue,
     iterations: iter,
     converged: true,
-    quality: "HIGH",
+    quality,
     methodologyVersion,
     warnings,
   };

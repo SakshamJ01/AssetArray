@@ -75,8 +75,13 @@ export function evaluateTaxLots(
       const gainLoss = lotCurVal - lot.costBasis;
 
       const warnings: string[] = [];
-      if (months === null) {
-        warnings.push(`Lot ${lot.id} lacks a valid acquisition date.`);
+      let dateVerificationStatus: "DATE_VERIFIED" | "DATE_MISSING" | "DATE_INVALID" | "LEGACY_ESTIMATE" = "DATE_VERIFIED";
+      if (!lot.acquiredAt) {
+        dateVerificationStatus = "DATE_MISSING";
+        warnings.push(`Lot ${lot.id} lacks an acquisition date; statutory term cannot be verified.`);
+      } else if (months === null) {
+        dateVerificationStatus = "DATE_INVALID";
+        warnings.push(`Lot ${lot.id} has an invalid acquisition date (${lot.acquiredAt}).`);
       }
 
       results.push({
@@ -91,6 +96,7 @@ export function evaluateTaxLots(
         unrealizedGainLoss: parseFloat(gainLoss.toFixed(2)),
         holdingPeriodMonths: months,
         isLongTerm,
+        dateVerificationStatus,
         quality: months !== null ? "HIGH" : "INSUFFICIENT_DATA",
         warnings,
       });
@@ -107,36 +113,53 @@ export function evaluateTaxLots(
   const warnings: string[] = [];
 
   let months = calculateLotHoldingMonths(acquiredAt, asOfDate);
+  let dateVerificationStatus: "DATE_VERIFIED" | "DATE_MISSING" | "DATE_INVALID" | "LEGACY_ESTIMATE" =
+    months !== null ? "DATE_VERIFIED" : acquiredAt ? "DATE_INVALID" : "DATE_MISSING";
 
   // Check if notes contain an explicit date or legacy note description
+  let legacyIsLongTerm: boolean | null = null;
   if (months === null && holding.notes) {
+    // Only extract if an actual calendar date is present in notes
     const match = holding.notes.match(/\b(20\d{2}[-/]\d{1,2}[-/]\d{1,2})\b/);
     if (match) {
       acquiredAt = match[1].replace(/\//g, "-");
       months = calculateLotHoldingMonths(acquiredAt, asOfDate);
+      if (months !== null) {
+        dateVerificationStatus = "DATE_VERIFIED";
+      }
     } else if (holding.notes.toLowerCase().includes("short")) {
-      months = 6;
+      dateVerificationStatus = "LEGACY_ESTIMATE";
+      legacyIsLongTerm = false;
       warnings.push(
-        `Holding '${holding.assetName}' classified as short-term based on notes ('short'). Formal transaction date required for institutional audit.`
+        `Holding '${holding.assetName}' has legacy note ('short'). Classified as LEGACY_ESTIMATE; verified acquisition date required for institutional tax calculation.`
       );
     } else if (
       holding.notes.toLowerCase().includes("lt") ||
       holding.notes.toLowerCase().includes("long")
     ) {
-      months = 18;
+      dateVerificationStatus = "LEGACY_ESTIMATE";
+      legacyIsLongTerm = true;
       warnings.push(
-        `Holding '${holding.assetName}' classified as long-term based on notes ('long'). Formal transaction date required for institutional audit.`
+        `Holding '${holding.assetName}' has legacy note ('long'). Classified as LEGACY_ESTIMATE; verified acquisition date required for institutional tax calculation.`
       );
     }
   }
 
-  const { isLongTerm, thresholdMonths } = classifyLotTerm(holding.assetClass, months, ruleSet);
+  const { isLongTerm: calculatedTerm } = classifyLotTerm(holding.assetClass, months, ruleSet);
+  const isLongTerm = months !== null ? calculatedTerm : legacyIsLongTerm;
 
-  if (months === null) {
+  if (months === null && legacyIsLongTerm === null) {
     warnings.push(
-      `Holding '${holding.assetName}' lacks an acquisition date. Statutory holding period cannot be determined from dates.`
+      `Holding '${holding.assetName}' lacks a verified acquisition date. Statutory capital gains classification cannot be confirmed.`
     );
   }
+
+  const quality =
+    months !== null
+      ? "HIGH"
+      : dateVerificationStatus === "LEGACY_ESTIMATE"
+      ? "LOW"
+      : "INSUFFICIENT_DATA";
 
   results.push({
     lotId: `lot_${holding.id}`,
@@ -150,7 +173,8 @@ export function evaluateTaxLots(
     unrealizedGainLoss: parseFloat(gainLoss.toFixed(2)),
     holdingPeriodMonths: months,
     isLongTerm,
-    quality: months !== null ? "HIGH" : "LOW",
+    dateVerificationStatus,
+    quality,
     warnings,
   });
 

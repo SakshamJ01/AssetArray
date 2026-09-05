@@ -53,9 +53,12 @@ export function scoreGeographicAndCurrency(
       internationalVal += val;
       countries.add(country || "Global/US");
       currencies.add(currency || "USD");
+    } else if (country || currency) {
+      countries.add(country || "Domestic");
+      currencies.add(currency || "Base");
     } else {
-      countries.add("India");
-      currencies.add("INR");
+      countries.add("Unspecified");
+      currencies.add("Unspecified");
     }
   });
 
@@ -68,13 +71,23 @@ export function scoreGeographicAndCurrency(
     score = 95; // Optimal global diversification
   } else if (intlPct > 0 && intlPct < 10) {
     score = 75 + Math.round(intlPct * 2);
-  } else if (intlPct > 30 && intlPct <= 50) {
-    score = 85;
-  } else if (intlPct > 50) {
-    score = 70; // Excessive currency volatility risk
+  } else if (intlPct > 30) {
+    score = 80; // High foreign currency volatility
   }
 
+  const hasUnspecified = countries.has("Unspecified");
+  const confidence = hasUnspecified
+    ? countries.size === 1
+      ? "LOW"
+      : "MEDIUM"
+    : "HIGH";
+
   const recommendations: string[] = [];
+  if (hasUnspecified) {
+    recommendations.push(
+      "Several positions lack explicit country or currency metadata. Add security domiciles to improve geographic exposure accuracy."
+    );
+  }
   if (intlWeight < 0.08) {
     recommendations.push(
       "Portfolio has negligible non-INR / international exposure. Allocate 10-15% into developed market funds (e.g. S&P 500, MSCI World) for currency hedging."
@@ -95,7 +108,7 @@ export function scoreGeographicAndCurrency(
       intlWeight >= 0.10
         ? `Well-calibrated geographic spread with ${intlPct.toFixed(1)}% invested across non-domestic assets.`
         : `Home-bias concentration: ${(100 - intlPct).toFixed(1)}% of capital remains tethered to domestic currency and sovereign risk.`,
-    confidence: "HIGH",
+    confidence,
     recommendations,
     evidence: [
       {

@@ -39,24 +39,28 @@ export function generateInstitutionalTaxReport(
       const absLoss = Math.abs(lot.unrealizedGainLoss);
       const isLT = lot.isLongTerm === true;
       const isST = lot.isLongTerm === false;
+      const isUnverified = lot.isLongTerm === null;
 
       // Applicable statutory tax rate
-      const applicableRate =
-        lot.assetClass === "Stocks" || lot.assetClass === "Mutual Funds"
-          ? isLT
-            ? ruleSet.rates.ltcgEquityPct
-            : ruleSet.rates.stcgEquityPct
-          : ruleSet.rates.debtMarginalRatePct;
+      const applicableRate = isUnverified
+        ? 0
+        : lot.assetClass === "Stocks" || lot.assetClass === "Mutual Funds"
+        ? isLT
+          ? ruleSet.rates.ltcgEquityPct
+          : ruleSet.rates.stcgEquityPct
+        : ruleSet.rates.debtMarginalRatePct;
 
       if (!isLoss) {
         if (isLT) unrealizedLTGains += lot.unrealizedGainLoss;
-        else unrealizedSTGains += lot.unrealizedGainLoss;
+        else if (isST) unrealizedSTGains += lot.unrealizedGainLoss;
       } else {
         totalHarvestableLoss += absLoss;
         if (isLT) unrealizedLTLoss += absLoss;
-        else unrealizedSTLoss += absLoss;
+        else if (isST) unrealizedSTLoss += absLoss;
 
-        const offsetCategory: "LTCG_ONLY" | "STCG_AND_LTCG" = isLT
+        const offsetCategory: "LTCG_ONLY" | "STCG_AND_LTCG" | "UNVERIFIED" = isUnverified
+          ? "UNVERIFIED"
+          : isLT
           ? "LTCG_ONLY"
           : "STCG_AND_LTCG";
 
@@ -66,12 +70,16 @@ export function generateInstitutionalTaxReport(
         let estimatedImpact = 0;
         let rationale = "";
 
-        if (!isLT && realizedGains.shortTerm > 0) {
+        if (isUnverified) {
+          estimatedImpact = 0;
+          rationale =
+            "Statutory holding period cannot be verified due to missing or invalid acquisition date. Acquisition date required before tax shield can be estimated.";
+        } else if (isST && realizedGains.shortTerm > 0) {
           // Offsets 20% STCG + 4% cess = 20.8% effective shield
           const offsetAmount = Math.min(absLoss, realizedGains.shortTerm);
           estimatedImpact = offsetAmount * (ruleSet.rates.stcgEquityPct / 100) * 1.04;
           rationale = `Can set off against ₹${Math.round(offsetAmount).toLocaleString("en-IN")} in realized STCG at 20% + 4% cess.`;
-        } else if (realizedGains.longTerm > ruleSet.rates.ltcgExemptionLimit) {
+        } else if (isLT && realizedGains.longTerm > ruleSet.rates.ltcgExemptionLimit) {
           // Offsets 12.5% LTCG + 4% cess = 13% effective shield
           const taxableLTCG = realizedGains.longTerm - ruleSet.rates.ltcgExemptionLimit;
           const offsetAmount = Math.min(absLoss, taxableLTCG);
@@ -93,11 +101,12 @@ export function generateInstitutionalTaxReport(
           quantity: lot.quantity,
           acquiredAt: lot.acquiredAt,
           holdingPeriodMonths: lot.holdingPeriodMonths,
-          isLongTerm: isLT,
+          isLongTerm: lot.isLongTerm,
+          dateVerificationStatus: lot.dateVerificationStatus,
           unrealizedLoss: absLoss,
           offsetCategory,
           estimatedTaxImpact: parseFloat(estimatedImpact.toFixed(2)),
-          confidence: lot.quality,
+          confidence: isUnverified ? "INSUFFICIENT_DATA" : lot.quality,
           rationale,
           warnings: lot.warnings,
         });
@@ -112,16 +121,18 @@ export function generateInstitutionalTaxReport(
         investedValue: lot.costBasis,
         currentValue: lot.currentValue,
         unrealizedGainLoss: lot.unrealizedGainLoss,
-        holdingPeriodMonths: lot.holdingPeriodMonths ?? 12,
+        holdingPeriodMonths: lot.holdingPeriodMonths ?? 0,
         isLongTerm: isLT,
         applicableTaxRatePct: applicableRate,
         isLossHarvestCandidate: isLoss,
         suggestedAction: isLoss
-          ? "HARVEST_LOSS"
+          ? isUnverified
+            ? "VERIFY_DATE"
+            : "HARVEST_LOSS"
           : lot.unrealizedGainLoss > 50000 && isLT
           ? "BOOK_PROFIT"
           : "HOLD",
-        potentialTaxShield: isLoss
+        potentialTaxShield: isLoss && !isUnverified
           ? parseFloat(((absLoss * applicableRate) / 100).toFixed(2))
           : 0,
         washSaleWarning: isLoss, // GAAR / rebuy advisory

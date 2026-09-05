@@ -53,8 +53,8 @@ export function sanitizeForAI(client: Client): SanitizedClientContext {
       category: h.assetClass || "Stocks",
       weightPct: parseFloat(weightPct.toFixed(2)),
       unrealizedGainLossPct: parseFloat(gainLossPct.toFixed(2)),
-      country: h.country || "India",
-      currency: h.currency || "INR",
+      country: h.country ? h.country.trim() : "UNKNOWN",
+      currency: h.currency ? h.currency.trim() : "UNKNOWN",
     };
   });
 
@@ -70,17 +70,34 @@ export function sanitizeForAI(client: Client): SanitizedClientContext {
 }
 
 /**
- * Scrubs potential PII substrings (PAN, phone, email) from prompt strings
+ * DPDP Act & Privacy Preserving PII Sanitizer
+ * Scrubs Aadhaar, PAN, Bank Accounts, IFSC codes, Phones, Emails, and contextual client entity names.
  */
-export function scrubPiiFromText(text: string): string {
+export function scrubPiiFromText(text: string, entitiesToRedact?: string[]): string {
   if (!text) return "";
 
-  return text
+  let cleaned = text
+    // Mask Indian Aadhaar: 12 digits (often in 4-4-4 format: 2345 6789 0123 or 234567890123)
+    .replace(/\b[2-9]\d{3}[\s-]?\d{4}[\s-]?\d{4}\b/g, "[AADHAAR_REDACTED]")
     // Mask Indian PAN: [A-Z]{5}[0-9]{4}[A-Z]{1}
-    .replace(/[A-Z]{5}[0-9]{4}[A-Z]{1}/gi, "[PAN_REDACTED]")
-    // Mask 10-12 digit phone / account numbers
-    .replace(/\b[6-9]\d{9}\b/g, "[PHONE_REDACTED]")
-    .replace(/\b\d{11,16}\b/g, "[ACCOUNT_REDACTED]")
-    // Mask emails
+    .replace(/\b[A-Z]{5}[0-9]{4}[A-Z]{1}\b/gi, "[PAN_REDACTED]")
+    // Mask Indian IFSC Codes: 4 letters, 0, 6 alphanumeric (e.g. HDFC0001234)
+    .replace(/\b[A-Z]{4}0[A-Z0-9]{6}\b/gi, "[IFSC_REDACTED]")
+    // Mask Indian Mobile Numbers (+91 or starting with 6-9)
+    .replace(/\b(?:\+91[\s-]?)?[6-9]\d{9}\b/g, "[PHONE_REDACTED]")
+    // Mask Bank Account Numbers (9 to 18 contiguous digits)
+    .replace(/\b\d{9,18}\b/g, "[ACCOUNT_REDACTED]")
+    // Mask Emails
     .replace(/[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+/g, "[EMAIL_REDACTED]");
+
+  // Contextual entity scrubbing (names, custom identifiers)
+  if (entitiesToRedact && entitiesToRedact.length > 0) {
+    entitiesToRedact.forEach((entity) => {
+      if (!entity || entity.trim().length < 3) return;
+      const escaped = entity.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      cleaned = cleaned.replace(new RegExp(`\\b${escaped}\\b`, "gi"), "[ENTITY_REDACTED]");
+    });
+  }
+
+  return cleaned;
 }

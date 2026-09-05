@@ -10,6 +10,10 @@ export const ATTRIBUTION_METHODOLOGY_VERSION = "brinson-fachler-v1.1";
 export interface BenchmarkProfile {
   symbol: string;
   name: string;
+  provider?: string;
+  currency?: string;
+  returnType?: "TOTAL_RETURN" | "PRICE_RETURN";
+  isSimulated?: boolean;
   categoryWeights: Record<string, number>; // e.g. { "Stocks": 0.65, "Bonds": 0.35 }
   categoryReturns: Record<string, number>; // e.g. { "Stocks": 0.12, "Bonds": 0.065 }
 }
@@ -17,7 +21,11 @@ export interface BenchmarkProfile {
 export const STANDARD_BENCHMARKS: Record<string, BenchmarkProfile> = {
   NIFTY_50: {
     symbol: "NIFTY50",
-    name: "Nifty 50 Index (India Core)",
+    name: "Nifty 50 Total Return Index",
+    provider: "NSE Indices",
+    currency: "INR",
+    returnType: "TOTAL_RETURN",
+    isSimulated: true,
     categoryWeights: {
       Stocks: 0.95,
       Cash: 0.05,
@@ -29,7 +37,11 @@ export const STANDARD_BENCHMARKS: Record<string, BenchmarkProfile> = {
   },
   BALANCED_HYBRID: {
     symbol: "BALANCED_65_35",
-    name: "CRISIL Hybrid 65:35 Aggressive",
+    name: "CRISIL Hybrid 65:35 Aggressive Index",
+    provider: "CRISIL",
+    currency: "INR",
+    returnType: "TOTAL_RETURN",
+    isSimulated: true,
     categoryWeights: {
       Stocks: 0.65,
       Bonds: 0.30,
@@ -43,7 +55,11 @@ export const STANDARD_BENCHMARKS: Record<string, BenchmarkProfile> = {
   },
   SPY_500: {
     symbol: "SPY",
-    name: "S&P 500 Total Return (US Core)",
+    name: "S&P 500 Total Return Index",
+    provider: "S&P Dow Jones Indices",
+    currency: "USD",
+    returnType: "TOTAL_RETURN",
+    isSimulated: true,
     categoryWeights: {
       Stocks: 0.98,
       Cash: 0.02,
@@ -55,7 +71,11 @@ export const STANDARD_BENCHMARKS: Record<string, BenchmarkProfile> = {
   },
   CONSERVATIVE_DEBT: {
     symbol: "DEBT_HYBRID",
-    name: "Conservative Debt Hybrid",
+    name: "Conservative Debt Hybrid Index",
+    provider: "CRISIL / CCIL",
+    currency: "INR",
+    returnType: "TOTAL_RETURN",
+    isSimulated: true,
     categoryWeights: {
       Bonds: 0.80,
       Cash: 0.15,
@@ -97,6 +117,7 @@ export function normalizeCategory(assetClass: string): string {
  */
 export interface AttributionOptions {
   customCategoryReturns?: Record<string, number>; // Time-weighted or cash-flow aware returns per category
+  portfolioCurrency?: string; // Portfolio base currency e.g. "INR"
   tolerance?: number; // Tolerance for active return reconciliation check (default 1e-4)
 }
 
@@ -225,7 +246,7 @@ export function calculateAttribution(
     const Rb = hasBenchmarkReturn ? benchmark.categoryReturns[cat] : 0;
 
     if (!hasBenchmarkReturn && wb > 0) {
-      warnings.push(`Benchmark return for category '${cat}' is missing. Used 0.0.`);
+      warnings.push(`Benchmark return for category '${cat}' is missing; assigned 0.0.`);
     }
 
     // Determine portfolio category return rp
@@ -275,10 +296,22 @@ export function calculateAttribution(
     );
   }
 
+  const portCurrency = options?.portfolioCurrency || "INR";
+  const benchCurrency = benchmark.currency || "INR";
+  if (portCurrency !== benchCurrency) {
+    warnings.push(
+      `Currency mismatch: portfolio is in '${portCurrency}' while benchmark '${benchmark.name}' is in '${benchCurrency}'. Direct active return comparisons may be influenced by FX rate fluctuations.`
+    );
+  }
+
   // Quality assessment
   let quality: PerformanceQuality = "HIGH";
   if (warnings.length > 0) {
-    quality = warnings.length > 2 ? "LOW" : "MEDIUM";
+    quality = warnings.some((w) => w.includes("missing") || w.includes("identity gap"))
+      ? "INSUFFICIENT_DATA"
+      : warnings.length > 2
+      ? "LOW"
+      : "MEDIUM";
   }
 
   // Plain-language explainability synthesis
@@ -300,6 +333,11 @@ export function calculateAttribution(
     portfolioReturn: parseFloat(portfolioTotalReturn.toFixed(4)),
     benchmarkReturn: parseFloat(benchmarkTotalReturn.toFixed(4)),
     totalActiveReturn: parseFloat(rawActiveReturn.toFixed(4)),
+    portfolioCurrency: portCurrency,
+    benchmarkCurrency: benchCurrency,
+    fxTreatment: portCurrency === benchCurrency ? "LOCAL_CURRENCY" : "UNHEDGED_BASE",
+    returnType: benchmark.returnType || "TOTAL_RETURN",
+    isSimulated: benchmark.isSimulated ?? false,
     summary: {
       allocationEffect: parseFloat(totalAllocEffect.toFixed(4)),
       selectionEffect: parseFloat(totalSelectEffect.toFixed(4)),

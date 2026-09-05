@@ -1,8 +1,8 @@
-# AssetArray v3.1 Statutory Tax Methodology (Finance Act 2024 / AY 2026-27)
+# AssetArray v3.2 Statutory Tax Methodology (Finance Act 2024 / AY 2026-27)
 
 ## 1. Statutory Framework Overview
 
-AssetArray v3.1 incorporates the revised Indian capital gains tax regime enacted under the **Finance (No. 2) Act, 2024** applicable for **Assessment Year 2026-27 (Financial Year 2024-25 / 2025-26)**.
+AssetArray v3.2 incorporates the revised Indian capital gains tax regime enacted under the **Finance (No. 2) Act, 2024** applicable for **Assessment Year 2026-27 (Financial Year 2024-25 / 2025-26)**.
 
 All calculations strictly avoid synthetic heuristics (e.g. array index assumptions or uncalibrated percentage estimates) and enforce date-driven statutory holding periods and marginal tax rates with health and education cess.
 
@@ -74,3 +74,16 @@ $$\text{Tax Shield} = (\text{Harvestable STCL} \times \tau_{\text{ST}}) + (\max(
 India does not possess a codified 30-day "Wash Sale Rule" like US IRC §1091. However, Chapter X-A (General Anti-Avoidance Rules / GAAR) empowers assessing officers to re-characterize transactions lacking commercial substance. AssetArray generates fiduciary warnings recommending:
 - Reinvesting sale proceeds into an economically equivalent ETF/index proxy rather than executing identical same-day buybacks.
 - Observing a minimum statutory settlement buffer (T+1 / 3 trading days) before re-entering identical securities.
+
+---
+
+## 6. Zero-Synthetic Tax Lot Integrity (V3.2 Invariant)
+
+To guarantee institutional auditability:
+1. **Mandatory Date Verification**: Every tax lot evaluated in institutional mode requires an explicit `acquiredAt` timestamp.
+2. **Tax Verification States**:
+   - `DATE_VERIFIED`: Exact acquisition date verified against depository/CAMS statement.
+   - `DATE_MISSING`: No date present; `isLongTerm = null`, `quality = INSUFFICIENT_DATA`. Potential tax shield is zero.
+   - `DATE_INVALID`: Malformed timestamp; requires advisor remediation before trade calculation.
+   - `LEGACY_ESTIMATE`: Inferred from unstructured notes (e.g. legacy imports). Clearly labeled as low confidence and excluded from high-confidence statutory exports.
+3. **Audit Methodology ID**: `in-tax-finance-act-2024-v2.0` (Statutory compliance verification date: September 2026).

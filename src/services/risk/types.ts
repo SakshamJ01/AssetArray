@@ -44,7 +44,9 @@ export interface DrawdownEpisode {
   drawdownPercent: number; // e.g. -18.5%
   drawdownDurationDays: number; // Days from peak to trough
   recoveryDurationDays: number | null; // Days from trough to full recovery
+  underwaterDurationDays: number; // Total days from peak to recovery, or to last valuation if unrecovered
   isRecovered: boolean;
+  recoveryStatus: "RECOVERED" | "NOT_RECOVERED";
 }
 
 export interface DrawdownAnalysis {

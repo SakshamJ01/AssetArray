@@ -560,6 +560,11 @@ app.post("/api/sync", requireAuth, async (req, res) => {
     res.status(400).json({ error: "ownerId and ciphertext are required." });
     return;
   }
+  // Enforce server-side ownership: non-admin users cannot write to other users' sync data
+  if (req.user.role !== "admin" && ownerId !== req.user.id && ownerId !== req.user.username) {
+    res.status(403).json({ error: "Forbidden: You cannot modify sync data for another owner." });
+    return;
+  }
   const nextUpdatedAt = updatedAt || new Date().toISOString();
   await syncCol.updateOne(
     { ownerId },
@@ -579,6 +584,11 @@ app.post("/api/sync", requireAuth, async (req, res) => {
 });
 
 app.get("/api/sync/:ownerId", requireAuth, async (req, res) => {
+  // Enforce server-side ownership: non-admin users cannot read other users' sync data
+  if (req.user.role !== "admin" && req.params.ownerId !== req.user.id && req.params.ownerId !== req.user.username) {
+    res.status(403).json({ error: "Forbidden: You cannot access sync data for another owner." });
+    return;
+  }
   const record = await syncCol.findOne({ ownerId: req.params.ownerId });
   if (!record) {
     res.status(404).json({ error: "Encrypted backup not found." });
@@ -855,33 +865,56 @@ app.post("/api/portfolios/tax-harvest", requireAuth, (req, res) => {
       const inv = Number(h.investedValue) || 0;
       const diff = cur - inv;
 
-      // Determine holding period from acquisition date if available
-      let isLongTerm = false;
+      // Determine holding period strictly from acquisition date (Zero synthetic classification)
+      let isLongTerm = null;
+      let dateVerificationStatus = "DATE_MISSING";
+
       if (h.acquiredAt) {
         const acqTime = new Date(h.acquiredAt).getTime();
-        if (!isNaN(acqTime)) {
-          isLongTerm = (now - acqTime) / (1000 * 60 * 60 * 24 * 30.4375) >= 12;
+        if (!isNaN(acqTime) && acqTime > 0) {
+          dateVerificationStatus = "DATE_VERIFIED";
+          // Listed equity threshold is 12 months under Finance Act 2024
+          const holdingMonths = (now - acqTime) / (1000 * 60 * 60 * 24 * 30.4375);
+          isLongTerm = holdingMonths >= 12;
+        } else {
+          dateVerificationStatus = "DATE_INVALID";
         }
-      } else if (h.notes && (h.notes.toLowerCase().includes("lt") || h.notes.toLowerCase().includes("long"))) {
-        isLongTerm = true;
       }
 
       if (diff < 0) {
         const loss = Math.abs(diff);
         totalHarvestableLoss += loss;
-        if (isLongTerm) ltLoss += loss;
-        else stLoss += loss;
 
-        const rate = isLongTerm ? 12.5 : 20.0;
+        let applicableRatePct = null;
+        let potentialTaxShield = 0;
+        let offsetCategory = "UNVERIFIED";
+
+        if (dateVerificationStatus === "DATE_VERIFIED" && isLongTerm !== null) {
+          if (isLongTerm) {
+            ltLoss += loss;
+            applicableRatePct = 12.5;
+            offsetCategory = "LONG_TERM";
+            potentialTaxShield = parseFloat(((loss * applicableRatePct) / 100).toFixed(2));
+          } else {
+            stLoss += loss;
+            applicableRatePct = 20.0;
+            offsetCategory = "SHORT_TERM";
+            potentialTaxShield = parseFloat(((loss * applicableRatePct) / 100).toFixed(2));
+          }
+        }
+
         harvestCandidates.push({
           holdingId: h.id,
           assetName: h.assetName,
           ticker: h.ticker || "HOLDING",
           unrealizedLoss: loss,
           isLongTerm,
-          applicableRatePct: rate,
-          potentialTaxShield: parseFloat(((loss * rate) / 100).toFixed(2)),
-          suggestedAction: "HARVEST_LOSS",
+          dateVerificationStatus,
+          quality: dateVerificationStatus === "DATE_VERIFIED" ? "HIGH" : "INSUFFICIENT_DATA",
+          applicableRatePct,
+          offsetCategory,
+          potentialTaxShield,
+          suggestedAction: dateVerificationStatus === "DATE_VERIFIED" ? "HARVEST_LOSS" : "VERIFY_ACQUISITION_DATE_FIRST",
         });
       }
     });
@@ -916,7 +949,7 @@ app.post("/api/portfolios/tax-harvest", requireAuth, (req, res) => {
       estimatedImmediateTaxSavings: parseFloat(genuineTaxSavings.toFixed(2)),
       harvestCandidates,
       statutoryDisclaimer: "Tax projections computed under Finance Act 2024 (Sections 111A, 112A, 70, 74). Consult a Chartered Accountant before trade execution.",
-      methodologyVersion: "in-tax-finance-act-2024-v1.1",
+      methodologyVersion: "in-tax-finance-act-2024-v2.0",
     });
   } catch (err) {
     res.status(500).json({ error: "Failed to compute tax harvest plan." });
@@ -935,26 +968,57 @@ app.post("/api/portfolios/whatif", requireAuth, (req, res) => {
 
     const shock = Number(shockPct) || 0;
     const initialValue = holdings.reduce((sum, h) => sum + (Number(h.currentValue) || 0), 0);
-    const projectedValue = initialValue * (1 + shock / 100);
 
-    const postShockSharpe = shock >= 0 ? 1.15 : Math.max(-0.5, parseFloat((0.85 + shock / 50).toFixed(2)));
-    const goalSuccessProbability = Math.max(20, Math.min(99, Math.round(85 + shock * 0.8)));
+    // Compute empirical asset-weighted sensitivity
+    let projectedValue = 0;
+    let equityWeight = 0;
+    let debtWeight = 0;
+
+    if (initialValue > 0) {
+      holdings.forEach((h) => {
+        const val = Number(h.currentValue) || 0;
+        const cat = (h.category || h.assetClass || "EQUITY").toUpperCase();
+        let assetShockFactor = 1.0; // default equity shock transmission
+
+        if (cat.includes("DEBT") || cat.includes("BOND") || cat.includes("FIXED")) {
+          assetShockFactor = 0.15; // low sensitivity to equity shock
+          debtWeight += val / initialValue;
+        } else if (cat.includes("CASH") || cat.includes("LIQUID")) {
+          assetShockFactor = 0.0;
+        } else if (cat.includes("COMMODITY") || cat.includes("GOLD")) {
+          assetShockFactor = -0.10; // modest flight to safety
+        } else {
+          equityWeight += val / initialValue;
+        }
+
+        const assetShock = (shock * assetShockFactor) / 100;
+        projectedValue += val * (1 + assetShock);
+      });
+    }
+
+    const effectivePortfolioShockPct = initialValue > 0 
+      ? parseFloat((((projectedValue - initialValue) / initialValue) * 100).toFixed(2))
+      : 0;
 
     res.json({
       ok: true,
       initialValue: Math.round(initialValue),
       projectedValue: Math.round(projectedValue),
-      percentChange: shock,
-      postShockSharpe,
-      goalSuccessProbability,
-      methodologyVersion: "whatif-sandbox-v2.0",
+      macroShockPct: shock,
+      effectivePortfolioShockPct,
+      assetSensitivityModel: {
+        equityWeight: parseFloat(equityWeight.toFixed(3)),
+        debtWeight: parseFloat(debtWeight.toFixed(3)),
+        modelType: "MULTI_ASSET_SENSITIVITY",
+      },
+      methodologyVersion: "whatif-sandbox-v3.2",
     });
   } catch (err) {
     res.status(500).json({ error: "Failed to simulate scenario." });
   }
 });
 
-// 5. AI Investment Committee Memorandum (DPDP Compliant)
+// 5. AI Investment Committee Memorandum (DPDP Aligned)
 app.post("/api/portfolios/committee-report", requireAuth, async (req, res) => {
   try {
     const { client } = req.body || {};
@@ -972,7 +1036,7 @@ app.post("/api/portfolios/committee-report", requireAuth, async (req, res) => {
 # INVESTMENT COMMITTEE MEMORANDUM
 **Date:** ${new Date().toLocaleDateString("en-IN")}
 **Mandate Reference:** ${anonymizedRef} (${client.category || "HNI"})
-**Fiduciary Standard:** SEBI RIA / DPDP Act 2023 Compliant
+**Framework:** DPDP-Aligned Privacy Controls / SEBI Suitability-Support Tooling
 
 ## Executive Summary
 Portfolio AUM stands at ₹${Math.round(totalVal).toLocaleString("en-IN")}. Strategy follows a ${client.riskProfile || "Balanced"} mandate.

@@ -5,6 +5,7 @@
  */
 
 import { LiveInstrument, realTimeMarket } from "../realTimeMarket";
+import { simulationProvider } from "../simulation/simulationProvider";
 
 export interface SectorPerformance {
   sector: string;
@@ -28,16 +29,6 @@ export interface MarketDataProvider {
   getSectorPerformance(): Promise<SectorPerformance[]>;
   getHistoricalPrices(symbol: string, days?: number): Promise<HistoricalPricePoint[]>;
 }
-
-// Fallback & reference sector data
-const DEFAULT_SECTOR_PERFORMANCE: SectorPerformance[] = [
-  { sector: "Technology", performancePercent: 2.14, momentum: "Bullish", leadingStock: "NVDA" },
-  { sector: "Financial Services", performancePercent: 0.85, momentum: "Bullish", leadingStock: "HDFCBANK" },
-  { sector: "Healthcare", performancePercent: -0.32, momentum: "Neutral", leadingStock: "SUNPHARMA" },
-  { sector: "Consumer Discretionary", performancePercent: 0.45, momentum: "Neutral", leadingStock: "TITAN" },
-  { sector: "Energy & Materials", performancePercent: -0.78, momentum: "Bearish", leadingStock: "RELIANCE" },
-  { sector: "Industrials", performancePercent: 1.12, momentum: "Bullish", leadingStock: "LT" },
-];
 
 /**
  * Finnhub Provider Implementation
@@ -79,23 +70,33 @@ export class FinnhubProvider implements MarketDataProvider {
   }
 
   async getSectorPerformance(): Promise<SectorPerformance[]> {
-    return DEFAULT_SECTOR_PERFORMANCE;
+    return [];
   }
 
   async getHistoricalPrices(symbol: string, days = 30): Promise<HistoricalPricePoint[]> {
-    const points: HistoricalPricePoint[] = [];
-    const now = Date.now();
-    const basePrice = 200;
-    for (let i = days; i >= 0; i--) {
-      const ts = now - i * 86400000;
-      points.push({
-        timestamp: ts,
-        date: new Date(ts).toISOString().slice(0, 10),
-        close: +(basePrice * (1 + (Math.sin(i / 3) * 0.05))).toFixed(2),
-        volume: Math.floor(1000000 + Math.random() * 500000),
+    if (!this.apiKey) return [];
+    try {
+      const to = Math.floor(Date.now() / 1000);
+      const from = to - days * 86400;
+      const res = await fetch(
+        `https://finnhub.io/api/v1/stock/candle?symbol=${encodeURIComponent(symbol)}&resolution=D&from=${from}&to=${to}&token=${this.apiKey}`
+      );
+      if (!res.ok) return [];
+      const data = await res.json();
+      if (!data || data.s !== "ok" || !Array.isArray(data.c)) return [];
+
+      return data.c.map((close: number, idx: number) => {
+        const ts = data.t[idx] * 1000;
+        return {
+          timestamp: ts,
+          date: new Date(ts).toISOString().slice(0, 10),
+          close,
+          volume: data.v ? data.v[idx] : 0,
+        };
       });
+    } catch {
+      return [];
     }
-    return points;
   }
 }
 
@@ -157,22 +158,25 @@ export class UnifiedMarketProvider {
       return fallbackData;
     }
 
-    // Simulated reliable baseline quote if unknown
-    const defaultQuote: Partial<LiveInstrument> = {
+    // For unknown quote in live mode: explicitly unavailable (zero numerical fabrication)
+    const unavailableQuote: Partial<LiveInstrument> = {
       symbol: sym,
-      price: 100.0,
-      change: 0.5,
-      changePercent: 0.5,
-      dayHigh: 101.0,
-      dayLow: 99.5,
-      open: 99.8,
-      previousClose: 99.5,
+      price: null as any,
+      change: null as any,
+      changePercent: null as any,
       lastUpdated: Date.now(),
     };
-    return defaultQuote;
+    return unavailableQuote;
   }
 
-  public async getSectorPerformance(): Promise<SectorPerformance[]> {
+  private hasConfiguredKey(): boolean {
+    return Boolean(
+      typeof process !== "undefined" &&
+        (process.env?.EXPO_PUBLIC_FINNHUB_API_KEY || process.env?.FINNHUB_API_KEY)
+    );
+  }
+
+  public async getSectorPerformance(isDemoMode = false): Promise<SectorPerformance[]> {
     if (this.sectorCache && this.sectorCache.expires > Date.now()) {
       return this.sectorCache.data;
     }
@@ -191,38 +195,40 @@ export class UnifiedMarketProvider {
       }
     }
 
-    this.sectorCache = { data: DEFAULT_SECTOR_PERFORMANCE, expires: Date.now() + 60000 };
-    return DEFAULT_SECTOR_PERFORMANCE;
+    // In demo/test mode without API keys: load from isolated simulation provider
+    if (isDemoMode || !this.hasConfiguredKey()) {
+      return simulationProvider.getSectorPerformance();
+    }
+
+    // In live mode with configured key: do not fabricate sector returns if unavailable
+    return [];
   }
 
-  public async getHistoricalPrices(symbol: string, days = 30): Promise<HistoricalPricePoint[]> {
+  public async getHistoricalPrices(
+    symbol: string,
+    days = 30,
+    isDemoMode = false
+  ): Promise<HistoricalPricePoint[]> {
     for (const p of this.providers) {
       if (await p.isAvailable()) {
         try {
           const history = await p.getHistoricalPrices(symbol, days);
           if (history && history.length > 0) return history;
         } catch {
-          // fallback
+          // fallback to next provider
         }
       }
     }
-    // Default fallback synthetic trend
-    const points: HistoricalPricePoint[] = [];
-    const now = Date.now();
-    const inst = realTimeMarket.getInstrument(symbol);
-    const basePrice = inst ? inst.price : 150;
-    for (let i = days; i >= 0; i--) {
-      const ts = now - i * 86400000;
-      const factor = 1 + Math.sin(i * 0.4) * 0.04 + (days - i) * 0.001;
-      points.push({
-        timestamp: ts,
-        date: new Date(ts).toISOString().slice(0, 10),
-        close: +(basePrice * factor).toFixed(2),
-        volume: Math.floor(1200000 + Math.random() * 400000),
-      });
+
+    // In demo/test mode without API keys: load from isolated simulation provider
+    if (isDemoMode || !this.hasConfiguredKey()) {
+      return simulationProvider.getHistoricalPrices(symbol, days);
     }
-    return points;
+
+    // In live mode with configured key: missing history returned as empty (HISTORY_UNAVAILABLE)
+    return [];
   }
 }
 
 export const unifiedMarketProvider = new UnifiedMarketProvider();
+

@@ -108,6 +108,7 @@ import { GlobalStyleInjector } from "./src/components/GlobalStyleInjector";
 import { LiveMarketTicker } from "./src/components/LiveMarketTicker";
 import { GlobalStatusBar } from "./src/components/GlobalStatusBar";
 import { ScreenTransition } from "./src/components/ScreenTransition";
+import { dataQualityEngine, DataQualitySummary } from "./src/services/dataQuality";
 import { CurrencyCode, loadCurrencyPreference, saveCurrencyPreference } from "./src/services/currency";
 import { realTimeMarket } from "./src/services/realTimeMarket";
 import { marketHealthMonitor } from "./src/services/market";
@@ -620,6 +621,18 @@ function AppContent() {
   const [vaultDocumentDraft, setVaultDocumentDraft] =
     useState<VaultDocumentDraft>(emptyVaultDocumentDraft);
   const [connectedAccounts] = useState<ConnectedAccount[]>(defaultConnectedAccounts);
+  const [dataQualityReport, setDataQualityReport] = useState<DataQualitySummary | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    void dataQualityEngine.evaluateDataQuality(clients, goals).then((res) => {
+      if (isMounted) setDataQualityReport(res);
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, [clients, goals]);
+
   const theme = useMemo(
     () => buildAppTheme(darkModeEnabled ? "dark" : "light"),
     [darkModeEnabled]
@@ -2734,7 +2747,8 @@ function AppContent() {
             }}
             theme={theme}
             marketStatus={marketHealthMonitor.getOverallHealth().activeProviders > 0 ? "LIVE" : "SIMULATED"}
-            dataQualityPct={98}
+            dataQualityPct={dataQualityReport?.overallScore ?? 0}
+            dataQualityTier={dataQualityReport?.overallTier ?? "MISSING"}
             onClearClient={() => setSelectedClientId(null)}
           />
           <ScreenTransition triggerKey={activeTab}>

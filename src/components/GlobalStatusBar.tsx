@@ -11,6 +11,7 @@ export interface GlobalStatusBarProps {
   theme: AppTheme;
   marketStatus?: "LIVE" | "SIMULATED" | "OFFLINE";
   dataQualityPct?: number;
+  dataQualityTier?: "COMPLETE" | "PARTIAL" | "STALE" | "MISSING";
   onClearClient?: () => void;
 }
 
@@ -20,7 +21,8 @@ export const GlobalStatusBar: React.FC<GlobalStatusBarProps> = ({
   onNavigateTab,
   theme,
   marketStatus = "LIVE",
-  dataQualityPct = 98,
+  dataQualityPct = 0,
+  dataQualityTier = "MISSING",
   onClearClient,
 }) => {
   const [currentTime, setCurrentTime] = useState("");
@@ -154,7 +156,22 @@ export const GlobalStatusBar: React.FC<GlobalStatusBarProps> = ({
 
         <View style={barStyles.dataQualityPill}>
           <Text style={barStyles.dataQualityText}>
-            Data: <Text style={{ color: "#38BDF8", fontWeight: "700" }}>{dataQualityPct}% complete</Text>
+            Data:{" "}
+            <Text
+              style={{
+                color:
+                  dataQualityTier === "COMPLETE"
+                    ? "#10B981"
+                    : dataQualityTier === "PARTIAL"
+                    ? "#38BDF8"
+                    : dataQualityTier === "STALE"
+                    ? "#F59E0B"
+                    : "#EF4444",
+                fontWeight: "700",
+              }}
+            >
+              {dataQualityTier} · {dataQualityPct}%
+            </Text>
           </Text>
         </View>
       </View>

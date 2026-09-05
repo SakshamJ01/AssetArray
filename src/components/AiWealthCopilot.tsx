@@ -85,6 +85,8 @@ export const AiWealthCopilot: React.FC<AiWealthCopilotProps> = ({
   };
   const [inputText, setInputText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [streamState, setStreamState] = useState<"IDLE" | "CONNECTING" | "STREAMING" | "COMPLETED" | "FAILED" | "RETRYING" | "UNAVAILABLE">("IDLE");
+  const [streamStatusText, setStreamStatusText] = useState<string>("ACTIVE • INSTITUTIONAL INTELLIGENCE");
   const scrollViewRef = useRef<ScrollView>(null);
 
   const [messages, setMessages] = useState<AiChatMessage[]>([
@@ -127,6 +129,9 @@ export const AiWealthCopilot: React.FC<AiWealthCopilotProps> = ({
     setMessages((prev) => [...prev, userMsg, initialAiMsg]);
     setInputText("");
     setIsLoading(true);
+    setStreamState("CONNECTING");
+    setStreamStatusText("AI Connecting…");
+    const requestStartTime = Date.now();
 
     let taskType: "briefing" | "tax_analytics" | "portfolio_attribution" | "scenario_stress" = "briefing";
     const lower = q.toLowerCase();
@@ -146,39 +151,61 @@ export const AiWealthCopilot: React.FC<AiWealthCopilotProps> = ({
         totalAum: clientContext?.totalAum,
         riskProfile: clientContext?.riskProfile,
       },
+      onStateChange: (state, msg) => {
+        setStreamState(state);
+        if (state === "CONNECTING") {
+          setStreamStatusText("AI Connecting…");
+        } else if (state === "STREAMING") {
+          setStreamStatusText("AI Generating…");
+        } else if (state === "RETRYING") {
+          setStreamStatusText("AI Retrying with alternate model…");
+        } else if (state === "UNAVAILABLE") {
+          setStreamStatusText("AI unavailable · Verified portfolio data remains available.");
+        } else if (state === "FAILED") {
+          setStreamStatusText(`AI failed · ${msg || "Service offline"}`);
+        } else if (state === "COMPLETED") {
+          const durationSec = ((Date.now() - requestStartTime) / 1000).toFixed(1);
+          setStreamStatusText(`AI Complete · ${durationSec}s`);
+        }
+      },
       onToken: (token) => {
         setMessages((prev) =>
           prev.map((m) => (m.id === aiMsgId ? { ...m, text: m.text + token } : m))
         );
       },
       onComplete: (meta) => {
+        const durationSec = ((Date.now() - requestStartTime) / 1000).toFixed(1);
         setMessages((prev) =>
           prev.map((m) =>
             m.id === aiMsgId
               ? {
                   ...m,
                   isStreaming: false,
-                  modelBadge: meta.model,
+                  modelBadge: `${meta.model} · ${durationSec}s`,
                   groundedAt: meta.groundedAt,
                 }
               : m
           )
         );
         setIsLoading(false);
+        setStreamState("COMPLETED");
+        setStreamStatusText(`AI Complete · ${meta.model} · ${durationSec}s`);
       },
-      onError: () => {
+      onError: (err) => {
         setMessages((prev) =>
           prev.map((m) =>
             m.id === aiMsgId
               ? {
                   ...m,
                   isStreaming: false,
-                  text: m.text || "An unexpected error occurred while streaming response. Please retry.",
+                  text: m.text || "AI temporarily unavailable. Verified portfolio data remains available.",
                 }
               : m
           )
         );
         setIsLoading(false);
+        setStreamState("UNAVAILABLE");
+        setStreamStatusText("AI unavailable · 1 retry failed");
       },
     });
   };
@@ -264,9 +291,27 @@ export const AiWealthCopilot: React.FC<AiWealthCopilotProps> = ({
                     Asset Array Wealth Copilot
                   </Text>
                   <View style={styles.statusRow}>
-                    <View style={styles.onlineDot} />
-                    <Text style={styles.statusText}>
-                      ACTIVE • INSTITUTIONAL INTELLIGENCE
+                    <View
+                      style={[
+                        styles.onlineDot,
+                        {
+                          backgroundColor:
+                            streamState === "STREAMING" || streamState === "CONNECTING"
+                              ? "#F59E0B"
+                              : streamState === "UNAVAILABLE" || streamState === "FAILED"
+                              ? "#EF4444"
+                              : "#10B981",
+                        },
+                      ]}
+                    />
+                    <Text
+                      style={[
+                        styles.statusText,
+                        (streamState === "STREAMING" || streamState === "CONNECTING") && { color: "#F59E0B" },
+                        (streamState === "UNAVAILABLE" || streamState === "FAILED") && { color: "#EF4444" },
+                      ]}
+                    >
+                      {streamStatusText}
                     </Text>
                   </View>
                 </View>

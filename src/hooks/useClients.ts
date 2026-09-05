@@ -14,7 +14,7 @@ import {
 } from "../types/wealth";
 import { DEMO_CLIENTS } from "../services/demoData";
 
-const CLIENTS_KEY = "@asset_array_clients_v1";
+const CLIENTS_KEY = "asset_array_clients";
 
 export function todayISO(): string {
   return new Date().toISOString().slice(0, 10);

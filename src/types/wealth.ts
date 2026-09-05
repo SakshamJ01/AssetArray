@@ -53,16 +53,31 @@ export type AdvisorMessageDraft = {
   body: string;
 };
 
+export type VaultCategory = "Report" | "KYC" | "Tax" | "Review";
+
 export type VaultDocument = {
   id: string;
-  title: string;
-  category: "Investment" | "Compliance" | "Tax" | "Estate";
   clientName: string;
-  uploadDate: string;
-  notes: string;
-  fileSize: string;
+  fileName: string;
+  category: VaultCategory;
+  date: string;
+  status: "Stored" | "Shared";
 };
-export type VaultDocumentDraft = Omit<VaultDocument, "id">;
+
+export type VaultDocumentDraft = {
+  clientName: string;
+  fileName: string;
+  category: VaultCategory;
+};
+
+export type ConnectedAccount = {
+  id: string;
+  institution: string;
+  accountType: "Bank" | "Broker" | "Card" | "Retirement";
+  currentValue: string;
+  status: "Connected" | "Review";
+};
+
 
 export interface PortfolioHolding {
   id: string;
@@ -204,3 +219,7 @@ export const emptyHoldingDraft: HoldingDraft = {
   targetWeight: "",
   notes: "",
 };
+
+export const defaultMessage =
+  "Today's market update: stay selective, watch volatility, and review position sizing before entering fresh trades.";
+

@@ -80,7 +80,7 @@ import {
   refreshAdvisorToken,
   sendBroadcastCampaign,
 } from "./src/services/secureSync";
-import { buildAppTheme } from "./src/theme";
+import { buildAppTheme, styles } from "./src/theme";
 import { SyncBadge } from "./src/components/SyncBadge";
 import { fetchLiveMarketQuotes, getQuoteForSymbol, MarketQuote } from "./src/services/marketData";
 import { analyzeClientPortfolioWithAI, ClientAiRecommendation } from "./src/services/aiAdvisor";
@@ -94,6 +94,7 @@ import {
   ToolsScreen,
   WorkspaceScreen,
   SettingsScreen,
+  AiResearchScreen,
 } from "./src/screens";
 import { PortfolioManagerSection } from "./src/components/PortfolioManagerSection";
 import { DEMO_CLIENTS, getClientAvatar } from "./src/services/demoData";
@@ -106,148 +107,51 @@ import { LiveMarketTicker } from "./src/components/LiveMarketTicker";
 import { ScreenTransition } from "./src/components/ScreenTransition";
 import { CurrencyCode, loadCurrencyPreference, saveCurrencyPreference } from "./src/services/currency";
 import { realTimeMarket } from "./src/services/realTimeMarket";
+import {
+  Channel,
+  Category,
+  Priority,
+  FilterMode,
+  BroadcastChannel,
+  CashFlowFrequency,
+  CashFlowMode,
+  SipFrequency,
+  CalculatorTab,
+  AppTab,
+  AboutSheet,
+  AssetClass,
+  GoalType,
+  GoalPriority,
+  Goal,
+  GoalDraft,
+  AdvisorMessage,
+  AdvisorMessageDraft,
+  VaultDocument,
+  VaultDocumentDraft,
+  ConnectedAccount,
+  PortfolioHolding,
+  Client,
+  ClientDraft,
+  HoldingDraft,
+  CloudSettings,
+  AuthSession,
+  CATEGORY_OPTIONS,
+  ASSET_CLASS_OPTIONS,
+  CATEGORY_FILTER_OPTIONS,
+  PRIORITY_OPTIONS,
+  CHANNEL_OPTIONS,
+  BROADCAST_CHANNEL_OPTIONS,
+  CASH_FLOW_FREQUENCIES,
+  CASH_FLOW_MODES,
+  SIP_FREQUENCIES,
+  CALCULATOR_TABS,
+  GOAL_TYPE_OPTIONS,
+  GOAL_PRIORITY_OPTIONS,
+  emptyDraft,
+  emptyHoldingDraft,
+  defaultMessage,
+} from "./src/types/wealth";
 
-type Channel = "Phone" | "SMS" | "Email" | "WhatsApp";
-type Category = "HNI" | "Retail" | "Family Office" | "Trader" | "Long Term";
-type Priority = "High" | "Medium" | "Low";
-type FilterMode = "All" | "Due" | "High Priority";
-type BroadcastChannel = "Preferred" | "SMS" | "Email" | "WhatsApp";
-type CashFlowFrequency = "Monthly" | "Quarterly" | "Yearly";
-type CashFlowMode = "Payout" | "Cumulative";
-type SipFrequency = "Monthly" | "Quarterly";
-type CalculatorTab = "Cash Flow" | "SIP" | "Goal Planner" | "Retirement";
-type AppTab =
-  | "Dashboard"
-  | "Clients"
-  | "Portfolios"
-  | "Tools"
-  | "Workspace"
-  | "Settings"
-  | "AI Research";
-type AboutSheet = "Privacy Policy" | "Terms & Conditions";
-type AssetClass =
-  | "Stocks"
-  | "Bonds"
-  | "Mutual Funds"
-  | "Cash"
-  | "Alternatives";
-type GoalType = "Retirement" | "Education" | "Wealth" | "Emergency";
-type GoalPriority = "Core" | "Growth" | "Optional";
-type Goal = {
-  id: string;
-  title: string;
-  goalType: GoalType;
-  targetAmount: string;
-  currentAmount: string;
-  targetYear: string;
-  monthlyContribution: string;
-  priority: GoalPriority;
-};
-type GoalDraft = Omit<Goal, "id">;
-type AdvisorMessage = {
-  id: string;
-  clientName: string;
-  title: string;
-  body: string;
-  date: string;
-  status: "Pending" | "Sent" | "Reviewed";
-};
-type AdvisorMessageDraft = {
-  clientName: string;
-  title: string;
-  body: string;
-};
-type VaultDocument = {
-  id: string;
-  clientName: string;
-  fileName: string;
-  category: "Report" | "KYC" | "Tax" | "Review";
-  date: string;
-  status: "Stored" | "Shared";
-};
-type VaultDocumentDraft = {
-  clientName: string;
-  fileName: string;
-  category: "Report" | "KYC" | "Tax" | "Review";
-};
-type ConnectedAccount = {
-  id: string;
-  institution: string;
-  accountType: "Bank" | "Broker" | "Card" | "Retirement";
-  currentValue: string;
-  status: "Connected" | "Review";
-};
-
-type PortfolioHolding = {
-  id: string;
-  assetName: string;
-  assetClass: AssetClass;
-  ticker: string;
-  quantity: string;
-  investedValue: string;
-  currentValue: string;
-  targetWeight: string;
-  notes: string;
-};
-
-type Client = {
-  id: string;
-  name: string;
-  phone: string;
-  email: string;
-  category: Category;
-  riskProfile: string;
-  preferredChannel: Channel;
-  watchlist: string[];
-  notes: string;
-  city: string;
-  allocation: string;
-  reminderDate: string;
-  priority: Priority;
-  lastContact: string;
-  updateHistory: string[];
-  portfolio: PortfolioHolding[];
-  avatarUrl?: string;
-};
-
-type ClientDraft = {
-  name: string;
-  phone: string;
-  email: string;
-  category: Category;
-  riskProfile: string;
-  preferredChannel: Channel;
-  watchlist: string;
-  notes: string;
-  city: string;
-  allocation: string;
-  reminderDate: string;
-  priority: Priority;
-};
-
-type HoldingDraft = {
-  assetName: string;
-  assetClass: AssetClass;
-  ticker: string;
-  quantity: string;
-  investedValue: string;
-  currentValue: string;
-  targetWeight: string;
-  notes: string;
-};
-
-type CloudSettings = {
-  endpoint: string;
-  ownerName: string;
-  authUsername: string;
-};
-
-type AuthSession = {
-  user: AuthUser;
-  accessToken: string;
-  refreshToken: string;
-  expiresAt: number;
-};
 
 const PIN_KEY = "asset_array_pin";
 const CLIENTS_KEY = "asset_array_clients";
@@ -264,78 +168,6 @@ const GOALS_KEY = "asset_array_goals";
 const ADVISOR_MESSAGES_KEY = "asset_array_advisor_messages";
 const VAULT_DOCUMENTS_KEY = "asset_array_vault_documents";
 
-const CATEGORY_OPTIONS: Category[] = [
-  "HNI",
-  "Retail",
-  "Family Office",
-  "Trader",
-  "Long Term",
-];
-const ASSET_CLASS_OPTIONS: AssetClass[] = [
-  "Stocks",
-  "Bonds",
-  "Mutual Funds",
-  "Cash",
-  "Alternatives",
-];
-const CATEGORY_FILTER_OPTIONS: Array<"All" | Category> = ["All", ...CATEGORY_OPTIONS];
-const PRIORITY_OPTIONS: Priority[] = ["High", "Medium", "Low"];
-const CHANNEL_OPTIONS: Channel[] = ["Phone", "SMS", "Email", "WhatsApp"];
-const BROADCAST_CHANNEL_OPTIONS: BroadcastChannel[] = [
-  "Preferred",
-  "SMS",
-  "Email",
-  "WhatsApp",
-];
-const CASH_FLOW_FREQUENCIES: CashFlowFrequency[] = [
-  "Monthly",
-  "Quarterly",
-  "Yearly",
-];
-const CASH_FLOW_MODES: CashFlowMode[] = ["Payout", "Cumulative"];
-const SIP_FREQUENCIES: SipFrequency[] = ["Monthly", "Quarterly"];
-const CALCULATOR_TABS: CalculatorTab[] = [
-  "Cash Flow",
-  "SIP",
-  "Goal Planner",
-  "Retirement",
-];
-const GOAL_TYPE_OPTIONS: GoalType[] = [
-  "Retirement",
-  "Education",
-  "Wealth",
-  "Emergency",
-];
-const GOAL_PRIORITY_OPTIONS: GoalPriority[] = ["Core", "Growth", "Optional"];
-
-const defaultMessage =
-  "Today's market update: stay selective, watch volatility, and review position sizing before entering fresh trades.";
-
-const emptyDraft: ClientDraft = {
-  name: "",
-  phone: "",
-  email: "",
-  category: "Retail",
-  riskProfile: "",
-  preferredChannel: "WhatsApp",
-  watchlist: "",
-  notes: "",
-  city: "",
-  allocation: "",
-  reminderDate: "",
-  priority: "Medium",
-};
-
-const emptyHoldingDraft: HoldingDraft = {
-  assetName: "",
-  assetClass: "Stocks",
-  ticker: "",
-  quantity: "",
-  investedValue: "",
-  currentValue: "",
-  targetWeight: "",
-  notes: "",
-};
 
 const DEFAULT_BACKEND_ENDPOINT = "https://assetarray.onrender.com";
 
@@ -680,9 +512,18 @@ function AppContent() {
     void loadCurrencyPreference().then((c) => setActiveCurrency(c));
   }, []);
 
-  // Continuous real-time portfolio valuation sync when securities tick
+  // Continuous real-time portfolio valuation sync when securities tick (throttled to 3s for maximum UI responsiveness)
   useEffect(() => {
+    let lastSyncTime = 0;
+    const THROTTLE_MS = 3000;
+
     const unsubscribe = realTimeMarket.subscribe((instruments) => {
+      const now = Date.now();
+      if (now - lastSyncTime < THROTTLE_MS) {
+        return;
+      }
+      lastSyncTime = now;
+
       setClients((prevClients) => {
         if (!prevClients || prevClients.length === 0) return prevClients;
         let anyHoldingChanged = false;
@@ -718,6 +559,7 @@ function AppContent() {
 
     return () => unsubscribe();
   }, []);
+
 
   const cycleCurrency = () => {
     const list: CurrencyCode[] = ["INR", "USD", "EUR", "GBP", "AED", "SGD"];
@@ -1566,7 +1408,36 @@ function AppContent() {
     };
   }, [clients]);
 
+  const dashboardDueClients = useMemo(
+    () =>
+      dueClients.map((client) => ({
+        id: client.id,
+        name: client.name,
+        category: client.category,
+        reminderDate: formatReminderDate(client.reminderDate),
+        lastContact: client.lastContact,
+        priority: client.priority,
+        avatarUrl: getClientAvatar(client),
+      })),
+    [dueClients]
+  );
+
+  const dashboardRecentClients = useMemo(
+    () =>
+      recentClients.slice(0, 3).map((client) => ({
+        id: client.id,
+        name: client.name,
+        category: client.category,
+        reminderDate: formatReminderDate(client.reminderDate),
+        lastContact: client.lastContact,
+        priority: client.priority,
+        avatarUrl: getClientAvatar(client),
+      })),
+    [recentClients]
+  );
+
   const visibleTabs = useMemo(
+
     () => [
       { key: "Dashboard" as AppTab, label: "Dashboard" },
       { key: "Clients" as AppTab, label: "Clients" },
@@ -2799,15 +2670,7 @@ function AppContent() {
         <DashboardScreen
           analytics={dashboardAnalytics}
           contentBottomPadding={contentBottomPadding}
-          dueClients={dueClients.map((client) => ({
-            id: client.id,
-            name: client.name,
-            category: client.category,
-            reminderDate: formatReminderDate(client.reminderDate),
-            lastContact: client.lastContact,
-            priority: client.priority,
-            avatarUrl: getClientAvatar(client),
-          }))}
+          dueClients={dashboardDueClients}
           onActionAddClient={openAddModal}
           onActionAiResearch={() => setActiveTab("AI Research")}
           onActionBroadcast={() => {
@@ -2822,19 +2685,12 @@ function AppContent() {
             setActiveTab("Clients");
           }}
           onViewAllClients={() => setActiveTab("Clients")}
-          recentClients={recentClients.map((client) => ({
-            id: client.id,
-            name: client.name,
-            category: client.category,
-            reminderDate: formatReminderDate(client.reminderDate),
-            lastContact: client.lastContact,
-            priority: client.priority,
-            avatarUrl: getClientAvatar(client),
-          })).slice(0, 3)}
+          recentClients={dashboardRecentClients}
           reminderKpis={dashboardReminderKpis}
           stats={dashboardStats}
           theme={theme}
         />
+
       ) : (
       <ScrollView
         style={{ flex: 1 }}
@@ -2915,182 +2771,24 @@ function AppContent() {
         </View>
 
         {activeTab === "AI Research" ? (
-          <>
-            <View style={[styles.panel, styles.analyticsPanel]}>
-              <Text style={styles.panelTitle}>AI Research</Text>
-              <Text style={styles.panelSubtitle}>
-                Generate a structured market brief for a stock, company, mutual fund, ETF, sector, or market topic.
-              </Text>
-              <TextInput
-                value={aiResearchQuery}
-                onChangeText={setAiResearchQuery}
-                placeholder="e.g. Reliance Industries, Nifty IT, Gold ETF, banking sector"
-                placeholderTextColor="#7f90a8"
-                autoCapitalize="words"
-                style={styles.input}
-              />
-              <View style={styles.inlineActions}>
-                <Pressable
-                  style={styles.primaryButton}
-                  onPress={() => void runAiResearch()}
-                  disabled={isAiResearchLoading}
-                >
-                  <Text style={styles.primaryButtonText}>
-                    {isAiResearchLoading ? "Researching..." : "Generate Research"}
-                  </Text>
-                </Pressable>
-                <Text style={styles.clientSubMeta}>{aiResearchState}</Text>
-              </View>
-
-              {aiResearchResult ? (
-                <View style={styles.aiResearchResult}>
-                  <View style={styles.aiResearchHeader}>
-                    <Text style={styles.sectionLabel}>Sentiment</Text>
-                    <Text
-                      style={[
-                        styles.sentimentPill,
-                        aiResearchResult.sentiment === "Bullish"
-                          ? styles.sentimentBullish
-                          : aiResearchResult.sentiment === "Bearish"
-                            ? styles.sentimentBearish
-                            : styles.sentimentNeutral,
-                      ]}
-                    >
-                      {aiResearchResult.sentiment}
-                    </Text>
-                  </View>
-
-                  <Text style={styles.sectionLabel}>Summary</Text>
-                  <Text style={styles.detailBlock}>{aiResearchResult.summary}</Text>
-
-                  <View style={styles.dualColumn}>
-                    <View style={styles.column}>
-                      <Text style={styles.sectionLabel}>Opportunities</Text>
-                      {aiResearchResult.opportunities.map((item) => (
-                        <Text key={item} style={styles.historyItem}>
-                          {item}
-                        </Text>
-                      ))}
-                    </View>
-                    <View style={styles.column}>
-                      <Text style={styles.sectionLabel}>Risks</Text>
-                      {aiResearchResult.risks.map((item) => (
-                        <Text key={item} style={styles.analyticsAlert}>
-                          {item}
-                        </Text>
-                      ))}
-                    </View>
-                  </View>
-
-                  <Text style={styles.sectionLabel}>Short-term outlook</Text>
-                  <Text style={styles.historyItem}>{aiResearchResult.shortTermOutlook}</Text>
-                  <Text style={styles.sectionLabel}>Long-term outlook</Text>
-                  <Text style={styles.historyItem}>{aiResearchResult.longTermOutlook}</Text>
-                </View>
-              ) : (
-                <View style={styles.emptyState}>
-                  <Text style={styles.emptyTitle}>Research ready</Text>
-                  <Text style={styles.emptyText}>
-                    Enter a topic and generate a structured advisor-ready view.
-                  </Text>
-                </View>
-              )}
-            </View>
-
-            <View style={[styles.panel, styles.analyticsPanel, { marginTop: 16 }]}>
-              <Text style={styles.panelTitle}>Client Portfolio Co-Pilot</Text>
-              <Text style={styles.panelSubtitle}>
-                Select a client to generate personalized rebalancing strategies, risk alerts, and custom advisory messages.
-              </Text>
-
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: 12 }}>
-                {clients.map((c) => {
-                  const isSelected = selectedAiClient?.id === c.id;
-                  return (
-                    <Pressable
-                      key={c.id}
-                      style={[
-                        styles.darkChip,
-                        { marginRight: 8, backgroundColor: isSelected ? theme.colors.brand : theme.colors.surfaceStrong },
-                      ]}
-                      onPress={() => setSelectedAiClient(c)}
-                    >
-                      <Text style={[styles.darkChipText, { color: isSelected ? "#ffffff" : theme.colors.textPrimary }]}>
-                        {c.name} ({c.category})
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </ScrollView>
-
-              {selectedAiClient ? (
-                <View style={{ marginTop: 8 }}>
-                  <Pressable
-                    style={[styles.primaryButton, { alignSelf: "flex-start" }]}
-                    onPress={() => void runClientAiCoPilot(selectedAiClient)}
-                    disabled={isClientAiLoading}
-                  >
-                    <Text style={styles.primaryButtonText}>
-                      {isClientAiLoading ? "Analyzing Portfolio..." : `🤖 Analyze ${selectedAiClient.name}'s Portfolio`}
-                    </Text>
-                  </Pressable>
-
-                  {clientAiRecommendation ? (
-                    <View style={[styles.aiResearchResult, { marginTop: 16 }]}>
-                      <Text style={styles.sectionLabel}>Client Strategy & Sentiment</Text>
-                      <Text style={styles.detailBlock}>{clientAiRecommendation.analysis.summary}</Text>
-
-                      <Text style={styles.sectionLabel}>💬 Personal WhatsApp Message Draft</Text>
-                      <Text style={[styles.detailBlock, { fontStyle: "italic", backgroundColor: "rgba(37, 211, 102, 0.1)" }]}>
-                        {clientAiRecommendation.whatsappDraft}
-                      </Text>
-                      <Pressable
-                        style={[styles.primaryButton, { backgroundColor: "#25D366", marginTop: 8, marginBottom: 16 }]}
-                        onPress={() => {
-                          const cleanPhone = (selectedAiClient.phone || "").replace(/[^0-9+]/g, "");
-                          const encodedText = encodeURIComponent(clientAiRecommendation.whatsappDraft);
-                          const url = cleanPhone
-                            ? `whatsapp://send?phone=${cleanPhone}&text=${encodedText}`
-                            : `whatsapp://send?text=${encodedText}`;
-                          Linking.openURL(url).catch(() => {
-                            Alert.alert("WhatsApp not found", "Could not open WhatsApp on this device.");
-                          });
-                        }}
-                      >
-                        <Text style={[styles.primaryButtonText, { color: "#ffffff", fontWeight: "700" }]}>
-                          📲 Send to {selectedAiClient.name} via WhatsApp
-                        </Text>
-                      </Pressable>
-
-                      <Text style={styles.sectionLabel}>📧 Professional Email Draft</Text>
-                      <Text style={[styles.detailBlock, { fontStyle: "italic" }]}>
-                        {clientAiRecommendation.emailDraft}
-                      </Text>
-                      <Pressable
-                        style={[styles.primaryButton, { backgroundColor: "#2f6fff", marginTop: 8 }]}
-                        onPress={() => {
-                          const email = selectedAiClient.email || "";
-                          const subject = encodeURIComponent(`Portfolio Strategy & Allocation Review for ${selectedAiClient.name}`);
-                          const body = encodeURIComponent(clientAiRecommendation.emailDraft);
-                          const url = `mailto:${email}?subject=${subject}&body=${body}`;
-                          Linking.openURL(url).catch(() => {
-                            Alert.alert("Email client not found", "Could not open your default email app.");
-                          });
-                        }}
-                      >
-                        <Text style={[styles.primaryButtonText, { color: "#ffffff", fontWeight: "700" }]}>
-                          ✉️ Open Draft in Email Client
-                        </Text>
-                      </Pressable>
-                    </View>
-                  ) : null}
-                </View>
-              ) : (
-                <Text style={styles.clientSubMeta}>Select a client above to unlock AI Co-Pilot analysis.</Text>
-              )}
-            </View>
-          </>
+          <AiResearchScreen
+            theme={theme}
+            clients={clients}
+            aiResearchQuery={aiResearchQuery}
+            setAiResearchQuery={setAiResearchQuery}
+            runAiResearch={runAiResearch}
+            isAiResearchLoading={isAiResearchLoading}
+            aiResearchState={aiResearchState}
+            aiResearchResult={aiResearchResult}
+            selectedAiClient={selectedAiClient}
+            setSelectedAiClient={setSelectedAiClient}
+            runClientAiCoPilot={runClientAiCoPilot}
+            isClientAiLoading={isClientAiLoading}
+            clientAiRecommendation={clientAiRecommendation}
+            styles={styles}
+          />
         ) : null}
+
 
         {activeTab === "Portfolios" ? (
           <>
@@ -3416,1023 +3114,3 @@ export default function App() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: "#070b14",
-  },
-  screenDark: {
-    backgroundColor: "#050916",
-  },
-  container: {
-    padding: 20,
-    paddingBottom: 120,
-    gap: 18,
-  },
-  bottomTabBar: {
-    position: "absolute",
-    left: 16,
-    right: 16,
-    bottom: 12,
-    backgroundColor: "#0b1630",
-    borderWidth: 1,
-    borderColor: "#1d3353",
-    borderRadius: 18,
-    padding: 8,
-    flexDirection: "row",
-    gap: 8,
-    shadowColor: "#000",
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 12,
-  },
-  bottomTabItem: {
-    flex: 1,
-    borderRadius: 12,
-    paddingVertical: 10,
-    alignItems: "center",
-    backgroundColor: "#0f1d3a",
-  },
-  bottomTabItemActive: {
-    backgroundColor: "#0cb38e",
-  },
-  bottomTabText: {
-    color: "#c4d2e8",
-    fontSize: 10,
-    fontWeight: "700",
-    textAlign: "center",
-  },
-  bottomTabTextActive: {
-    color: "#041b16",
-  },
-  loadingScreen: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#0f1b2d",
-  },
-  loadingTitle: {
-    color: "#f8fafc",
-    fontSize: 20,
-    fontWeight: "700",
-  },
-  authScreen: {
-    flex: 1,
-    justifyContent: "center",
-    padding: 24,
-    backgroundColor: "#0f1b2d",
-  },
-  authScreenDark: {
-    backgroundColor: "#09111d",
-  },
-  authCard: {
-    backgroundColor: "#0b1630",
-    borderRadius: 28,
-    padding: 24,
-    borderWidth: 1,
-    borderColor: "#1a2a49",
-  },
-  authEyebrow: {
-    color: "#a3bad5",
-    fontSize: 13,
-    letterSpacing: 1.3,
-    textTransform: "uppercase",
-    marginBottom: 10,
-  },
-  authTitle: {
-    color: "#f8fafc",
-    fontSize: 28,
-    lineHeight: 34,
-    fontWeight: "700",
-    marginBottom: 10,
-  },
-  authText: {
-    color: "#d2ddeb",
-    fontSize: 15,
-    lineHeight: 22,
-    marginBottom: 18,
-  },
-  authInput: {
-    backgroundColor: "#0b1522",
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#27405e",
-    color: "#f8fafc",
-    fontSize: 18,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    marginBottom: 16,
-  },
-  authStatusText: {
-    color: "#9fb1c9",
-    fontSize: 13,
-    fontWeight: "700",
-    marginTop: 12,
-    textAlign: "center",
-  },
-  heroCard: {
-    backgroundColor: "#0a1630",
-    borderRadius: 28,
-    padding: 22,
-    borderWidth: 1,
-    borderColor: "#213a61",
-    gap: 16,
-    shadowColor: "#0f1724",
-    shadowOpacity: 0.12,
-    shadowRadius: 18,
-    shadowOffset: {
-      width: 0,
-      height: 10,
-    },
-    elevation: 5,
-  },
-  pageHeader: {
-    alignItems: "center",
-    borderRadius: 16,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 8,
-    paddingHorizontal: 20,
-    paddingVertical: 18,
-  },
-  pageHeaderCompact: {
-    alignItems: "stretch",
-    flexDirection: "column",
-    gap: 14,
-    justifyContent: "flex-start",
-  },
-  pageHeaderTitle: {
-    fontSize: 24,
-    fontWeight: "800",
-    lineHeight: 30,
-  },
-  pageHeaderTitleCompact: {
-    fontSize: 22,
-    lineHeight: 28,
-  },
-  heroCopy: {
-    gap: 8,
-    flexShrink: 1,
-    minWidth: 0,
-  },
-  heroCopyCompact: {
-    width: "100%",
-  },
-  heroEyebrow: {
-    color: "#94abc7",
-    fontSize: 13,
-    letterSpacing: 1.3,
-    textTransform: "uppercase",
-  },
-  heroTitle: {
-    color: "#f8fafc",
-    fontSize: 28,
-    lineHeight: 34,
-    fontWeight: "700",
-  },
-  heroText: {
-    color: "#d7e3ef",
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  heroActionRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-  },
-  heroActionRowCompact: {
-    flexDirection: "row",
-    flexWrap: "nowrap",
-    gap: 10,
-    width: "100%",
-  },
-  statRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 12,
-  },
-  statCard: {
-    flexGrow: 1,
-    minWidth: 110,
-    backgroundColor: "#0d1931",
-    borderRadius: 22,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#1f3352",
-    shadowColor: "#15263c",
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    elevation: 2,
-  },
-  statValue: {
-    color: "#eef4ff",
-    fontSize: 24,
-    fontWeight: "700",
-    marginBottom: 4,
-  },
-  statLabel: {
-    color: "#8ca3c4",
-    fontSize: 13,
-  },
-  miniStat: {
-    flexGrow: 1,
-    minWidth: 90,
-    backgroundColor: "#101d39",
-    borderRadius: 16,
-    padding: 14,
-  },
-  calculatorResultGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 12,
-    marginTop: 4,
-  },
-  calculatorStat: {
-    minWidth: 130,
-    borderWidth: 1,
-    borderColor: "#1d3354",
-    backgroundColor: "#0f1b36",
-  },
-  miniStatValue: {
-    color: "#f2f7ff",
-    fontSize: 18,
-    fontWeight: "700",
-    marginBottom: 4,
-  },
-  miniStatLabel: {
-    color: "#8ba2c5",
-    fontSize: 12,
-  },
-  panel: {
-    backgroundColor: "#111a2e",
-    borderRadius: 20,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: "#1c2842",
-    shadowColor: "#000",
-    shadowOpacity: 0.16,
-    shadowRadius: 12,
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    elevation: 3,
-  },
-  calculatorPanel: {
-    backgroundColor: "#111a2e",
-    borderColor: "#1c2842",
-  },
-  analyticsPanel: {
-    backgroundColor: "#111a2e",
-    borderColor: "#1c2842",
-  },
-  panelTitle: {
-    color: "#f8fafc",
-    fontSize: 20,
-    fontWeight: "700",
-    marginBottom: 6,
-    letterSpacing: -0.2,
-  },
-  panelSubtitle: {
-    color: "#94a3b8",
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 14,
-  },
-  input: {
-    backgroundColor: "#0c1322",
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "#1e2c47",
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    color: "#f8fafc",
-    fontSize: 15,
-    marginBottom: 12,
-  },
-  messageInput: {
-    minHeight: 110,
-    textAlignVertical: "top",
-  },
-  notesInput: {
-    minHeight: 120,
-    textAlignVertical: "top",
-  },
-  inputLabel: {
-    color: "#94a3b8",
-    fontSize: 13,
-    fontWeight: "600",
-    marginBottom: 8,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  optionRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-    marginBottom: 12,
-  },
-  optionChip: {
-    backgroundColor: "#17233d",
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: "#23355b",
-  },
-  optionChipActive: {
-    backgroundColor: "#2563eb",
-    borderColor: "#3b82f6",
-  },
-  optionChipText: {
-    color: "#94a3b8",
-    fontWeight: "600",
-    fontSize: 13,
-  },
-  optionChipTextActive: {
-    color: "#ffffff",
-  },
-  broadcastStrip: {
-    backgroundColor: "#111a2e",
-    borderRadius: 18,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#1c2842",
-  },
-  broadcastStripText: {
-    color: "#f8fafc",
-    fontSize: 14,
-    fontWeight: "700",
-    marginBottom: 10,
-  },
-  dualColumn: {
-    gap: 18,
-  },
-  column: {
-    flex: 1,
-  },
-  emptyState: {
-    backgroundColor: "#0c1322",
-    borderRadius: 16,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: "#1e2c47",
-  },
-  emptyTitle: {
-    color: "#f8fafc",
-    fontSize: 16,
-    fontWeight: "700",
-    marginBottom: 6,
-  },
-  emptyText: {
-    color: "#94a3b8",
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  clientRowShell: {
-    flexDirection: "row",
-    gap: 10,
-    alignItems: "stretch",
-    marginBottom: 8,
-  },
-  selectorPill: {
-    width: 78,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#17233d",
-    borderRadius: 14,
-    paddingHorizontal: 8,
-    borderWidth: 1,
-    borderColor: "#23355b",
-  },
-  selectorPillActive: {
-    backgroundColor: "rgba(16, 185, 129, 0.2)",
-    borderColor: "#10b981",
-  },
-  selectorPillText: {
-    color: "#94a3b8",
-    fontWeight: "700",
-    fontSize: 12,
-    textAlign: "center",
-  },
-  selectorPillTextActive: {
-    color: "#10b981",
-  },
-  clientRow: {
-    flex: 1,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#1c2842",
-    backgroundColor: "#111a2e",
-    gap: 12,
-  },
-  clientRowActive: {
-    backgroundColor: "#172542",
-    borderColor: "#3b82f6",
-  },
-  clientRowMain: {
-    flex: 1,
-    gap: 4,
-  },
-  clientName: {
-    color: "#f8fafc",
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  clientMeta: {
-    color: "#94a3b8",
-    fontSize: 13,
-  },
-  clientSubMeta: {
-    color: "#64748b",
-    fontSize: 12,
-  },
-  dueBadge: {
-    backgroundColor: "rgba(245, 158, 11, 0.18)",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "rgba(245, 158, 11, 0.4)",
-  },
-  dueBadgeText: {
-    color: "#f59e0b",
-    fontWeight: "700",
-    fontSize: 12,
-  },
-  detailName: {
-    color: "#f8fafc",
-    fontSize: 26,
-    fontWeight: "700",
-    marginBottom: 6,
-  },
-  detailLine: {
-    color: "#94a3b8",
-    fontSize: 14,
-    marginBottom: 4,
-  },
-  tagRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginTop: 12,
-    marginBottom: 12,
-  },
-  tag: {
-    backgroundColor: "#17233d",
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderWidth: 1,
-    borderColor: "#23355b",
-  },
-  tagText: {
-    color: "#cbd5e1",
-    fontWeight: "600",
-    fontSize: 13,
-  },
-  sectionLabel: {
-    color: "#f8fafc",
-    fontSize: 14,
-    fontWeight: "700",
-    marginTop: 14,
-    marginBottom: 6,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  detailBlock: {
-    color: "#94a3b8",
-    fontSize: 14,
-    lineHeight: 22,
-  },
-  aiResearchResult: {
-    gap: 12,
-    marginTop: 12,
-    padding: 16,
-    backgroundColor: "#0c1322",
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#1e2c47",
-  },
-  aiResearchHeader: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 12,
-  },
-  sentimentPill: {
-    borderRadius: 999,
-    overflow: "hidden",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    fontSize: 12,
-    fontWeight: "700",
-    letterSpacing: 0.4,
-  },
-  sentimentBullish: {
-    backgroundColor: "rgba(16, 185, 129, 0.15)",
-    color: "#10b981",
-  },
-  sentimentNeutral: {
-    backgroundColor: "rgba(148, 163, 184, 0.15)",
-    color: "#cbd5e1",
-  },
-  sentimentBearish: {
-    backgroundColor: "rgba(244, 63, 94, 0.15)",
-    color: "#f43f5e",
-  },
-  darkChip: {
-    backgroundColor: "#2563eb",
-    borderRadius: 999,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-  },
-  darkChipText: {
-    color: "#ffffff",
-    fontWeight: "600",
-    fontSize: 13,
-  },
-  lightChip: {
-    backgroundColor: "#17233d",
-    borderRadius: 999,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: "#23355b",
-  },
-  lightChipText: {
-    color: "#cbd5e1",
-    fontWeight: "600",
-    fontSize: 13,
-  },
-  inlineActions: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 14,
-    marginTop: 10,
-  },
-  linkButton: {
-    paddingVertical: 8,
-  },
-  linkButtonText: {
-    color: "#3b82f6",
-    fontWeight: "700",
-  },
-  linkDanger: {
-    color: "#f43f5e",
-  },
-  historyItem: {
-    backgroundColor: "#0c1322",
-    borderRadius: 14,
-    padding: 12,
-    color: "#cbd5e1",
-    marginTop: 8,
-    lineHeight: 20,
-    borderWidth: 1,
-    borderColor: "#1e2c47",
-  },
-  reportBlock: {
-    backgroundColor: "#0c1322",
-    borderRadius: 16,
-    padding: 14,
-    color: "#cbd5e1",
-    lineHeight: 21,
-    marginTop: 8,
-    borderWidth: 1,
-    borderColor: "#1e2c47",
-  },
-  reminderRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 12,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#1e293b",
-  },
-  slimButton: {
-    backgroundColor: "#2563eb",
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
-  slimButtonText: {
-    color: "#f8fafc",
-    fontWeight: "700",
-  },
-  categoryGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 12,
-  },
-  categoryCard: {
-    width: "47%",
-    backgroundColor: "#111a2e",
-    borderRadius: 18,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#1c2842",
-  },
-  analyticsSummaryRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 12,
-    marginTop: 8,
-    marginBottom: 18,
-  },
-  analyticsMetricCard: {
-    flexGrow: 1,
-    minWidth: 130,
-    borderRadius: 18,
-    padding: 16,
-    borderWidth: 1,
-  },
-  analyticsBlue: {
-    backgroundColor: "rgba(37, 99, 235, 0.08)",
-    borderColor: "rgba(59, 130, 246, 0.35)",
-  },
-  analyticsSlate: {
-    backgroundColor: "#162238",
-    borderColor: "#283959",
-  },
-  analyticsGreen: {
-    backgroundColor: "rgba(16, 185, 129, 0.08)",
-    borderColor: "rgba(16, 185, 129, 0.35)",
-  },
-  analyticsRed: {
-    backgroundColor: "rgba(244, 63, 94, 0.08)",
-    borderColor: "rgba(244, 63, 94, 0.35)",
-  },
-  analyticsGold: {
-    backgroundColor: "rgba(245, 158, 11, 0.08)",
-    borderColor: "rgba(245, 158, 11, 0.35)",
-  },
-  analyticsMetricLabel: {
-    color: "#c1d3ec",
-    fontSize: 12,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    marginBottom: 6,
-  },
-  analyticsMetricValue: {
-    color: "#f3f8ff",
-    fontSize: 20,
-    fontWeight: "700",
-  },
-  allocationRow: {
-    backgroundColor: "#0f1d39",
-    borderRadius: 16,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: "#213b61",
-    marginTop: 10,
-  },
-  allocationHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  allocationBarTrack: {
-    height: 10,
-    borderRadius: 999,
-    backgroundColor: "#1b2f50",
-    overflow: "hidden",
-    marginBottom: 8,
-  },
-  allocationBarFill: {
-    height: "100%",
-    borderRadius: 999,
-    backgroundColor: "#2f6fff",
-  },
-  analyticsAlert: {
-    backgroundColor: "#2f2530",
-    borderRadius: 14,
-    padding: 12,
-    color: "#ffd5a1",
-    lineHeight: 20,
-    marginTop: 8,
-  },
-  analyticsListCard: {
-    backgroundColor: "#0f1d39",
-    borderRadius: 16,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: "#213b61",
-    marginTop: 10,
-  },
-  analyticsPositive: {
-    color: "#0f8a4d",
-    fontWeight: "700",
-    marginTop: 6,
-  },
-  analyticsNegative: {
-    color: "#b23a3a",
-    fontWeight: "700",
-    marginTop: 6,
-  },
-  categoryValue: {
-    color: "#eef4ff",
-    fontSize: 22,
-    fontWeight: "700",
-    marginBottom: 4,
-  },
-  categoryLabel: {
-    color: "#8ea6c8",
-    fontSize: 13,
-  },
-  holdingCard: {
-    backgroundColor: "#0f1d39",
-    borderRadius: 18,
-    padding: 16,
-    marginTop: 12,
-  },
-  holdingTitle: {
-    color: "#ecf3ff",
-    fontSize: 16,
-    fontWeight: "700",
-    marginBottom: 6,
-  },
-  holdingMeta: {
-    color: "#98afd0",
-    fontSize: 13,
-    marginBottom: 4,
-  },
-  holdingNote: {
-    color: "#8ea8ca",
-    fontSize: 13,
-    lineHeight: 19,
-    marginTop: 6,
-  },
-  settingsOverviewPanel: {
-    backgroundColor: "#0b1b38",
-    borderColor: "#294b79",
-  },
-  settingsStatusGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-  },
-  settingsStatusItem: {
-    backgroundColor: "#09172d",
-    borderColor: "#244164",
-    borderRadius: 14,
-    borderWidth: 1,
-    flexGrow: 1,
-    flexBasis: 150,
-    padding: 12,
-  },
-  settingsStatusLabel: {
-    color: "#8fa9cd",
-    fontSize: 12,
-    fontWeight: "700",
-    marginBottom: 5,
-    textTransform: "uppercase",
-  },
-  settingsStatusValue: {
-    color: "#edf5ff",
-    fontSize: 14,
-    fontWeight: "700",
-    lineHeight: 19,
-  },
-  settingsSectionTitle: {
-    color: "#ecf3ff",
-    fontSize: 18,
-    fontWeight: "700",
-    marginBottom: 10,
-  },
-  settingsRow: {
-    alignItems: "center",
-    borderBottomColor: "#1b3355",
-    borderBottomWidth: 1,
-    flexDirection: "row",
-    gap: 16,
-    justifyContent: "space-between",
-    paddingVertical: 14,
-  },
-  settingsActionRow: {
-    alignItems: "center",
-    borderBottomColor: "#1b3355",
-    borderBottomWidth: 1,
-    flexDirection: "row",
-    gap: 16,
-    justifyContent: "space-between",
-    paddingVertical: 14,
-  },
-  settingsActionText: {
-    color: "#bfd5f3",
-    fontSize: 14,
-    fontWeight: "800",
-  },
-  settingsButtonRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-  },
-  toggleRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 16,
-    marginBottom: 16,
-  },
-  toggleCopy: {
-    flex: 1,
-  },
-  toggleTitle: {
-    color: "#e8f2ff",
-    fontSize: 15,
-    fontWeight: "700",
-    marginBottom: 4,
-  },
-  toggleText: {
-    color: "#8fa9cd",
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  primaryButton: {
-    backgroundColor: "#2563eb",
-    borderRadius: 14,
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#2563eb",
-    shadowOpacity: 0.35,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
-  },
-  primaryButtonText: {
-    color: "#ffffff",
-    fontWeight: "700",
-    fontSize: 15,
-    letterSpacing: 0.2,
-  },
-  goldButton: {
-    alignSelf: "flex-start",
-    backgroundColor: "#10b981",
-    borderRadius: 14,
-    paddingHorizontal: 18,
-    paddingVertical: 14,
-  },
-  goldButtonText: {
-    color: "#ffffff",
-    fontWeight: "700",
-    fontSize: 14,
-  },
-  secondaryButton: {
-    backgroundColor: "#17233d",
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "#23355b",
-  },
-  secondaryButtonCompact: {
-    alignItems: "center",
-    flex: 1,
-    justifyContent: "center",
-    minHeight: 48,
-    minWidth: 0,
-  },
-  secondaryButtonText: {
-    color: "#cbd5e1",
-    fontWeight: "600",
-    fontSize: 14,
-  },
-  logoutButton: {
-    borderWidth: 1,
-    borderColor: "rgba(244, 63, 94, 0.35)",
-    backgroundColor: "rgba(244, 63, 94, 0.1)",
-  },
-  logoutButtonText: {
-    color: "#f43f5e",
-    fontWeight: "700",
-  },
-  secondaryAction: {
-    marginTop: 14,
-    alignSelf: "center",
-  },
-  secondaryActionText: {
-    color: "#3b82f6",
-    fontWeight: "700",
-  },
-  modalBackdrop: {
-    flex: 1,
-    justifyContent: "flex-end",
-    backgroundColor: "rgba(0, 0, 0, 0.65)",
-  },
-  modalBackdropCenter: {
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 24,
-  },
-  modalCard: {
-    maxHeight: "90%",
-    backgroundColor: "#111a2e",
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    padding: 24,
-    borderWidth: 1,
-    borderColor: "#1c2842",
-  },
-  modalCardCenter: {
-    width: "100%",
-    maxWidth: 580,
-    maxHeight: "85%",
-    borderRadius: 20,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    borderColor: "rgba(224, 168, 76, 0.18)",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 24 },
-    shadowOpacity: 0.55,
-    shadowRadius: 40,
-    elevation: 20,
-  },
-  modalTitle: {
-    color: "#eaf3ff",
-    fontSize: 22,
-    fontWeight: "700",
-    marginBottom: 12,
-  },
-  modalActions: {
-    flexDirection: "row",
-    gap: 12,
-    marginTop: 10,
-  },
-  modalSecondary: {
-    flex: 1,
-    backgroundColor: "#102240",
-    borderRadius: 16,
-    paddingVertical: 14,
-    alignItems: "center",
-  },
-  modalSecondaryText: {
-    color: "#bfd3ef",
-    fontWeight: "700",
-  },
-  clientDetailHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-    marginBottom: 14,
-  },
-  clientListAvatar: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    borderWidth: 1,
-    borderColor: "rgba(224, 168, 76, 0.35)",
-  },
-  clientListAvatarPlaceholder: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: "rgba(224, 168, 76, 0.15)",
-    borderWidth: 1,
-    borderColor: "rgba(224, 168, 76, 0.35)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  clientListAvatarText: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#E0A84C",
-  },
-  clientDetailAvatar: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    borderWidth: 2,
-    borderColor: "#E0A84C",
-  },
-  clientDetailAvatarPlaceholder: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: "rgba(224, 168, 76, 0.15)",
-    borderWidth: 2,
-    borderColor: "#E0A84C",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  clientDetailAvatarText: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: "#E0A84C",
-  },
-});

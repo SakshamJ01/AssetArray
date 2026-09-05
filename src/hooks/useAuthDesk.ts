@@ -5,11 +5,12 @@ import { storageService } from "../platform/storage";
 import { localAuth } from "../platform/auth";
 import { AuthSession } from "../types/wealth";
 
-const PIN_KEY = "@asset_array_pin_v1";
-const BIOMETRIC_KEY = "@asset_array_biometric_v1";
-const DARK_MODE_KEY = "@asset_array_dark_mode_v1";
-const HAPTICS_KEY = "@asset_array_haptics_v1";
-const AUTH_SESSION_KEY = "@asset_array_auth_session_v1";
+const PIN_KEY = "asset_array_pin";
+const BIOMETRIC_KEY = "asset_array_biometric";
+const DARK_MODE_KEY = "asset_array_dark_mode";
+const HAPTICS_KEY = "asset_array_haptics";
+const AUTH_SESSION_KEY = "asset_array_auth_session";
+
 
 export async function persistBiometric(value: boolean): Promise<void> {
   await storageService.setSecureItem(BIOMETRIC_KEY, JSON.stringify(value));

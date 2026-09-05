@@ -29,7 +29,7 @@ export interface PortfoliosScreenProps {
   styles: any;
 }
 
-export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = ({
+export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
   theme,
   unifiedPortfolioAnalytics,
   taxReporting,
@@ -38,6 +38,7 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = ({
   currencyDisplay,
   styles,
 }) => {
+
   const [isRebalanceOpen, setIsRebalanceOpen] = useState(false);
   const [isStressTestOpen, setIsStressTestOpen] = useState(false);
   const [activeVisualization, setActiveVisualization] = useState<"both" | "chart" | "heatmap">("both");
@@ -477,4 +478,5 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = ({
       />
     </>
   );
-};
+});
+

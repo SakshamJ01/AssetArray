@@ -121,13 +121,14 @@ const ClientRowItem = React.memo<ClientRowItemProps>(
   }
 );
 
-export const ClientsScreen: React.FC<ClientsScreenProps> = ({
+export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
   theme,
   isDesktop,
   searchQuery,
   setSearchQuery,
   categoryFilter,
   setCategoryFilter,
+
   filterMode,
   setFilterMode,
   selectedClientIds,
@@ -501,4 +502,5 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = ({
       />
     </>
   );
-};
+});
+

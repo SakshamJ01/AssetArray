@@ -122,10 +122,11 @@ export interface ToolsScreenProps {
   styles: any;
 }
 
-export const ToolsScreen: React.FC<ToolsScreenProps> = ({
+export const ToolsScreen: React.FC<ToolsScreenProps> = React.memo(({
   theme,
   activeCalculator,
   setActiveCalculator,
+
   cashFlowAmount,
   setCashFlowAmount,
   cashFlowRate,
@@ -828,4 +829,5 @@ export const ToolsScreen: React.FC<ToolsScreenProps> = ({
       />
     </>
   );
-};
+});
+

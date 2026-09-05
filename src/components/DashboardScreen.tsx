@@ -57,7 +57,7 @@ function chunkPairs<T>(array: T[]): T[][] {
   return pairs;
 }
 
-export function DashboardScreen({
+export const DashboardScreen = React.memo(function DashboardScreen({
   analytics,
   contentBottomPadding,
   dueClients,
@@ -72,6 +72,7 @@ export function DashboardScreen({
   stats,
   theme,
 }: DashboardScreenProps) {
+
   const styles = useMemo(() => createStyles(theme, contentBottomPadding), [contentBottomPadding, theme]);
   const sections: SectionId[] = ["summary", "quick", "recent", "reminders", "analytics"];
   const statMap = useMemo(
@@ -428,7 +429,8 @@ export function DashboardScreen({
       <AiWealthCopilot theme={theme} />
     </View>
   );
-}
+});
+
 
 const createStyles = (theme: AppTheme, contentBottomPadding: number) =>
   StyleSheet.create({

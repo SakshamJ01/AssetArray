@@ -62,7 +62,7 @@ Comprehensive institutional methodology, mathematical formulas, claims policy, a
 - [Zero-Knowledge Security Model](docs/security.md)
 - [Compliance & Statutory Disclosures](docs/compliance-disclosures.md)
 - [v3.3.0 Release Notes](docs/release-notes-v3.3.md)
-- [v3.2.0 Red-Team Hardening](docs/redteam-audit-report.md)
+- [v3.2.0 Red-Team Hardening](docs/V3_2_RED_TEAM_REPORT.md)
 - [v3.1.0 Release Notes](docs/release-notes-v3.1.md)
 
 ### 🏛️ Brinson-Fachler Performance Attribution Engine

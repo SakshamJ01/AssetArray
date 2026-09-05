@@ -6,6 +6,7 @@
 
 import { AiProvider, AiStreamCallbacks, AiTaskType, ProviderStatus, StreamContextPayload } from "./types";
 import { GeminiProvider } from "./providers/gemini";
+import { OllamaProvider } from "./providers/ollama";
 import { OpenAIProvider } from "./providers/openai";
 import { AnthropicProvider } from "./providers/anthropic";
 import { generateDeterministicSummary } from "./fallback";
@@ -25,6 +26,8 @@ const TASK_TIMEOUT_POLICY: Record<AiTaskType, number> = {
   ADVISOR_BRIEF: 15000,
   PORTFOLIO_EXPLANATION: 15000,
   TAX_EXPLANATION: 15000,
+  CLIENT_INSIGHT: 12000,
+  GOAL_EXPLANATION: 12000,
   DOCUMENT_EXTRACTION: 20000,
   DEEP_RESEARCH: 30000,
 };
@@ -34,7 +37,9 @@ export class AiRouter {
   private lastRoutingDecision: RoutingDecision | null = null;
 
   constructor() {
+    // Free-first priority: Gemini Free Cloud API -> Ollama Local -> Optional Paid
     this.registerProvider(new GeminiProvider());
+    this.registerProvider(new OllamaProvider());
     this.registerProvider(new OpenAIProvider());
     this.registerProvider(new AnthropicProvider());
   }
@@ -81,7 +86,10 @@ export class AiRouter {
   }
 
   /**
-   * Determine optimal provider order based on task requirements and provider availability.
+   * Determine optimal provider order based on Free-First policy:
+   * 1. Free Cloud (Gemini Free API)
+   * 2. Local Free (Ollama Local Daemon)
+   * 3. Optional Paid (OpenAI / Anthropic only if explicitly supplied)
    */
   public resolveProviderChain(taskType: AiTaskType): AiProvider[] {
     let order: string[] = [];
@@ -89,18 +97,15 @@ export class AiRouter {
     switch (taskType) {
       case "FAST_SUMMARY":
       case "ADVISOR_BRIEF":
-        order = ["gemini", "openai", "anthropic"];
-        break;
-      case "DEEP_RESEARCH":
-        order = ["anthropic", "gemini", "openai"];
-        break;
+      case "CLIENT_INSIGHT":
+      case "GOAL_EXPLANATION":
       case "TAX_EXPLANATION":
       case "PORTFOLIO_EXPLANATION":
-        order = ["gemini", "openai", "anthropic"];
-        break;
       case "DOCUMENT_EXTRACTION":
+      case "DEEP_RESEARCH":
       default:
-        order = ["gemini", "anthropic", "openai"];
+        // Free-first hierarchy: Gemini Free Cloud -> Ollama Local Free -> Optional Paid
+        order = ["gemini", "ollama", "openai", "anthropic"];
         break;
     }
 

@@ -31,6 +31,8 @@ const AI_OPENAI_FAST_MODEL = process.env.AI_OPENAI_FAST_MODEL || "gpt-4o-mini";
 const AI_OPENAI_RESEARCH_MODEL = process.env.AI_OPENAI_RESEARCH_MODEL || "gpt-4o";
 const AI_ANTHROPIC_FAST_MODEL = process.env.AI_ANTHROPIC_FAST_MODEL || "claude-3-5-haiku-20241022";
 const AI_ANTHROPIC_RESEARCH_MODEL = process.env.AI_ANTHROPIC_RESEARCH_MODEL || "claude-3-5-sonnet-20241022";
+const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434";
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "llama3.2";
 
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
@@ -696,24 +698,39 @@ app.get("/api/ai/status", (req, res) => {
   res.json({
     gemini: {
       id: "gemini",
-      name: "Google Gemini",
+      name: "Google Gemini (Free Cloud Tier)",
       isConfigured: Boolean(GEMINI_API_KEY),
       status: GEMINI_API_KEY ? "AVAILABLE" : "NOT_CONFIGURED",
       models: { fast: AI_GEMINI_FAST_MODEL, research: AI_GEMINI_RESEARCH_MODEL },
     },
+    ollama: {
+      id: "ollama",
+      name: "Ollama Local (Zero-Cost Daemon)",
+      isConfigured: true,
+      status: "AVAILABLE",
+      models: { fast: OLLAMA_MODEL, research: OLLAMA_MODEL },
+      baseUrl: OLLAMA_BASE_URL,
+    },
     openai: {
       id: "openai",
-      name: "OpenAI",
+      name: "OpenAI (Optional)",
       isConfigured: Boolean(OPENAI_API_KEY),
       status: OPENAI_API_KEY ? "AVAILABLE" : "NOT_CONFIGURED",
       models: { fast: AI_OPENAI_FAST_MODEL, research: AI_OPENAI_RESEARCH_MODEL },
     },
     anthropic: {
       id: "anthropic",
-      name: "Anthropic",
+      name: "Anthropic (Optional)",
       isConfigured: Boolean(ANTHROPIC_API_KEY),
       status: ANTHROPIC_API_KEY ? "AVAILABLE" : "NOT_CONFIGURED",
       models: { fast: AI_ANTHROPIC_FAST_MODEL, research: AI_ANTHROPIC_RESEARCH_MODEL },
+    },
+    ruleEngine: {
+      id: "verified-rule-engine",
+      name: "Deterministic Financial Rule Engine",
+      isConfigured: true,
+      status: "AVAILABLE",
+      models: { fast: "deterministic-core", research: "deterministic-core" },
     },
   });
 });
@@ -735,6 +752,60 @@ app.post("/api/ai/stream", requireAuth, async (req, res) => {
   if (res.flushHeaders) res.flushHeaders();
 
   const groundedAt = new Date().toISOString();
+
+  // 0. OLLAMA Provider Stream (Zero-Cost Local Inference)
+  if (provider === "ollama") {
+    try {
+      const selectedModel = req.body.model || OLLAMA_MODEL;
+      const fullPrompt = buildStreamPrompt(query, taskType, portfolioContext, clientContext, macroContext);
+      const ollamaRes = await fetch(`${OLLAMA_BASE_URL}/api/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: selectedModel,
+          prompt: fullPrompt,
+          stream: true,
+        }),
+      });
+
+      if (!ollamaRes.ok || !ollamaRes.body) {
+        throw new Error(`Ollama daemon HTTP ${ollamaRes.status}`);
+      }
+
+      const reader = ollamaRes.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+          try {
+            const parsed = JSON.parse(trimmed);
+            if (parsed.response) {
+              res.write(`data: ${JSON.stringify({ token: parsed.response, model: selectedModel, provider: "ollama", taskType })}\n\n`);
+            }
+            if (parsed.done) {
+              res.write(`data: ${JSON.stringify({ done: true, model: selectedModel, provider: "ollama", taskType, groundedAt })}\n\n`);
+              res.end();
+              return;
+            }
+          } catch {}
+        }
+      }
+      res.write(`data: ${JSON.stringify({ done: true, model: selectedModel, provider: "ollama", taskType, groundedAt })}\n\n`);
+      res.end();
+      return;
+    } catch (err) {
+      console.warn("[AI Stream] Ollama local stream exception:", err.message);
+    }
+  }
 
   // 1. OPENAI Provider Stream
   if (provider === "openai") {

@@ -63,7 +63,7 @@ describe("Production Truth — Master Regression Suite", () => {
   describe("Rule 8: Frontend AI Secrets Abolition", () => {
     it("ensures provider instances contain zero exposed client secrets", () => {
       const providers = aiRouter.getAllProviders();
-      expect(providers.length).toBe(3);
+      expect(providers.length).toBe(4);
 
       for (const p of providers) {
         const serialized = JSON.stringify(p);

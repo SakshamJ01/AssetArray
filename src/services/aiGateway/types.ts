@@ -9,7 +9,9 @@ export type AiTaskType =
   | "DEEP_RESEARCH"
   | "DOCUMENT_EXTRACTION"
   | "PORTFOLIO_EXPLANATION"
-  | "TAX_EXPLANATION";
+  | "TAX_EXPLANATION"
+  | "CLIENT_INSIGHT"
+  | "GOAL_EXPLANATION";
 
 export type AiStreamState =
   | "IDLE"

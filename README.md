@@ -32,6 +32,17 @@ Engineered with a high-contrast obsidian & champagne gold luxury aesthetic, dual
 
 ---
 
+## 🆓 Free-First / Zero-Subscription Architecture
+
+AssetArray is engineered to operate completely in a **100% Free Development & Zero-Subscription Mode**:
+- **Free Cloud AI**: Google Gemini Developer Tier (`gemini-2.5-flash` / `gemini-2.5-pro` via free developer keys from Google AI Studio).
+- **Free Local AI**: Ollama Daemon (`llama3.2`, `mistral`) running locally at `http://localhost:11434` with zero token cost and zero PII exposure.
+- **Deterministic Core**: All institutional analytics (TWR, XIRR, Section 70/74 Indian Capital Gains Tax, Monte Carlo goal planning, Risk metrics) execute 100% offline on CPU without AI or paid subscriptions.
+- **Free Market Feeds**: Official open AMFI NAV data for Indian Mutual Funds, plus quota-guarded free tiers for Finnhub (60 calls/min) and Alpha Vantage (25 calls/day).
+- **Quickstart Guide**: Complete configuration instructions in [`docs/FREE_SETUP.md`](docs/FREE_SETUP.md).
+
+---
+
 ## 🌟 Version 3.3.1 Advisor Command Center & Governance Hardening
 
 Comprehensive institutional methodology, mathematical formulas, claims policy, and statutory compliance documentation are available in the [`docs/`](docs/) directory:

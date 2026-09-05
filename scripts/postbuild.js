@@ -28,7 +28,7 @@ const manifestContent = {
 fs.writeFileSync(manifestPath, JSON.stringify(manifestContent, null, 2), 'utf8');
 
 // 2. Write service-worker.js
-const swContent = `const CACHE_NAME = "asset-array-pwa-v2";
+const swContent = `const CACHE_NAME = "asset-array-pwa-v3";
 const STATIC_ASSETS = ["/", "/index.html", "/manifest.json", "/favicon.ico"];
 
 self.addEventListener("install", (event) => {

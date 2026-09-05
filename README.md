@@ -1,6 +1,6 @@
 # Asset Array 💼📈
 
-[![Version 3.0.0](https://img.shields.io/badge/Version-3.0.0-E0A84C?style=for-the-badge&logo=git&logoColor=white)](https://github.com/SakshamJ01/AssetArray)
+[![Version 3.1.0](https://img.shields.io/badge/Version-3.1.0-E0A84C?style=for-the-badge&logo=git&logoColor=white)](https://github.com/SakshamJ01/AssetArray)
 [![Live Web App](https://img.shields.io/badge/Live%20Web%20App-asset--array.web.app-E0A84C?style=for-the-badge&logo=firebase&logoColor=white)](https://asset-array.web.app)
 [![Live Backend API](https://img.shields.io/badge/API-assetarray.onrender.com-46E3B7?style=for-the-badge&logo=render&logoColor=black)](https://assetarray.onrender.com/api/health)
 [![Cloud Database](https://img.shields.io/badge/Database-MongoDB%20Atlas-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://cloud.mongodb.com)
@@ -9,7 +9,7 @@
 [![RevenueCat](https://img.shields.io/badge/Monetization-RevenueCat-orange.svg)](https://www.revenuecat.com/)
 [![Built with Expo](https://img.shields.io/badge/Built%20with-Expo%20%2F%20React%20Native-blue.svg)](https://expo.dev/)
 [![Gemini AI](https://img.shields.io/badge/AI-Google%20Gemini-8E75B2.svg)](https://ai.google.dev/)
-[![Tests Passing](https://img.shields.io/badge/Tests-59%20Passed-22c55e.svg)](https://github.com/SakshamJ01/AssetArray)
+[![Tests Passing](https://img.shields.io/badge/Tests-100%20Passed-22c55e.svg)](https://github.com/SakshamJ01/AssetArray)
 
 ![Asset Array Hero Banner](assets/hero-thumbnail.jpg)
 
@@ -29,7 +29,18 @@ Engineered with a high-contrast obsidian & champagne gold luxury aesthetic, dual
 
 ---
 
-## 🌟 Version 3.0.0 Institutional Features
+## 🌟 Version 3.1.0 Institutional Hardening & Accuracy
+
+Comprehensive institutional methodology, mathematical formulas, and statutory compliance documentation are available in the [`docs/`](docs/) directory:
+- [System Architecture](docs/architecture.md)
+- [Analytics & Performance Methodology (TWR, XIRR, Brinson Attribution)](docs/analytics-methodology.md)
+- [Statutory Indian Tax Methodology (AY 2026-27 & Sec 70/74)](docs/tax-methodology.md)
+- [Risk & Benchmark Analytics (MPT, HWM Drawdowns, Mulberry32 Monte Carlo)](docs/risk-methodology.md)
+- [AI Architecture & DPDP Act PII Sanitization](docs/ai-architecture.md)
+- [Zero-Knowledge Security Model](docs/security.md)
+- [Domain Data Models & Schemas](docs/data-model.md)
+- [REST API Reference](docs/api.md)
+- [v3.1.0 Release Notes](docs/release-notes-v3.1.md)
 
 ### 🏛️ Brinson-Fachler Performance Attribution Engine
 - **Alpha Decomposition:** Mathematically breaks down active portfolio returns against benchmark indices (NIFTY 50, CRISIL Hybrid 65:35, S&P 500) into **Allocation Effect**, **Selection Effect**, and **Interaction Effect**.

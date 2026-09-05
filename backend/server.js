@@ -661,13 +661,22 @@ app.get("/api/broadcast/history", requireAuth, async (req, res) => {
   res.json({ ok: true, campaigns });
 });
 
-// --- AssetArray v3.0 Institutional Endpoints ---
+// --- AssetArray v3.1 Institutional Analytical Endpoints ---
 
 // 1. Performance Attribution (Brinson-Fachler Model)
 app.post("/api/portfolios/attribution", requireAuth, (req, res) => {
   try {
     const { holdings = [], benchmarkSymbol = "BALANCED_65_35" } = req.body || {};
-    const totalVal = holdings.reduce((sum, h) => sum + (Number(h.currentValue) || 0), 0);
+
+    if (!Array.isArray(holdings)) {
+      res.status(400).json({ error: "holdings must be an array." });
+      return;
+    }
+
+    const totalVal = holdings.reduce((sum, h) => {
+      const v = Number(h.currentValue) || 0;
+      return sum + (v > 0 && isFinite(v) ? v : 0);
+    }, 0);
 
     const categories = ["Stocks", "Bonds", "Mutual Funds", "Cash", "Alternatives"];
     const benchmarkReturns = { Stocks: 0.114, Bonds: 0.072, Cash: 0.062, "Mutual Funds": 0.105, Alternatives: 0.09 };
@@ -677,7 +686,7 @@ app.post("/api/portfolios/attribution", requireAuth, (req, res) => {
 
     let benchmarkTotalReturn = 0;
     Object.keys(benchmarkWeights).forEach((cat) => {
-      benchmarkTotalReturn += (benchmarkWeights[cat] || 0) * (benchmarkReturns[cat] || 0.07);
+      benchmarkTotalReturn += (benchmarkWeights[cat] || 0) * (benchmarkReturns[cat] || 0);
     });
 
     const categoryVals = {};
@@ -690,8 +699,10 @@ app.post("/api/portfolios/attribution", requireAuth, (req, res) => {
       else if (raw.includes("gold") || raw.includes("commodity") || raw.includes("alt")) cat = "Alternatives";
       else if (raw.includes("fund")) cat = "Mutual Funds";
 
-      categoryVals[cat] = (categoryVals[cat] || 0) + (Number(h.currentValue) || 0);
-      categoryInvested[cat] = (categoryInvested[cat] || 0) + (Number(h.investedValue) || 0);
+      const cVal = Number(h.currentValue) || 0;
+      const cInv = Number(h.investedValue) || 0;
+      categoryVals[cat] = (categoryVals[cat] || 0) + (cVal > 0 && isFinite(cVal) ? cVal : 0);
+      categoryInvested[cat] = (categoryInvested[cat] || 0) + (cInv > 0 && isFinite(cInv) ? cInv : 0);
     });
 
     let portfolioTotalReturn = 0;
@@ -704,8 +715,8 @@ app.post("/api/portfolios/attribution", requireAuth, (req, res) => {
       const cInv = categoryInvested[cat] || 0;
       const wp = totalVal > 0 ? cVal / totalVal : 0;
       const wb = benchmarkWeights[cat] || 0;
-      const Rb = benchmarkReturns[cat] || 0.07;
-      const rp = cInv > 0 ? (cVal - cInv) / cInv : Rb;
+      const Rb = benchmarkReturns[cat] || 0;
+      const rp = cInv > 0 ? (cVal - cInv) / cInv : 0;
 
       portfolioTotalReturn += wp * rp;
       const alloc = (wp - wb) * (Rb - benchmarkTotalReturn);
@@ -730,6 +741,7 @@ app.post("/api/portfolios/attribution", requireAuth, (req, res) => {
     });
 
     const totalActiveReturn = portfolioTotalReturn - benchmarkTotalReturn;
+    const isReconciled = Math.abs((totalAlloc + totalSelect + totalInteract) - totalActiveReturn) < 1e-4;
 
     res.json({
       ok: true,
@@ -741,7 +753,9 @@ app.post("/api/portfolios/attribution", requireAuth, (req, res) => {
         selectionEffect: parseFloat(totalSelect.toFixed(4)),
         interactionEffect: parseFloat(totalInteract.toFixed(4)),
       },
+      isReconciled,
       breakdown,
+      methodologyVersion: "brinson-fachler-v1.1",
     });
   } catch (err) {
     res.status(500).json({ error: "Failed to compute attribution." });
@@ -752,15 +766,23 @@ app.post("/api/portfolios/attribution", requireAuth, (req, res) => {
 app.post("/api/portfolios/health", requireAuth, (req, res) => {
   try {
     const { holdings = [], liabilitiesValue = 0 } = req.body || {};
+
+    if (!Array.isArray(holdings)) {
+      res.status(400).json({ error: "holdings must be an array." });
+      return;
+    }
+
     const totalVal = holdings.reduce((sum, h) => sum + (Number(h.currentValue) || 0), 0);
 
-    if (totalVal <= 0) {
+    if (totalVal <= 0 || holdings.length === 0) {
       res.json({
         ok: true,
         healthScore: 30,
         grade: "High Fragility",
-        factors: { dataCompleteness: 20, assetDiversification: 20, concentrationRisk: 30, geographicAndCurrency: 20, liabilityManagement: 50 },
+        factors: { dataCompleteness: 10, assetDiversification: 20, concentrationRisk: 30, geographicAndCurrency: 20, liabilityManagement: 50 },
         recommendations: ["Add positions to generate portfolio health diagnostic."],
+        confidence: "INSUFFICIENT_DATA",
+        methodologyVersion: "health-score-v1.2",
       });
       return;
     }
@@ -775,11 +797,11 @@ app.post("/api/portfolios/health", requireAuth, (req, res) => {
     });
 
     const maxWeight = maxSingleVal / totalVal;
-    const concentrationRisk = Math.max(20, Math.min(100, Math.round(100 - Math.max(0, maxWeight - 0.15) * 130)));
-    const assetDiversification = Math.min(100, Math.max(30, Object.keys(catVals).length * 22));
-    const dataCompleteness = 95;
-    const geographicAndCurrency = catVals["Alternatives"] ? 80 : 65;
-    const liabilityManagement = liabilitiesValue > totalVal * 0.3 ? 60 : 90;
+    const concentrationRisk = Math.max(15, Math.min(100, Math.round(100 - Math.max(0, maxWeight - 0.15) * 120)));
+    const assetDiversification = Math.min(100, Math.max(25, Object.keys(catVals).length * 24));
+    const dataCompleteness = holdings.every((h) => Number(h.currentValue) > 0 && h.ticker) ? 100 : 85;
+    const geographicAndCurrency = catVals["Alternatives"] ? 85 : 70;
+    const liabilityManagement = liabilitiesValue > totalVal * 0.3 ? 60 : 95;
 
     const healthScore = Math.round(
       0.2 * dataCompleteness +
@@ -805,32 +827,58 @@ app.post("/api/portfolios/health", requireAuth, (req, res) => {
       recommendations: [
         concentrationRisk < 70 ? "Trim concentrated single positions to below 15%." : "Maintain current asset allocation balance.",
       ],
+      methodologyVersion: "health-score-v1.2",
     });
   } catch (err) {
     res.status(500).json({ error: "Failed to compute health score." });
   }
 });
 
-// 3. Indian Tax Loss Harvesting (Finance Act 2024)
+// 3. Indian Tax Loss Harvesting (Finance Act 2024 / AY 2026-27)
 app.post("/api/portfolios/tax-harvest", requireAuth, (req, res) => {
   try {
     const { holdings = [], realizedGains = { shortTerm: 0, longTerm: 0 } } = req.body || {};
-    let totalHarvestableLoss = 0;
-    const harvestCandidates = [];
 
-    holdings.forEach((h, idx) => {
+    if (!Array.isArray(holdings)) {
+      res.status(400).json({ error: "holdings must be an array." });
+      return;
+    }
+
+    let totalHarvestableLoss = 0;
+    let stLoss = 0;
+    let ltLoss = 0;
+    const harvestCandidates = [];
+    const now = Date.now();
+
+    holdings.forEach((h) => {
       const cur = Number(h.currentValue) || 0;
       const inv = Number(h.investedValue) || 0;
       const diff = cur - inv;
+
+      // Determine holding period from acquisition date if available
+      let isLongTerm = false;
+      if (h.acquiredAt) {
+        const acqTime = new Date(h.acquiredAt).getTime();
+        if (!isNaN(acqTime)) {
+          isLongTerm = (now - acqTime) / (1000 * 60 * 60 * 24 * 30.4375) >= 12;
+        }
+      } else if (h.notes && (h.notes.toLowerCase().includes("lt") || h.notes.toLowerCase().includes("long"))) {
+        isLongTerm = true;
+      }
+
       if (diff < 0) {
         const loss = Math.abs(diff);
         totalHarvestableLoss += loss;
-        const rate = idx % 2 === 0 ? 12.5 : 20.0;
+        if (isLongTerm) ltLoss += loss;
+        else stLoss += loss;
+
+        const rate = isLongTerm ? 12.5 : 20.0;
         harvestCandidates.push({
           holdingId: h.id,
           assetName: h.assetName,
           ticker: h.ticker || "HOLDING",
           unrealizedLoss: loss,
+          isLongTerm,
           applicableRatePct: rate,
           potentialTaxShield: parseFloat(((loss * rate) / 100).toFixed(2)),
           suggestedAction: "HARVEST_LOSS",
@@ -838,17 +886,37 @@ app.post("/api/portfolios/tax-harvest", requireAuth, (req, res) => {
       }
     });
 
-    const ltcgExemption = 125000;
-    const estimatedSavings = harvestCandidates.reduce((sum, c) => sum + c.potentialTaxShield, 0);
+    // Section 70/74 Set-off: LTCL offsets LTCG only. STCL offsets STCG first, then LTCG.
+    const grossSTCG = Math.max(0, realizedGains.shortTerm || 0);
+    const grossLTCG = Math.max(0, realizedGains.longTerm || 0);
+
+    const ltclUsed = Math.min(ltLoss, grossLTCG);
+    const remLTCG = grossLTCG - ltclUsed;
+
+    const stclUsedAgainstSTCG = Math.min(stLoss, grossSTCG);
+    const remSTCL = stLoss - stclUsedAgainstSTCG;
+    const stclUsedAgainstLTCG = Math.min(remSTCL, remLTCG);
+    const netLTCG = remLTCG - stclUsedAgainstLTCG;
+
+    // LTCG Exemption under Section 112A: ₹1,25,000
+    const ltcgExemptionLimit = 125000;
+    const taxableLTCG = Math.max(0, netLTCG - ltcgExemptionLimit);
+    const taxableSTCG = grossSTCG - stclUsedAgainstSTCG;
+
+    const baseTax = (grossSTCG * 0.20) + (Math.max(0, grossLTCG - ltcgExemptionLimit) * 0.125);
+    const postHarvestTax = (taxableSTCG * 0.20) + (taxableLTCG * 0.125);
+    const genuineTaxSavings = Math.max(0, (baseTax - postHarvestTax) * 1.04);
 
     res.json({
       ok: true,
       assessmentYear: "AY 2026-27",
-      ltcgExemptionAvailable: ltcgExemption,
+      financialYear: "FY 2025-26",
+      ltcgExemptionAvailable: ltcgExemptionLimit,
       totalHarvestableLoss: parseFloat(totalHarvestableLoss.toFixed(2)),
-      estimatedImmediateTaxSavings: parseFloat(estimatedSavings.toFixed(2)),
+      estimatedImmediateTaxSavings: parseFloat(genuineTaxSavings.toFixed(2)),
       harvestCandidates,
-      statutoryDisclaimer: "Tax projections computed under Finance Act 2024. Consult a Chartered Accountant before trade execution.",
+      statutoryDisclaimer: "Tax projections computed under Finance Act 2024 (Sections 111A, 112A, 70, 74). Consult a Chartered Accountant before trade execution.",
+      methodologyVersion: "in-tax-finance-act-2024-v1.1",
     });
   } catch (err) {
     res.status(500).json({ error: "Failed to compute tax harvest plan." });
@@ -859,16 +927,27 @@ app.post("/api/portfolios/tax-harvest", requireAuth, (req, res) => {
 app.post("/api/portfolios/whatif", requireAuth, (req, res) => {
   try {
     const { holdings = [], shockPct = -20 } = req.body || {};
+
+    if (!Array.isArray(holdings)) {
+      res.status(400).json({ error: "holdings must be an array." });
+      return;
+    }
+
+    const shock = Number(shockPct) || 0;
     const initialValue = holdings.reduce((sum, h) => sum + (Number(h.currentValue) || 0), 0);
-    const projectedValue = initialValue * (1 + shockPct / 100);
+    const projectedValue = initialValue * (1 + shock / 100);
+
+    const postShockSharpe = shock >= 0 ? 1.15 : Math.max(-0.5, parseFloat((0.85 + shock / 50).toFixed(2)));
+    const goalSuccessProbability = Math.max(20, Math.min(99, Math.round(85 + shock * 0.8)));
 
     res.json({
       ok: true,
       initialValue: Math.round(initialValue),
       projectedValue: Math.round(projectedValue),
-      percentChange: shockPct,
-      postShockSharpe: shockPct >= 0 ? 1.2 : 0.65,
-      goalSuccessProbability: Math.max(20, Math.min(99, Math.round(85 + shockPct * 0.8))),
+      percentChange: shock,
+      postShockSharpe,
+      goalSuccessProbability,
+      methodologyVersion: "whatif-sandbox-v2.0",
     });
   } catch (err) {
     res.status(500).json({ error: "Failed to simulate scenario." });
@@ -885,7 +964,7 @@ app.post("/api/portfolios/committee-report", requireAuth, async (req, res) => {
     }
 
     // Anonymize client name and identifiers under DPDP Act
-    const anonymizedRef = `Client Ref #AA-${Math.abs(client.name?.length * 97 + 101) % 900 + 100}`;
+    const anonymizedRef = `Client Ref #AA-${Math.abs((client.id || "").length * 97 + 101) % 900 + 100}`;
     const holdings = client.portfolio || [];
     const totalVal = holdings.reduce((sum, h) => sum + (Number(h.currentValue) || 0), 0);
 
@@ -911,6 +990,7 @@ Portfolio AUM stands at ₹${Math.round(totalVal).toLocaleString("en-IN")}. Stra
       ok: true,
       anonymizedClientRef: anonymizedRef,
       fullMarkdownReport: memoReport,
+      methodologyVersion: "ic-memo-grounded-v1.1",
     });
   } catch (err) {
     res.status(500).json({ error: "Failed to generate committee report." });

@@ -60,4 +60,23 @@ describe("PDF Report Data Formatter", () => {
     expect(gainLossPercent).toBe("0");
     expect(Number.isNaN(Number(gainLossPercent))).toBe(false);
   });
+
+  it("exports client report HTML containing institutional v3.1 diagnostics", async () => {
+    const { exportClientPdfReport } = await import("../src/services/pdfReport");
+    const { documentExporter } = await import("../src/platform/export");
+    const spy = jest.spyOn(documentExporter, "exportHtmlReport").mockResolvedValue();
+
+    await exportClientPdfReport({ client: sampleClient, advisorName: "Jane Doe" });
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    const callArg = spy.mock.calls[0][0];
+    expect(callArg.filename).toContain("Alexander_Hamilton.pdf");
+    expect(callArg.html).toContain("Institutional Analytics &amp; Risk Mandate (v3.1 Engine)".replace("&amp;", "&"));
+    expect(callArg.html).toContain("Health Score");
+    expect(callArg.html).toContain("Active Alpha vs Benchmark");
+    expect(callArg.html).toContain("Tax Loss Harvesting Shield");
+    expect(callArg.html).toContain("Stress Simulation Impact");
+
+    spy.mockRestore();
+  });
 });

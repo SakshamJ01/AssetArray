@@ -1,11 +1,23 @@
-import {
-  Client,
-  CommitteeMemoResult,
-} from "../types/wealth";
+import { Client, CommitteeMemoResult } from "../types/wealth";
 import { calculateAttribution, STANDARD_BENCHMARKS } from "./attribution";
-import { calculateHealthScore } from "./healthScore";
+import { calculateInstitutionalHealthScore } from "./health";
 import { simulateScenario, PRESET_SCENARIOS } from "./scenarioEngine";
-import { generateTaxHarvestReport } from "./taxIntelligence";
+import { generateInstitutionalTaxReport } from "./tax";
+import { sanitizeForAI } from "./ai/aiSanitizer";
+
+export const COMMITTEE_MEMO_METHODOLOGY_VERSION = "ic-memo-grounded-v1.1";
+
+export interface SourceMetricCitation {
+  statement: string;
+  sourceMetric: string;
+  value: number | string;
+}
+
+export interface GroundedCommitteeMemoResult extends CommitteeMemoResult {
+  sourceCitations: SourceMetricCitation[];
+  dataQualityConfidence: string;
+  methodologyVersion: string;
+}
 
 /**
  * DPDP Act Compliant Client Sanitizer
@@ -17,35 +29,26 @@ export function anonymizeClientForAI(client: Client): {
   riskProfile: string;
   totalVal: number;
 } {
-  // Deterministic 3-digit numeric code from client ID
-  let hash = 0;
-  for (let i = 0; i < (client.id || "").length; i++) {
-    hash = (hash << 5) - hash + client.id.charCodeAt(i);
-    hash |= 0;
-  }
-  const refNum = Math.abs(hash % 900) + 100;
-  const anonymizedRef = `Client Ref #AA-${refNum}`;
-
-  const holdings = client.portfolio || [];
-  const totalVal = holdings.reduce(
-    (sum, h) => sum + (Number(h.currentValue) || 0),
-    0
-  );
-
+  const sanitized = sanitizeForAI(client);
   return {
-    anonymizedRef,
-    category: client.category || "HNI",
-    riskProfile: client.riskProfile || "Balanced",
-    totalVal,
+    anonymizedRef: sanitized.anonymizedRef,
+    category: sanitized.category,
+    riskProfile: sanitized.riskProfile,
+    totalVal: sanitized.totalPortfolioValue,
   };
 }
 
 /**
  * Generates a formal, structured Investment Committee Memo
+ * with every numerical assertion strictly grounded in deterministic source metrics.
  */
-export function generateCommitteeMemo(client: Client): CommitteeMemoResult {
-  const { anonymizedRef, category, riskProfile, totalVal } =
-    anonymizeClientForAI(client);
+export function generateCommitteeMemo(client: Client): GroundedCommitteeMemoResult {
+  const sanitized = sanitizeForAI(client);
+  const anonymizedRef = sanitized.anonymizedRef;
+  const category = sanitized.category;
+  const riskProfile = sanitized.riskProfile;
+  const totalVal = sanitized.totalPortfolioValue;
+
   const holdings = client.portfolio || [];
   const dateStr = new Date().toLocaleDateString("en-IN", {
     year: "numeric",
@@ -53,7 +56,8 @@ export function generateCommitteeMemo(client: Client): CommitteeMemoResult {
     day: "numeric",
   });
 
-  const health = calculateHealthScore(holdings, 0, client.id);
+  // Execute deterministic analytical engines
+  const health = calculateInstitutionalHealthScore(holdings, 0, client.id);
   const attribution = calculateAttribution(
     holdings,
     STANDARD_BENCHMARKS.BALANCED_HYBRID,
@@ -64,7 +68,50 @@ export function generateCommitteeMemo(client: Client): CommitteeMemoResult {
     PRESET_SCENARIOS.TECH_CORRECTION,
     client.id
   );
-  const tax = generateTaxHarvestReport(holdings, { shortTerm: 0, longTerm: 0 }, client.id);
+  const tax = generateInstitutionalTaxReport(
+    holdings,
+    { shortTerm: 0, longTerm: 0 },
+    client.id
+  );
+
+  // Build rigorous source citations
+  const sourceCitations: SourceMetricCitation[] = [
+    {
+      statement: `Portfolio AUM stands at ₹${totalVal.toLocaleString("en-IN")}`,
+      sourceMetric: "portfolio.totalAUM",
+      value: totalVal,
+    },
+    {
+      statement: `Diagnostic rating of "${health.grade}" with Health Index of ${health.healthScore}/100`,
+      sourceMetric: "healthScore.overall",
+      value: health.healthScore,
+    },
+    {
+      statement: `Active alpha against benchmark of ${(attribution.totalActiveReturn * 100).toFixed(2)}%`,
+      sourceMetric: "attribution.totalActiveReturn",
+      value: attribution.totalActiveReturn,
+    },
+    {
+      statement: `Brinson-Fachler allocation effect of ${(attribution.summary.allocationEffect * 10000).toFixed(0)} bps`,
+      sourceMetric: "attribution.allocationEffectBps",
+      value: Math.round(attribution.summary.allocationEffect * 10000),
+    },
+    {
+      statement: `Brinson-Fachler selection effect of ${(attribution.summary.selectionEffect * 10000).toFixed(0)} bps`,
+      sourceMetric: "attribution.selectionEffectBps",
+      value: Math.round(attribution.summary.selectionEffect * 10000),
+    },
+    {
+      statement: `Macro scenario projected impact of ${stress.percentChange >= 0 ? "+" : ""}${stress.percentChange}%`,
+      sourceMetric: "stressTest.percentChange",
+      value: stress.percentChange,
+    },
+    {
+      statement: `Identified harvestable loss of ₹${Math.round(tax.totalHarvestableLoss).toLocaleString("en-IN")}`,
+      sourceMetric: "taxHarvesting.totalHarvestableLoss",
+      value: tax.totalHarvestableLoss,
+    },
+  ];
 
   const execSummary = `Investment Committee Review for ${anonymizedRef} (${category}, ${riskProfile} mandate). Portfolio AUM stands at ₹${Math.round(totalVal).toLocaleString("en-IN")}. Overall diagnostic rating is "${health.grade}" with an AI Health Index of ${health.healthScore}/100. Portfolio generated ${attribution.totalActiveReturn >= 0 ? "+" : ""}${(attribution.totalActiveReturn * 100).toFixed(2)}% active return against ${attribution.benchmarkName}.`;
 
@@ -127,8 +174,11 @@ ${stressTestingSummary}
 ### 4. Fiduciary Recommendations & Action Plan
 ${fiduciaryRecommendations.map((r, i) => `${i + 1}. **Action ${i + 1}:** ${r}`).join("\n")}
 
+### 5. Grounded Analytical Citations & Methodology
+${sourceCitations.map((c) => `- **${c.statement}** (Verified: \`${c.sourceMetric}\` = ${c.value})`).join("\n")}
+
 ---
-*Generated by AssetArray Institutional Terminal v3.0. Confidential — For Investment Committee Review Only.*
+*Generated by AssetArray Institutional Terminal v3.1. Confidential — For Investment Committee Review Only.*
   `.trim();
 
   return {
@@ -142,5 +192,8 @@ ${fiduciaryRecommendations.map((r, i) => `${i + 1}. **Action ${i + 1}:** ${r}`).
     stressTestingSummary,
     fiduciaryRecommendations,
     fullMarkdownReport: fullMarkdown,
+    sourceCitations,
+    dataQualityConfidence: health.confidence,
+    methodologyVersion: COMMITTEE_MEMO_METHODOLOGY_VERSION,
   };
 }

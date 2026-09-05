@@ -29,13 +29,21 @@ export type GoalPriority = "Core" | "Growth" | "Optional";
 
 export type Goal = {
   id: string;
+  clientId?: string;
   title: string;
+  name?: string;
   goalType: GoalType;
   targetAmount: string;
   currentAmount: string;
   targetYear: string;
   monthlyContribution: string;
   priority: GoalPriority;
+  targetDate?: string;
+  currentFunding?: number;
+  linkedPortfolios?: string[];
+  inflationAssumption?: number;
+  expectedReturnAssumption?: number;
+  volatilityAssumption?: number;
 };
 export type GoalDraft = Omit<Goal, "id">;
 
@@ -89,6 +97,13 @@ export interface PortfolioHolding {
   currentValue: string;
   targetWeight: string;
   notes: string;
+  country?: string;
+  region?: string;
+  currency?: string;
+  sector?: string;
+  industry?: string;
+  acquiredAt?: string;
+  taxLots?: TaxLot[];
 }
 
 export interface Client {
@@ -251,6 +266,10 @@ export interface AttributionResult {
   };
   breakdown: AttributionCategoryBreakdown[];
   narrativeExplanation: string;
+  quality?: PerformanceQuality;
+  methodologyVersion?: string;
+  isReconciled?: boolean;
+  warnings?: string[];
 }
 
 export interface HealthScoreFactors {
@@ -350,6 +369,24 @@ export interface SmartAlertRule {
   enabled: boolean;
 }
 
+export type SmartAlertSeverity =
+  | "CRITICAL"
+  | "WARNING"
+  | "NOTICE"
+  | "INFO"
+  | "critical"
+  | "warning"
+  | "info";
+
+export type SmartAlertStatus =
+  | "OPEN"
+  | "IN_PROGRESS"
+  | "WAITING"
+  | "DONE"
+  | "CANCELLED"
+  | "ACTIVE"
+  | "ACKNOWLEDGED";
+
 export interface SmartAlert {
   id: string;
   ruleId?: string;
@@ -358,10 +395,16 @@ export interface SmartAlert {
   condition: SmartAlertCondition;
   title: string;
   message: string;
-  severity: "critical" | "warning" | "info";
+  severity: SmartAlertSeverity;
   timestamp: string;
   acknowledged: boolean;
   actionableRoute?: string;
+  portfolioId?: string;
+  metric?: string;
+  observedValue?: number;
+  threshold?: number;
+  status?: SmartAlertStatus;
+  createdAt?: string;
 }
 
 export interface CommitteeMemoResult {
@@ -390,4 +433,151 @@ export interface NetWorthSnapshot {
     loansAndLiabilities: number;
   };
 }
+
+// --- AssetArray v3.1 Institutional Hardening Foundations ---
+
+export type DataProvenance =
+  | "LIVE_MARKET"
+  | "HISTORICAL"
+  | "USER_INPUT"
+  | "IMPORTED"
+  | "SIMULATED"
+  | "ESTIMATED";
+
+export type DataQualityState =
+  | "HIGH"
+  | "MEDIUM"
+  | "LOW"
+  | "INSUFFICIENT_DATA";
+
+export type PerformanceQuality =
+  | "HIGH"
+  | "MEDIUM"
+  | "LOW"
+  | "INSUFFICIENT_DATA";
+
+export interface DataQuality {
+  completeness: number; // 0 - 100%
+  freshnessMinutes?: number;
+  source: string;
+  confidence: DataQualityState;
+  warnings: string[];
+}
+
+export interface TaxLot {
+  id: string;
+  securityId: string;
+  ticker: string;
+  assetClass: AssetClass;
+  quantity: number;
+  acquiredAt: string; // ISO 8601 date e.g. "2023-08-15"
+  costBasis: number; // Total cost basis or per-unit cost
+  remainingQuantity: number;
+  acquisitionSource?: string;
+}
+
+export type TransactionType =
+  | "BUY"
+  | "SELL"
+  | "DEPOSIT"
+  | "WITHDRAWAL"
+  | "DIVIDEND"
+  | "INTEREST"
+  | "FEE"
+  | "TRANSFER";
+
+export interface Transaction {
+  id: string;
+  portfolioId: string;
+  holdingId?: string;
+  ticker?: string;
+  type: TransactionType;
+  date: string; // ISO 8601 e.g. "2024-01-15"
+  amount: number; // Positive for inflow, negative for outflow
+  quantity?: number;
+  price?: number;
+  currency?: string;
+  notes?: string;
+}
+
+export interface HistoricalValuationPoint {
+  date: string; // YYYY-MM-DD
+  nav: number;
+  cashFlow?: number; // Net external flow on this date
+}
+
+export interface BenchmarkModel {
+  id: string;
+  symbol: string;
+  name: string;
+  currency: string;
+  region: string;
+  assetClass: string;
+  methodology: string;
+  dataSource: DataProvenance;
+  totalReturnAvailable: boolean;
+  priceReturnAvailable: boolean;
+  categoryReturns?: Record<string, number>;
+  historicalReturns?: { date: string; returnRate: number }[];
+}
+
+export type AdvisorTaskStatus = "OPEN" | "IN_PROGRESS" | "WAITING" | "DONE" | "CANCELLED";
+export type AdvisorTaskPriority = "URGENT" | "HIGH" | "MEDIUM" | "LOW";
+
+export interface AdvisorTask {
+  id: string;
+  clientId?: string;
+  clientName?: string;
+  portfolioId?: string;
+  title: string;
+  description?: string;
+  category:
+    | "HIGH_PRIORITY"
+    | "FOLLOW_UP"
+    | "PENDING_REPORT"
+    | "PORTFOLIO_ALERT"
+    | "GOAL_REVIEW"
+    | "TAX_REVIEW"
+    | "CLIENT_MESSAGE";
+  status: AdvisorTaskStatus;
+  priority: AdvisorTaskPriority;
+  dueDate: string;
+  createdAt: string;
+  completedAt?: string;
+  notes?: string;
+}
+
+export interface WhatIfScenarioChange {
+  type:
+    | "OVERWEIGHT"
+    | "UNDERWEIGHT"
+    | "BUY"
+    | "SELL"
+    | "ALLOCATION_SHIFT"
+    | "CASH_INFLOW"
+    | "CASH_OUTFLOW"
+    | "BENCHMARK_SHIFT"
+    | "MACRO_SHOCK";
+  targetHoldingId?: string;
+  targetTicker?: string;
+  targetCategory?: AssetClass;
+  deltaPercent?: number;
+  deltaAmount?: number;
+}
+
+export interface WhatIfScenario {
+  id: string;
+  basePortfolioId: string;
+  name: string;
+  createdAt: string;
+  changes: WhatIfScenarioChange[];
+  assumptions: {
+    equityShockPct?: number;
+    debtYieldBps?: number;
+    commodityShockPct?: number;
+    currencyDevaluationPct?: number;
+    inflationShockPct?: number;
+  };
+}
+
 

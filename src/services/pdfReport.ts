@@ -1,5 +1,20 @@
 import { documentExporter } from "../platform/export";
 import { ClientInput } from "./aiAdvisor";
+import { AssetClass, PortfolioHolding } from "../types/wealth";
+import { calculateHealthScore } from "./healthScore";
+import { calculateAttribution, STANDARD_BENCHMARKS } from "./attribution";
+import { generateTaxHarvestReport } from "./taxIntelligence";
+import { simulateScenario, PRESET_SCENARIOS } from "./scenarioEngine";
+
+function normalizePdfAssetClass(cls?: string): AssetClass {
+  if (!cls) return "Stocks";
+  const lower = cls.toLowerCase();
+  if (lower.includes("bond") || lower.includes("debt") || lower.includes("fixed")) return "Bonds";
+  if (lower.includes("mutual") || lower.includes("fund")) return "Mutual Funds";
+  if (lower.includes("cash") || lower.includes("liquid") || lower.includes("money")) return "Cash";
+  if (lower.includes("real") || lower.includes("crypto") || lower.includes("gold") || lower.includes("alt")) return "Alternatives";
+  return "Stocks";
+}
 
 export interface GeneratePdfOptions {
   client: ClientInput;
@@ -7,13 +22,37 @@ export interface GeneratePdfOptions {
 }
 
 export async function exportClientPdfReport({ client, advisorName = "Asset Array Private Wealth" }: GeneratePdfOptions) {
-  const holdings = client.portfolio || [];
+  const rawHoldings = client.portfolio || [];
+  const holdings: PortfolioHolding[] = rawHoldings.map((h, i) => ({
+    id: `holding-${i}`,
+    assetName: h.assetName,
+    assetClass: normalizePdfAssetClass(h.assetClass),
+    ticker: h.ticker || "UNKNOWN",
+    quantity: h.quantity || "1",
+    investedValue: h.investedValue || "0",
+    currentValue: h.currentValue || "0",
+    targetWeight: h.targetWeight || "0%",
+    notes: "",
+    provenance: {
+      dataSource: "USER_INPUT",
+      lastVerifiedAt: new Date().toISOString(),
+      confidence: "HIGH",
+    },
+    quality: "HIGH",
+  }));
+
   const totalValue = holdings.reduce((sum, h) => sum + (Number(h.currentValue) || 0), 0);
   const totalCost = holdings.reduce((sum, h) => sum + (Number(h.investedValue) || 0), 0);
   const totalGainLoss = totalValue - totalCost;
   const gainLossPercent = totalCost > 0 ? ((totalGainLoss / totalCost) * 100).toFixed(2) : "0.00";
   const dateStr = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
   const reportRef = `AA-${Math.floor(100000 + Math.random() * 900000)}`;
+
+  // Evaluate institutional v3.1 diagnostic engines
+  const health = calculateHealthScore(holdings, 0, client.id || "pdf-port");
+  const attribution = calculateAttribution(holdings, STANDARD_BENCHMARKS.BALANCED_HYBRID, client.id || "pdf-port");
+  const tax = generateTaxHarvestReport(holdings, { shortTerm: 0, longTerm: 0 }, client.id || "pdf-port");
+  const stress = simulateScenario(holdings, PRESET_SCENARIOS.TECH_CORRECTION, client.id || "pdf-port");
 
   // Group by Asset Class for allocation breakdown
   const classBreakdown: Record<string, number> = {};
@@ -294,6 +333,37 @@ export async function exportClientPdfReport({ client, advisorName = "Asset Array
     </div>
   </div>
 
+  <!-- Institutional v3.1 Diagnostics Grid -->
+  <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; color: #b37e28;">
+    Institutional Analytics & Risk Mandate (v3.1 Engine)
+  </div>
+  <div class="kpi-row" style="margin-bottom: 20px;">
+    <div class="kpi-card" style="border-top: 3px solid #e0a84c;">
+      <div class="kpi-title">Health Score</div>
+      <div class="kpi-num" style="font-size: 20px;">${health.healthScore}/100</div>
+      <div style="font-size: 11px; color: #64748b; margin-top: 4px;">Rating: <strong>${health.grade}</strong> • Conf: ${health.confidence}</div>
+    </div>
+    <div class="kpi-card" style="border-top: 3px solid ${attribution.totalActiveReturn >= 0 ? "#10b981" : "#ef4444"};">
+      <div class="kpi-title">Active Alpha vs Benchmark</div>
+      <div class="kpi-num" style="font-size: 20px; color: ${attribution.totalActiveReturn >= 0 ? "#059669" : "#dc2626"};">
+        ${attribution.totalActiveReturn >= 0 ? "+" : ""}${(attribution.totalActiveReturn * 100).toFixed(2)}%
+      </div>
+      <div style="font-size: 11px; color: #64748b; margin-top: 4px;">Benchmark: Balanced Hybrid</div>
+    </div>
+    <div class="kpi-card" style="border-top: 3px solid #6366f1;">
+      <div class="kpi-title">Tax Loss Harvesting Shield</div>
+      <div class="kpi-num" style="font-size: 20px; color: #4338ca;">$${tax.estimatedImmediateTaxSavings.toLocaleString()}</div>
+      <div style="font-size: 11px; color: #64748b; margin-top: 4px;">Harvestable: $${tax.totalHarvestableLoss.toLocaleString()}</div>
+    </div>
+    <div class="kpi-card" style="border-top: 3px solid #f59e0b;">
+      <div class="kpi-title">Stress Simulation Impact</div>
+      <div class="kpi-num" style="font-size: 20px; color: ${stress.percentChange >= 0 ? "#059669" : "#dc2626"};">
+        ${stress.percentChange >= 0 ? "+" : ""}${stress.percentChange.toFixed(1)}%
+      </div>
+      <div style="font-size: 11px; color: #64748b; margin-top: 4px;">Scenario: Tech Correction</div>
+    </div>
+  </div>
+
   <div class="two-col-summary">
     <div class="summary-card">
       <div class="card-heading">Asset Class Allocation Breakdown</div>
@@ -303,7 +373,8 @@ export async function exportClientPdfReport({ client, advisorName = "Asset Array
       <div class="card-heading">Fiduciary Mandate & Strategy</div>
       <div style="font-size: 12px; color: #475569; line-height: 18px;">
         <strong>Allocations Mandate:</strong> ${client.allocation || "Diversified institutional allocation targeting capital preservation and real equity growth."}<br><br>
-        <strong>Advisor Notes:</strong> ${client.notes || "Periodic portfolio review completed. Risk exposure is calibrated in alignment with long-term liquidity and estate planning objectives."}
+        <strong>Advisor Notes:</strong> ${client.notes || "Periodic portfolio review completed. Risk exposure is calibrated in alignment with long-term liquidity and estate planning objectives."}<br><br>
+        <strong>Health Diagnostics:</strong> ${health.recommendations[0] || "Target diversification maintained."}
       </div>
     </div>
   </div>

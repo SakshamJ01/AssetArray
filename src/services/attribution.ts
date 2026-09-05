@@ -2,7 +2,10 @@ import {
   AttributionCategoryBreakdown,
   AttributionResult,
   PortfolioHolding,
+  PerformanceQuality,
 } from "../types/wealth";
+
+export const ATTRIBUTION_METHODOLOGY_VERSION = "brinson-fachler-v1.1";
 
 export interface BenchmarkProfile {
   symbol: string;
@@ -90,22 +93,92 @@ export function normalizeCategory(assetClass: string): string {
 }
 
 /**
+ * Options for attribution calculation
+ */
+export interface AttributionOptions {
+  customCategoryReturns?: Record<string, number>; // Time-weighted or cash-flow aware returns per category
+  tolerance?: number; // Tolerance for active return reconciliation check (default 1e-4)
+}
+
+/**
  * Calculates Brinson-Fachler Performance Attribution
  *
- * Allocation Effect = (wp - wb) * (Rb - R_total_b)
- * Selection Effect = wb * (rp - Rb)
- * Interaction Effect = (wp - wb) * (rp - Rb)
- * Total Active Return = Allocation + Selection + Interaction = rp_total - Rb_total
+ * Mathematical Identity:
+ * Allocation Effect   = (wp_i - wb_i) * (Rb_i - R_total_b)
+ * Selection Effect    = wb_i * (rp_i - Rb_i)
+ * Interaction Effect  = (wp_i - wb_i) * (rp_i - Rb_i)
+ * Total Active Return = Portfolio Return - Benchmark Return = Allocation + Selection + Interaction
  */
 export function calculateAttribution(
   holdings: PortfolioHolding[],
   benchmark: BenchmarkProfile = STANDARD_BENCHMARKS.BALANCED_HYBRID,
-  portfolioId: string = "default-portfolio"
+  portfolioId: string = "default-portfolio",
+  options?: AttributionOptions
 ): AttributionResult {
+  const warnings: string[] = [];
+  const tolerance = options?.tolerance ?? 1e-4;
+
   const totalVal = holdings.reduce(
     (sum, h) => sum + (Number(h.currentValue) || 0),
     0
   );
+
+  if (totalVal <= 0 || holdings.length === 0) {
+    const benchmarkCategories = Object.keys(benchmark.categoryWeights || {});
+    let benchmarkTotalReturn = 0;
+    benchmarkCategories.forEach((cat) => {
+      const wb = benchmark.categoryWeights[cat] || 0;
+      const Rb = benchmark.categoryReturns[cat] || 0;
+      benchmarkTotalReturn += wb * Rb;
+    });
+
+    let totalAllocEffect = 0;
+    let totalSelectEffect = 0;
+    let totalInteractEffect = 0;
+
+    const breakdown: AttributionCategoryBreakdown[] = benchmarkCategories.map((cat) => {
+      const wb = benchmark.categoryWeights[cat] || 0;
+      const Rb = benchmark.categoryReturns[cat] || 0;
+      const alloc = (0 - wb) * (Rb - benchmarkTotalReturn);
+      const select = 0;
+      const interact = 0;
+      totalAllocEffect += alloc;
+
+      return {
+        category: cat,
+        portfolioWeight: 0,
+        benchmarkWeight: parseFloat(wb.toFixed(4)),
+        portfolioReturn: 0,
+        benchmarkReturn: parseFloat(Rb.toFixed(4)),
+        allocationEffect: parseFloat(alloc.toFixed(4)),
+        selectionEffect: 0,
+        interactionEffect: 0,
+        totalActiveContribution: parseFloat(alloc.toFixed(4)),
+      };
+    });
+
+    const activeReturn = -benchmarkTotalReturn;
+
+    return {
+      portfolioId,
+      benchmarkSymbol: benchmark.symbol,
+      benchmarkName: benchmark.name,
+      portfolioReturn: 0,
+      benchmarkReturn: parseFloat(benchmarkTotalReturn.toFixed(4)),
+      totalActiveReturn: parseFloat(activeReturn.toFixed(4)),
+      summary: {
+        allocationEffect: parseFloat(totalAllocEffect.toFixed(4)),
+        selectionEffect: parseFloat(totalSelectEffect.toFixed(4)),
+        interactionEffect: parseFloat(totalInteractEffect.toFixed(4)),
+      },
+      breakdown,
+      narrativeExplanation: `Portfolio holds no assets; underperformed ${benchmark.name} by ${(benchmarkTotalReturn * 100).toFixed(2)}%.`,
+      quality: "INSUFFICIENT_DATA",
+      methodologyVersion: ATTRIBUTION_METHODOLOGY_VERSION,
+      isReconciled: true,
+      warnings: ["Portfolio has zero valuation or no holdings."],
+    };
+  }
 
   // Group portfolio holdings by normalized category
   const portfolioByCategory: Record<
@@ -124,7 +197,7 @@ export function calculateAttribution(
 
   // Calculate Benchmark total return (sum of wb_i * Rb_i)
   let benchmarkTotalReturn = 0;
-  const benchmarkCategories = Object.keys(benchmark.categoryWeights);
+  const benchmarkCategories = Object.keys(benchmark.categoryWeights || {});
   benchmarkCategories.forEach((cat) => {
     const wb = benchmark.categoryWeights[cat] || 0;
     const Rb = benchmark.categoryReturns[cat] || 0;
@@ -135,7 +208,7 @@ export function calculateAttribution(
   const allCategories = Array.from(
     new Set([
       ...Object.keys(portfolioByCategory),
-      ...Object.keys(benchmark.categoryWeights),
+      ...benchmarkCategories,
     ])
   );
 
@@ -147,17 +220,27 @@ export function calculateAttribution(
   const breakdown: AttributionCategoryBreakdown[] = allCategories.map((cat) => {
     const portData = portfolioByCategory[cat] || { currentVal: 0, investedVal: 0 };
     const wp = totalVal > 0 ? portData.currentVal / totalVal : 0;
-    
-    // Category return for portfolio: (current - invested) / invested, fallback to benchmark return
-    let rp = benchmark.categoryReturns[cat] || 0.08;
-    if (portData.investedVal > 0) {
+    const wb = benchmark.categoryWeights[cat] || 0;
+    const hasBenchmarkReturn = typeof benchmark.categoryReturns[cat] === "number";
+    const Rb = hasBenchmarkReturn ? benchmark.categoryReturns[cat] : 0;
+
+    if (!hasBenchmarkReturn && wb > 0) {
+      warnings.push(`Benchmark return for category '${cat}' is missing. Used 0.0.`);
+    }
+
+    // Determine portfolio category return rp
+    let rp = 0;
+    if (options?.customCategoryReturns && typeof options.customCategoryReturns[cat] === "number") {
+      rp = options.customCategoryReturns[cat];
+    } else if (portData.investedVal > 0) {
       rp = (portData.currentVal - portData.investedVal) / portData.investedVal;
+    } else if (portData.currentVal > 0) {
+      // Cost basis is zero; uncalculated return
+      rp = 0;
+      warnings.push(`Invested value for category '${cat}' is zero; return defaulted to 0.0.`);
     }
 
     portfolioTotalReturn += wp * rp;
-
-    const wb = benchmark.categoryWeights[cat] || 0;
-    const Rb = benchmark.categoryReturns[cat] || 0.07;
 
     // Brinson-Fachler Decomposition
     const alloc = (wp - wb) * (Rb - benchmarkTotalReturn);
@@ -182,18 +265,32 @@ export function calculateAttribution(
     };
   });
 
-  const totalActiveReturn = portfolioTotalReturn - benchmarkTotalReturn;
+  const rawActiveReturn = portfolioTotalReturn - benchmarkTotalReturn;
+  const rawSumEffects = totalAllocEffect + totalSelectEffect + totalInteractEffect;
+  const isReconciled = Math.abs(rawSumEffects - rawActiveReturn) < tolerance;
 
-  // Generate plain-language explainability synthesis
+  if (!isReconciled) {
+    warnings.push(
+      `Attribution identity gap: sum of effects (${rawSumEffects.toFixed(6)}) differs from active return (${rawActiveReturn.toFixed(6)}) by ${Math.abs(rawSumEffects - rawActiveReturn).toFixed(6)}.`
+    );
+  }
+
+  // Quality assessment
+  let quality: PerformanceQuality = "HIGH";
+  if (warnings.length > 0) {
+    quality = warnings.length > 2 ? "LOW" : "MEDIUM";
+  }
+
+  // Plain-language explainability synthesis
   let explanation = "";
-  const diffBps = Math.round(totalActiveReturn * 10000);
+  const diffBps = Math.round(rawActiveReturn * 10000);
   const allocBps = Math.round(totalAllocEffect * 10000);
   const selectBps = Math.round(totalSelectEffect * 10000);
 
   if (diffBps >= 0) {
-    explanation = `Portfolio generated +${(totalActiveReturn * 100).toFixed(2)}% (+${diffBps} bps) of alpha against ${benchmark.name}. Asset allocation contributed ${allocBps >= 0 ? "+" : ""}${allocBps} bps, while security selection delivered ${selectBps >= 0 ? "+" : ""}${selectBps} bps.`;
+    explanation = `Portfolio generated +${(rawActiveReturn * 100).toFixed(2)}% (+${diffBps} bps) of active return against ${benchmark.name}. Asset allocation contributed ${allocBps >= 0 ? "+" : ""}${allocBps} bps, while security selection delivered ${selectBps >= 0 ? "+" : ""}${selectBps} bps.`;
   } else {
-    explanation = `Portfolio trailed ${benchmark.name} by ${(Math.abs(totalActiveReturn) * 100).toFixed(2)}% (${diffBps} bps). Allocation drag contributed ${allocBps} bps, while asset selection drove ${selectBps} bps.`;
+    explanation = `Portfolio trailed ${benchmark.name} by ${(Math.abs(rawActiveReturn) * 100).toFixed(2)}% (${diffBps} bps). Allocation drag contributed ${allocBps} bps, while asset selection drove ${selectBps} bps.`;
   }
 
   return {
@@ -202,7 +299,7 @@ export function calculateAttribution(
     benchmarkName: benchmark.name,
     portfolioReturn: parseFloat(portfolioTotalReturn.toFixed(4)),
     benchmarkReturn: parseFloat(benchmarkTotalReturn.toFixed(4)),
-    totalActiveReturn: parseFloat(totalActiveReturn.toFixed(4)),
+    totalActiveReturn: parseFloat(rawActiveReturn.toFixed(4)),
     summary: {
       allocationEffect: parseFloat(totalAllocEffect.toFixed(4)),
       selectionEffect: parseFloat(totalSelectEffect.toFixed(4)),
@@ -210,5 +307,9 @@ export function calculateAttribution(
     },
     breakdown,
     narrativeExplanation: explanation,
+    quality,
+    methodologyVersion: ATTRIBUTION_METHODOLOGY_VERSION,
+    isReconciled,
+    warnings,
   };
 }

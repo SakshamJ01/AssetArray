@@ -1,5 +1,5 @@
 {
-  "auditedAt": "2026-09-05T20:08:33.402Z",
+  "auditedAt": "2026-09-05T20:20:41.208Z",
   "totalWorkflows": 12,
   "verifiedCount": 12,
   "partialCount": 0,
@@ -9,7 +9,7 @@
       "id": "UAT-01",
       "workflow": "Authentication & Session Management",
       "status": "VERIFIED",
-      "observedAt": "2026-09-05T20:08:33.402Z",
+      "observedAt": "2026-09-05T20:20:41.208Z",
       "evidence": [
         "__tests__/pal.test.ts",
         "src/services/secureSync.ts"
@@ -20,7 +20,7 @@
       "id": "UAT-02",
       "workflow": "Client Creation & No-History Isolation",
       "status": "VERIFIED",
-      "observedAt": "2026-09-05T20:08:33.402Z",
+      "observedAt": "2026-09-05T20:20:41.208Z",
       "evidence": [
         "__tests__/clientInsightTruth.test.ts",
         "src/services/clientInsights/snapshotStore.ts"
@@ -31,7 +31,7 @@
       "id": "UAT-03",
       "workflow": "Client 360 Workspace & 10s Summary",
       "status": "VERIFIED",
-      "observedAt": "2026-09-05T20:08:33.402Z",
+      "observedAt": "2026-09-05T20:20:41.208Z",
       "evidence": [
         "src/features/clients/Client360Workspace.tsx"
       ],
@@ -41,7 +41,7 @@
       "id": "UAT-04",
       "workflow": "Holdings Management & Cascade",
       "status": "VERIFIED",
-      "observedAt": "2026-09-05T20:08:33.402Z",
+      "observedAt": "2026-09-05T20:20:41.208Z",
       "evidence": [
         "__tests__/healthScore.test.ts",
         "src/services/healthScore.ts"
@@ -52,7 +52,7 @@
       "id": "UAT-05",
       "workflow": "Market Data & AMFI NAVs",
       "status": "VERIFIED",
-      "observedAt": "2026-09-05T20:08:33.402Z",
+      "observedAt": "2026-09-05T20:20:41.208Z",
       "evidence": [
         "__tests__/marketTruth.test.ts",
         "src/services/market/amfiNavProvider.ts"
@@ -63,7 +63,7 @@
       "id": "UAT-06",
       "workflow": "Statutory Indian Tax Engine (AY 2026-27)",
       "status": "VERIFIED",
-      "observedAt": "2026-09-05T20:08:33.402Z",
+      "observedAt": "2026-09-05T20:20:41.208Z",
       "evidence": [
         "__tests__/statutoryTaxEngine.test.ts",
         "src/services/tax/taxCalculator.ts"
@@ -74,7 +74,7 @@
       "id": "UAT-07",
       "workflow": "Goal Planning & Monte Carlo",
       "status": "VERIFIED",
-      "observedAt": "2026-09-05T20:08:33.402Z",
+      "observedAt": "2026-09-05T20:20:41.208Z",
       "evidence": [
         "__tests__/monteCarlo.test.ts",
         "src/services/monteCarlo.ts"
@@ -85,7 +85,7 @@
       "id": "UAT-08",
       "workflow": "What-If Scenario Sandbox",
       "status": "VERIFIED",
-      "observedAt": "2026-09-05T20:08:33.402Z",
+      "observedAt": "2026-09-05T20:20:41.208Z",
       "evidence": [
         "__tests__/scenarioEngine.test.ts",
         "src/services/scenarioEngine.ts"
@@ -96,7 +96,7 @@
       "id": "UAT-09",
       "workflow": "Smart Alerts & Priority Triage",
       "status": "VERIFIED",
-      "observedAt": "2026-09-05T20:08:33.402Z",
+      "observedAt": "2026-09-05T20:20:41.208Z",
       "evidence": [
         "__tests__/smartAlerts.test.ts",
         "src/services/smartAlerts.ts"
@@ -107,7 +107,7 @@
       "id": "UAT-10",
       "workflow": "Advisor Command Center",
       "status": "VERIFIED",
-      "observedAt": "2026-09-05T20:08:33.402Z",
+      "observedAt": "2026-09-05T20:20:41.208Z",
       "evidence": [
         "__tests__/advisorPriority.test.ts",
         "src/features/advisor/AdvisorCommandCenter.tsx"
@@ -118,7 +118,7 @@
       "id": "UAT-11",
       "workflow": "Free-First AI Copilot & Grounding",
       "status": "VERIFIED",
-      "observedAt": "2026-09-05T20:08:33.402Z",
+      "observedAt": "2026-09-05T20:20:41.208Z",
       "evidence": [
         "__tests__/freeFirstAi.test.ts",
         "src/services/aiGateway/grounding.ts"
@@ -129,7 +129,7 @@
       "id": "UAT-12",
       "workflow": "PDF Report Generation",
       "status": "VERIFIED",
-      "observedAt": "2026-09-05T20:08:33.402Z",
+      "observedAt": "2026-09-05T20:20:41.208Z",
       "evidence": [
         "__tests__/pdfReport.test.ts",
         "src/services/pdfReport.ts"

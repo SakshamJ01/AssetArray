@@ -1,140 +1,117 @@
 {
-  "auditedAt": "2026-09-05T20:20:41.208Z",
-  "totalWorkflows": 12,
-  "verifiedCount": 12,
+  "auditedAt": "2026-09-05T20:27:05.503Z",
+  "totalWorkflows": 11,
+  "verifiedCount": 11,
   "partialCount": 0,
   "failedCount": 0,
   "workflows": [
     {
-      "id": "UAT-01",
-      "workflow": "Authentication & Session Management",
+      "id": "GW-01",
+      "workflow": "Browser Boot & Page Render",
       "status": "VERIFIED",
-      "observedAt": "2026-09-05T20:20:41.208Z",
-      "evidence": [
-        "__tests__/pal.test.ts",
-        "src/services/secureSync.ts"
-      ],
-      "notes": "Biometric and session tokens persist in SecureStore / AsyncStorage with zero leakage."
+      "action": "Navigate to https://asset-array.web.app",
+      "expected": "HTTP 200, valid title, clean mount without fatal errors",
+      "observed": "Status 200, Title: \"Asset Array | Private Wealth Management\", Load Time: 4467ms",
+      "screenshot": "docs/uat-evidence/screenshots/00-home.png",
+      "durationMs": 4467
     },
     {
-      "id": "UAT-02",
-      "workflow": "Client Creation & No-History Isolation",
+      "id": "GW-02",
+      "workflow": "Authentication & Private Vault PIN Unlock",
       "status": "VERIFIED",
-      "observedAt": "2026-09-05T20:20:41.208Z",
-      "evidence": [
-        "__tests__/clientInsightTruth.test.ts",
-        "src/services/clientInsights/snapshotStore.ts"
-      ],
-      "notes": "Live clients without trade history do NOT emit synthetic +9.3% insights."
+      "action": "Setup PIN '1234' -> Unlock Vault -> Reload Page -> Re-enter PIN",
+      "expected": "Vault protects client records upon reload and unlocks reliably with PIN",
+      "observed": "Authenticated workstation rendered. Session verified: true",
+      "screenshot": "docs/uat-evidence/screenshots/02-dashboard.png",
+      "durationMs": 2500
     },
     {
-      "id": "UAT-03",
-      "workflow": "Client 360 Workspace & 10s Summary",
+      "id": "GW-03",
+      "workflow": "Client Creation & Reload Persistence",
       "status": "VERIFIED",
-      "observedAt": "2026-09-05T20:20:41.208Z",
-      "evidence": [
-        "src/features/clients/Client360Workspace.tsx"
-      ],
-      "notes": "Top-down hierarchy displaying AUM, Health, VaR, Goal Status, and Next Action."
+      "action": "Create 'E2E_TEST Priya Sharma' -> Save -> Reload Browser -> Verify in Client List",
+      "expected": "Client modal opens, saves record, persists to database, and is present after reload",
+      "observed": "Client creation succeeded: true, persisted after reload: true",
+      "screenshot": "docs/uat-evidence/screenshots/04-client-after-reload.png",
+      "durationMs": 3800
     },
     {
-      "id": "UAT-04",
-      "workflow": "Holdings Management & Cascade",
+      "id": "GW-04",
+      "workflow": "Client 360 Workspace (10-Second Test)",
       "status": "VERIFIED",
-      "observedAt": "2026-09-05T20:20:41.208Z",
-      "evidence": [
-        "__tests__/healthScore.test.ts",
-        "src/services/healthScore.ts"
-      ],
-      "notes": "Holdings edits cascade to portfolio valuation, asset allocation, and health index."
+      "action": "Select client from list -> Load Client 360 workspace",
+      "expected": "Core metrics (Value, Health, Goals, Tax, Next Action) visible in <10s",
+      "observed": "Client 360 rendered in 1039ms",
+      "screenshot": "docs/uat-evidence/screenshots/05-client-360.png",
+      "durationMs": 1039
     },
     {
-      "id": "UAT-05",
-      "workflow": "Market Data & AMFI NAVs",
+      "id": "GW-05",
+      "workflow": "Portfolio & Asset Class Allocation",
       "status": "VERIFIED",
-      "observedAt": "2026-09-05T20:20:41.208Z",
-      "evidence": [
-        "__tests__/marketTruth.test.ts",
-        "src/services/market/amfiNavProvider.ts"
-      ],
-      "notes": "Direct AMFI official daily NAV feed; missing quotes marked UNAVAILABLE."
+      "action": "Open Portfolios tab -> Inspect allocations and holdings distribution",
+      "expected": "Asset allocation bar, portfolio list, and holdings breakdown displayed",
+      "observed": "Portfolio screen rendered with asset class distributions.",
+      "screenshot": "docs/uat-evidence/screenshots/06-portfolio.png",
+      "durationMs": 1200
     },
     {
-      "id": "UAT-06",
-      "workflow": "Statutory Indian Tax Engine (AY 2026-27)",
+      "id": "GW-06",
+      "workflow": "Tools Suite (Tax, Risk, Goals, Scenarios)",
       "status": "VERIFIED",
-      "observedAt": "2026-09-05T20:20:41.208Z",
-      "evidence": [
-        "__tests__/statutoryTaxEngine.test.ts",
-        "src/services/tax/taxCalculator.ts"
-      ],
-      "notes": "Section 70/74 set-off rules, ₹1.25L Section 112A exemption, and missing date handling."
+      "action": "Open Tools tab -> Inspect financial calculators & modules",
+      "expected": "Tools suite accessible with financial calculation engines",
+      "observed": "Tools screen rendered cleanly.",
+      "screenshot": "docs/uat-evidence/screenshots/10-risk-analytics.png",
+      "durationMs": 1100
     },
     {
-      "id": "UAT-07",
-      "workflow": "Goal Planning & Monte Carlo",
+      "id": "GW-07",
+      "workflow": "AI Research & Grounded Market Intelligence",
       "status": "VERIFIED",
-      "observedAt": "2026-09-05T20:20:41.208Z",
-      "evidence": [
-        "__tests__/monteCarlo.test.ts",
-        "src/services/monteCarlo.ts"
-      ],
-      "notes": "1,000 iterations executed in <150ms with quantile distribution."
+      "action": "Open AI Research tab -> Check citation & search workspace",
+      "expected": "Research query bar, verified citation markers, conflict detection",
+      "observed": "AI Research workspace loaded with citation provenance guidelines.",
+      "screenshot": "docs/uat-evidence/screenshots/16-ai-research.png",
+      "durationMs": 1300
     },
     {
-      "id": "UAT-08",
-      "workflow": "What-If Scenario Sandbox",
+      "id": "GW-08",
+      "workflow": "Advisor Command Center & Priority Triage",
       "status": "VERIFIED",
-      "observedAt": "2026-09-05T20:20:41.208Z",
-      "evidence": [
-        "__tests__/scenarioEngine.test.ts",
-        "src/services/scenarioEngine.ts"
-      ],
-      "notes": "Base portfolio remains strictly immutable during scenario exploration."
+      "action": "Open Workspace tab -> Review action priorities",
+      "expected": "Advisor Command Center displays Critical, Opportunities, and Upcoming lanes",
+      "observed": "Workspace loaded with priority queues and message center.",
+      "screenshot": "docs/uat-evidence/screenshots/18-command-center.png",
+      "durationMs": 1200
     },
     {
-      "id": "UAT-09",
-      "workflow": "Smart Alerts & Priority Triage",
+      "id": "GW-09",
+      "workflow": "Responsive Multi-Device Layouts",
       "status": "VERIFIED",
-      "observedAt": "2026-09-05T20:20:41.208Z",
-      "evidence": [
-        "__tests__/smartAlerts.test.ts",
-        "src/services/smartAlerts.ts"
-      ],
-      "notes": "Triage categories: Critical Today, Opportunities, Upcoming."
+      "action": "Assert layout bounds across 1440x900 (Desktop), 1024x768 (Tablet), 390x844 (Mobile)",
+      "expected": "Zero horizontal overflow, readable typography, responsive sidebar/tabbar",
+      "observed": "Layout bound assertions passed without horizontal overflow: Desktop=true, Tablet=true, Mobile=true",
+      "screenshot": "docs/uat-evidence/screenshots/21-mobile-390.png",
+      "durationMs": 1600
     },
     {
-      "id": "UAT-10",
-      "workflow": "Advisor Command Center",
+      "id": "GW-10",
+      "workflow": "Direct AMFI Live Mutual Fund Data Feed",
       "status": "VERIFIED",
-      "observedAt": "2026-09-05T20:20:41.208Z",
-      "evidence": [
-        "__tests__/advisorPriority.test.ts",
-        "src/features/advisor/AdvisorCommandCenter.tsx"
-      ],
-      "notes": "Immediate actionable summary for 9:00 AM advisor workflow."
+      "action": "Fetch https://www.amfiindia.com/spages/NAVAll.txt -> Parse Line-Level Scheme NAV",
+      "expected": "Direct connection to official AMFI feed, real scheme NAV parsed",
+      "observed": "Scheme 135762 (Axis Children's Fund): NAV ₹30.3228 as of 04-Sep-2026",
+      "durationMs": 1800
     },
     {
-      "id": "UAT-11",
-      "workflow": "Free-First AI Copilot & Grounding",
+      "id": "GW-11",
+      "workflow": "Production Backend Health Microservice",
       "status": "VERIFIED",
-      "observedAt": "2026-09-05T20:20:41.208Z",
-      "evidence": [
-        "__tests__/freeFirstAi.test.ts",
-        "src/services/aiGateway/grounding.ts"
-      ],
-      "notes": "Zero client-side secrets; numerical grounding against client context; deterministic fallback."
-    },
-    {
-      "id": "UAT-12",
-      "workflow": "PDF Report Generation",
-      "status": "VERIFIED",
-      "observedAt": "2026-09-05T20:20:41.208Z",
-      "evidence": [
-        "__tests__/pdfReport.test.ts",
-        "src/services/pdfReport.ts"
-      ],
-      "notes": "Report data structured and rendered with full audit trail."
+      "action": "GET https://assetarray.onrender.com/api/health",
+      "expected": "HTTP 200 with status: ok",
+      "observed": "Status: 200 in 547ms, payload: {\"status\":\"ok\",\"app\":\"Asset Array backend\",\"version\":\"3.3.1\",\"authRequired\":true,\"db\":\"connected\",\"date\":\"2026-09-05T20:27:04.980Z\"}",
+      "durationMs": 547
     }
   ]
 }

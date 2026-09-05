@@ -56,6 +56,7 @@ if (Platform.OS === "web" && typeof document !== "undefined") {
 import { BottomTabBar } from "./src/components/BottomTabBar";
 import { DesktopSidebar } from "./src/components/DesktopSidebar";
 import { DashboardScreen } from "./src/components/DashboardScreen";
+import { AiWealthCopilot } from "./src/components/AiWealthCopilot";
 import { AdvisorCommandCenter } from "./src/features/advisor";
 import { AdvisorMessagesScreen } from "./src/screens/workspace/AdvisorMessagesScreen";
 import { setHapticsEnabled, triggerSuccessHaptic } from "./src/services/haptics";
@@ -507,6 +508,7 @@ function AppContent() {
   const [selectedAiClient, setSelectedAiClient] = useState<Client | null>(null);
   const [clientAiRecommendation, setClientAiRecommendation] = useState<ClientAiRecommendation | null>(null);
   const [isClientAiLoading, setIsClientAiLoading] = useState(false);
+  const [isAiCopilotOpen, setIsAiCopilotOpen] = useState(false);
   const [activeCurrency, setActiveCurrency] = useState<CurrencyCode>("INR");
 
   useEffect(() => {
@@ -2697,6 +2699,8 @@ function AppContent() {
             }
             setIsBroadcastModalOpen(true);
           }}
+          onOpenAiCopilot={() => setIsAiCopilotOpen(true)}
+          onOpenAiResearch={() => setActiveTab("AI Research")}
         />
 
       ) : (
@@ -3026,6 +3030,30 @@ function AppContent() {
         onClose={closeHoldingModal}
         onSave={saveHolding}
         theme={theme}
+      />
+
+      <AiWealthCopilot
+        theme={theme}
+        isOpen={isAiCopilotOpen}
+        onOpenChange={setIsAiCopilotOpen}
+        bottomOffset={!isDesktop ? insets.bottom + 68 : 24}
+        clientContext={
+          selectedClientId
+            ? (() => {
+                const target = clients.find((c) => c.id === selectedClientId);
+                if (!target) return undefined;
+                const totalAum = (target.portfolio || []).reduce(
+                  (sum, h) => sum + (parseFloat(h.currentValue) || parseFloat(h.investedValue) || 0),
+                  0
+                );
+                return {
+                  clientName: target.name,
+                  totalAum,
+                  riskProfile: target.riskProfile,
+                };
+              })()
+            : undefined
+        }
       />
 
       <SyncConfigModal

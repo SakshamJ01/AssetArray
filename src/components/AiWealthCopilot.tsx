@@ -27,6 +27,10 @@ export interface AiWealthCopilotProps {
     totalAum?: number;
     riskProfile?: string;
   };
+  bottomOffset?: number;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideFloatingFab?: boolean;
 }
 
 const QUICK_PROMPTS = [
@@ -63,6 +67,10 @@ const QUICK_PROMPTS = [
 export const AiWealthCopilot: React.FC<AiWealthCopilotProps> = ({
   theme,
   clientContext,
+  bottomOffset,
+  isOpen: controlledIsOpen,
+  onOpenChange,
+  hideFloatingFab = false,
 }) => {
   const isDark =
     theme.colors.background === "#030712" ||
@@ -71,7 +79,14 @@ export const AiWealthCopilot: React.FC<AiWealthCopilotProps> = ({
 
   const brandColor = theme.colors.brand || "#E0A84C";
 
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
+  const isControlled = controlledIsOpen !== undefined;
+  const isOpen = isControlled ? controlledIsOpen : internalIsOpen;
+
+  const setIsOpen = (next: boolean) => {
+    if (onOpenChange) onOpenChange(next);
+    if (!isControlled) setInternalIsOpen(next);
+  };
   const [inputText, setInputText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
@@ -140,24 +155,27 @@ export const AiWealthCopilot: React.FC<AiWealthCopilotProps> = ({
   return (
     <>
       {/* Floating Launcher Button (Bottom Right) */}
-      <Pressable
-        onPress={() => setIsOpen(true)}
-        style={[
-          styles.fab,
-          {
-            backgroundColor: isDark ? "#0E182F" : "#FFFFFF",
-            borderColor: brandColor,
-            shadowColor: brandColor,
-          },
-        ]}
-      >
-        <View style={styles.fabInner}>
-          <View style={[styles.aiDot, { backgroundColor: brandColor }]} />
-          <Text style={[styles.fabText, { color: brandColor }]}>
-            Ask Wealth AI
-          </Text>
-        </View>
-      </Pressable>
+      {!hideFloatingFab && (
+        <Pressable
+          onPress={() => setIsOpen(true)}
+          style={[
+            styles.fab,
+            {
+              backgroundColor: isDark ? "#0E182F" : "#FFFFFF",
+              borderColor: brandColor,
+              shadowColor: brandColor,
+              bottom: bottomOffset !== undefined ? bottomOffset : 24,
+            },
+          ]}
+        >
+          <View style={styles.fabInner}>
+            <View style={[styles.aiDot, { backgroundColor: brandColor }]} />
+            <Text style={[styles.fabText, { color: brandColor }]}>
+              Ask Wealth AI
+            </Text>
+          </View>
+        </Pressable>
+      )}
 
       {/* Slide-Up / Dialog Copilot Modal */}
       <Modal

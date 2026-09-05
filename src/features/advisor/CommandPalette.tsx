@@ -36,6 +36,8 @@ export interface CommandPaletteProps {
   onOpenDecisionJournal: () => void;
   onOpenDataQuality: () => void;
   onOpenBroadcast: () => void;
+  onOpenAiCopilot?: () => void;
+  onOpenAiResearch?: () => void;
 }
 
 export const CommandPalette: React.FC<CommandPaletteProps> = ({
@@ -51,6 +53,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   onOpenDecisionJournal,
   onOpenDataQuality,
   onOpenBroadcast,
+  onOpenAiCopilot,
+  onOpenAiResearch,
 }) => {
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -76,6 +80,18 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   const allCommands: CommandItem[] = useMemo(() => {
     const list: CommandItem[] = [
       {
+        id: "cmd_ask_wealth_ai",
+        category: "ACTION",
+        title: "Ask Wealth AI Copilot",
+        subtitle: "Launch conversational fiduciary copilot & portfolio diagnostics",
+        icon: "chatbubbles-outline",
+        shortcut: "A",
+        onSelect: () => {
+          onClose();
+          onOpenAiCopilot?.();
+        },
+      },
+      {
         id: "cmd_ai_brief",
         category: "ACTION",
         title: "Run Daily AI Advisor Brief",
@@ -85,6 +101,18 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         onSelect: () => {
           onClose();
           onOpenAiBrief();
+        },
+      },
+      {
+        id: "cmd_ai_research",
+        category: "ACTION",
+        title: "Launch AI Market Research",
+        subtitle: "Gemini-powered deep stock, sector & client research",
+        icon: "telescope-outline",
+        shortcut: "R",
+        onSelect: () => {
+          onClose();
+          onOpenAiResearch?.();
         },
       },
       {

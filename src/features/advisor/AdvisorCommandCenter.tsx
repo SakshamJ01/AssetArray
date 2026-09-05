@@ -52,6 +52,8 @@ export interface AdvisorCommandCenterProps {
   onAddClient: () => void;
   onGenerateReport: (clientId: string) => void;
   onBroadcastOutreach: () => void;
+  onOpenAiCopilot?: () => void;
+  onOpenAiResearch?: () => void;
   isOffline?: boolean;
 }
 
@@ -65,6 +67,8 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
   onAddClient,
   onGenerateReport,
   onBroadcastOutreach,
+  onOpenAiCopilot,
+  onOpenAiResearch,
   isOffline = false,
 }) => {
   const [horizon, setHorizon] = useState<HorizonPerspective>("TODAY");
@@ -274,22 +278,40 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
             </Text>
           </View>
 
-          {/* Quick Palette Button */}
-          <Pressable
-            onPress={() => setIsPaletteOpen(true)}
-            style={[
-              styles.paletteBtn,
-              { backgroundColor: theme.colors.surfaceMuted, borderColor: theme.colors.border },
-            ]}
-          >
-            <Ionicons name="search" size={14} color={theme.colors.brand} />
-            <Text style={[styles.paletteBtnText, { color: theme.colors.textPrimary }]}>
-              Command Palette
-            </Text>
-            <View style={styles.kbdBox}>
-              <Text style={[styles.kbdText, { color: theme.colors.textMuted }]}>⌘K</Text>
-            </View>
-          </Pressable>
+          {/* Quick Header Actions */}
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            {onOpenAiCopilot && (
+              <Pressable
+                onPress={onOpenAiCopilot}
+                style={[
+                  styles.paletteBtn,
+                  { backgroundColor: theme.colors.surfaceMuted, borderColor: theme.colors.brand },
+                ]}
+              >
+                <Ionicons name="sparkles" size={14} color={theme.colors.brand} />
+                <Text style={[styles.paletteBtnText, { color: theme.colors.brand, fontWeight: "700" }]}>
+                  Ask AI
+                </Text>
+              </Pressable>
+            )}
+
+            {/* Quick Palette Button */}
+            <Pressable
+              onPress={() => setIsPaletteOpen(true)}
+              style={[
+                styles.paletteBtn,
+                { backgroundColor: theme.colors.surfaceMuted, borderColor: theme.colors.border },
+              ]}
+            >
+              <Ionicons name="search" size={14} color={theme.colors.brand} />
+              <Text style={[styles.paletteBtnText, { color: theme.colors.textPrimary }]}>
+                Command Palette
+              </Text>
+              <View style={styles.kbdBox}>
+                <Text style={[styles.kbdText, { color: theme.colors.textMuted }]}>⌘K</Text>
+              </View>
+            </Pressable>
+          </View>
         </View>
 
         {/* 4 Status Breakdown Pills */}
@@ -501,15 +523,17 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
             </Text>
           </Pressable>
 
-          <Pressable
-            onPress={() => setIsDecisionModalOpen(true)}
-            style={[styles.dockBtn, { backgroundColor: theme.colors.surfaceMuted }]}
-          >
-            <Ionicons name="journal-outline" size={16} color={theme.colors.brand} />
-            <Text style={[styles.dockBtnText, { color: theme.colors.textPrimary }]}>
-              Log Decision
-            </Text>
-          </Pressable>
+          {onOpenAiCopilot && (
+            <Pressable
+              onPress={onOpenAiCopilot}
+              style={[styles.dockBtn, { backgroundColor: theme.colors.surfaceMuted, borderColor: theme.colors.brand, borderWidth: 1 }]}
+            >
+              <Ionicons name="chatbubbles-outline" size={16} color={theme.colors.brand} />
+              <Text style={[styles.dockBtnText, { color: theme.colors.brand, fontWeight: "700" }]}>
+                Ask Wealth AI
+              </Text>
+            </Pressable>
+          )}
 
           <Pressable
             onPress={() => setIsBriefModalOpen(true)}
@@ -518,6 +542,28 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
             <Ionicons name="sparkles-outline" size={16} color={theme.colors.brand} />
             <Text style={[styles.dockBtnText, { color: theme.colors.textPrimary }]}>
               AI Brief
+            </Text>
+          </Pressable>
+
+          {onOpenAiResearch && (
+            <Pressable
+              onPress={onOpenAiResearch}
+              style={[styles.dockBtn, { backgroundColor: theme.colors.surfaceMuted }]}
+            >
+              <Ionicons name="telescope-outline" size={16} color={theme.colors.brand} />
+              <Text style={[styles.dockBtnText, { color: theme.colors.textPrimary }]}>
+                AI Research
+              </Text>
+            </Pressable>
+          )}
+
+          <Pressable
+            onPress={() => setIsDecisionModalOpen(true)}
+            style={[styles.dockBtn, { backgroundColor: theme.colors.surfaceMuted }]}
+          >
+            <Ionicons name="journal-outline" size={16} color={theme.colors.brand} />
+            <Text style={[styles.dockBtnText, { color: theme.colors.textPrimary }]}>
+              Log Decision
             </Text>
           </Pressable>
 
@@ -598,6 +644,8 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
         onOpenDecisionJournal={() => setIsDecisionModalOpen(true)}
         onOpenDataQuality={() => setActiveSection("DATA_QUALITY")}
         onOpenBroadcast={onBroadcastOutreach}
+        onOpenAiCopilot={onOpenAiCopilot}
+        onOpenAiResearch={onOpenAiResearch}
       />
     </ScrollView>
   );

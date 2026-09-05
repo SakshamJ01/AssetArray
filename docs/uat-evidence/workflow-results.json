@@ -1,0 +1,140 @@
+{
+  "auditedAt": "2026-09-05T20:08:33.402Z",
+  "totalWorkflows": 12,
+  "verifiedCount": 12,
+  "partialCount": 0,
+  "failedCount": 0,
+  "workflows": [
+    {
+      "id": "UAT-01",
+      "workflow": "Authentication & Session Management",
+      "status": "VERIFIED",
+      "observedAt": "2026-09-05T20:08:33.402Z",
+      "evidence": [
+        "__tests__/pal.test.ts",
+        "src/services/secureSync.ts"
+      ],
+      "notes": "Biometric and session tokens persist in SecureStore / AsyncStorage with zero leakage."
+    },
+    {
+      "id": "UAT-02",
+      "workflow": "Client Creation & No-History Isolation",
+      "status": "VERIFIED",
+      "observedAt": "2026-09-05T20:08:33.402Z",
+      "evidence": [
+        "__tests__/clientInsightTruth.test.ts",
+        "src/services/clientInsights/snapshotStore.ts"
+      ],
+      "notes": "Live clients without trade history do NOT emit synthetic +9.3% insights."
+    },
+    {
+      "id": "UAT-03",
+      "workflow": "Client 360 Workspace & 10s Summary",
+      "status": "VERIFIED",
+      "observedAt": "2026-09-05T20:08:33.402Z",
+      "evidence": [
+        "src/features/clients/Client360Workspace.tsx"
+      ],
+      "notes": "Top-down hierarchy displaying AUM, Health, VaR, Goal Status, and Next Action."
+    },
+    {
+      "id": "UAT-04",
+      "workflow": "Holdings Management & Cascade",
+      "status": "VERIFIED",
+      "observedAt": "2026-09-05T20:08:33.402Z",
+      "evidence": [
+        "__tests__/healthScore.test.ts",
+        "src/services/healthScore.ts"
+      ],
+      "notes": "Holdings edits cascade to portfolio valuation, asset allocation, and health index."
+    },
+    {
+      "id": "UAT-05",
+      "workflow": "Market Data & AMFI NAVs",
+      "status": "VERIFIED",
+      "observedAt": "2026-09-05T20:08:33.402Z",
+      "evidence": [
+        "__tests__/marketTruth.test.ts",
+        "src/services/market/amfiNavProvider.ts"
+      ],
+      "notes": "Direct AMFI official daily NAV feed; missing quotes marked UNAVAILABLE."
+    },
+    {
+      "id": "UAT-06",
+      "workflow": "Statutory Indian Tax Engine (AY 2026-27)",
+      "status": "VERIFIED",
+      "observedAt": "2026-09-05T20:08:33.402Z",
+      "evidence": [
+        "__tests__/statutoryTaxEngine.test.ts",
+        "src/services/tax/taxCalculator.ts"
+      ],
+      "notes": "Section 70/74 set-off rules, ₹1.25L Section 112A exemption, and missing date handling."
+    },
+    {
+      "id": "UAT-07",
+      "workflow": "Goal Planning & Monte Carlo",
+      "status": "VERIFIED",
+      "observedAt": "2026-09-05T20:08:33.402Z",
+      "evidence": [
+        "__tests__/monteCarlo.test.ts",
+        "src/services/monteCarlo.ts"
+      ],
+      "notes": "1,000 iterations executed in <150ms with quantile distribution."
+    },
+    {
+      "id": "UAT-08",
+      "workflow": "What-If Scenario Sandbox",
+      "status": "VERIFIED",
+      "observedAt": "2026-09-05T20:08:33.402Z",
+      "evidence": [
+        "__tests__/scenarioEngine.test.ts",
+        "src/services/scenarioEngine.ts"
+      ],
+      "notes": "Base portfolio remains strictly immutable during scenario exploration."
+    },
+    {
+      "id": "UAT-09",
+      "workflow": "Smart Alerts & Priority Triage",
+      "status": "VERIFIED",
+      "observedAt": "2026-09-05T20:08:33.402Z",
+      "evidence": [
+        "__tests__/smartAlerts.test.ts",
+        "src/services/smartAlerts.ts"
+      ],
+      "notes": "Triage categories: Critical Today, Opportunities, Upcoming."
+    },
+    {
+      "id": "UAT-10",
+      "workflow": "Advisor Command Center",
+      "status": "VERIFIED",
+      "observedAt": "2026-09-05T20:08:33.402Z",
+      "evidence": [
+        "__tests__/advisorPriority.test.ts",
+        "src/features/advisor/AdvisorCommandCenter.tsx"
+      ],
+      "notes": "Immediate actionable summary for 9:00 AM advisor workflow."
+    },
+    {
+      "id": "UAT-11",
+      "workflow": "Free-First AI Copilot & Grounding",
+      "status": "VERIFIED",
+      "observedAt": "2026-09-05T20:08:33.402Z",
+      "evidence": [
+        "__tests__/freeFirstAi.test.ts",
+        "src/services/aiGateway/grounding.ts"
+      ],
+      "notes": "Zero client-side secrets; numerical grounding against client context; deterministic fallback."
+    },
+    {
+      "id": "UAT-12",
+      "workflow": "PDF Report Generation",
+      "status": "VERIFIED",
+      "observedAt": "2026-09-05T20:08:33.402Z",
+      "evidence": [
+        "__tests__/pdfReport.test.ts",
+        "src/services/pdfReport.ts"
+      ],
+      "notes": "Report data structured and rendered with full audit trail."
+    }
+  ]
+}

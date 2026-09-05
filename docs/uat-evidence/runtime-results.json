@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-09-05T20:08:33.403Z",
+  "nodeVersion": "v24.15.0",
+  "totalTestSuites": 47,
+  "evidenceDirectory": "docs/uat-evidence/",
+  "verdict": "READY WITH LIMITATIONS",
+  "limitations": [
+    "AMFI mutual fund NAVs are updated on end-of-day basis (~9:00 PM IST).",
+    "Gemini Free AI is subject to provider rate limits (15 RPM); falls back to local Ollama or rule-based summaries."
+  ]
+}

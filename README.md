@@ -1,6 +1,6 @@
 # Asset Array 💼📈
 
-[![Version 3.1.0](https://img.shields.io/badge/Version-3.1.0-E0A84C?style=for-the-badge&logo=git&logoColor=white)](https://github.com/SakshamJ01/AssetArray)
+[![Version 3.3.0](https://img.shields.io/badge/Version-3.3.0-E0A84C?style=for-the-badge&logo=git&logoColor=white)](https://github.com/SakshamJ01/AssetArray)
 [![Live Web App](https://img.shields.io/badge/Live%20Web%20App-asset--array.web.app-E0A84C?style=for-the-badge&logo=firebase&logoColor=white)](https://asset-array.web.app)
 [![Live Backend API](https://img.shields.io/badge/API-assetarray.onrender.com-46E3B7?style=for-the-badge&logo=render&logoColor=black)](https://assetarray.onrender.com/api/health)
 [![Cloud Database](https://img.shields.io/badge/Database-MongoDB%20Atlas-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://cloud.mongodb.com)
@@ -29,17 +29,22 @@ Engineered with a high-contrast obsidian & champagne gold luxury aesthetic, dual
 
 ---
 
-## 🌟 Version 3.1.0 Institutional Hardening & Accuracy
+## 🌟 Version 3.3.0 Advisor Command Center & Fiduciary Architecture
 
 Comprehensive institutional methodology, mathematical formulas, and statutory compliance documentation are available in the [`docs/`](docs/) directory:
+- [Advisor Command Center Architecture](docs/advisor-command-center.md)
+- [Advisor Workflow & Prioritization Engine](docs/advisor-workflow.md)
+- [Client 360 Workspace](docs/client-360.md)
+- [Fiduciary Decision Journal & Audit Log](docs/decision-journal.md)
+- [Daily AI Advisor Brief & Grounding Methodology](docs/ai-advisor-brief.md)
 - [System Architecture](docs/architecture.md)
 - [Analytics & Performance Methodology (TWR, XIRR, Brinson Attribution)](docs/analytics-methodology.md)
 - [Statutory Indian Tax Methodology (AY 2026-27 & Sec 70/74)](docs/tax-methodology.md)
 - [Risk & Benchmark Analytics (MPT, HWM Drawdowns, Mulberry32 Monte Carlo)](docs/risk-methodology.md)
 - [AI Architecture & DPDP Act PII Sanitization](docs/ai-architecture.md)
 - [Zero-Knowledge Security Model](docs/security.md)
-- [Domain Data Models & Schemas](docs/data-model.md)
-- [REST API Reference](docs/api.md)
+- [v3.3.0 Release Notes](docs/release-notes-v3.3.md)
+- [v3.2.0 Red-Team Hardening](docs/redteam-audit-report.md)
 - [v3.1.0 Release Notes](docs/release-notes-v3.1.md)
 
 ### 🏛️ Brinson-Fachler Performance Attribution Engine

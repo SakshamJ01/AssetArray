@@ -56,6 +56,7 @@ if (Platform.OS === "web" && typeof document !== "undefined") {
 import { BottomTabBar } from "./src/components/BottomTabBar";
 import { DesktopSidebar } from "./src/components/DesktopSidebar";
 import { DashboardScreen } from "./src/components/DashboardScreen";
+import { AdvisorCommandCenter } from "./src/features/advisor";
 import { AdvisorMessagesScreen } from "./src/screens/workspace/AdvisorMessagesScreen";
 import { setHapticsEnabled, triggerSuccessHaptic } from "./src/services/haptics";
 import {
@@ -2667,28 +2668,35 @@ function AppContent() {
           />
           <ScreenTransition triggerKey={activeTab}>
             {activeTab === "Dashboard" ? (
-        <DashboardScreen
-          analytics={dashboardAnalytics}
+        <AdvisorCommandCenter
+          clients={clients}
+          goals={goals}
+          theme={theme}
           contentBottomPadding={contentBottomPadding}
-          dueClients={dashboardDueClients}
-          onActionAddClient={openAddModal}
-          onActionAiResearch={() => setActiveTab("AI Research")}
-          onActionBroadcast={() => {
+          onNavigateTab={(tab, params) => {
+            setActiveTab(tab);
+            if (params?.clientId) {
+              setSelectedClientId(params.clientId);
+            }
+          }}
+          onSelectClient={(clientId) => {
+            setSelectedClientId(clientId);
+            setActiveTab("Clients");
+          }}
+          onAddClient={openAddModal}
+          onGenerateReport={(clientId) => {
+            setSelectedClientId(clientId);
+            const cl = clients.find((c) => c.id === clientId);
+            if (cl) {
+              exportClientPdfReport({ client: cl });
+            }
+          }}
+          onBroadcastOutreach={() => {
             if (selectedClientIds.length === 0 && clients.length > 0) {
               setSelectedClientIds(clients.map((client) => client.id));
             }
             setIsBroadcastModalOpen(true);
           }}
-          onActionOpenClients={() => setActiveTab("Clients")}
-          onOpenClient={(clientId) => {
-            setSelectedClientId(clientId);
-            setActiveTab("Clients");
-          }}
-          onViewAllClients={() => setActiveTab("Clients")}
-          recentClients={dashboardRecentClients}
-          reminderKpis={dashboardReminderKpis}
-          stats={dashboardStats}
-          theme={theme}
         />
 
       ) : (

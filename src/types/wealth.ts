@@ -103,6 +103,7 @@ export interface PortfolioHolding {
   sector?: string;
   industry?: string;
   acquiredAt?: string;
+  acquisitionDate?: string;
   taxLots?: TaxLot[];
 }
 

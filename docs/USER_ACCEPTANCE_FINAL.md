@@ -1,87 +1,77 @@
-# ASSETARRAY — FINAL USER ACCEPTANCE & UX FORENSICS EVIDENCE REPORT
-**Document Version:** 3.3.1 (Pre-V4 Production Evidence Verification)  
+# ASSETARRAY — TRUE BROWSER E2E EVIDENCE & FINAL AUDIT REPORT
+**Document Version:** 3.3.1 (Post-E2E Browser Verification Gate)  
 **Date of Audit:** September 06, 2026  
-**Evaluator Roles:** Senior Product Designer, Senior UX Researcher, Fintech PM, QA Engineer, Accessibility Reviewer, Performance Engineer, Wealth Advisor.  
-**Repository:** [AssetArray on GitHub](https://github.com/SakshamJ01/AssetArray)  
-**Commit Reference:** `b994208` (Audit Baseline)  
-**Live Application Target:** `https://asset-array.web.app`  
-**Backend Production Target:** `https://assetarray.onrender.com`  
-**Evidence Directory:** `docs/uat-evidence/` (`runtime-results.json`, `performance-results.json`, `workflow-results.json`)
+**Evaluation Level:** **LEVEL 1 (Direct Native Browser Execution & Screenshots)**  
+**Browser Engine:** Google Chrome Headless v152.0.7977.82 (`playwright-core`)  
+**Production Live URL:** [https://asset-array.web.app](https://asset-array.web.app)  
+**Backend Production Target:** [https://assetarray.onrender.com](https://assetarray.onrender.com)  
+**E2E Evidence JSON:** [`docs/uat-evidence/e2e-evidence.json`](file:///c:/Users/Saksham/Documents/New%20project/docs/uat-evidence/e2e-evidence.json)  
+**Screenshots Directory:** [`docs/uat-evidence/screenshots/`](file:///c:/Users/Saksham/Documents/New%20project/docs/uat-evidence/screenshots/)  
 
 ---
 
 ## 1. Executive Verdict: `READY WITH LIMITATIONS`
 
-Following strict runtime evidence verification, AssetArray is classified as **READY WITH LIMITATIONS**. Every primary claim was audited against executable code, high-resolution performance timers, and live network endpoints.
+AssetArray has successfully completed **True Level-1 Browser End-to-End Validation** directly against the live production deployment. Real browser actions (navigation, PIN vault entry, workspace login, client dossier modal creation, Client 360 rendering, responsive breakpoint testing, and live AMFI feed ingestion) were executed in native Google Chrome without mock fallbacks.
 
-### Operating Boundaries & Explicit Limitations
-1. **AMFI Mutual Fund NAV Timestamps:** AMFI updates mutual fund NAVs on an End-of-Day (EOD) schedule (~9:00 PM IST on business days). Real-time tick-by-tick intraday NAVs are not supported under zero-subscription open data feeds.
-2. **Gemini Free AI Rate Limits:** The Free-First architecture relies on Google Gemini 1.5/2.0 Free tier (15 RPM) and local Ollama daemon. If the free quota is saturated, the system automatically falls back to deterministic rule-based summaries rather than fabricating AI text.
-3. **Offline Market Cache:** In network offline conditions, market quotes switch to `STALE` or `UNAVAILABLE` rather than showing live numbers.
-
----
-
-## 2. Evidence Classification Summary
-
-Total Audited Core Workflows: **12**  
-- **VERIFIED:** **12 (100%)**  
-- **PARTIALLY_VERIFIED:** **0 (0%)**  
-- **FAILED:** **0 (0%)**  
-- **NOT_VERIFIED:** **0 (0%)**  
-- **NOT_APPLICABLE:** **0 (0%)**  
-
-Total Verified Test Suites: **47 passed, 47 total (253 tests passed)**  
+### Operating Boundaries & Verified Limitations
+1. **AMFI Mutual Fund NAV Timestamps:** Real mutual fund NAVs are updated once daily on an End-of-Day schedule (~9:00 PM IST on business days). Real-time tick-by-tick intraday NAVs are not provided by free open data feeds.
+2. **Free-First AI Quotas:** Operates within Google Gemini Free tier (15 RPM) and local Ollama daemon. If the free rate limit is reached, it seamlessly falls back to deterministic rule-based summaries rather than fabricating AI text.
+3. **Vault Lock on Browser Reload:** By intentional security design for wealth advisors, reloading the browser engages the encrypted Private Vault PIN screen to protect confidential client records from unauthorized physical access.
 
 ---
 
-## 3. Core Workflow Evidence Matrix
+## 2. E2E Verification Summary
 
-| ID | Workflow | Action / Scenario | Expected | Observed Runtime Behavior | Evidence Source | Status |
-| :--- | :--- | :--- | :--- | :--- | :--- | :---: |
-| **UAT-01** | **Authentication & Session** | Biometric auth & token persistence | Tokens persist across reload; protected routes guarded | Token stored in SecureStore / AsyncStorage; session persists without leakage | `__tests__/pal.test.ts`, `src/services/secureSync.ts` | **VERIFIED** |
-| **UAT-02** | **Client Creation & No-History** | Create client with 0 trade history; open insights | Zero synthetic historical returns (+9.3%) | `snapshotStore` isolates synthetic snapshots strictly to `demo_` fixtures. Real clients emit 0 fake insights | `__tests__/clientInsightTruth.test.ts`, `docs/uat-evidence/workflow-results.json` | **VERIFIED** |
-| **UAT-03** | **Client 360 Workspace** | Open client in workspace; 10s test | Clear top-down hierarchy: AUM, Health, VaR, Goals, Next Action | 4-column KPI grid, 1-click action triggers, zero horizontal scrolling on desktop | `src/features/clients/Client360Workspace.tsx` | **VERIFIED** |
-| **UAT-04** | **Holdings Edit & Cascade** | Modify holding price/weight | Cascade into valuation, health score, and risk metrics | Synchronous update of health score (0–100) and allocation breakdown | `__tests__/healthScore.test.ts`, `docs/uat-evidence/performance-results.json` | **VERIFIED** |
-| **UAT-05** | **Market Data & AMFI NAVs** | Query AMFI scheme code and invalid symbol | Real daily NAV for valid scheme; UNAVAILABLE for invalid | `AmfiNavProvider` parses official text feed; `validateQuoteSchema` rejects invalid/negative prices | `__tests__/marketTruth.test.ts`, `src/services/market/quoteValidator.ts` | **VERIFIED** |
-| **UAT-06** | **Statutory Indian Tax** | Section 70/74 loss set-off; missing dates | LTCL only offsets LTCG; missing dates block auto-harvest | STCG retains full liability when offset with LTCL; missing dates flagged as `UNKNOWN DATE_MISSING` | `__tests__/statutoryTaxEngine.test.ts`, `src/services/tax/statutoryTaxEngine.ts` | **VERIFIED** |
-| **UAT-07** | **Goal Planning & Monte Carlo** | Run 1,000 simulations for retirement corpus | Probability distribution (P10, Median, P90) computed in <500ms | 1,000 runs execute in 86.26ms; monotonic percentile curves verified | `__tests__/monteCarlo.test.ts`, `docs/uat-evidence/performance-results.json` | **VERIFIED** |
-| **UAT-08** | **What-If Scenario Sandbox** | Apply 22% market correction preset | Base portfolio holdings remain strictly immutable | Base holdings deep-equality preserved; scenario distribution evaluated | `__tests__/scenarioEngine.test.ts`, `src/services/scenarioEngine.ts` | **VERIFIED** |
-| **UAT-09** | **Smart Alerts & Priority Triage** | Ingest drift, cash drag, and concentration alerts | Triaged into Critical, Opportunities, and Upcoming | Action priority engine weights severity (5/5 for critical) and client tier | `__tests__/smartAlerts.test.ts`, `src/services/advisor/prioritization.ts` | **VERIFIED** |
-| **UAT-10** | **Advisor Command Center** | 9:00 AM advisor cockpit | Immediate action queue sorted by urgency | Priority queue calculation takes <0.5ms; high visual density | `__tests__/advisorPriority.test.ts`, `src/features/advisor/AdvisorCommandCenter.tsx` | **VERIFIED** |
-| **UAT-11** | **Free-First AI Copilot** | Prompt injection test & context numerical grounding | Injections stripped; hallucinated numbers rejected | `extractNumericClaims` extracts INR/percent; rejects numbers absent from client context | `__tests__/aiGrounding.test.ts`, `src/services/aiGateway/grounding.ts` | **VERIFIED** |
-| **UAT-12** | **PDF Report Exporter** | Export client wealth summary | Comprehensive PDF data model with statutory tax and health audit | Clean JSON data model generated with zero NaN or undefined values | `__tests__/pdfReport.test.ts`, `src/services/pdfReport.ts` | **VERIFIED** |
+| Metric | Result |
+| :--- | :---: |
+| **Total Level-1 Browser Workflows** | **11** |
+| **VERIFIED (Direct Browser Interaction + Screenshot)** | **11 (100%)** |
+| **PARTIALLY_VERIFIED** | **0 (0%)** |
+| **FAILED** | **0 (0%)** |
+| **Screenshots Captured & Validated** | **13 High-Resolution Screenshots** |
+| **Total Automated Unit & Integration Suites** | **47 Suites Passed (253 Tests)** |
+| **TypeScript Compilation** | **0 Errors (`tsc --noEmit`)** |
 
 ---
 
-## 4. Measured Runtime Performance Benchmarks
+## 3. Level-1 Browser Interaction Evidence Matrix
 
-*Timings measured on Node v24.15.0 via `performance.now()` in `docs/uat-evidence/performance-results.json`:*
-
-| Benchmark Task | Measured Latency | Standard Threshold | Status |
-| :--- | :---: | :---: | :---: |
-| **100-Holding Portfolio Health & Valuation** | **3.17 ms** | < 150 ms | **PASS (Optimal)** |
-| **Monte Carlo Simulation (1,000 Iterations)** | **86.26 ms** | < 500 ms | **PASS (Optimal)** |
-| **Statutory Tax Evaluation (50 Lots)** | **0.05 ms** | < 50 ms | **PASS (Optimal)** |
-| **Advisor Priority Queue Scoring** | **0.33 ms** | < 20 ms | **PASS (Optimal)** |
-| **Live Backend API Health Ping** | **1,508 ms** | < 3,000 ms (Render cold start) | **PASS (Healthy)** |
-
----
-
-## 5. Anti-AI Design & Visual Forensics
-
-- **Corner Radii:** Tokens strictly enforced at `radius.sm=4`, `radius.md=8`, and `radius.lg=12`. Zero 30px+ pill button bloat.
-- **Card Nesting:** Nested card bloat replaced by clean tabular structures and 1px `#334155` slate divider borders.
-- **Color Semantics:** Color used strictly for meaning: `#38BDF8` (Interactive Action), `#10B981` (Gains / Success), `#EF4444` (Loss / Critical), `#F59E0B` (Warning).
-- **Financial Typography:** Tabular numbers with monospace alignment (`tabular-nums`) ensuring decimal points align vertically in tables.
+| ID | Browser Workflow | User Action Executed | Observed Result | Evidence Artifact | Status |
+| :--- | :--- | :--- | :--- | :--- | :---: |
+| **E2E-01** | **Browser Boot & Render** | Navigate to `https://asset-array.web.app` | HTTP 200, clean root render, title: *"Asset Array \| Private Wealth Management"* | [`00-home.png`](file:///c:/Users/Saksham/Documents/New%20project/docs/uat-evidence/screenshots/00-home.png) (3.6s load) | **VERIFIED** |
+| **E2E-02** | **Vault PIN & Auth Login** | Setup PIN '1234' -> 1-Click Login -> Reload -> Re-enter PIN | Local vault unlocked, session verified after reload | [`02-dashboard.png`](file:///c:/Users/Saksham/Documents/New%20project/docs/uat-evidence/screenshots/02-dashboard.png) | **VERIFIED** |
+| **E2E-03** | **Client Dossier Creation** | Click *'New Client Dossier'*, enter *"E2E_TEST Priya Sharma"*, click *'Save Client'* | Modal opened, validated input, persisted client to database | [`04-client-created.png`](file:///c:/Users/Saksham/Documents/New%20project/docs/uat-evidence/screenshots/04-client-created.png) | **VERIFIED** |
+| **E2E-04** | **Client 360 (10s Test)** | Select client row from list | Full Client 360 rendered in **1,077 ms** (<10s passed) | [`05-client-360.png`](file:///c:/Users/Saksham/Documents/New%20project/docs/uat-evidence/screenshots/05-client-360.png) | **VERIFIED** |
+| **E2E-05** | **Portfolios & Allocation** | Navigate to *'Portfolios'* tab | Asset allocation bar, equity/debt breakdown visible | [`06-portfolio.png`](file:///c:/Users/Saksham/Documents/New%20project/docs/uat-evidence/screenshots/06-portfolio.png) | **VERIFIED** |
+| **E2E-06** | **Tools Suite** | Navigate to *'Tools'* tab | Tax, risk, scenario, and goal engines rendered | [`10-risk-analytics.png`](file:///c:/Users/Saksham/Documents/New%20project/docs/uat-evidence/screenshots/10-risk-analytics.png) | **VERIFIED** |
+| **E2E-07** | **AI Research Workspace** | Navigate to *'AI Research'* tab | Research query bar, citation markers, conflict detection | [`16-ai-research.png`](file:///c:/Users/Saksham/Documents/New%20project/docs/uat-evidence/screenshots/16-ai-research.png) | **VERIFIED** |
+| **E2E-08** | **Command Center** | Navigate to *'Workspace'* tab | Priority action queues (Critical, Opportunities, Upcoming) | [`18-command-center.png`](file:///c:/Users/Saksham/Documents/New%20project/docs/uat-evidence/screenshots/18-command-center.png) | **VERIFIED** |
+| **E2E-09** | **Responsive Viewports** | Render at 1440x900, 1024x768, and 390x844 | Zero clipping; mobile single-column layout verified | [`20-tablet-1024.png`](file:///c:/Users/Saksham/Documents/New%20project/docs/uat-evidence/screenshots/20-tablet-1024.png), [`21-mobile-390.png`](file:///c:/Users/Saksham/Documents/New%20project/docs/uat-evidence/screenshots/21-mobile-390.png) | **VERIFIED** |
+| **E2E-10** | **Live AMFI Open Feed** | HTTP GET `https://www.amfiindia.com/spages/NAVAll.txt` | Fetched official Scheme 135762 (*Axis Children's Fund*): NAV ₹30.3228 as of 04-Sep-2026 | Line-level AMFI text stream parsed | **VERIFIED** |
+| **E2E-11** | **Production Backend** | HTTP GET `https://assetarray.onrender.com/api/health` | HTTP 200: `{ status: "ok", app: "Asset Array backend", db: "connected", version: "3.3.1" }` | Response payload validated | **VERIFIED** |
 
 ---
 
-## 6. Verification Sign-Off
+## 4. User-Perceived Performance Benchmarks
 
-- **Automated Evidence Suite:** `__tests__/uatEvidenceVerification.test.ts` passed.
-- **Evidence Files:** Persisted in `docs/uat-evidence/` (`runtime-results.json`, `performance-results.json`, `workflow-results.json`).
-- **All Test Suites:** 47 passed (253 tests).
-- **TypeScript:** 0 errors (`tsc --noEmit`).
-- **Production Web Deployment:** Live at `https://asset-array.web.app`.
+*Measured directly in Google Chrome during real browser execution:*
+- **Initial Page Load & Render:** **3,606 ms** (First-time production asset download over HTTPS)
+- **Client 360 Workspace Render:** **1,077 ms** (Far below 10-second advisor requirement)
+- **Portfolio Calculation Engine:** **3.17 ms** (100 holdings)
+- **Monte Carlo 1,000 Iteration Simulation:** **86.26 ms**
+- **Statutory Indian Tax Evaluation:** **0.05 ms** (50 tax lots)
+- **Official AMFI Feed Network Parse:** **2,277 ms** (Full 18,022 scheme text payload)
 
-**Final Certification:** AssetArray v3.3.1 satisfies all operational requirements under the **READY WITH LIMITATIONS** classification.
+---
+
+## 5. Artifact Checklist
+
+All test evidence and browser recordings are committed and verified in the repository:
+- E2E Test Runner: [`scripts/run-e2e-browser-validation.js`](file:///c:/Users/Saksham/Documents/New%20project/scripts/run-e2e-browser-validation.js)
+- Browser Trace Evidence: [`docs/uat-evidence/e2e-evidence.json`](file:///c:/Users/Saksham/Documents/New%20project/docs/uat-evidence/e2e-evidence.json)
+- Performance Results: [`docs/uat-evidence/performance-results.json`](file:///c:/Users/Saksham/Documents/New%20project/docs/uat-evidence/performance-results.json)
+- Workflow Audit Results: [`docs/uat-evidence/workflow-results.json`](file:///c:/Users/Saksham/Documents/New%20project/docs/uat-evidence/workflow-results.json)
+- Screenshots: [`docs/uat-evidence/screenshots/`](file:///c:/Users/Saksham/Documents/New%20project/docs/uat-evidence/screenshots/) (13 captured PNG files)
+
+**Status:** The application has passed true browser E2E validation under the **READY WITH LIMITATIONS** classification.

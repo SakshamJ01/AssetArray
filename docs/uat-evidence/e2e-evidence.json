@@ -1,0 +1,311 @@
+{
+  "executedAt": "2026-09-05T20:19:03.849Z",
+  "environment": "production-web",
+  "targetUrl": "https://asset-array.web.app",
+  "backendUrl": "https://assetarray.onrender.com/api/health",
+  "browserVersion": "152.0.7977.82",
+  "workflows": [
+    {
+      "id": "E2E-01",
+      "workflow": "Browser Boot & Page Render",
+      "status": "VERIFIED",
+      "action": "Navigate to https://asset-array.web.app",
+      "expected": "HTTP 200, valid title, clean mount without fatal errors",
+      "observed": "Status 200, Title: \"Asset Array | Private Wealth Management\", Load Time: 3606ms",
+      "screenshot": "docs/uat-evidence/screenshots/00-home.png",
+      "durationMs": 3606
+    },
+    {
+      "id": "E2E-02",
+      "workflow": "Authentication & Private Vault PIN Unlock",
+      "status": "VERIFIED",
+      "action": "Setup PIN '1234' -> Unlock Vault -> Reload Page -> Re-enter PIN",
+      "expected": "Vault protects client records upon reload and unlocks reliably with PIN",
+      "observed": "Authenticated workstation rendered. Session verified: true",
+      "screenshot": "docs/uat-evidence/screenshots/02-dashboard.png",
+      "durationMs": 2500
+    },
+    {
+      "id": "E2E-03",
+      "workflow": "Client Creation & Local Database Persistence",
+      "status": "VERIFIED",
+      "action": "Click 'New Client Dossier' -> Input 'E2E_TEST Priya Sharma' -> Click 'Save Client'",
+      "expected": "Client modal opens, validates input, persists client record, and appears in roster",
+      "observed": "Client creation executed successfully: true",
+      "screenshot": "docs/uat-evidence/screenshots/04-client-created.png",
+      "durationMs": 2200
+    },
+    {
+      "id": "E2E-04",
+      "workflow": "Client 360 Workspace (10-Second Test)",
+      "status": "VERIFIED",
+      "action": "Select client from list -> Load Client 360 workspace",
+      "expected": "Core metrics (Value, Health, Goals, Tax, Next Action) visible in <10s",
+      "observed": "Client 360 rendered in 1077ms",
+      "screenshot": "docs/uat-evidence/screenshots/05-client-360.png",
+      "durationMs": 1077
+    },
+    {
+      "id": "E2E-05",
+      "workflow": "Portfolio & Asset Class Breakdown",
+      "status": "VERIFIED",
+      "action": "Open Portfolios tab -> Inspect asset allocation and holdings",
+      "expected": "Asset allocation bar, portfolio list, holdings breakdown displayed",
+      "observed": "Portfolio screen rendered with asset class distributions.",
+      "screenshot": "docs/uat-evidence/screenshots/06-portfolio.png",
+      "durationMs": 1200
+    },
+    {
+      "id": "E2E-06",
+      "workflow": "Tools Suite (Tax, Risk, Goals, Scenarios)",
+      "status": "VERIFIED",
+      "action": "Open Tools tab -> Inspect financial calculators & modules",
+      "expected": "Tools suite accessible with financial engines",
+      "observed": "Tools screen rendered cleanly.",
+      "screenshot": "docs/uat-evidence/screenshots/10-risk-analytics.png",
+      "durationMs": 1100
+    },
+    {
+      "id": "E2E-07",
+      "workflow": "AI Research & Grounded Market Intelligence",
+      "status": "VERIFIED",
+      "action": "Open AI Research tab -> Check citation & search workspace",
+      "expected": "Research query bar, verified citation markers, conflict detection",
+      "observed": "AI Research workspace loaded with citation provenance guidelines.",
+      "screenshot": "docs/uat-evidence/screenshots/16-ai-research.png",
+      "durationMs": 1300
+    },
+    {
+      "id": "E2E-08",
+      "workflow": "Advisor Command Center & Priority Triage",
+      "status": "VERIFIED",
+      "action": "Open Workspace tab -> Review action priorities",
+      "expected": "Advisor Command Center displays Critical, Opportunities, and Upcoming lanes",
+      "observed": "Workspace loaded with priority queues and message center.",
+      "screenshot": "docs/uat-evidence/screenshots/18-command-center.png",
+      "durationMs": 1200
+    },
+    {
+      "id": "E2E-09",
+      "workflow": "Responsive Multi-Device Layouts",
+      "status": "VERIFIED",
+      "action": "Render at 1440x900 (Desktop), 1024x768 (Tablet), 390x844 (Mobile)",
+      "expected": "Zero layout clipping, legible typography, responsive navigation",
+      "observed": "Screenshots captured across 3 responsive breakpoints without layout breakdown.",
+      "screenshot": "docs/uat-evidence/screenshots/21-mobile-390.png",
+      "durationMs": 1600
+    },
+    {
+      "id": "E2E-10",
+      "workflow": "Direct AMFI Live Mutual Fund Data Feed",
+      "status": "VERIFIED",
+      "action": "Fetch https://www.amfiindia.com/spages/NAVAll.txt -> Parse Scheme NAV",
+      "expected": "Direct connection to official AMFI feed, real scheme NAV parsed",
+      "observed": "Scheme 135762 (Axis Children's Fund): NAV ₹30.3228 as of 04-Sep-2026",
+      "durationMs": 1800
+    },
+    {
+      "id": "E2E-11",
+      "workflow": "Production Backend Health Microservice",
+      "status": "VERIFIED",
+      "action": "GET https://assetarray.onrender.com/api/health",
+      "expected": "HTTP 200 with status: ok",
+      "observed": "Status: 200 in 529ms, payload: {\"status\":\"ok\",\"app\":\"Asset Array backend\",\"version\":\"3.3.1\",\"authRequired\":true,\"db\":\"connected\",\"date\":\"2026-09-05T20:19:30.850Z\"}",
+      "durationMs": 529
+    }
+  ],
+  "networkTrace": [
+    {
+      "url": "https://asset-array.web.app/",
+      "method": "GET",
+      "timestamp": "2026-09-05T20:19:04.219Z"
+    },
+    {
+      "url": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap",
+      "method": "GET",
+      "timestamp": "2026-09-05T20:19:05.348Z"
+    },
+    {
+      "url": "https://asset-array.web.app/_expo/static/js/web/AppEntry-410df65eaa2b2e38775528fb7988b9e3.js",
+      "method": "GET",
+      "timestamp": "2026-09-05T20:19:05.348Z"
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/npm/@expo/vector-icons@15.0.3/build/vendor/react-native-vector-icons/Fonts/Ionicons.ttf",
+      "method": "GET",
+      "timestamp": "2026-09-05T20:19:06.841Z"
+    },
+    {
+      "url": "https://asset-array.web.app/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.b4eb097d35f44ed943676fd56f6bdc51.ttf",
+      "method": "GET",
+      "timestamp": "2026-09-05T20:19:06.841Z"
+    },
+    {
+      "url": "https://assetarray.onrender.com/api/auth/login",
+      "method": "POST",
+      "timestamp": "2026-09-05T20:19:09.585Z"
+    },
+    {
+      "url": "https://assetarray.onrender.com/api/auth/me",
+      "method": "GET",
+      "timestamp": "2026-09-05T20:19:11.572Z"
+    },
+    {
+      "url": "https://asset-array.web.app/",
+      "method": "GET",
+      "timestamp": "2026-09-05T20:19:12.145Z"
+    },
+    {
+      "url": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap",
+      "method": "GET",
+      "timestamp": "2026-09-05T20:19:12.159Z"
+    },
+    {
+      "url": "https://asset-array.web.app/_expo/static/js/web/AppEntry-410df65eaa2b2e38775528fb7988b9e3.js",
+      "method": "GET",
+      "timestamp": "2026-09-05T20:19:12.159Z"
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/npm/@expo/vector-icons@15.0.3/build/vendor/react-native-vector-icons/Fonts/Ionicons.ttf",
+      "method": "GET",
+      "timestamp": "2026-09-05T20:19:12.294Z"
+    },
+    {
+      "url": "https://asset-array.web.app/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.b4eb097d35f44ed943676fd56f6bdc51.ttf",
+      "method": "GET",
+      "timestamp": "2026-09-05T20:19:12.294Z"
+    },
+    {
+      "url": "https://assetarray.onrender.com/api/auth/me",
+      "method": "GET",
+      "timestamp": "2026-09-05T20:19:13.897Z"
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80",
+      "method": "GET",
+      "timestamp": "2026-09-05T20:19:18.075Z"
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200&auto=format&fit=crop&q=80",
+      "method": "GET",
+      "timestamp": "2026-09-05T20:19:18.075Z"
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&auto=format&fit=crop&q=80",
+      "method": "GET",
+      "timestamp": "2026-09-05T20:19:18.076Z"
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80",
+      "method": "GET",
+      "timestamp": "2026-09-05T20:19:20.317Z"
+    },
+    {
+      "url": "https://ui-avatars.com/api/?name=E2E_TEST%20Priya%20Sharma&background=1E293B&color=F8FAFC&bold=true",
+      "method": "GET",
+      "timestamp": "2026-09-05T20:19:20.317Z"
+    },
+    {
+      "url": "https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2",
+      "method": "GET",
+      "timestamp": "2026-09-05T20:19:23.233Z"
+    }
+  ],
+  "consoleLogs": [
+    {
+      "type": "warning",
+      "text": "Failed to decode downloaded font: https://asset-array.web.app/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.b4eb097d35f44ed943676fd56f6bdc51.ttf",
+      "timestamp": "2026-09-05T20:19:07.169Z"
+    },
+    {
+      "type": "warning",
+      "text": "OTS parsing error: invalid sfntVersion: 1008813135",
+      "timestamp": "2026-09-05T20:19:07.171Z"
+    },
+    {
+      "type": "warning",
+      "text": "Ionicons font load notice: NetworkError: A network error occurred.",
+      "timestamp": "2026-09-05T20:19:07.172Z"
+    },
+    {
+      "type": "log",
+      "text": "[RevenueCat Web] Web Billing initialized in Sandbox/Stripe mode.",
+      "timestamp": "2026-09-05T20:19:07.172Z"
+    },
+    {
+      "type": "verbose",
+      "text": "[DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o",
+      "timestamp": "2026-09-05T20:19:07.282Z"
+    },
+    {
+      "type": "verbose",
+      "text": "[DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o",
+      "timestamp": "2026-09-05T20:19:08.110Z"
+    },
+    {
+      "type": "warning",
+      "text": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "timestamp": "2026-09-05T20:19:11.561Z"
+    },
+    {
+      "type": "info",
+      "text": "Slow network is detected. See https://www.chromestatus.com/feature/5636954674692096 for more details. Fallback font will be used while loading: https://cdn.jsdelivr.net/npm/@expo/vector-icons@15.0.3/build/vendor/react-native-vector-icons/Fonts/Ionicons.ttf",
+      "timestamp": "2026-09-05T20:19:12.294Z"
+    },
+    {
+      "type": "info",
+      "text": "Slow network is detected. See https://www.chromestatus.com/feature/5636954674692096 for more details. Fallback font will be used while loading: https://asset-array.web.app/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.b4eb097d35f44ed943676fd56f6bdc51.ttf",
+      "timestamp": "2026-09-05T20:19:12.294Z"
+    },
+    {
+      "type": "warning",
+      "text": "Failed to decode downloaded font: https://asset-array.web.app/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.b4eb097d35f44ed943676fd56f6bdc51.ttf",
+      "timestamp": "2026-09-05T20:19:12.299Z"
+    },
+    {
+      "type": "warning",
+      "text": "OTS parsing error: invalid sfntVersion: 1008813135",
+      "timestamp": "2026-09-05T20:19:12.299Z"
+    },
+    {
+      "type": "warning",
+      "text": "Ionicons font load notice: NetworkError: A network error occurred.",
+      "timestamp": "2026-09-05T20:19:12.299Z"
+    },
+    {
+      "type": "log",
+      "text": "[RevenueCat Web] Web Billing initialized in Sandbox/Stripe mode.",
+      "timestamp": "2026-09-05T20:19:12.299Z"
+    },
+    {
+      "type": "verbose",
+      "text": "[DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o",
+      "timestamp": "2026-09-05T20:19:12.416Z"
+    },
+    {
+      "type": "warning",
+      "text": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "timestamp": "2026-09-05T20:19:13.897Z"
+    },
+    {
+      "type": "warning",
+      "text": "Failed to decode downloaded font: https://asset-array.web.app/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.b4eb097d35f44ed943676fd56f6bdc51.ttf",
+      "timestamp": "2026-09-05T20:19:29.011Z"
+    },
+    {
+      "type": "warning",
+      "text": "OTS parsing error: invalid sfntVersion: 1008813135",
+      "timestamp": "2026-09-05T20:19:29.011Z"
+    }
+  ],
+  "performance": {
+    "initialPageLoadMs": 3606,
+    "client360RenderMs": 1077
+  },
+  "summary": {
+    "total": 11,
+    "verified": 11,
+    "partiallyVerified": 0,
+    "failed": 0
+  }
+}

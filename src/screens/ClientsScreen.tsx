@@ -13,10 +13,12 @@ import {
   CHANNEL_OPTIONS,
   Client,
   FilterMode,
+  Goal,
 } from "../types/wealth";
 import { AssetAllocationBar } from "../components/AssetAllocationBar";
 import { StatementImportModal, ClientPortalModal } from "../components/modals";
 import { SimpleHolding } from "../services/rebalancer";
+import { Client360Workspace } from "../components/client360";
 
 export interface ClientsScreenProps {
   theme: AppTheme;
@@ -51,6 +53,8 @@ export interface ClientsScreenProps {
   selectedClientMessageDraft: string;
   selectedClientReportDraft: string;
   onImportHoldings?: (holdings: SimpleHolding[], mode: "merge" | "replace") => void;
+  goals?: Goal[];
+  onNavigateTab?: (tab: string, params?: any) => void;
   styles: any;
 }
 
@@ -157,6 +161,8 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
   selectedClientMessageDraft,
   selectedClientReportDraft,
   onImportHoldings,
+  goals = [],
+  onNavigateTab,
   styles,
 }) => {
   const [localSearch, setLocalSearch] = React.useState(searchQuery);
@@ -298,145 +304,43 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
           </View>
         </View>
 
-        {/* Right Column: Client Details */}
-        <View style={styles.column}>
-          <View style={styles.panel}>
-            <Text style={styles.panelTitle}>Client details</Text>
-            {selectedClient ? (
-              <>
-                <View style={styles.clientDetailHeader}>
-                  <Image
-                    source={{ uri: getClientAvatar(selectedClient) }}
-                    style={styles.clientDetailAvatar}
-                  />
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.detailName}>{selectedClient.name}</Text>
-                    <Text style={styles.detailLine}>{selectedClient.phone}</Text>
-                    <Text style={styles.detailLine}>
-                      {selectedClient.email || "No email saved"}
-                    </Text>
-                    <Text style={styles.detailLine}>
-                      {selectedClient.city || "Location not saved"}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.tagRow}>
-                  {[selectedClient.category, selectedClient.priority, selectedClient.preferredChannel].map(
-                    (tag, index) => (
-                      <View key={`${tag}-${index}`} style={styles.tag}>
-                        <Text style={styles.tagText}>{tag}</Text>
-                      </View>
-                    )
-                  )}
-                </View>
-
-                <Text style={styles.sectionLabel}>Risk profile</Text>
-                <Text style={styles.detailBlock}>
-                  {selectedClient.riskProfile || "Not assigned"}
-                </Text>
-
-                <Text style={styles.sectionLabel}>Portfolio allocation</Text>
-                <AssetAllocationBar allocationString={selectedClient.allocation} theme={theme} />
-                <Text style={[styles.detailBlock, { marginTop: 6 }]}>
-                  {selectedClient.allocation || "Not saved"}
-                </Text>
-
-                <Text style={styles.sectionLabel}>Watchlist</Text>
-                <Text style={styles.detailBlock}>
-                  {selectedClient.watchlist.join(", ") || "No watchlist saved"}
-                </Text>
-
-                <Text style={styles.sectionLabel}>Private notes</Text>
-                <Text style={styles.detailBlock}>
-                  {selectedClient.notes || "No notes added yet"}
-                </Text>
-
-                <Text style={styles.sectionLabel}>Next reminder</Text>
-                <Text style={styles.detailBlock}>
-                  {formatReminderDate(selectedClient.reminderDate)}
-                </Text>
-
-                <Text style={styles.sectionLabel}>Quick contact</Text>
-                <View style={styles.optionRow}>
-                  {CHANNEL_OPTIONS.map((channel) => (
-                    <Pressable
-                      key={channel}
-                      style={styles.darkChip}
-                      onPress={() => void contactClient(selectedClient, channel)}
-                    >
-                      <Text style={styles.darkChipText}>{channel}</Text>
-                    </Pressable>
-                  ))}
-                </View>
-
-                <View style={styles.inlineActions}>
-                  <Pressable
-                    style={styles.linkButton}
-                    onPress={() => setShowImportModal(true)}
-                  >
-                    <Text style={[styles.linkButtonText, { color: theme.colors.brand }]}>
-                      📊 Import Statement
-                    </Text>
-                  </Pressable>
-                  <Pressable
-                    style={styles.linkButton}
-                    onPress={() => setShowPortalModal(true)}
-                  >
-                    <Text style={[styles.linkButtonText, { color: theme.colors.brand }]}>
-                      🌐 Client Portal
-                    </Text>
-                  </Pressable>
-                  <Pressable
-                    style={styles.linkButton}
-                    onPress={() => {
-                      if (!isPro) {
-                        setIsPaywallVisible(true);
-                        return;
-                      }
-                      void exportClientPdfReport({
-                        client: selectedClient,
-                        advisorName,
-                      });
-                    }}
-                  >
-                    <Text style={[styles.linkButtonText, { color: theme.colors.warning }]}>
-                      📄 Export PDF Report
-                    </Text>
-                  </Pressable>
-                  <Pressable
-                    style={styles.linkButton}
-                    onPress={() => openEditModal(selectedClient)}
-                  >
-                    <Text style={styles.linkButtonText}>Edit Client</Text>
-                  </Pressable>
-                  <Pressable
-                    style={styles.linkButton}
-                    onPress={() => deleteClient(selectedClient)}
-                  >
-                    <Text style={[styles.linkButtonText, styles.linkDanger]}>Delete</Text>
-                  </Pressable>
-                </View>
-                <Text style={styles.sectionLabel}>Recent update history</Text>
-                {selectedClient.updateHistory.length === 0 ? (
-                  <Text style={styles.detailBlock}>No updates shared yet.</Text>
-                ) : (
-                  (selectedClient.updateHistory || []).map((item, index) => (
-                    <Text key={`history-${selectedClient.id}-${index}`} style={styles.historyItem}>
-                      {item}
-                    </Text>
-                  ))
-                )}
-              </>
-            ) : (
+        {/* Right Column: Client 360 Workspace */}
+        <View style={[styles.column, { flex: isDesktop ? 2 : 1 }]}>
+          {selectedClient ? (
+            <Client360Workspace
+              client={selectedClient}
+              goals={goals}
+              theme={theme}
+              advisorName={advisorName}
+              isPro={isPro}
+              onNavigateTab={onNavigateTab}
+              onExportReport={(cl) => {
+                if (!isPro) {
+                  setIsPaywallVisible(true);
+                  return;
+                }
+                void exportClientPdfReport({
+                  client: cl,
+                  advisorName,
+                });
+              }}
+              onOpenImport={() => setShowImportModal(true)}
+              onOpenPortal={() => setShowPortalModal(true)}
+              onEditClient={openEditModal}
+              onDeleteClient={deleteClient}
+              onContactClient={contactClient}
+            />
+          ) : (
+            <View style={styles.panel}>
+              <Text style={styles.panelTitle}>Client 360 Workspace</Text>
               <View style={styles.emptyState}>
                 <Text style={styles.emptyTitle}>Select a client</Text>
                 <Text style={styles.emptyText}>
-                  Review profile details, reminders, and communication history here.
+                  Select a client from the roster to open their real-time Client 360 workspace, portfolio holdings, change detection insights, and follow-up plans.
                 </Text>
               </View>
-            )}
-          </View>
+            </View>
+          )}
         </View>
       </View>
 

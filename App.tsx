@@ -106,9 +106,11 @@ import { localAuth } from "./src/platform/auth";
 import { BillingPackage } from "./src/platform/billing";
 import { GlobalStyleInjector } from "./src/components/GlobalStyleInjector";
 import { LiveMarketTicker } from "./src/components/LiveMarketTicker";
+import { GlobalStatusBar } from "./src/components/GlobalStatusBar";
 import { ScreenTransition } from "./src/components/ScreenTransition";
 import { CurrencyCode, loadCurrencyPreference, saveCurrencyPreference } from "./src/services/currency";
 import { realTimeMarket } from "./src/services/realTimeMarket";
+import { marketHealthMonitor } from "./src/services/market";
 import {
   Channel,
   Category,
@@ -2720,6 +2722,21 @@ function AppContent() {
             activeCurrency={activeCurrency}
             onCycleCurrency={cycleCurrency}
           />
+          <GlobalStatusBar
+            selectedClient={selectedClient}
+            activeTab={activeTab}
+            onNavigateTab={(tab, params) => {
+              setActiveTab(tab as AppTab);
+              if (params?.clientId) setSelectedClientId(params.clientId);
+              if (tab === "Portfolios" && params?.view) {
+                setPortfolioActiveModal(params.view);
+              }
+            }}
+            theme={theme}
+            marketStatus={marketHealthMonitor.getOverallHealth().activeProviders > 0 ? "LIVE" : "SIMULATED"}
+            dataQualityPct={98}
+            onClearClient={() => setSelectedClientId(null)}
+          />
           <ScreenTransition triggerKey={activeTab}>
             {activeTab === "Dashboard" ? (
         <AdvisorCommandCenter
@@ -3016,6 +3033,15 @@ function AppContent() {
               selectedClientMessageDraft={selectedClientMessageDraft}
               selectedClientReportDraft={selectedClientReportDraft}
               onImportHoldings={handleImportClientHoldings}
+              goals={goals}
+              onNavigateTab={(tab, params) => {
+                setActiveTab(tab as AppTab);
+                if (tab === "Portfolios" && params?.view) {
+                  setPortfolioActiveModal(params.view);
+                } else if (tab === "Tools" && params?.calculator) {
+                  setActiveCalculator(params.calculator);
+                }
+              }}
               styles={styles}
             />
             <PortfolioManagerSection

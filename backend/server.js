@@ -212,17 +212,17 @@ function buildStreamPrompt(query, taskType, portfolioContext, clientContext, mac
 
 function generateGroundedFallbackText(query, taskType, portfolioContext, clientContext) {
   const clientName = clientContext?.name || "Client Mandate";
-  const aum = portfolioContext?.totalAum ? `$${Number(portfolioContext.totalAum).toLocaleString()}` : "$2,450,000";
-  const healthScore = portfolioContext?.healthScore || 85;
-  const criticalAlerts = portfolioContext?.criticalAlertsCount ?? 1;
-  const taxLoss = portfolioContext?.taxLossAvailable ? `$${Number(portfolioContext.taxLossAvailable).toLocaleString()}` : "$18,450";
+  const aum = portfolioContext?.totalAum != null ? `$${Number(portfolioContext.totalAum).toLocaleString()}` : "AUM data not supplied";
+  const healthScore = portfolioContext?.healthScore != null ? `${portfolioContext.healthScore}/100` : "Not calculated";
+  const criticalAlerts = portfolioContext?.criticalAlertsCount != null ? `${portfolioContext.criticalAlertsCount} critical alert(s)` : "Zero pending alerts";
+  const taxLoss = portfolioContext?.taxLossAvailable != null ? `$${Number(portfolioContext.taxLossAvailable).toLocaleString()}` : null;
   const topHoldings = Array.isArray(portfolioContext?.topHoldings) && portfolioContext.topHoldings.length > 0
     ? portfolioContext.topHoldings.join(", ")
-    : "AAPL (19.0%), MSFT (20.1%), VOO (20.1%)";
+    : "No positions recorded";
 
   if (taskType === "tax_analytics") {
     return `[Tax Intelligence Model - AY 2026-27 / Finance Act 2024]\n` +
-      `Portfolio analysis for ${clientName} indicates ${taxLoss} in identified unrealized capital loss candidates across holdings.\n` +
+      `Portfolio analysis for ${clientName} indicates ${taxLoss ? `${taxLoss} in identified unrealized capital loss candidates` : "no verified unrealized capital loss candidates"} across holdings.\n` +
       `Under Section 70 and Section 74, short-term capital losses (STCL) can offset both STCG and LTCG, while long-term capital losses (LTCL) can only offset LTCG.\n` +
       `Recommended Advisor Step: Verify acquisition timestamps on tax lots to substantiate holding periods before generating execution trade slips. Note: Statutory tax projections do not constitute individualized legal or tax advice.`;
   }
@@ -1285,8 +1285,8 @@ app.get("/api/advisor/summary", requireAuth, async (req, res) => {
       openCriticalAlerts,
       openHighPriorityTasks,
       clientsNeedingReview,
-      goalWarnings: 2,
-      taxOpportunities: 3,
+      goalWarnings: tasks.filter((t) => t.type === "GOAL_WARNING" && t.status !== "DONE").length,
+      taxOpportunities: tasks.filter((t) => (t.type === "TAX_HARVESTING" || t.type === "TAX_LOSS_HARVEST") && t.status !== "DONE").length,
       totalActiveTasks: tasks.filter((t) => t.status !== "DONE").length,
     });
   } catch (err) {

@@ -52,14 +52,29 @@ export const ClientPortalModal: React.FC<ClientPortalModalProps> = ({
     setRebalanceApproved(true);
   };
 
-  const totalAum =
-    client.portfolio && client.portfolio.length > 0
-      ? client.portfolio.reduce(
-          (sum, h) => sum + (Number(h.currentValue) || 0),
-          0
-        )
-      : 48500000;
+  const holdings = client.portfolio || [];
+  const totalAum = holdings.reduce(
+    (sum, h) => sum + (Number(h.currentValue) || 0),
+    0
+  );
+  const totalCost = holdings.reduce(
+    (sum, h) => sum + (Number(h.investedValue) || 0),
+    0
+  );
+  const unrealizedGainLoss = totalAum - totalCost;
+  const unrealizedGainLossPct =
+    totalCost > 0 ? ((unrealizedGainLoss / totalCost) * 100).toFixed(1) : null;
+
+  // Calculate actual category breakdown
+  const categoryTotals: Record<string, number> = {};
+  holdings.forEach((h) => {
+    const cls = (h.assetClass || "Stocks").trim();
+    categoryTotals[cls] = (categoryTotals[cls] || 0) + (Number(h.currentValue) || 0);
+  });
+  const categoryKeys = Object.keys(categoryTotals);
+
   const formatAum = (val: number) => {
+    if (val === 0) return "₹0";
     if (val >= 10000000) return `₹${(val / 10000000).toFixed(2)} Cr`;
     if (val >= 100000) return `₹${(val / 100000).toFixed(2)} L`;
     return `₹${val.toLocaleString("en-IN")}`;
@@ -127,7 +142,7 @@ export const ClientPortalModal: React.FC<ClientPortalModalProps> = ({
                   { color: isDark ? "#94A3B8" : theme.colors.textSecondary },
                 ]}
               >
-                Managing Advisor: {advisorName} • Tier: {client.category} Family Office
+                Managing Advisor: {advisorName} • Tier: {client.category} Mandate
               </Text>
             </View>
 
@@ -197,7 +212,7 @@ export const ClientPortalModal: React.FC<ClientPortalModalProps> = ({
               </Pressable>
             </View>
 
-            {/* Simulated Client Portfolio Hero */}
+            {/* Client Portfolio Hero */}
             <View
               style={[
                 styles.heroCard,
@@ -211,7 +226,7 @@ export const ClientPortalModal: React.FC<ClientPortalModalProps> = ({
                 },
               ]}
             >
-              <Text style={styles.heroEyebrow}>PORTFOLIO VALUATION (LIVE)</Text>
+              <Text style={styles.heroEyebrow}>PORTFOLIO VALUATION</Text>
               <View style={styles.valRow}>
                 <Text
                   style={[
@@ -219,30 +234,40 @@ export const ClientPortalModal: React.FC<ClientPortalModalProps> = ({
                     { color: isDark ? "#F8FAFC" : theme.colors.textPrimary },
                   ]}
                 >
-                  {formatAum(totalAum)}
+                  {totalAum > 0 ? formatAum(totalAum) : "--"}
                 </Text>
-                <View style={styles.deltaBadge}>
-                  <Text style={styles.deltaText}>▲ +18.4% YTD</Text>
-                </View>
+                {unrealizedGainLossPct !== null && (
+                  <View style={styles.deltaBadge}>
+                    <Text style={styles.deltaText}>
+                      {Number(unrealizedGainLossPct) >= 0 ? "▲ +" : "▼ "}
+                      {unrealizedGainLossPct}% Overall
+                    </Text>
+                  </View>
+                )}
               </View>
 
               <View style={styles.kpiRow}>
                 <View style={styles.kpiItem}>
-                  <Text style={styles.kpiLabel}>ESTIMATED ANNUAL DIVIDENDS</Text>
+                  <Text style={styles.kpiLabel}>TOTAL INVESTED COST</Text>
                   <Text style={[styles.kpiValue, { color: brandColor }]}>
-                    {formatAum(totalAum * 0.024)}
+                    {totalCost > 0 ? formatAum(totalCost) : "--"}
                   </Text>
                 </View>
                 <View style={styles.kpiItem}>
-                  <Text style={styles.kpiLabel}>UNREALIZED GAINS</Text>
-                  <Text style={[styles.kpiValue, { color: "#10B981" }]}>
-                    {formatAum(totalAum * 0.165)}
+                  <Text style={styles.kpiLabel}>UNREALIZED P&L</Text>
+                  <Text
+                    style={[
+                      styles.kpiValue,
+                      { color: unrealizedGainLoss >= 0 ? "#10B981" : "#EF4444" },
+                    ]}
+                  >
+                    {totalAum > 0 ? formatAum(unrealizedGainLoss) : "--"}
                   </Text>
                 </View>
                 <View style={styles.kpiItem}>
                   <Text style={styles.kpiLabel}>RISK MANDATE</Text>
                   <Text style={[styles.kpiValue, { color: "#3B82F6" }]}>
-                    Balanced Fiduciary
+                    {client.riskProfile || "Balanced Growth"}
                   </Text>
                 </View>
               </View>
@@ -268,34 +293,39 @@ export const ClientPortalModal: React.FC<ClientPortalModalProps> = ({
                   { color: isDark ? "#F8FAFC" : theme.colors.textPrimary },
                 ]}
               >
-                Fiduciary Allocation Breakdown
+                Portfolio Allocation Breakdown
               </Text>
 
-              <View style={styles.allocRow}>
-                <View style={styles.allocItem}>
-                  <Text style={styles.allocClass}>Equity Growth (Core)</Text>
-                  <Text style={[styles.allocWeight, { color: "#10B981" }]}>58.0%</Text>
-                  <Text style={styles.allocVal}>{formatAum(totalAum * 0.58)}</Text>
+              {categoryKeys.length > 0 && totalAum > 0 ? (
+                <View style={styles.allocRow}>
+                  {categoryKeys.map((catKey) => {
+                    const catVal = categoryTotals[catKey] || 0;
+                    const catPct = ((catVal / totalAum) * 100).toFixed(1);
+                    return (
+                      <View key={catKey} style={styles.allocItem}>
+                        <Text style={styles.allocClass}>{catKey}</Text>
+                        <Text style={[styles.allocWeight, { color: brandColor }]}>
+                          {catPct}%
+                        </Text>
+                        <Text style={styles.allocVal}>{formatAum(catVal)}</Text>
+                      </View>
+                    );
+                  })}
                 </View>
-                <View style={styles.allocItem}>
-                  <Text style={styles.allocClass}>Fixed Income & Bonds</Text>
-                  <Text style={[styles.allocWeight, { color: "#3B82F6" }]}>24.0%</Text>
-                  <Text style={styles.allocVal}>{formatAum(totalAum * 0.24)}</Text>
-                </View>
-                <View style={styles.allocItem}>
-                  <Text style={styles.allocClass}>Gold & Precious Metals</Text>
-                  <Text style={[styles.allocWeight, { color: brandColor }]}>10.0%</Text>
-                  <Text style={styles.allocVal}>{formatAum(totalAum * 0.10)}</Text>
-                </View>
-                <View style={styles.allocItem}>
-                  <Text style={styles.allocClass}>Liquid Cash Reserves</Text>
-                  <Text style={[styles.allocWeight, { color: "#94A3B8" }]}>8.0%</Text>
-                  <Text style={styles.allocVal}>{formatAum(totalAum * 0.08)}</Text>
-                </View>
-              </View>
+              ) : (
+                <Text
+                  style={{
+                    color: isDark ? "#94A3B8" : theme.colors.textSecondary,
+                    fontSize: 13,
+                    paddingVertical: 12,
+                  }}
+                >
+                  No portfolio holdings recorded for this client.
+                </Text>
+              )}
             </View>
 
-            {/* Pending Advisor Rebalancing Recommendation */}
+            {/* Advisor Rebalancing Status */}
             <View
               style={[
                 styles.actionCard,
@@ -326,10 +356,10 @@ export const ClientPortalModal: React.FC<ClientPortalModalProps> = ({
                       { color: rebalanceApproved ? "#10B981" : brandColor },
                     ]}
                   >
-                    {rebalanceApproved ? "✓ APPROVED BY CLIENT" : "⚡ ADVISOR PROPOSAL PENDING"}
+                    {rebalanceApproved ? "✓ REVIEWED BY CLIENT" : "⚡ ADVISORY STATUS"}
                   </Text>
                 </View>
-                <Text style={styles.actionDate}>Quarterly Fiduciary Rebalance</Text>
+                <Text style={styles.actionDate}>Mandate Status</Text>
               </View>
 
               <Text
@@ -338,7 +368,9 @@ export const ClientPortalModal: React.FC<ClientPortalModalProps> = ({
                   { color: isDark ? "#F8FAFC" : theme.colors.textPrimary },
                 ]}
               >
-                Reallocate 6% from Equity to Fixed Income & Gold Hedge
+                {holdings.length > 0
+                  ? `Portfolio Monitored Across ${holdings.length} Positions`
+                  : "Mandate Setup in Progress"}
               </Text>
               <Text
                 style={[
@@ -346,7 +378,9 @@ export const ClientPortalModal: React.FC<ClientPortalModalProps> = ({
                   { color: isDark ? "#94A3B8" : theme.colors.textSecondary },
                 ]}
               >
-                Due to recent stock rally, equity allocation has expanded past policy thresholds. We propose realizing {formatAum(totalAum * 0.06)} from large caps and transferring into 7Y Sovereign Bonds and Gold BeES to lock in gains and shield returns.
+                {holdings.length > 0
+                  ? `Asset allocations are tracked in accordance with ${client.name}'s ${client.riskProfile || "Balanced"} investment mandate. Review periodic performance reports and contact your advisor for customized rebalancing.`
+                  : `This client account is registered under ${client.category} tier. Custodian statement import or manual position entry is required to activate live performance reporting.`}
               </Text>
 
               {rebalanceApproved ? (

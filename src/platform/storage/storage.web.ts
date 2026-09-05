@@ -2,29 +2,55 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { IStorageService } from "./types";
 
 class WebStorageService implements IStorageService {
+  private memMap = new Map<string, string>();
+
+  private isWindowAvailable(): boolean {
+    return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
+  }
+
   async getItem(key: string): Promise<string | null> {
-    return AsyncStorage.getItem(key);
+    if (!this.isWindowAvailable()) {
+      return this.memMap.get(key) ?? null;
+    }
+    try {
+      return await AsyncStorage.getItem(key);
+    } catch {
+      return this.memMap.get(key) ?? null;
+    }
   }
 
   async setItem(key: string, value: string): Promise<void> {
-    await AsyncStorage.setItem(key, value);
+    this.memMap.set(key, value);
+    if (this.isWindowAvailable()) {
+      try {
+        await AsyncStorage.setItem(key, value);
+      } catch {
+        // Handled via memory map
+      }
+    }
   }
 
   async removeItem(key: string): Promise<void> {
-    await AsyncStorage.removeItem(key);
+    this.memMap.delete(key);
+    if (this.isWindowAvailable()) {
+      try {
+        await AsyncStorage.removeItem(key);
+      } catch {
+        // Handled via memory map
+      }
+    }
   }
 
   async getSecureItem(key: string): Promise<string | null> {
-    // In web environment, use AsyncStorage or sessionStorage with obfuscated prefix
-    return AsyncStorage.getItem(`__sec_${key}`);
+    return this.getItem(`__sec_${key}`);
   }
 
   async setSecureItem(key: string, value: string): Promise<void> {
-    await AsyncStorage.setItem(`__sec_${key}`, value);
+    await this.setItem(`__sec_${key}`, value);
   }
 
   async removeSecureItem(key: string): Promise<void> {
-    await AsyncStorage.removeItem(`__sec_${key}`);
+    await this.removeItem(`__sec_${key}`);
   }
 }
 

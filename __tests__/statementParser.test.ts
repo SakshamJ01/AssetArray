@@ -53,4 +53,34 @@ describe("Statement Parser Engine", () => {
     const invalidResult = parseStatement("Random,Text,Only\n1,2,3");
     expect(invalidResult.success).toBe(false);
   });
+
+  it("should correctly map parsed holdings to normalized client PortfolioHolding types", () => {
+    const result = parseStatement(SAMPLE_STATEMENTS.zerodha);
+    expect(result.success).toBe(true);
+
+    const clientHoldings = result.holdings.map((h, i) => {
+      let mappedClass = "Stocks";
+      const ac = (h.assetClass || "").toLowerCase();
+      if (ac.includes("debt") || ac.includes("bond") || ac.includes("fixed")) {
+        mappedClass = "Bonds";
+      } else if (ac.includes("fund") || ac.includes("mutual")) {
+        mappedClass = "Mutual Funds";
+      } else if (ac.includes("cash") || ac.includes("liquid")) {
+        mappedClass = "Cash";
+      } else if (ac.includes("alt") || ac.includes("comm") || ac.includes("gold")) {
+        mappedClass = "Alternatives";
+      }
+      return {
+        id: `holding-${i}`,
+        assetName: h.assetName || h.symbol,
+        assetClass: mappedClass,
+        ticker: h.symbol || "N/A",
+        currentValue: String(h.currentValue),
+      };
+    });
+
+    expect(clientHoldings.length).toBe(6);
+    expect(clientHoldings.find((h) => h.ticker === "GOLDBEES")?.assetClass).toBe("Alternatives");
+    expect(clientHoldings.find((h) => h.ticker === "RELIANCE")?.assetClass).toBe("Stocks");
+  });
 });

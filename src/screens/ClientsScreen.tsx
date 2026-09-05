@@ -16,6 +16,7 @@ import {
 } from "../types/wealth";
 import { AssetAllocationBar } from "../components/AssetAllocationBar";
 import { StatementImportModal, ClientPortalModal } from "../components/modals";
+import { SimpleHolding } from "../services/rebalancer";
 
 export interface ClientsScreenProps {
   theme: AppTheme;
@@ -49,6 +50,7 @@ export interface ClientsScreenProps {
   selectedClientInsights: string[];
   selectedClientMessageDraft: string;
   selectedClientReportDraft: string;
+  onImportHoldings?: (holdings: SimpleHolding[], mode: "merge" | "replace") => void;
   styles: any;
 }
 
@@ -154,6 +156,7 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
   selectedClientInsights,
   selectedClientMessageDraft,
   selectedClientReportDraft,
+  onImportHoldings,
   styles,
 }) => {
   const [localSearch, setLocalSearch] = React.useState(searchQuery);
@@ -491,6 +494,7 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
         onClose={() => setShowImportModal(false)}
         theme={theme}
         clientName={selectedClient ? selectedClient.name : "Client Portfolio"}
+        onImportHoldings={onImportHoldings}
       />
 
       <ClientPortalModal

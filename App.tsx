@@ -153,7 +153,7 @@ import {
   emptyHoldingDraft,
   defaultMessage,
 } from "./src/types/wealth";
-
+import { SimpleHolding } from "./src/services/rebalancer";
 
 const PIN_KEY = "asset_array_pin";
 const CLIENTS_KEY = "asset_array_clients";
@@ -163,7 +163,7 @@ const AUTH_SESSION_KEY = "asset_array_auth_session";
 const MARKET_MESSAGE_KEY = "asset_array_market_message";
 const DARK_MODE_KEY = "asset_array_dark_mode";
 const HAPTICS_KEY = "asset_array_haptics";
-const APP_VERSION = "3.1.0";
+const APP_VERSION = "3.3.1";
 const SUPPORT_EMAIL = "support@assetarray.app";
 const BUG_REPORT_EMAIL = "bugs@assetarray.app";
 const GOALS_KEY = "asset_array_goals";
@@ -608,6 +608,7 @@ function AppContent() {
     useState("25");
   const [marketResearchNotes, setMarketResearchNotes] = useState("");
   const [activeTab, setActiveTab] = useState<AppTab>("Dashboard");
+  const [portfolioActiveModal, setPortfolioActiveModal] = useState<string | null>(null);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [goalDraft, setGoalDraft] = useState<GoalDraft>(emptyGoalDraft);
   const [advisorMessages, setAdvisorMessages] = useState<AdvisorMessage[]>([]);
@@ -1448,6 +1449,7 @@ function AppContent() {
       { key: "Tools" as AppTab, label: "Tools" },
       { key: "Workspace" as AppTab, label: "Workspace" },
       { key: "Settings" as AppTab, label: "Settings" },
+      { key: "AI Research" as AppTab, label: "AI Research" },
     ],
     []
   );
@@ -2294,6 +2296,56 @@ function AppContent() {
     );
   }
 
+  function handleImportClientHoldings(
+    imported: SimpleHolding[],
+    mode: "merge" | "replace"
+  ) {
+    if (!selectedClient) {
+      return;
+    }
+
+    const mapped: PortfolioHolding[] = imported.map((h, i) => {
+      let mappedClass: AssetClass = "Stocks";
+      const ac = (h.assetClass || "").toLowerCase();
+      if (ac.includes("debt") || ac.includes("bond") || ac.includes("fixed")) {
+        mappedClass = "Bonds";
+      } else if (ac.includes("fund") || ac.includes("mutual")) {
+        mappedClass = "Mutual Funds";
+      } else if (ac.includes("cash") || ac.includes("liquid")) {
+        mappedClass = "Cash";
+      } else if (ac.includes("alt") || ac.includes("comm") || ac.includes("gold")) {
+        mappedClass = "Alternatives";
+      }
+
+      return {
+        id: h.id || `imp-${Date.now()}-${i}`,
+        assetName: h.assetName || h.symbol || "Holding",
+        assetClass: mappedClass,
+        ticker: h.ticker || h.symbol || "N/A",
+        quantity: String(h.quantity || 1),
+        investedValue: String(h.investedValue || h.currentValue || 0),
+        currentValue: String(h.currentValue || 0),
+        targetWeight: "0",
+        notes: "Imported via statement",
+      };
+    });
+
+    setClients((current) =>
+      current.map((client) => {
+        if (client.id !== selectedClient.id) {
+          return client;
+        }
+        return {
+          ...client,
+          portfolio:
+            mode === "replace"
+              ? mapped
+              : [...mapped, ...(client.portfolio || [])],
+        };
+      })
+    );
+  }
+
   async function runBroadcastCampaign() {
     const effectiveTargets = broadcastTargets.length > 0 ? broadcastTargets : clients;
     if (!effectiveTargets.length) {
@@ -2680,6 +2732,22 @@ function AppContent() {
             if (params?.clientId) {
               setSelectedClientId(params.clientId);
             }
+            if (tab === "Portfolios") {
+              if (params?.view === "attribution" || params?.screen === "attribution") {
+                setPortfolioActiveModal("attribution");
+              } else if (params?.view === "tax-harvest" || params?.screen === "Tax") {
+                setPortfolioActiveModal("tax-harvest");
+              } else if (params?.view === "rebalance" || params?.screen === "Rebalancer") {
+                setPortfolioActiveModal("rebalance");
+              } else if (params?.view === "stress" || params?.screen === "Drawdown") {
+                setPortfolioActiveModal("stress");
+              } else if (params?.view === "whatif") {
+                setPortfolioActiveModal("whatif");
+              }
+            }
+            if (tab === "Tools" && params?.calculator) {
+              setActiveCalculator(params.calculator);
+            }
           }}
           onSelectClient={(clientId) => {
             setSelectedClientId(clientId);
@@ -2811,6 +2879,8 @@ function AppContent() {
               isMarketRefreshing={isMarketRefreshing}
               refreshLiveMarketPrices={refreshLiveMarketPrices}
               currencyDisplay={currencyDisplay}
+              activeModal={portfolioActiveModal}
+              onCloseActiveModal={() => setPortfolioActiveModal(null)}
               styles={styles}
             />
             <PortfolioManagerSection
@@ -2945,6 +3015,7 @@ function AppContent() {
               selectedClientInsights={selectedClientInsights}
               selectedClientMessageDraft={selectedClientMessageDraft}
               selectedClientReportDraft={selectedClientReportDraft}
+              onImportHoldings={handleImportClientHoldings}
               styles={styles}
             />
             <PortfolioManagerSection

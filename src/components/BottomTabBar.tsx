@@ -42,6 +42,8 @@ function getTabIcon(label: string) {
       return "ellipsis-horizontal-circle";
     case "Settings":
       return "settings";
+    case "AI Research":
+      return "sparkles";
     default:
       return "ellipse";
   }

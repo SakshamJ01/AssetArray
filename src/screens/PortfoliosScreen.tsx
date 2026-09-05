@@ -33,6 +33,8 @@ export interface PortfoliosScreenProps {
   isMarketRefreshing: boolean;
   refreshLiveMarketPrices: () => Promise<void> | void;
   currencyDisplay: (value: string) => string;
+  activeModal?: string | null;
+  onCloseActiveModal?: () => void;
   styles: any;
 }
 
@@ -43,6 +45,8 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
   isMarketRefreshing,
   refreshLiveMarketPrices,
   currencyDisplay,
+  activeModal,
+  onCloseActiveModal,
   styles,
 }) => {
 
@@ -53,6 +57,15 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
   const [isScenarioOpen, setIsScenarioOpen] = useState(false);
   const [isMemoOpen, setIsMemoOpen] = useState(false);
   const [activeVisualization, setActiveVisualization] = useState<"both" | "chart" | "heatmap">("both");
+
+  React.useEffect(() => {
+    if (activeModal === "rebalance") setIsRebalanceOpen(true);
+    else if (activeModal === "stress") setIsStressTestOpen(true);
+    else if (activeModal === "attribution") setIsAttributionOpen(true);
+    else if (activeModal === "tax-harvest") setIsTaxStudioOpen(true);
+    else if (activeModal === "whatif") setIsScenarioOpen(true);
+    else if (activeModal === "memo") setIsMemoOpen(true);
+  }, [activeModal]);
 
   const healthResult = React.useMemo(() => {
     return calculateHealthScore(
@@ -576,7 +589,10 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
 
       <RebalanceModal
         visible={isRebalanceOpen}
-        onClose={() => setIsRebalanceOpen(false)}
+        onClose={() => {
+          setIsRebalanceOpen(false);
+          onCloseActiveModal?.();
+        }}
         holdings={unifiedPortfolioAnalytics.holdings}
         theme={theme}
         clientName="All Discretionary Portfolios"
@@ -584,7 +600,10 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
 
       <StressTestModal
         visible={isStressTestOpen}
-        onClose={() => setIsStressTestOpen(false)}
+        onClose={() => {
+          setIsStressTestOpen(false);
+          onCloseActiveModal?.();
+        }}
         holdings={unifiedPortfolioAnalytics.holdings}
         theme={theme}
         clientName="All Discretionary Portfolios"
@@ -592,7 +611,10 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
 
       <AttributionModal
         visible={isAttributionOpen}
-        onClose={() => setIsAttributionOpen(false)}
+        onClose={() => {
+          setIsAttributionOpen(false);
+          onCloseActiveModal?.();
+        }}
         holdings={unifiedPortfolioAnalytics.holdings}
         theme={theme}
         portfolioName="All Discretionary Portfolios"
@@ -600,7 +622,10 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
 
       <TaxHarvestStudioModal
         visible={isTaxStudioOpen}
-        onClose={() => setIsTaxStudioOpen(false)}
+        onClose={() => {
+          setIsTaxStudioOpen(false);
+          onCloseActiveModal?.();
+        }}
         holdings={unifiedPortfolioAnalytics.holdings}
         theme={theme}
         portfolioName="All Discretionary Portfolios"
@@ -608,7 +633,10 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
 
       <ScenarioSandboxModal
         visible={isScenarioOpen}
-        onClose={() => setIsScenarioOpen(false)}
+        onClose={() => {
+          setIsScenarioOpen(false);
+          onCloseActiveModal?.();
+        }}
         holdings={unifiedPortfolioAnalytics.holdings}
         theme={theme}
         portfolioName="All Discretionary Portfolios"
@@ -616,7 +644,10 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
 
       <CommitteeMemoModal
         visible={isMemoOpen}
-        onClose={() => setIsMemoOpen(false)}
+        onClose={() => {
+          setIsMemoOpen(false);
+          onCloseActiveModal?.();
+        }}
         client={unifiedClient}
         theme={theme}
       />

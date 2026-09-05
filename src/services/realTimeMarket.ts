@@ -539,6 +539,9 @@ class RealTimeMarketService {
     this.intervalId = setInterval(() => {
       this.generateMarketTick();
     }, tickIntervalMs);
+    if (typeof (this.intervalId as any)?.unref === "function") {
+      (this.intervalId as any).unref();
+    }
   }
 
   public stopStreaming() {

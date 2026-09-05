@@ -129,6 +129,9 @@ export async function streamAiResponse(options: StreamOptions): Promise<void> {
         });
       }
     }, 20);
+    if (typeof (timer as any)?.unref === "function") {
+      (timer as any).unref();
+    }
   }
 }
 

@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Pressable,
   ScrollView,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { generateCommitteeMemo } from "../services/committeeMemo";
@@ -31,6 +32,9 @@ export const CommitteeMemoModal: React.FC<CommitteeMemoModalProps> = ({
   const memo = generateCommitteeMemo(client);
 
   const handleCopy = () => {
+    if (Platform.OS === "web" && typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(memo.fullMarkdownReport).catch(() => {});
+    }
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
   };

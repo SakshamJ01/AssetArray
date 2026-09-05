@@ -747,7 +747,7 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
           </Pressable>
 
           <Pressable
-            onPress={() => onNavigateTab("Portfolios")}
+            onPress={() => onNavigateTab("Portfolios", { view: "tax-harvest" })}
             style={[styles.dockBtn, { backgroundColor: theme.colors.surfaceMuted }]}
           >
             <Ionicons name="pie-chart-outline" size={16} color={theme.colors.brand} />
@@ -817,8 +817,8 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
           onNavigateTab("Clients");
         }}
         onOpenPortfolios={() => onNavigateTab("Portfolios")}
-        onOpenTaxHarvesting={() => onNavigateTab("Portfolios")}
-        onOpenGoals={() => onNavigateTab("Tools")}
+        onOpenTaxHarvesting={() => onNavigateTab("Portfolios", { view: "tax-harvest" })}
+        onOpenGoals={() => onNavigateTab("Tools", { calculator: "Goal Planner" })}
         onOpenAiBrief={() => setIsBriefModalOpen(true)}
         onOpenDecisionJournal={() => setIsDecisionModalOpen(true)}
         onOpenDataQuality={() => setActiveSection("DATA_QUALITY")}

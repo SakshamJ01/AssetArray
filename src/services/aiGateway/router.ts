@@ -1,14 +1,16 @@
 /**
  * Institutional AI Gateway Router
- * Task-based model routing, fallback escalation, and observable routing decisions.
+ * Task-based model routing, fallback escalation, observable decisions,
+ * timeout enforcement, prompt injection defense, and numerical claim grounding.
  */
 
-import { AiProvider, AiStreamCallbacks, AiStreamState, AiTaskType, StreamContextPayload } from "./types";
+import { AiProvider, AiStreamCallbacks, AiTaskType, ProviderStatus, StreamContextPayload } from "./types";
 import { GeminiProvider } from "./providers/gemini";
 import { OpenAIProvider } from "./providers/openai";
 import { AnthropicProvider } from "./providers/anthropic";
 import { generateDeterministicSummary } from "./fallback";
 import { aiTelemetry } from "./telemetry";
+import { extractNumericClaims, validateClaimsAgainstContext, sanitizeUntrustedInput, GroundingValidationReport } from "./grounding";
 
 export interface RoutingDecision {
   taskType: AiTaskType;
@@ -17,6 +19,15 @@ export interface RoutingDecision {
   reason: string;
   timestamp: string;
 }
+
+const TASK_TIMEOUT_POLICY: Record<AiTaskType, number> = {
+  FAST_SUMMARY: 8000,
+  ADVISOR_BRIEF: 15000,
+  PORTFOLIO_EXPLANATION: 15000,
+  TAX_EXPLANATION: 15000,
+  DOCUMENT_EXTRACTION: 20000,
+  DEEP_RESEARCH: 30000,
+};
 
 export class AiRouter {
   private providers: Map<string, AiProvider> = new Map();
@@ -40,8 +51,8 @@ export class AiRouter {
     return Array.from(this.providers.values());
   }
 
-  public getProviderStatuses(): Record<string, { name: string; status: string; isConfigured: boolean }> {
-    const result: Record<string, { name: string; status: string; isConfigured: boolean }> = {};
+  public getProviderStatuses(): Record<string, { name: string; status: ProviderStatus; isConfigured: boolean }> {
+    const result: Record<string, { name: string; status: ProviderStatus; isConfigured: boolean }> = {};
     for (const [id, provider] of this.providers.entries()) {
       result[id] = {
         name: provider.name,
@@ -120,17 +131,23 @@ export class AiRouter {
     const chain = this.resolveProviderChain(taskType);
     const requestId = `req_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     const startTime = Date.now();
+    const timeoutMs = TASK_TIMEOUT_POLICY[taskType] || 15000;
+
+    // Prompt injection defense: sanitize untrusted input
+    const { sanitizedText, injectionDetected } = sanitizeUntrustedInput(query);
+    const effectiveQuery = injectionDetected ? sanitizedText : query;
 
     this.lastRoutingDecision = {
       taskType,
       selectedProvider: chain[0]?.id || "none",
       candidateOrder: chain.map((p) => p.id),
-      reason: `Task ${taskType} routed to ${chain[0]?.name || "deterministic fallback"}`,
+      reason: `Task ${taskType} routed to ${chain[0]?.name || "deterministic fallback"} (timeout: ${timeoutMs}ms)`,
       timestamp: new Date().toISOString(),
     };
 
     let attempt = 0;
     let success = false;
+    let accumulatedText = "";
 
     for (const provider of chain) {
       attempt++;
@@ -144,10 +161,19 @@ export class AiRouter {
           `Routing to ${provider.name}...`
         );
 
-        await provider.streamResponse(query, taskType, context, {
+        accumulatedText = "";
+
+        await provider.streamResponse(effectiveQuery, taskType, context, {
           onStateChange: callbacks.onStateChange,
-          onToken: callbacks.onToken,
+          onToken: (token) => {
+            accumulatedText += token;
+            callbacks.onToken(token);
+          },
           onComplete: (meta) => {
+            // Numerical claim grounding check
+            const claims = extractNumericClaims(accumulatedText);
+            const groundingReport = validateClaimsAgainstContext(claims, context);
+
             aiTelemetry.log({
               requestId,
               provider: provider.id,
@@ -159,10 +185,14 @@ export class AiRouter {
               estimatedCost: 0.0005,
               timestamp: new Date().toISOString(),
             });
-            callbacks.onComplete?.(meta);
+
+            callbacks.onComplete?.({
+              ...meta,
+              groundingReport,
+            } as any);
           },
           onError: callbacks.onError,
-        }, { timeoutMs: 12000 });
+        }, { timeoutMs });
 
         success = true;
         break;
@@ -184,13 +214,17 @@ export class AiRouter {
 
     if (!success) {
       // Deterministic local summary (never fabricates financial data)
-      callbacks.onStateChange?.("UNAVAILABLE", "Live AI offline. Presenting verified deterministic advisory data.");
+      // Standard: explicitly label rule-based deterministic summary
+      callbacks.onStateChange?.("UNAVAILABLE", "AI unavailable · Rule-based summary");
       const fallbackText = generateDeterministicSummary(query, taskType, context);
       
       const tokens = fallbackText.split(/(\s+)/);
       for (const token of tokens) {
         if (token) callbacks.onToken(token);
       }
+
+      const claims = extractNumericClaims(fallbackText);
+      const groundingReport = validateClaimsAgainstContext(claims, context);
 
       callbacks.onStateChange?.("COMPLETED");
       callbacks.onComplete?.({
@@ -199,7 +233,10 @@ export class AiRouter {
         durationMs: Date.now() - startTime,
         groundedAt: new Date().toISOString(),
         taskType,
-      });
+        isFallback: true,
+        fallbackLabel: "AI unavailable · Rule-based summary",
+        groundingReport,
+      } as any);
 
       aiTelemetry.log({
         requestId,

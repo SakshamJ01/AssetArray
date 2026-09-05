@@ -20,7 +20,13 @@ export type AiStreamState =
   | "RETRYING"
   | "UNAVAILABLE";
 
-export type ProviderStatus = "ONLINE" | "NOT_CONFIGURED" | "RATE_LIMITED" | "ERROR";
+export type ProviderStatus =
+  | "CONFIGURED"
+  | "AVAILABLE"
+  | "DEGRADED"
+  | "RATE_LIMITED"
+  | "FAILED"
+  | "NOT_CONFIGURED";
 
 export interface AiProviderConfig {
   apiKey?: string | null;

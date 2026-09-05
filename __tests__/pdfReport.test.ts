@@ -74,7 +74,7 @@ describe("PDF Report Data Formatter", () => {
     expect(callArg.html).toContain("Institutional Analytics &amp; Risk Mandate (v3.1 Engine)".replace("&amp;", "&"));
     expect(callArg.html).toContain("Health Score");
     expect(callArg.html).toContain("Active Alpha vs Benchmark");
-    expect(callArg.html).toContain("Tax Loss Harvesting Shield");
+    expect(callArg.html).toContain("Estimated Tax Impact");
     expect(callArg.html).toContain("Stress Simulation Impact");
 
     spy.mockRestore();

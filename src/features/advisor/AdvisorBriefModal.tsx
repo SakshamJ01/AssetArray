@@ -36,10 +36,10 @@ export const AdvisorBriefModal: React.FC<AdvisorBriefModalProps> = ({
               </View>
               <View>
                 <Text style={[styles.title, { color: theme.colors.textPrimary }]}>
-                  DAILY AI ADVISOR BRIEF
+                  GROUNDED ADVISOR BRIEF
                 </Text>
                 <Text style={[styles.subtitle, { color: theme.colors.brand }]}>
-                  DETERMINISTIC FIDUCIARY SYNTHESIS • {brief.date}
+                  DETERMINISTIC DECISION SUPPORT SYNTHESIS • {brief.date}
                 </Text>
               </View>
             </View>

@@ -253,7 +253,7 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
         >
           <Ionicons name="cloud-offline-outline" size={16} color={theme.colors.brand} />
           <Text style={[styles.offlineText, { color: theme.colors.brand }]}>
-            OFFLINE MODE — Displaying cached fiduciary queue. Local actions will sync automatically.
+            OFFLINE MODE — Displaying cached governance queue. Local actions will sync automatically.
           </Text>
         </View>
       )}
@@ -268,12 +268,15 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
         <View style={styles.headerTopRow}>
           <View>
             <Text style={[styles.greetingLabel, { color: theme.colors.brand }]}>
-              FIDUCIARY COMMAND CENTER
+              ADVISOR COMMAND CENTER
             </Text>
             <Text style={[styles.greetingTitle, { color: theme.colors.textPrimary }]}>
               Good Morning, Advisor
             </Text>
             <Text style={[styles.dateText, { color: theme.colors.textMuted }]}>
+              Daily workflow, governance, analytics and decision support
+            </Text>
+            <Text style={[styles.dateText, { color: theme.colors.textSecondary, marginTop: 2 }]}>
               {todayFormatted} • {attentionClientsCount} Clients Need Attention
             </Text>
           </View>

@@ -20,7 +20,7 @@ export interface GroundedCommitteeMemoResult extends CommitteeMemoResult {
 }
 
 /**
- * DPDP Act Compliant Client Sanitizer
+ * DPDP-Aligned Privacy Client Sanitizer
  * Produces an anonymized client reference to prevent transmitting personal data to third-party LLMs
  */
 export function anonymizeClientForAI(client: Client): {
@@ -148,7 +148,7 @@ export function generateCommitteeMemo(client: Client): GroundedCommitteeMemoResu
     ...health.recommendations,
     ...(tax.totalHarvestableLoss > 0
       ? [
-          `Execute tax-loss harvesting on ${tax.harvestCandidates.filter((c) => c.isLossHarvestCandidate).length} identified positions to unlock ₹${Math.round(tax.estimatedImmediateTaxSavings).toLocaleString("en-IN")} in immediate capital gains tax shielding (Sec 111A/112A).`,
+          `Execute tax-loss harvesting on ${tax.harvestCandidates.filter((c) => c.isLossHarvestCandidate).length} identified positions to unlock ₹${Math.round(tax.estimatedImmediateTaxSavings).toLocaleString("en-IN")} in estimated capital gains tax impact (Sec 111A/112A).`,
         ]
       : []),
     `Maintain scheduled rebalancing discipline within +/- 3% band of ${riskProfile} mandate.`,
@@ -158,7 +158,7 @@ export function generateCommitteeMemo(client: Client): GroundedCommitteeMemoResu
 # INVESTMENT COMMITTEE MEMORANDUM
 **Date:** ${dateStr}  
 **Mandate Reference:** ${anonymizedRef} (${category})  
-**Fiduciary Standard:** SEBI RIA / DPDP Act 2023 Compliant  
+**Advisor Governance:** SEBI-Aware Workflow / DPDP-Aligned Privacy Controls  
 
 ---
 

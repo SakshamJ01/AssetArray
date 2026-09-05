@@ -1,9 +1,9 @@
-# AssetArray v3.2 Analytics Methodology
+# AssetArray Analytics Methodology
 
-## 1. Time-Weighted Return (TWR) & GIPS 2020 Timing Disclosures
+## 1. Time-Weighted Return (TWR) & GIPS®-Informed Methodology Disclosures
 
 ### 1.1 Mathematical Formulation
-Time-Weighted Return removes the distorting effects of external cash inflows and outflows ($C_t$), measuring pure investment management skill:
+Time-Weighted Return removes the distorting effects of external cash inflows and outflows ($C_t$), measuring portfolio performance independent of cash-flow timing:
 
 $$R_{\text{TWR}} = \prod_{t=1}^{N} (1 + R_t) - 1$$
 
@@ -11,11 +11,13 @@ Where each sub-period return $R_t$ bounded by external cash flows is computed as
 
 $$R_t = \frac{V_t^{\text{end}} - C_t}{V_t^{\text{start}}} - 1$$
 
-### 1.2 Institutional Timing Assumptions & GIPS 2020 Alignment
+### 1.2 Timing Assumptions & GIPS® Alignment Disclosures
 Located at `src/services/performance/twr.ts`:
 - **Methodology Identifier**: `twr-gips-2020-v3.2`
-- **Cash-Flow Timing Assumption**: Cash flows are assumed to occur at the end of the day (`END_OF_DAY`).
-- **GIPS 2020 2.A.24 Disclosure**: While true GIPS 2020 compliance requires intra-day portfolio revaluation at the exact timestamp of any external cash flow, daily valuation feeds require a daily subperiod approximation (`DAILY_SUBPERIOD_APPROXIMATION`).
+- **Methodology Alignment**: GIPS-informed performance methodology.
+- **Statutory Disclosure**: AssetArray provides performance analytics using methodologies informed by the Global Investment Performance Standards (GIPS®). AssetArray is not itself claiming GIPS compliance, certification, or verification. Firms using AssetArray remain responsible for their own policies, data, calculations, disclosures, and applicable GIPS requirements.
+- **Cash-Flow Timing Assumption**: Cash flows are modeled as occurring at the end of the day (`END_OF_DAY`).
+- **GIPS Concept 2.A.24 Disclosure**: While true standard compliance by an investment management firm requires intra-day portfolio revaluation at the exact timestamp of any large external cash flow, daily valuation feeds utilize a daily subperiod approximation (`DAILY_SUBPERIOD_APPROXIMATION`).
 - **Non-Positive Starting NAV**: If initial portfolio NAV is zero or negative without an external capital inflow, the engine refuses to manufacture return numbers and marks `quality: INSUFFICIENT_DATA`.
 
 ---
@@ -43,7 +45,7 @@ Located at `src/services/performance/xirr.ts`:
 ## 3. Brinson-Fachler Performance Attribution
 
 ### 3.1 Mathematical Decomposition
-AssetArray v3.2 decomposes total active excess return against benchmark profiles (e.g., CRISIL Hybrid 65:35, S&P 500) into three orthogonal components for each asset category $i$:
+Decomposes total active excess return against benchmark profiles (e.g., CRISIL Hybrid 65:35, S&P 500) into three orthogonal components for each asset category $i$:
 
 $$R_p - R_b = \sum_{i} \left( \text{Alloc}_i + \text{Select}_i + \text{Interact}_i \right)$$
 

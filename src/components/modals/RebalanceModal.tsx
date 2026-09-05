@@ -57,11 +57,11 @@ export const RebalanceModal: React.FC<RebalanceModalProps> = ({
           <View style={styles.header}>
             <View style={{ flex: 1 }}>
               <View style={styles.tagBadge}>
-                <Text style={styles.tagText}>FIDUCIARY ENGINE</Text>
+                <Text style={styles.tagText}>GOVERNANCE ENGINE</Text>
               </View>
               <Text style={styles.title}>Portfolio Rebalance & Tax Harvesting</Text>
               <Text style={styles.subtitle}>
-                Simulate optimal allocation for {clientName} based on target models.
+                Simulate target rebalancing allocation for {clientName} based on benchmark models.
               </Text>
             </View>
             <Pressable onPress={onClose} style={styles.closeBtn}>
@@ -74,7 +74,7 @@ export const RebalanceModal: React.FC<RebalanceModalProps> = ({
             showsVerticalScrollIndicator={false}
           >
             {/* Target Model Selector */}
-            <Text style={styles.sectionHeader}>SELECT FIDUCIARY TARGET MODEL</Text>
+            <Text style={styles.sectionHeader}>SELECT BENCHMARK TARGET MODEL</Text>
             <View style={styles.modelsGrid}>
               {TARGET_MODELS.map((model) => {
                 const isActive = model.id === selectedModelId;
@@ -192,7 +192,7 @@ export const RebalanceModal: React.FC<RebalanceModalProps> = ({
                   </Text>
                 </View>
                 <View style={styles.taxShieldBox}>
-                  <Text style={styles.taxShieldLabel}>POTENTIAL TAX SHIELD</Text>
+                  <Text style={styles.taxShieldLabel}>ESTIMATED TAX IMPACT</Text>
                   <Text style={styles.taxShieldValue}>
                     ₹{result.potentialTaxShield.toLocaleString()}
                   </Text>
@@ -215,7 +215,7 @@ export const RebalanceModal: React.FC<RebalanceModalProps> = ({
                         -₹{c.unrealizedLoss.toLocaleString()}
                       </Text>
                       <Text style={styles.tlhSavingsText}>
-                        Save ~₹{c.estimatedTaxSavings.toLocaleString()} tax
+                        Offset ~₹{c.estimatedTaxSavings.toLocaleString()} tax
                       </Text>
                     </View>
                   </View>
@@ -231,7 +231,7 @@ export const RebalanceModal: React.FC<RebalanceModalProps> = ({
               onPress={() => {
                 Alert.alert(
                   "Rebalance Strategy Generated",
-                  `Trade tickets ready for ${clientName}. Potential tax shield: ₹${result.potentialTaxShield.toLocaleString()}.`
+                  `Trade tickets ready for ${clientName}. Estimated tax impact: ₹${result.potentialTaxShield.toLocaleString()}.`
                 );
                 onClose();
               }}

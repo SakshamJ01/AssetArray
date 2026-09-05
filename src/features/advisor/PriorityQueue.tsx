@@ -227,7 +227,7 @@ export const PriorityQueue: React.FC<PriorityQueueProps> = ({
           >
             <Ionicons name="shield-checkmark" size={32} color={theme.colors.accent} />
             <Text style={[styles.emptyTitle, { color: theme.colors.textPrimary }]}>
-              All Mandates Compliant
+              All Mandates Within Tolerance
             </Text>
             <Text style={[styles.emptySubtitle, { color: theme.colors.textMuted }]}>
               {activeFilter === "URGENT"

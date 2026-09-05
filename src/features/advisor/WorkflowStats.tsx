@@ -48,7 +48,7 @@ export const WorkflowStats: React.FC<WorkflowStatsProps> = ({ kpis, theme }) => 
     {
       label: "OPEN ALERTS",
       value: kpis.openAlertsCount,
-      sub: "Active Fiduciary Triggers",
+      sub: "Active Governance Triggers",
       icon: "notifications-outline",
       tone: kpis.openAlertsCount > 5 ? "warning" : "neutral",
     },
@@ -64,7 +64,7 @@ export const WorkflowStats: React.FC<WorkflowStatsProps> = ({ kpis, theme }) => 
   return (
     <View style={styles.container}>
       <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
-        OPERATIONAL FIDUCIARY WORKFLOW KPIS
+        OPERATIONAL WORKFLOW & GOVERNANCE KPIS
       </Text>
       <View style={styles.grid}>
         {cards.map((card, idx) => {

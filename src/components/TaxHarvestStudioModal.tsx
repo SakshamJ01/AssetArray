@@ -58,7 +58,7 @@ export const TaxHarvestStudioModal: React.FC<TaxHarvestStudioModalProps> = ({
                 Indian Tax-Loss Harvesting Studio
               </Text>
               <Text style={[styles.headerSub, { color: colors.textMuted }]}>
-                Finance Act 2024 / AY 2026-27 Compliant • {portfolioName}
+                Finance Act 2024 Rules Aligned (AY 2026-27) • {portfolioName}
               </Text>
             </View>
             <Pressable onPress={onClose} style={styles.closeBtn}>
@@ -96,13 +96,13 @@ export const TaxHarvestStudioModal: React.FC<TaxHarvestStudioModalProps> = ({
                 ]}
               >
                 <Text style={[styles.kpiCardLabel, { color: colors.textMuted }]}>
-                  Tax Shield Available
+                  Estimated Tax Impact
                 </Text>
                 <Text style={[styles.kpiCardValue, { color: colors.accent }]}>
                   ₹{Math.round(selectedSavings).toLocaleString("en-IN")}
                 </Text>
                 <Text style={[styles.kpiCardSub, { color: colors.textSecondary }]}>
-                  Direct cash tax reduction
+                  Potential immediate tax offset
                 </Text>
               </View>
 
@@ -113,13 +113,13 @@ export const TaxHarvestStudioModal: React.FC<TaxHarvestStudioModalProps> = ({
                 ]}
               >
                 <Text style={[styles.kpiCardLabel, { color: colors.textMuted }]}>
-                  Sec 112A Exemption
+                  Exemption Used
                 </Text>
                 <Text style={[styles.kpiCardValue, { color: colors.brand }]}>
-                  ₹1,25,000
+                  ₹{Math.round(report.ltcgExemptionUtilized || 0).toLocaleString("en-IN")}
                 </Text>
                 <Text style={[styles.kpiCardSub, { color: colors.textMuted }]}>
-                  Annual statutory limit
+                  ₹1.25L statutory LTCG limit
                 </Text>
               </View>
             </View>
@@ -169,7 +169,7 @@ export const TaxHarvestStudioModal: React.FC<TaxHarvestStudioModalProps> = ({
                   <Text style={[styles.thCell, { flex: 2, color: colors.textSecondary }]}>Asset / Ticker</Text>
                   <Text style={[styles.thCell, { flex: 1.2, color: colors.textSecondary }]}>Period</Text>
                   <Text style={[styles.thCell, { flex: 1.4, color: colors.textSecondary }]}>Unrealized Loss</Text>
-                  <Text style={[styles.thCell, { flex: 1.3, color: colors.textSecondary }]}>Tax Shield</Text>
+                  <Text style={[styles.thCell, { flex: 1.3, color: colors.textSecondary }]}>Estimated Tax Impact</Text>
                 </View>
 
                 {harvestCandidates.map((lot, idx) => {

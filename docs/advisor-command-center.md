@@ -5,9 +5,9 @@ AssetArray V3.3 evolves the platform from a portfolio analytics tool into a dail
 
 1. **WHO needs attention?** (Clients with critical risk breaches, scheduled reviews, or overdue touchpoints).
 2. **WHAT changed?** (Asset concentration breaches, portfolio health degradations, market drift, milestone lags).
-3. **WHY did it change?** (Detailed fiduciary evidence, policy thresholds, and single-stock movements).
+3. **WHY did it change?** (Detailed quantitative evidence, policy thresholds, and single-stock movements).
 4. **WHAT should I do next?** (Deterministic next steps with 1-click deep links to Rebalancer, Tax Harvesting, or Scenario Sandbox).
-5. **HOW do I communicate that decision to the client?** (Report generation, client communication hub, and auditable fiduciary decision logging).
+5. **HOW do I communicate that decision to the client?** (Report generation, client communication hub, and auditable advisor decision logging).
 
 ```
 OBSERVE ↓ UNDERSTAND ↓ PRIORITIZE ↓ ACT ↓ COMMUNICATE ↓ RECORD

@@ -53,7 +53,7 @@ export async function analyzeClientPortfolioWithAI({
   ).join("\n");
 
   const query = `
-Perform a high-net-worth portfolio analysis and advisor recommendation for client:
+Perform an advisor decision-support portfolio analysis for client:
 - Client Name: ${client.name}
 - Category: ${client.category} (Priority: ${client.priority})
 - Risk Preference: ${client.notes?.toLowerCase().includes("conservative") ? "Conservative" : "Balanced/Growth"}
@@ -62,7 +62,7 @@ Perform a high-net-worth portfolio analysis and advisor recommendation for clien
 Holdings Breakdown:
 ${holdingsSummary || "No holdings entered yet."}
 
-Provide a concise analysis including market outlook, key risks, asset allocation opportunities, and strategic advice.
+Provide an objective, non-guaranteed analysis including market observations, potential risk factors, asset allocation considerations, and suggested areas for advisor review. Clearly distinguish observed facts, model results, and suggested review points.
   `.trim();
 
   const aiResult = await requestAiResearch({

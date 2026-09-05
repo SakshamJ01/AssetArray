@@ -97,7 +97,7 @@ export const Client360Modal: React.FC<Client360ModalProps> = ({
                   CLIENT 360 WORKSPACE
                 </Text>
                 <Text style={[styles.modalHeaderSubtitle, { color: theme.colors.brand }]}>
-                  HOLISTIC FIDUCIARY INTELLIGENCE
+                  HOLISTIC CLIENT INTELLIGENCE
                 </Text>
               </View>
             </View>
@@ -311,7 +311,7 @@ export const Client360Modal: React.FC<Client360ModalProps> = ({
             {/* Recent Activity Timeline */}
             <View style={styles.timelineSection}>
               <Text style={[styles.sectionHeading, { color: theme.colors.textPrimary }]}>
-                RECENT FIDUCIARY TIMELINE
+                RECENT GOVERNANCE & ACTIVITY TIMELINE
               </Text>
               {snapshot.recentActivities.length === 0 ? (
                 <Text style={[styles.emptyTimeline, { color: theme.colors.textMuted }]}>

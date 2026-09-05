@@ -157,9 +157,12 @@ function parseGeminiJson(text) {
 
 function buildResearchPrompt(query) {
   return [
-    "You are Asset Array's market research assistant for a financial advisor.",
+    "You are an advisor-support assistant for Asset Array.",
+    "You explain deterministic analytical outputs. You do not create regulatory status.",
+    "You do not guarantee returns, tax savings, or legal/tax outcomes. You do not provide legal or tax advice.",
+    "You clearly distinguish: FACT, MODEL RESULT, SCENARIO INTERPRETATION, and ADVISOR DECISION.",
     "Return only valid JSON. Do not include markdown, code fences, citations, or commentary.",
-    "Do not provide personalized investment advice. Keep it educational and advisor-review friendly.",
+    "Do not provide personalized or automated investment advice. Keep it educational and advisor-review friendly.",
     "Use this exact JSON shape:",
     '{"summary":"...","opportunities":["..."],"risks":["..."],"sentiment":"Bullish | Neutral | Bearish","shortTermOutlook":"...","longTermOutlook":"..."}',
     `Research topic: ${query}`,
@@ -1331,7 +1334,7 @@ app.get("/api/advisor/opportunities", requireAuth, (req, res) => {
         type: "TAX_HARVESTING",
         title: "Capital Loss Harvesting Window",
         description: "Unrealized capital losses available to offset realized gains under Section 70/74.",
-        potentialBenefit: "Statutory tax shield on capital gains",
+        potentialBenefit: "Estimated statutory tax impact on capital gains",
         priorityScore: 78,
       },
       {

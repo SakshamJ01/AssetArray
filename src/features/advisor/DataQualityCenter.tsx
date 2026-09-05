@@ -30,10 +30,10 @@ export const DataQualityCenter: React.FC<DataQualityCenterProps> = ({
           </View>
           <View>
             <Text style={[styles.headerTitle, { color: theme.colors.textPrimary }]}>
-              DATA QUALITY & FIDUCIARY HYGIENE
+              DATA QUALITY & GOVERNANCE HYGIENE
             </Text>
             <Text style={[styles.headerSubtitle, { color: theme.colors.brand }]}>
-              DETERMINISTIC COMPLIANCE AUDIT
+              DETERMINISTIC DATA QUALITY & GOVERNANCE AUDIT
             </Text>
           </View>
         </View>

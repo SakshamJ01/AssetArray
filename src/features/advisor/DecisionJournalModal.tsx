@@ -123,10 +123,10 @@ export const DecisionJournalModal: React.FC<DecisionJournalModalProps> = ({
               </View>
               <View>
                 <Text style={[styles.title, { color: theme.colors.textPrimary }]}>
-                  FIDUCIARY DECISION JOURNAL
+                  ADVISOR DECISION JOURNAL
                 </Text>
                 <Text style={[styles.subtitle, { color: theme.colors.brand }]}>
-                  AUDITABLE ADVISOR RATIONALE & GOVERNANCE
+                  EVIDENCE-BACKED ADVISOR DECISION & GOVERNANCE RECORD
                 </Text>
               </View>
             </View>
@@ -287,7 +287,7 @@ export const DecisionJournalModal: React.FC<DecisionJournalModalProps> = ({
 
                 {/* Rationale Field */}
                 <Text style={[styles.fieldLabel, { color: theme.colors.textMuted }]}>
-                  FIDUCIARY RATIONALE
+                  DECISION RATIONALE
                 </Text>
                 <TextInput
                   placeholder="e.g. Mitigate single-stock drawdown risk while preserving equity beta"

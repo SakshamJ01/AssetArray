@@ -1,6 +1,6 @@
 # Asset Array 💼📈
 
-[![Version 3.3.0](https://img.shields.io/badge/Version-3.3.0-E0A84C?style=for-the-badge&logo=git&logoColor=white)](https://github.com/SakshamJ01/AssetArray)
+[![Version 3.3.1](https://img.shields.io/badge/Version-3.3.1-E0A84C?style=for-the-badge&logo=git&logoColor=white)](https://github.com/SakshamJ01/AssetArray)
 [![Live Web App](https://img.shields.io/badge/Live%20Web%20App-asset--array.web.app-E0A84C?style=for-the-badge&logo=firebase&logoColor=white)](https://asset-array.web.app)
 [![Live Backend API](https://img.shields.io/badge/API-assetarray.onrender.com-46E3B7?style=for-the-badge&logo=render&logoColor=black)](https://assetarray.onrender.com/api/health)
 [![Cloud Database](https://img.shields.io/badge/Database-MongoDB%20Atlas-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://cloud.mongodb.com)
@@ -13,9 +13,12 @@
 
 ![Asset Array Hero Banner](assets/hero-thumbnail.jpg)
 
-**Asset Array** is an institutional-grade wealth management CRM, real-time share market terminal, portfolio analyzer, and client reporting suite tailored for independent financial advisors, wealth managers, and family offices. 
+**AssetArray** is an advisor operating system for portfolio analytics, risk intelligence, tax estimation, client workflow, governance, and AI-assisted decision support.
 
 Engineered with a high-contrast obsidian & champagne gold luxury aesthetic, dual-mode Swiss Private Banking light theme, real-time stochastic share market streaming engine, client-side zero-knowledge AES-256 encryption, multi-user cloud synchronization, responsive cross-platform web/desktop support, and built-in subscription monetization powered by **RevenueCat**.
+
+> **Important Positioning & Regulatory Disclosure**:  
+> AssetArray uses performance methodologies informed by GIPS® concepts but is not itself claiming GIPS compliance, certification, or verification. AssetArray provides advisor governance, decision-support, privacy, and analytical tooling; regulatory status, fiduciary responsibility, suitability determination, and compliance adherence remain the sole responsibility of the advisor or registered firm.
 
 ---
 
@@ -29,20 +32,24 @@ Engineered with a high-contrast obsidian & champagne gold luxury aesthetic, dual
 
 ---
 
-## 🌟 Version 3.3.0 Advisor Command Center & Fiduciary Architecture
+## 🌟 Version 3.3.1 Advisor Command Center & Governance Hardening
 
-Comprehensive institutional methodology, mathematical formulas, and statutory compliance documentation are available in the [`docs/`](docs/) directory:
+Comprehensive institutional methodology, mathematical formulas, claims policy, and statutory compliance documentation are available in the [`docs/`](docs/) directory:
+- [Claims & Terminology Policy](docs/claims-policy.md)
+- [Product Terminology Glossary](docs/terminology.md)
+- [V3.4 Strategic Roadmap (Planned)](docs/v3-4-roadmap.md)
 - [Advisor Command Center Architecture](docs/advisor-command-center.md)
 - [Advisor Workflow & Prioritization Engine](docs/advisor-workflow.md)
 - [Client 360 Workspace](docs/client-360.md)
-- [Fiduciary Decision Journal & Audit Log](docs/decision-journal.md)
+- [Advisor Decision Journal & Governance Record](docs/decision-journal.md)
 - [Daily AI Advisor Brief & Grounding Methodology](docs/ai-advisor-brief.md)
 - [System Architecture](docs/architecture.md)
-- [Analytics & Performance Methodology (TWR, XIRR, Brinson Attribution)](docs/analytics-methodology.md)
+- [Analytics & Performance Methodology (GIPS-Informed TWR, XIRR, Brinson Attribution)](docs/analytics-methodology.md)
 - [Statutory Indian Tax Methodology (AY 2026-27 & Sec 70/74)](docs/tax-methodology.md)
 - [Risk & Benchmark Analytics (MPT, HWM Drawdowns, Mulberry32 Monte Carlo)](docs/risk-methodology.md)
 - [AI Architecture & DPDP Act PII Sanitization](docs/ai-architecture.md)
 - [Zero-Knowledge Security Model](docs/security.md)
+- [Compliance & Statutory Disclosures](docs/compliance-disclosures.md)
 - [v3.3.0 Release Notes](docs/release-notes-v3.3.md)
 - [v3.2.0 Red-Team Hardening](docs/redteam-audit-report.md)
 - [v3.1.0 Release Notes](docs/release-notes-v3.1.md)
@@ -57,15 +64,15 @@ Comprehensive institutional methodology, mathematical formulas, and statutory co
 
 ### ⚖️ Indian Tax Intelligence & Loss Harvesting (Finance Act 2024 / FY 2025-26)
 - **Updated Capital Gains Thresholds:** Section 112A LTCG at 12.5% above ₹1,25,000 exemption limit; Section 111A STCG at 20.0%.
-- **1-Click Tax Harvest Action Plan:** Identifies loss positions, computes immediate cash tax shields, and provides 30-day fiduciary wash-sale protection guidance.
+- **1-Click Tax Harvest Action Plan:** Identifies loss positions, computes estimated immediate tax impact, and provides 30-day wash-sale protection guidance.
 
 ### 🎯 What-If Macro Scenario Sandbox & Stress Testing
 - **Crisis Shock Templates:** Simulates historical shocks (2008 GFC Crunch, Tech Correction, 1970s Stagflation, Emerging Markets Liquidity Boom).
 - **Outcome Distribution:** Computes P5 (worst-case tail risk), P50 (median NAV), and P95 (resilience NAV) with post-shock Sharpe ratio shifts.
 
-### 📜 DPDP-Compliant AI Investment Committee Memorandum Studio
-- **Zero-Knowledge PII Tokenization:** Replaces client identifiers with deterministic tokens (e.g. `Client Ref #AA-881`) ensuring complete compliance with India's DPDP Act 2023.
-- **Structured Executive Report:** One-click generation of formal Investment Committee memos with executive summary, risk diagnostics, attribution analysis, and fiduciary action plans.
+### 📜 DPDP-Aligned AI Investment Committee Memorandum Studio
+- **Zero-Knowledge PII Tokenization:** Replaces client identifiers with deterministic tokens (e.g. `Client Ref #AA-881`) ensuring alignment with India's DPDP Act 2023 data minimization principles.
+- **Structured Executive Report:** One-click generation of formal Investment Committee memos with executive summary, risk diagnostics, attribution analysis, and advisor action plans.
 
 ### 🚨 Smart Alerts & Policy Violation Governance
 - **Real-Time Guardrails:** Monitors concentration breaches (>20% single position), large drawdowns, health score drops, and tax-loss harvesting windows.

@@ -113,7 +113,7 @@ export const PriorityActionCard: React.FC<PriorityActionCardProps> = ({
             color={theme.colors.brand}
           />
           <Text style={[styles.expandToggleText, { color: theme.colors.brand }]}>
-            {isExpanded ? "HIDE FIDUCIARY EVIDENCE" : "WHY THIS MATTERS (EVIDENCE)"}
+            {isExpanded ? "HIDE EVIDENCE" : "WHY THIS MATTERS (EVIDENCE)"}
           </Text>
         </View>
         <Text style={[styles.evidenceSnippet, { color: theme.colors.textMuted }]}>

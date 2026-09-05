@@ -51,7 +51,7 @@ export const CommitteeMemoModal: React.FC<CommitteeMemoModalProps> = ({
                 Investment Committee Memorandum
               </Text>
               <Text style={[styles.headerSub, { color: colors.textMuted }]}>
-                DPDP Act 2023 Compliant • {memo.anonymizedClientRef}
+                DPDP-Aligned Privacy Controls • {memo.anonymizedClientRef}
               </Text>
             </View>
             <Pressable onPress={onClose} style={styles.closeBtn}>
@@ -80,10 +80,10 @@ export const CommitteeMemoModal: React.FC<CommitteeMemoModalProps> = ({
               </View>
               <View style={styles.metaCol}>
                 <Text style={[styles.metaLabel, { color: colors.textMuted }]}>
-                  Fiduciary Standard
+                  Advisor Governance
                 </Text>
                 <Text style={[styles.metaVal, { color: colors.accent }]}>
-                  SEBI RIA / DPDP
+                  SEBI-Aware / DPDP-Aligned
                 </Text>
               </View>
               <View style={styles.metaCol}>

@@ -351,7 +351,7 @@ export async function exportClientPdfReport({ client, advisorName = "Asset Array
       <div style="font-size: 11px; color: #64748b; margin-top: 4px;">Benchmark: Balanced Hybrid</div>
     </div>
     <div class="kpi-card" style="border-top: 3px solid #6366f1;">
-      <div class="kpi-title">Tax Loss Harvesting Shield</div>
+      <div class="kpi-title">Estimated Tax Impact</div>
       <div class="kpi-num" style="font-size: 20px; color: #4338ca;">$${tax.estimatedImmediateTaxSavings.toLocaleString()}</div>
       <div style="font-size: 11px; color: #64748b; margin-top: 4px;">Harvestable: $${tax.totalHarvestableLoss.toLocaleString()}</div>
     </div>
@@ -370,7 +370,7 @@ export async function exportClientPdfReport({ client, advisorName = "Asset Array
       ${allocationRows || "<div style='color: #64748b; font-size: 12px;'>No asset class breakdown available.</div>"}
     </div>
     <div class="summary-card">
-      <div class="card-heading">Fiduciary Mandate & Strategy</div>
+      <div class="card-heading">Investment Mandate & Strategy</div>
       <div style="font-size: 12px; color: #475569; line-height: 18px;">
         <strong>Allocations Mandate:</strong> ${client.allocation || "Diversified institutional allocation targeting capital preservation and real equity growth."}<br><br>
         <strong>Advisor Notes:</strong> ${client.notes || "Periodic portfolio review completed. Risk exposure is calibrated in alignment with long-term liquidity and estate planning objectives."}<br><br>
@@ -400,9 +400,10 @@ export async function exportClientPdfReport({ client, advisorName = "Asset Array
   </table>
 
   <div class="footer">
-    <div class="fiduciary-seal">
-      <strong>STRICTLY CONFIDENTIAL & PROPRIETARY</strong><br>
-      This valuation statement is generated on-device via Asset Array with client-side zero-knowledge encryption. Valuations reflect active market quotes and custodial records. Prepared solely for the personal and fiduciary review of the named account holder.
+    <div class="fiduciary-seal" style="font-size: 9px; line-height: 14px; color: #64748b; max-width: 65%;">
+      <strong>STRICTLY CONFIDENTIAL & PROPRIETARY • ADVISOR DECISION-SUPPORT RECORD</strong><br>
+      <strong>Performance Methodology:</strong> Time-weighted return calculated using available valuation and external cash-flow observations (GIPS-informed methodology). The presence of a GIPS-informed methodology does not represent a claim of GIPS compliance by AssetArray or the advisor using the software.<br>
+      <strong>Tax & Regulatory:</strong> Estimated Tax Impact figures are illustrative estimations under applicable tax rules and do not constitute formal tax advice or an assurance of tax savings. Processed with DPDP-aligned privacy controls. Prepared solely for the advisory and decision-support review of the named account holder.
     </div>
     <div class="signature-block">
       <div class="signature-line"></div>

@@ -879,18 +879,21 @@ const workspaceStyles = StyleSheet.create({
   kpiValueLarge: {
     fontSize: 20,
     fontWeight: "800",
+    fontVariant: ["tabular-nums"],
     color: "#F8FAFC",
     marginVertical: 4,
   },
   kpiValueMedium: {
     fontSize: 16,
     fontWeight: "700",
+    fontVariant: ["tabular-nums"],
     color: "#F8FAFC",
     marginVertical: 4,
   },
   kpiDelta: {
     fontSize: 11,
     fontWeight: "600",
+    fontVariant: ["tabular-nums"],
   },
   kpiSub: {
     fontSize: 10,
@@ -899,7 +902,7 @@ const workspaceStyles = StyleSheet.create({
   tableContainer: {
     borderWidth: 1,
     borderColor: "#1E293B",
-    borderRadius: 6,
+    borderRadius: 0,
     overflow: "hidden",
   },
   tableHeaderRow: {
@@ -928,11 +931,13 @@ const workspaceStyles = StyleSheet.create({
   tableCell: {
     fontSize: 12,
     color: "#CBD5E1",
+    fontVariant: ["tabular-nums"],
   },
   tableCellPrimary: {
     fontSize: 12,
     fontWeight: "600",
     color: "#F8FAFC",
+    fontVariant: ["tabular-nums"],
   },
   tableCellMeta: {
     fontSize: 10,
@@ -963,7 +968,7 @@ const workspaceStyles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#131C2E",
     padding: 14,
-    borderRadius: 6,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: "#1E293B",
     marginTop: 8,
@@ -971,6 +976,7 @@ const workspaceStyles = StyleSheet.create({
   scoreBig: {
     fontSize: 32,
     fontWeight: "800",
+    fontVariant: ["tabular-nums"],
     color: "#10B981",
   },
   scoreMax: {

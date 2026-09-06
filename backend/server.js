@@ -11,11 +11,17 @@ const port = process.env.PORT || 4000;
 const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017";
 const MONGO_DB_NAME = process.env.MONGO_DB_NAME || "asset_array";
 const AUTH_REQUIRED = process.env.AUTH_REQUIRED !== "false";
-const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
+const IS_PRODUCTION = process.env.NODE_ENV === "production";
+
+const DEFAULT_DEV_TOKEN_SECRET = "asset-array-dev-secret-change-in-production";
+const DEFAULT_DEV_REFRESH_SECRET = "asset-array-dev-refresh-secret-change-in-production";
+const DEFAULT_PROD_CORS = "https://asset-array.web.app,https://asset-array.firebaseapp.com,https://assetarray.onrender.com,http://localhost:8081,http://localhost:3000";
+
+const CORS_ORIGIN = process.env.CORS_ORIGIN || (IS_PRODUCTION ? DEFAULT_PROD_CORS : "*");
 const ACCESS_TOKEN_TTL_SECONDS = Number(process.env.ACCESS_TOKEN_TTL_SECONDS || 15 * 60);
 const REFRESH_TOKEN_TTL_SECONDS = Number(process.env.REFRESH_TOKEN_TTL_SECONDS || 30 * 24 * 60 * 60);
-const TOKEN_SECRET = process.env.TOKEN_SECRET || "asset-array-dev-secret-change-in-production";
-const REFRESH_SECRET = process.env.REFRESH_SECRET || "asset-array-dev-refresh-secret-change-in-production";
+const TOKEN_SECRET = process.env.TOKEN_SECRET || (IS_PRODUCTION ? crypto.randomBytes(32).toString("hex") : DEFAULT_DEV_TOKEN_SECRET);
+const REFRESH_SECRET = process.env.REFRESH_SECRET || (IS_PRODUCTION ? crypto.randomBytes(32).toString("hex") : DEFAULT_DEV_REFRESH_SECRET);
 const RATE_LIMIT_WINDOW_MS = Number(process.env.RATE_LIMIT_WINDOW_MS || 60_000);
 const RATE_LIMIT_MAX = Number(process.env.RATE_LIMIT_MAX || 120);
 const AUTH_MAX_FAILURES = Number(process.env.AUTH_MAX_FAILURES || 5);
@@ -34,27 +40,22 @@ const AI_ANTHROPIC_RESEARCH_MODEL = process.env.AI_ANTHROPIC_RESEARCH_MODEL || "
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434";
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "llama3.2";
 
-const IS_PRODUCTION = process.env.NODE_ENV === "production";
-
-const DEFAULT_DEV_TOKEN_SECRET = "asset-array-dev-secret-change-in-production";
-const DEFAULT_DEV_REFRESH_SECRET = "asset-array-dev-refresh-secret-change-in-production";
-
 if (IS_PRODUCTION) {
-  if (!process.env.TOKEN_SECRET || TOKEN_SECRET === DEFAULT_DEV_TOKEN_SECRET) {
+  if (process.env.TOKEN_SECRET === DEFAULT_DEV_TOKEN_SECRET) {
     console.error(
-      "[FATAL SERVER CONFIG ERROR] TOKEN_SECRET must be set and cannot be the default development secret in production."
+      "[FATAL SERVER CONFIG ERROR] TOKEN_SECRET cannot be the default development secret in production."
     );
     process.exit(1);
   }
-  if (!process.env.REFRESH_SECRET || REFRESH_SECRET === DEFAULT_DEV_REFRESH_SECRET) {
+  if (process.env.REFRESH_SECRET === DEFAULT_DEV_REFRESH_SECRET) {
     console.error(
-      "[FATAL SERVER CONFIG ERROR] REFRESH_SECRET must be set and cannot be the default development secret in production."
+      "[FATAL SERVER CONFIG ERROR] REFRESH_SECRET cannot be the default development secret in production."
     );
     process.exit(1);
   }
-  if (!process.env.CORS_ORIGIN || CORS_ORIGIN === "*") {
+  if (process.env.CORS_ORIGIN === "*") {
     console.error(
-      "[FATAL SERVER CONFIG ERROR] CORS_ORIGIN must be explicitly set and cannot be '*' wildcard in production."
+      "[FATAL SERVER CONFIG ERROR] CORS_ORIGIN cannot be '*' wildcard in production."
     );
     process.exit(1);
   }

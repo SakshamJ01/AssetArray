@@ -47,8 +47,7 @@ export const PriorityActionCard: React.FC<PriorityActionCardProps> = ({
         {
           backgroundColor: theme.colors.surface,
           borderColor: isCritical ? theme.colors.danger : theme.colors.border,
-          borderRadius: theme.radius.card || 14,
-          ...theme.shadows.card,
+          borderRadius: 4,
           opacity: isDone ? 0.65 : 1,
         },
       ]}
@@ -308,7 +307,7 @@ const styles = StyleSheet.create({
   pill: {
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 6,
+    borderRadius: 4,
   },
   pillText: {
     fontSize: 10,
@@ -320,7 +319,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 3,
     borderWidth: 1,
-    borderRadius: 6,
+    borderRadius: 4,
     paddingHorizontal: 6,
     paddingVertical: 2,
   },
@@ -332,24 +331,25 @@ const styles = StyleSheet.create({
   scoreValue: {
     fontSize: 11,
     fontWeight: "900",
+    fontVariant: ["tabular-nums"],
   },
   actionTitle: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: "700",
-    lineHeight: 20,
+    lineHeight: 18,
     marginBottom: 4,
   },
   description: {
     fontSize: 12,
-    lineHeight: 17,
-    marginBottom: 10,
+    lineHeight: 16,
+    marginBottom: 8,
   },
   expandToggle: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 4,
     paddingHorizontal: 10,
     paddingVertical: 6,
     marginBottom: 8,
@@ -366,11 +366,11 @@ const styles = StyleSheet.create({
   },
   evidenceSnippet: {
     fontSize: 10,
-    fontFamily: "monospace",
+    fontVariant: ["tabular-nums"],
   },
   evidenceBox: {
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 4,
     padding: 10,
     marginBottom: 10,
   },
@@ -437,7 +437,7 @@ const styles = StyleSheet.create({
     gap: 5,
     paddingHorizontal: 12,
     paddingVertical: 7,
-    borderRadius: 8,
+    borderRadius: 4,
   },
   primaryButtonText: {
     color: "#000000",
@@ -452,7 +452,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: 4,
   },
   secondaryButtonText: {
     fontSize: 11,
@@ -466,6 +466,6 @@ const styles = StyleSheet.create({
   },
   iconAction: {
     padding: 6,
-    borderRadius: 6,
+    borderRadius: 4,
   },
 });

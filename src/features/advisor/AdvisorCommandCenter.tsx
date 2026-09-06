@@ -405,8 +405,7 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
             {
               backgroundColor: theme.colors.surface,
               borderColor: theme.colors.border,
-              borderRadius: theme.radius.card || 14,
-              ...theme.shadows.card,
+              borderRadius: 4,
             },
           ]}
         >
@@ -434,8 +433,7 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
             {
               backgroundColor: theme.colors.surface,
               borderColor: criticalCount > 0 ? theme.colors.danger : theme.colors.border,
-              borderRadius: theme.radius.card || 14,
-              ...theme.shadows.card,
+              borderRadius: 4,
             },
           ]}
         >
@@ -477,8 +475,7 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
             {
               backgroundColor: theme.colors.surface,
               borderColor: theme.colors.border,
-              borderRadius: theme.radius.card || 14,
-              ...theme.shadows.card,
+              borderRadius: 4,
             },
           ]}
         >
@@ -506,8 +503,7 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
             {
               backgroundColor: theme.colors.surface,
               borderColor: theme.colors.border,
-              borderRadius: theme.radius.card || 14,
-              ...theme.shadows.card,
+              borderRadius: 4,
             },
           ]}
         >
@@ -839,7 +835,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 4,
     padding: 10,
     marginBottom: 12,
   },
@@ -850,7 +846,7 @@ const styles = StyleSheet.create({
   },
   executiveHeader: {
     borderWidth: 1,
-    borderRadius: 14,
+    borderRadius: 4,
     padding: 16,
     marginBottom: 14,
   },
@@ -880,7 +876,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 6,
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 4,
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
@@ -908,6 +904,7 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 150,
     borderWidth: 1,
+    borderRadius: 4,
     padding: 14,
     justifyContent: "space-between",
   },
@@ -920,7 +917,7 @@ const styles = StyleSheet.create({
   kpiIconBox: {
     width: 28,
     height: 28,
-    borderRadius: 7,
+    borderRadius: 4,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -934,6 +931,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: -0.5,
     marginBottom: 4,
+    fontVariant: ["tabular-nums"],
   },
   kpiSubtext: {
     fontSize: 11,
@@ -944,7 +942,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
     borderWidth: 1,
-    borderRadius: 10,
+    borderRadius: 4,
     paddingHorizontal: 12,
     paddingVertical: 8,
     marginBottom: 12,
@@ -955,7 +953,7 @@ const styles = StyleSheet.create({
   },
   briefBanner: {
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: 4,
     padding: 14,
     marginBottom: 14,
   },
@@ -1021,14 +1019,14 @@ const styles = StyleSheet.create({
   horizonSwitcher: {
     flexDirection: "row",
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 4,
     padding: 2,
     marginBottom: 6,
   },
   horizonBtn: {
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: 4,
   },
   horizonBtnText: {
     fontSize: 9,
@@ -1036,7 +1034,7 @@ const styles = StyleSheet.create({
   },
   quickActionsDock: {
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: 4,
     padding: 14,
     marginTop: 10,
   },
@@ -1058,7 +1056,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 6,
-    borderRadius: 8,
+    borderRadius: 4,
     paddingVertical: 10,
   },
   dockBtnText: {

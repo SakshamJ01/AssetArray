@@ -39,6 +39,11 @@ export const ScenarioSandboxModal: React.FC<ScenarioSandboxModalProps> = ({
       customEquityShock !== null ? customEquityShock : basePreset.equityShockPct,
   };
 
+  const currentTotalValue = holdings.reduce(
+    (sum, h) => sum + (parseFloat(h.currentValue) || 0),
+    0
+  );
+
   const result = simulateScenario(holdings, activeParams, portfolioName);
   const isPositive = result.percentChange >= 0;
   const changeColor = isPositive ? colors.accent : colors.danger;
@@ -148,32 +153,47 @@ export const ScenarioSandboxModal: React.FC<ScenarioSandboxModalProps> = ({
               })}
             </View>
 
-            {/* Projected Outcome Hero Card */}
+            {/* CURRENT VS SCENARIO SIDE-BY-SIDE (Desktop) / STACK (Mobile) (Rule 53) */}
             <View
               style={[
                 styles.heroCard,
-                { backgroundColor: colors.backgroundMuted, borderColor: colors.border },
+                { backgroundColor: colors.backgroundMuted, borderColor: colors.border, borderRadius: 4 },
               ]}
             >
-              <View style={styles.heroRow}>
-                <View>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12, marginBottom: 14 }}>
+                <View style={{ flex: 1, minWidth: 120 }}>
                   <Text style={[styles.heroLabel, { color: colors.textMuted }]}>
-                    Projected Portfolio NAV
+                    CURRENT NAV
                   </Text>
-                  <Text style={[styles.heroVal, { color: colors.textPrimary }]}>
+                  <Text style={[styles.heroVal, { color: colors.textPrimary, fontSize: 18, fontVariant: ["tabular-nums"] }]}>
+                    ₹{Math.round(currentTotalValue).toLocaleString("en-IN")}
+                  </Text>
+                </View>
+
+                <View style={{ alignItems: "center", paddingHorizontal: 4 }}>
+                  <Ionicons name="arrow-forward" size={16} color={colors.brand} />
+                </View>
+
+                <View style={{ flex: 1, minWidth: 120 }}>
+                  <Text style={[styles.heroLabel, { color: colors.textMuted }]}>
+                    PROJECTED NAV
+                  </Text>
+                  <Text style={[styles.heroVal, { color: colors.textPrimary, fontSize: 18, fontVariant: ["tabular-nums"] }]}>
                     ₹{result.projectedValue.toLocaleString("en-IN")}
                   </Text>
                 </View>
+
                 <View
                   style={[
                     styles.changeBadge,
                     {
                       backgroundColor: isPositive ? colors.accentSoft : colors.dangerSoft,
                       borderColor: changeColor,
+                      borderRadius: 4,
                     },
                   ]}
                 >
-                  <Text style={[styles.changeText, { color: changeColor }]}>
+                  <Text style={[styles.changeText, { color: changeColor, fontVariant: ["tabular-nums"] }]}>
                     {isPositive ? "+" : ""}
                     {result.percentChange}%
                   </Text>
@@ -183,30 +203,15 @@ export const ScenarioSandboxModal: React.FC<ScenarioSandboxModalProps> = ({
               <View style={styles.statsRow}>
                 <View style={styles.statItem}>
                   <Text style={[styles.statLabel, { color: colors.textMuted }]}>
-                    Post-Shock Sharpe
-                  </Text>
-                  <Text style={[styles.statVal, { color: colors.textPrimary }]}>
-                    {result.postShockSharpe}
-                  </Text>
-                </View>
-
-                <View style={styles.statItem}>
-                  <Text style={[styles.statLabel, { color: colors.textMuted }]}>
-                    Implied Volatility
-                  </Text>
-                  <Text style={[styles.statVal, { color: colors.textPrimary }]}>
-                    {result.postShockVolatility}%
-                  </Text>
-                </View>
-
-                <View style={styles.statItem}>
-                  <Text style={[styles.statLabel, { color: colors.textMuted }]}>
-                    Goal Attainment Prob
+                    Goal Attainment
                   </Text>
                   <Text
                     style={[
                       styles.statVal,
                       {
+                        fontSize: 15,
+                        fontWeight: "800",
+                        fontVariant: ["tabular-nums"],
                         color:
                           result.goalSuccessProbability >= 75
                             ? colors.accent
@@ -217,18 +222,37 @@ export const ScenarioSandboxModal: React.FC<ScenarioSandboxModalProps> = ({
                     {result.goalSuccessProbability}%
                   </Text>
                 </View>
+
+                <View style={styles.statItem}>
+                  <Text style={[styles.statLabel, { color: colors.textMuted }]}>
+                    Post-Shock Sharpe
+                  </Text>
+                  <Text style={[styles.statVal, { color: colors.textPrimary, fontVariant: ["tabular-nums"] }]}>
+                    {result.postShockSharpe}
+                  </Text>
+                </View>
+
+                <View style={styles.statItem}>
+                  <Text style={[styles.statLabel, { color: colors.textMuted }]}>
+                    Implied Volatility
+                  </Text>
+                  <Text style={[styles.statVal, { color: colors.textPrimary, fontVariant: ["tabular-nums"] }]}>
+                    {result.postShockVolatility}%
+                  </Text>
+                </View>
               </View>
             </View>
 
-            {/* Distribution Tail Risk Cards */}
+            {/* Distribution Tail Risk Cards (Rule 54) */}
             <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>
-              Simulated Value Distribution Percentiles
+              Monte Carlo Distribution (P10 · P50 · P90)
             </Text>
 
             <View style={styles.distRow}>
               {result.valueDistribution.map((point) => {
-                const isTail = point.percentile === 5;
+                const isTail = point.percentile === 5 || point.percentile === 10;
                 const isMedian = point.percentile === 50;
+                const isBull = point.percentile === 90 || point.percentile === 95;
                 return (
                   <View
                     key={point.percentile}
@@ -241,18 +265,19 @@ export const ScenarioSandboxModal: React.FC<ScenarioSandboxModalProps> = ({
                           ? colors.surfaceStrong
                           : colors.surfaceMuted,
                         borderColor: isTail ? colors.danger : colors.border,
+                        borderRadius: 4,
                       },
                     ]}
                   >
                     <Text
                       style={[
                         styles.distPct,
-                        { color: isTail ? colors.danger : colors.textMuted },
+                        { color: isTail ? colors.danger : isBull ? colors.accent : colors.textMuted },
                       ]}
                     >
-                      P{point.percentile} {isTail ? "(Tail Risk)" : isMedian ? "(Median)" : ""}
+                      P{point.percentile} {isTail ? "(Downside)" : isMedian ? "(Median)" : isBull ? "(Upside)" : ""}
                     </Text>
-                    <Text style={[styles.distVal, { color: colors.textPrimary }]}>
+                    <Text style={[styles.distVal, { color: colors.textPrimary, fontVariant: ["tabular-nums"] }]}>
                       ₹{Math.round(point.value / 1000).toLocaleString("en-IN")}k
                     </Text>
                   </View>
@@ -295,7 +320,7 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 680,
     maxHeight: "90%",
-    borderRadius: 20,
+    borderRadius: 8,
     borderWidth: 1,
     overflow: "hidden",
   },
@@ -303,12 +328,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 18,
+    padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: "rgba(150, 150, 150, 0.15)",
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "800",
   },
   headerSub: {
@@ -320,11 +345,11 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   scrollContent: {
-    padding: 18,
+    padding: 16,
     paddingBottom: 28,
   },
   sectionLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.8,
@@ -340,11 +365,11 @@ const styles = StyleSheet.create({
   presetCard: {
     width: "48.5%",
     padding: 10,
-    borderRadius: 12,
+    borderRadius: 4,
     borderWidth: 1,
   },
   presetName: {
-    fontSize: 12.5,
+    fontSize: 12,
     fontWeight: "700",
     marginBottom: 2,
   },
@@ -360,7 +385,7 @@ const styles = StyleSheet.create({
   stepperBtn: {
     flex: 1,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: 4,
     borderWidth: 1,
     alignItems: "center",
   },
@@ -369,8 +394,8 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   heroCard: {
-    padding: 16,
-    borderRadius: 14,
+    padding: 14,
+    borderRadius: 4,
     borderWidth: 1,
     marginBottom: 16,
   },
@@ -381,22 +406,24 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   heroLabel: {
-    fontSize: 11.5,
-    fontWeight: "600",
+    fontSize: 10,
+    fontWeight: "700",
+    letterSpacing: 0.5,
     marginBottom: 4,
   },
   heroVal: {
-    fontSize: 26,
+    fontSize: 22,
     fontWeight: "800",
+    fontVariant: ["tabular-nums"],
   },
   changeBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 4,
     borderWidth: 1,
   },
   changeText: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: "800",
   },
   statsRow: {
@@ -417,6 +444,7 @@ const styles = StyleSheet.create({
   statVal: {
     fontSize: 14,
     fontWeight: "700",
+    fontVariant: ["tabular-nums"],
   },
   distRow: {
     flexDirection: "row",
@@ -426,7 +454,7 @@ const styles = StyleSheet.create({
   distCard: {
     flex: 1,
     padding: 8,
-    borderRadius: 10,
+    borderRadius: 4,
     borderWidth: 1,
     alignItems: "center",
   },
@@ -438,16 +466,17 @@ const styles = StyleSheet.create({
   distVal: {
     fontSize: 12,
     fontWeight: "700",
+    fontVariant: ["tabular-nums"],
   },
   advisoryBox: {
     flexDirection: "row",
-    padding: 14,
-    borderRadius: 12,
+    padding: 12,
+    borderRadius: 4,
     borderWidth: 1,
     alignItems: "flex-start",
   },
   advisoryTitle: {
-    fontSize: 12.5,
+    fontSize: 12,
     fontWeight: "700",
     marginBottom: 4,
   },

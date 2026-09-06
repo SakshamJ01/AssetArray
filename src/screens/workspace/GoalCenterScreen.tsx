@@ -1,6 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, TextInput, View } from "react-native";
 import { AnimatedPressable as Pressable } from "../../components/AnimatedPressable";
+import { GoalTableWorkstation } from "../../components/goals/GoalTableWorkstation";
 
 type GoalType = "Retirement" | "Education" | "Wealth" | "Emergency";
 type GoalPriority = "Core" | "Growth" | "Optional";
@@ -60,36 +61,50 @@ export function GoalCenterScreen({
   return (
     <View style={styles.panel}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.panelTitle}>Goal center</Text>
+        <Text style={styles.panelTitle}>Goal Center</Text>
         <Pressable onPress={onBack} style={styles.linkButton}>
           <Text style={styles.linkButtonText}>Back</Text>
         </Pressable>
       </View>
       <Text style={styles.panelSubtitle}>
-        Track retirement, education, emergency, and wealth goals in one place.
+        Track retirement, education, emergency, and wealth objectives with funding gap analysis and completion probability.
       </Text>
       <View style={styles.analyticsSummaryRow}>
         <View style={[styles.analyticsMetricCard, styles.analyticsGold]}>
-          <Text style={styles.analyticsMetricLabel}>Target corpus</Text>
-          <Text style={styles.analyticsMetricValue}>
+          <Text style={styles.analyticsMetricLabel}>Target Corpus</Text>
+          <Text style={[styles.analyticsMetricValue, { fontVariant: ["tabular-nums"] }]}>
             {currencyDisplay(`${goalCenterStats.totalTarget}`)}
           </Text>
         </View>
         <View style={[styles.analyticsMetricCard, styles.analyticsBlue]}>
-          <Text style={styles.analyticsMetricLabel}>Current progress</Text>
-          <Text style={styles.analyticsMetricValue}>
+          <Text style={styles.analyticsMetricLabel}>Current Progress</Text>
+          <Text style={[styles.analyticsMetricValue, { fontVariant: ["tabular-nums"] }]}>
             {currencyDisplay(`${goalCenterStats.totalCurrent}`)}
           </Text>
         </View>
         <View style={[styles.analyticsMetricCard, styles.analyticsRed]}>
-          <Text style={styles.analyticsMetricLabel}>Urgent goals</Text>
-          <Text style={styles.analyticsMetricValue}>{goalCenterStats.urgentGoals}</Text>
+          <Text style={styles.analyticsMetricLabel}>Urgent Goals</Text>
+          <Text style={[styles.analyticsMetricValue, { fontVariant: ["tabular-nums"] }]}>{goalCenterStats.urgentGoals}</Text>
         </View>
       </View>
+
+      <View style={{ marginVertical: 16 }}>
+        <Text style={[styles.panelSubtitle, { fontWeight: "700", marginBottom: 8, color: "#f8fafc" }]}>
+          Active Client Goals ({goalCenterStats.rows.length})
+        </Text>
+        <GoalTableWorkstation
+          goals={goalCenterStats.rows}
+          currencyDisplay={currencyDisplay}
+        />
+      </View>
+
+      <Text style={[styles.panelSubtitle, { fontWeight: "700", marginTop: 12, marginBottom: 8, color: "#f8fafc" }]}>
+        Add New Financial Goal
+      </Text>
       <TextInput
         value={goalDraft.title}
         onChangeText={(value) => onUpdateGoalDraft("title", value)}
-        placeholder="Goal name"
+        placeholder="Goal Title (e.g., Retirement 2040)"
         placeholderTextColor="#7f90a8"
         style={styles.input}
       />
@@ -117,7 +132,7 @@ export function GoalCenterScreen({
       <TextInput
         value={goalDraft.targetAmount}
         onChangeText={(value) => onUpdateGoalDraft("targetAmount", value)}
-        placeholder="Target amount"
+        placeholder="Target Amount (INR)"
         placeholderTextColor="#7f90a8"
         keyboardType="decimal-pad"
         style={styles.input}
@@ -125,7 +140,7 @@ export function GoalCenterScreen({
       <TextInput
         value={goalDraft.currentAmount}
         onChangeText={(value) => onUpdateGoalDraft("currentAmount", value)}
-        placeholder="Current amount"
+        placeholder="Current Allocated Amount (INR)"
         placeholderTextColor="#7f90a8"
         keyboardType="decimal-pad"
         style={styles.input}
@@ -133,7 +148,7 @@ export function GoalCenterScreen({
       <TextInput
         value={goalDraft.targetYear}
         onChangeText={(value) => onUpdateGoalDraft("targetYear", value)}
-        placeholder="Target year"
+        placeholder="Target Horizon Year (e.g., 2035)"
         placeholderTextColor="#7f90a8"
         keyboardType="number-pad"
         style={styles.input}
@@ -141,7 +156,7 @@ export function GoalCenterScreen({
       <TextInput
         value={goalDraft.monthlyContribution}
         onChangeText={(value) => onUpdateGoalDraft("monthlyContribution", value)}
-        placeholder="Monthly contribution"
+        placeholder="Planned Monthly SIP (INR)"
         placeholderTextColor="#7f90a8"
         keyboardType="decimal-pad"
         style={styles.input}
@@ -168,39 +183,8 @@ export function GoalCenterScreen({
         })}
       </View>
       <Pressable style={styles.goldButton} onPress={onSaveGoal}>
-        <Text style={styles.goldButtonText}>Add Goal</Text>
+        <Text style={styles.goldButtonText}>Save Goal</Text>
       </Pressable>
-      {goalCenterStats.rows.length === 0 ? (
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyTitle}>No goals added yet</Text>
-          <Text style={styles.emptyText}>
-            Add target-based goals and track funding progress here.
-          </Text>
-        </View>
-      ) : (
-        goalCenterStats.rows.map((goal) => (
-          <View key={goal.id} style={styles.analyticsListCard}>
-            <Text style={styles.clientName}>{goal.title}</Text>
-            <Text style={styles.clientMeta}>
-              {goal.goalType} | {goal.priority} | Target year {goal.targetYear}
-            </Text>
-            <Text style={styles.clientSubMeta}>
-              Current {currencyDisplay(goal.currentAmount)} / Target {currencyDisplay(goal.targetAmount)}
-            </Text>
-            <View style={styles.allocationBarTrack}>
-              <View
-                style={[
-                  styles.allocationBarFill,
-                  { width: `${Math.min(goal.progress, 100)}%` },
-                ]}
-              />
-            </View>
-            <Text style={styles.clientSubMeta}>
-              Progress {goal.progress.toFixed(1)}% | Gap {currencyDisplay(`${goal.gap}`)}
-            </Text>
-          </View>
-        ))
-      )}
     </View>
   );
 }

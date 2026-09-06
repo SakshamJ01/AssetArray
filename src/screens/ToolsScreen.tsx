@@ -17,6 +17,7 @@ import {
   VaultDocumentDraft,
 } from "../types/wealth";
 import { MonteCarloModal } from "../components/modals/MonteCarloModal";
+import { GoalTableWorkstation } from "../components/goals/GoalTableWorkstation";
 
 export interface ToolsScreenProps {
   theme: AppTheme;
@@ -600,32 +601,46 @@ export const ToolsScreen: React.FC<ToolsScreenProps> = React.memo(({
       <View style={styles.dualColumn}>
         <View style={styles.column}>
           <View style={styles.panel}>
-            <Text style={styles.panelTitle}>Goal center</Text>
+            <Text style={styles.panelTitle}>Goal Center</Text>
             <Text style={styles.panelSubtitle}>
-              Retirement, education, emergency, and wealth goals ko track karo with progress visibility.
+              Track retirement, education, emergency, and wealth objectives with funding gap analysis and completion probability.
             </Text>
             <View style={styles.analyticsSummaryRow}>
               <View style={[styles.analyticsMetricCard, styles.analyticsGold]}>
-                <Text style={styles.analyticsMetricLabel}>Target corpus</Text>
-                <Text style={styles.analyticsMetricValue}>
+                <Text style={styles.analyticsMetricLabel}>Target Corpus</Text>
+                <Text style={[styles.analyticsMetricValue, { fontVariant: ["tabular-nums"] }]}>
                   {currencyDisplay(`${goalCenterStats.totalTarget}`)}
                 </Text>
               </View>
               <View style={[styles.analyticsMetricCard, styles.analyticsBlue]}>
-                <Text style={styles.analyticsMetricLabel}>Current progress</Text>
-                <Text style={styles.analyticsMetricValue}>
+                <Text style={styles.analyticsMetricLabel}>Current Progress</Text>
+                <Text style={[styles.analyticsMetricValue, { fontVariant: ["tabular-nums"] }]}>
                   {currencyDisplay(`${goalCenterStats.totalCurrent}`)}
                 </Text>
               </View>
               <View style={[styles.analyticsMetricCard, styles.analyticsRed]}>
-                <Text style={styles.analyticsMetricLabel}>Urgent goals</Text>
-                <Text style={styles.analyticsMetricValue}>{goalCenterStats.urgentGoals}</Text>
+                <Text style={styles.analyticsMetricLabel}>Urgent Goals</Text>
+                <Text style={[styles.analyticsMetricValue, { fontVariant: ["tabular-nums"] }]}>{goalCenterStats.urgentGoals}</Text>
               </View>
             </View>
+
+            <View style={{ marginVertical: 14 }}>
+              <Text style={[styles.panelSubtitle, { fontWeight: "700", marginBottom: 8, color: "#f8fafc" }]}>
+                Goal Overview ({goalCenterStats.rows.length})
+              </Text>
+              <GoalTableWorkstation
+                goals={goalCenterStats.rows}
+                currencyDisplay={currencyDisplay}
+              />
+            </View>
+
+            <Text style={[styles.panelSubtitle, { fontWeight: "700", marginTop: 12, marginBottom: 8, color: "#f8fafc" }]}>
+              Define New Financial Goal
+            </Text>
             <TextInput
               value={goalDraft.title}
               onChangeText={(value) => updateGoalDraft("title", value)}
-              placeholder="Goal name"
+              placeholder="Goal Name (e.g. Higher Education Fund)"
               placeholderTextColor="#7f90a8"
               style={styles.input}
             />
@@ -653,7 +668,7 @@ export const ToolsScreen: React.FC<ToolsScreenProps> = React.memo(({
             <TextInput
               value={goalDraft.targetAmount}
               onChangeText={(value) => updateGoalDraft("targetAmount", value)}
-              placeholder="Target amount"
+              placeholder="Target Amount (INR)"
               placeholderTextColor="#7f90a8"
               keyboardType="decimal-pad"
               style={styles.input}
@@ -661,7 +676,7 @@ export const ToolsScreen: React.FC<ToolsScreenProps> = React.memo(({
             <TextInput
               value={goalDraft.currentAmount}
               onChangeText={(value) => updateGoalDraft("currentAmount", value)}
-              placeholder="Current amount"
+              placeholder="Current Allocated Amount (INR)"
               placeholderTextColor="#7f90a8"
               keyboardType="decimal-pad"
               style={styles.input}
@@ -669,7 +684,7 @@ export const ToolsScreen: React.FC<ToolsScreenProps> = React.memo(({
             <TextInput
               value={goalDraft.targetYear}
               onChangeText={(value) => updateGoalDraft("targetYear", value)}
-              placeholder="Target year"
+              placeholder="Target Horizon Year (e.g. 2032)"
               placeholderTextColor="#7f90a8"
               keyboardType="number-pad"
               style={styles.input}
@@ -677,7 +692,7 @@ export const ToolsScreen: React.FC<ToolsScreenProps> = React.memo(({
             <TextInput
               value={goalDraft.monthlyContribution}
               onChangeText={(value) => updateGoalDraft("monthlyContribution", value)}
-              placeholder="Monthly contribution"
+              placeholder="Planned Monthly SIP (INR)"
               placeholderTextColor="#7f90a8"
               keyboardType="decimal-pad"
               style={styles.input}
@@ -704,39 +719,8 @@ export const ToolsScreen: React.FC<ToolsScreenProps> = React.memo(({
               })}
             </View>
             <Pressable style={styles.goldButton} onPress={saveGoalFromDraft}>
-              <Text style={styles.goldButtonText}>Add Goal</Text>
+              <Text style={styles.goldButtonText}>Save Goal</Text>
             </Pressable>
-            {goalCenterStats.rows.length === 0 ? (
-              <View style={styles.emptyState}>
-                <Text style={styles.emptyTitle}>No goals added yet</Text>
-                <Text style={styles.emptyText}>
-                  Add target-based goals and track funding progress here.
-                </Text>
-              </View>
-            ) : (
-              goalCenterStats.rows.map((goal) => (
-                <View key={goal.id} style={styles.analyticsListCard}>
-                  <Text style={styles.clientName}>{goal.title}</Text>
-                  <Text style={styles.clientMeta}>
-                    {goal.goalType} | {goal.priority} | Target year {goal.targetYear}
-                  </Text>
-                  <Text style={styles.clientSubMeta}>
-                    Current {currencyDisplay(goal.currentAmount)} / Target {currencyDisplay(goal.targetAmount)}
-                  </Text>
-                  <View style={styles.allocationBarTrack}>
-                    <View
-                      style={[
-                        styles.allocationBarFill,
-                        { width: `${Math.min(goal.progress, 100)}%` },
-                      ]}
-                    />
-                  </View>
-                  <Text style={styles.clientSubMeta}>
-                    Progress {goal.progress.toFixed(1)}% | Gap {currencyDisplay(`${goal.gap}`)}
-                  </Text>
-                </View>
-              ))
-            )}
           </View>
         </View>
       </View>

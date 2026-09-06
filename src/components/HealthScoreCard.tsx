@@ -118,7 +118,7 @@ export const HealthScoreCard: React.FC<HealthScoreCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 16,
+    borderRadius: 4,
     borderWidth: 1,
     padding: 16,
     marginBottom: 16,
@@ -140,9 +140,9 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   badge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 4,
     borderWidth: 1,
   },
   badgeText: {
@@ -167,6 +167,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "800",
     lineHeight: 26,
+    fontVariant: ["tabular-nums"],
   },
   scoreLabel: {
     fontSize: 10,
@@ -190,25 +191,26 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 5,
     backgroundColor: "rgba(150, 150, 150, 0.2)",
-    borderRadius: 3,
+    borderRadius: 2,
     marginHorizontal: 8,
     overflow: "hidden",
   },
   barFill: {
     height: "100%",
-    borderRadius: 3,
+    borderRadius: 2,
   },
   factorScore: {
     fontSize: 10,
     fontWeight: "700",
     width: 28,
     textAlign: "right",
+    fontVariant: ["tabular-nums"],
   },
   recommendationBox: {
     flexDirection: "row",
     alignItems: "flex-start",
     padding: 10,
-    borderRadius: 10,
+    borderRadius: 4,
     borderWidth: 1,
     marginTop: 4,
   },

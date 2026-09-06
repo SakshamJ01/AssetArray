@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 680,
     maxHeight: "90%",
-    borderRadius: 20,
+    borderRadius: 8,
     borderWidth: 1,
     overflow: "hidden",
   },
@@ -264,12 +264,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 18,
+    padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: "rgba(150, 150, 150, 0.15)",
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "800",
   },
   headerSub: {
@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   scrollContent: {
-    padding: 18,
+    padding: 16,
     paddingBottom: 28,
   },
   kpiRow: {
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
   },
   kpiCard: {
     flex: 1,
-    borderRadius: 14,
+    borderRadius: 4,
     borderWidth: 1,
     padding: 12,
     alignItems: "center",
@@ -306,6 +306,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "800",
     marginBottom: 2,
+    fontVariant: ["tabular-nums"],
   },
   kpiCardSub: {
     fontSize: 9.5,
@@ -315,7 +316,7 @@ const styles = StyleSheet.create({
   ratesBanner: {
     flexDirection: "row",
     padding: 12,
-    borderRadius: 12,
+    borderRadius: 4,
     borderWidth: 1,
     alignItems: "center",
     marginBottom: 16,
@@ -335,7 +336,7 @@ const styles = StyleSheet.create({
   },
   emptyBox: {
     padding: 24,
-    borderRadius: 12,
+    borderRadius: 4,
     borderWidth: 1,
     alignItems: "center",
     marginBottom: 16,
@@ -352,7 +353,7 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   tableContainer: {
-    borderRadius: 12,
+    borderRadius: 4,
     borderWidth: 1,
     overflow: "hidden",
     marginBottom: 16,
@@ -378,17 +379,19 @@ const styles = StyleSheet.create({
   tdMain: {
     fontSize: 12,
     fontWeight: "600",
+    fontVariant: ["tabular-nums"],
   },
   tdSub: {
     fontSize: 10,
   },
   tdCell: {
     fontSize: 11,
+    fontVariant: ["tabular-nums"],
   },
   washSaleBox: {
     flexDirection: "row",
     padding: 12,
-    borderRadius: 12,
+    borderRadius: 4,
     borderWidth: 1,
     alignItems: "flex-start",
     marginBottom: 14,

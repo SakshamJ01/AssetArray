@@ -80,57 +80,9 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   const allCommands: CommandItem[] = useMemo(() => {
     const list: CommandItem[] = [
       {
-        id: "cmd_ask_wealth_ai",
-        category: "ACTION",
-        title: "Ask Wealth AI Copilot",
-        subtitle: "Launch conversational fiduciary copilot & portfolio diagnostics",
-        icon: "chatbubbles-outline",
-        shortcut: "A",
-        onSelect: () => {
-          onClose();
-          onOpenAiCopilot?.();
-        },
-      },
-      {
-        id: "cmd_ai_brief",
-        category: "ACTION",
-        title: "Run Daily AI Advisor Brief",
-        subtitle: "Deterministic fiduciary briefing for today's market session",
-        icon: "sparkles",
-        shortcut: "B",
-        onSelect: () => {
-          onClose();
-          onOpenAiBrief();
-        },
-      },
-      {
-        id: "cmd_ai_research",
-        category: "ACTION",
-        title: "Launch AI Market Research",
-        subtitle: "Gemini-powered deep stock, sector & client research",
-        icon: "telescope-outline",
-        shortcut: "R",
-        onSelect: () => {
-          onClose();
-          onOpenAiResearch?.();
-        },
-      },
-      {
-        id: "cmd_decision",
-        category: "ACTION",
-        title: "Log Advisor Decision in Journal",
-        subtitle: "Record auditable rationale and follow-up in fiduciary log",
-        icon: "journal-outline",
-        shortcut: "D",
-        onSelect: () => {
-          onClose();
-          onOpenDecisionJournal();
-        },
-      },
-      {
         id: "cmd_portfolios",
         category: "NAVIGATION",
-        title: "Open Portfolio Command Center",
+        title: "Open Portfolio",
         subtitle: "Asset allocation, concentration, and performance attribution",
         icon: "pie-chart-outline",
         shortcut: "P",
@@ -142,7 +94,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       {
         id: "cmd_tax",
         category: "ACTION",
-        title: "Tax Loss Harvesting Center",
+        title: "Open Tax",
         subtitle: "Section 70/74 statutory capital gain offset opportunities",
         icon: "receipt-outline",
         shortcut: "T",
@@ -152,10 +104,74 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         },
       },
       {
+        id: "cmd_ai_research",
+        category: "ACTION",
+        title: "Open Research",
+        subtitle: "Institutional market research & fundamental source citations",
+        icon: "telescope-outline",
+        shortcut: "R",
+        onSelect: () => {
+          onClose();
+          onOpenAiResearch?.();
+        },
+      },
+      {
+        id: "cmd_report",
+        category: "ACTION",
+        title: "Generate Report",
+        subtitle: "Export executive valuation statement and GIPS-informed report",
+        icon: "document-text-outline",
+        shortcut: "E",
+        onSelect: () => {
+          onClose();
+          if (clients.length > 0) {
+            onOpenClient(clients[0].id);
+          } else {
+            onOpenPortfolios();
+          }
+        },
+      },
+      {
+        id: "cmd_task",
+        category: "ACTION",
+        title: "Create Task",
+        subtitle: "Log fiduciary review follow-up in decision journal",
+        icon: "checkbox-outline",
+        shortcut: "K",
+        onSelect: () => {
+          onClose();
+          onOpenDecisionJournal();
+        },
+      },
+      {
+        id: "cmd_ask_wealth_ai",
+        category: "ACTION",
+        title: "Ask Wealth AI Copilot",
+        subtitle: "Conversational advisor intelligence and portfolio diagnostics",
+        icon: "chatbubbles-outline",
+        shortcut: "A",
+        onSelect: () => {
+          onClose();
+          onOpenAiCopilot?.();
+        },
+      },
+      {
+        id: "cmd_ai_brief",
+        category: "ACTION",
+        title: "Run Daily Advisor Brief",
+        subtitle: "Morning executive briefing for today's market session",
+        icon: "sparkles",
+        shortcut: "B",
+        onSelect: () => {
+          onClose();
+          onOpenAiBrief();
+        },
+      },
+      {
         id: "cmd_goals",
         category: "NAVIGATION",
-        title: "Open Milestone & Goal Planner",
-        subtitle: "Track retirement, wealth creation, and education targets",
+        title: "Open Goals Planner",
+        subtitle: "Milestone gap analysis and target funding probability",
         icon: "flag-outline",
         shortcut: "G",
         onSelect: () => {
@@ -166,7 +182,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       {
         id: "cmd_dq",
         category: "ACTION",
-        title: "Open Data Quality & Hygiene Center",
+        title: "Open Data Quality Center",
         subtitle: "Audit portfolio completeness and missing acquisition dates",
         icon: "shield-checkmark-outline",
         onSelect: () => {
@@ -177,8 +193,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       {
         id: "cmd_broadcast",
         category: "ACTION",
-        title: "Launch Client Broadcast Campaign",
-        subtitle: "Secure multi-channel advisory outreach",
+        title: "Launch Client Broadcast",
+        subtitle: "Multi-channel advisory outreach and tax notices",
         icon: "megaphone-outline",
         onSelect: () => {
           onClose();
@@ -316,7 +332,7 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 580,
     maxHeight: 460,
-    borderRadius: 14,
+    borderRadius: 8,
     borderWidth: 1,
     overflow: "hidden",
     shadowColor: "#000",
@@ -370,7 +386,7 @@ const styles = StyleSheet.create({
   iconBox: {
     width: 28,
     height: 28,
-    borderRadius: 6,
+    borderRadius: 4,
     justifyContent: "center",
     alignItems: "center",
   },

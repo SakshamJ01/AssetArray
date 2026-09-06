@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   Image,
   Pressable,
@@ -6,6 +6,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { AppTheme } from "../theme";
 import {
   Category,
@@ -67,6 +68,7 @@ interface ClientRowItemProps {
   formattedDate: string;
   onToggleSelected: (id: string) => void;
   onSelectClient: (id: string) => void;
+  theme: AppTheme;
   styles: any;
 }
 
@@ -80,12 +82,34 @@ const ClientRowItem = React.memo<ClientRowItemProps>(
     formattedDate,
     onToggleSelected,
     onSelectClient,
+    theme,
     styles,
   }) => {
+    const aum = useMemo(() => {
+      return (client.portfolio || []).reduce(
+        (acc, h) => acc + (parseFloat(h.currentValue) || 0),
+        0
+      );
+    }, [client.portfolio]);
+
+    const formattedAum = useMemo(() => {
+      if (aum >= 10_000_000) return `₹${(aum / 10_000_000).toFixed(2)} Cr`;
+      if (aum >= 100_000) return `₹${(aum / 100_000).toFixed(2)} L`;
+      if (aum > 0) return `₹${Math.round(aum).toLocaleString("en-IN")}`;
+      return "₹0";
+    }, [aum]);
+
+    const healthScore = useMemo(() => {
+      const base = 78;
+      const countBonus = Math.min(10, (client.portfolio?.length || 0) * 2);
+      const duePenalty = isDue ? 14 : 0;
+      return Math.min(96, Math.max(52, base + countBonus - duePenalty));
+    }, [client.portfolio, isDue]);
+
     return (
-      <View style={styles.clientRowShell}>
+      <View style={[styles.clientRowShell, { marginBottom: 6 }]}>
         <Pressable
-          style={[styles.selectorPill, selected ? styles.selectorPillActive : null]}
+          style={[styles.selectorPill, selected ? styles.selectorPillActive : null, { borderRadius: 4 }]}
           onPress={() => onToggleSelected(client.id)}
         >
           <Text
@@ -94,31 +118,62 @@ const ClientRowItem = React.memo<ClientRowItemProps>(
               selected ? styles.selectorPillTextActive : null,
             ]}
           >
-            {selected ? "Selected" : "Select"}
+            {selected ? "✓" : "○"}
           </Text>
         </Pressable>
         <Pressable
-          style={[styles.clientRow, active ? styles.clientRowActive : null]}
+          style={[
+            styles.clientRow,
+            active ? styles.clientRowActive : null,
+            {
+              borderRadius: 4,
+              borderWidth: 1,
+              borderColor: active ? theme.colors.brand : theme.colors.border,
+              paddingVertical: 10,
+              paddingHorizontal: 12,
+            },
+          ]}
           onPress={() => onSelectClient(client.id)}
         >
           <View style={{ flexDirection: "row", alignItems: "center", gap: 10, flex: 1 }}>
             <Image
               source={{ uri: avatarUri }}
-              style={styles.clientListAvatar}
+              style={[styles.clientListAvatar, { borderRadius: 4, width: 34, height: 34 }]}
             />
-            <View style={styles.clientRowMain}>
-              <Text style={styles.clientName}>{client.name}</Text>
-              <Text style={styles.clientMeta}>
-                {client.category} | {client.priority} | {client.preferredChannel}
-              </Text>
-              <Text style={styles.clientSubMeta}>
-                Follow-up: {formattedDate}
-              </Text>
+            <View style={[styles.clientRowMain, { flex: 1 }]}>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 4 }}>
+                <Text style={[styles.clientName, { fontSize: 13, fontWeight: "700", color: theme.colors.textPrimary }]}>
+                  {client.name}
+                </Text>
+                <Text style={{ fontSize: 12, fontWeight: "800", color: theme.colors.brand, fontVariant: ["tabular-nums"] }}>
+                  {formattedAum}
+                </Text>
+              </View>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 3, flexWrap: "wrap" }}>
+                <View style={{ paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4, backgroundColor: theme.colors.surfaceStrong, borderWidth: 1, borderColor: theme.colors.border }}>
+                  <Text style={{ fontSize: 9, fontWeight: "700", color: theme.colors.textSecondary }}>
+                    {client.category || "HNI"}
+                  </Text>
+                </View>
+                <View style={{ paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4, backgroundColor: theme.colors.surfaceStrong, borderWidth: 1, borderColor: theme.colors.border }}>
+                  <Text style={{ fontSize: 9, fontWeight: "700", color: theme.colors.textMuted }}>
+                    {client.riskProfile || "Moderate"}
+                  </Text>
+                </View>
+                <View style={{ paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4, backgroundColor: healthScore >= 75 ? "rgba(16, 185, 129, 0.12)" : "rgba(245, 158, 11, 0.12)", borderWidth: 1, borderColor: healthScore >= 75 ? "#10B981" : "#F59E0B" }}>
+                  <Text style={{ fontSize: 9, fontWeight: "800", color: healthScore >= 75 ? "#10B981" : "#F59E0B", fontVariant: ["tabular-nums"] }}>
+                    H:{healthScore}
+                  </Text>
+                </View>
+                <Text style={{ fontSize: 10, color: theme.colors.textMuted, marginLeft: "auto" }}>
+                  Review: {formattedDate}
+                </Text>
+              </View>
             </View>
           </View>
           {isDue ? (
-            <View style={styles.dueBadge}>
-              <Text style={styles.dueBadgeText}>Due</Text>
+            <View style={[styles.dueBadge, { borderRadius: 4, backgroundColor: "rgba(239, 68, 68, 0.15)", borderWidth: 1, borderColor: "#EF4444" }]}>
+              <Text style={[styles.dueBadgeText, { color: "#EF4444", fontWeight: "800", fontSize: 10 }]}>Due</Text>
             </View>
           ) : null}
         </Pressable>
@@ -166,6 +221,7 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
   styles,
 }) => {
   const [localSearch, setLocalSearch] = React.useState(searchQuery);
+  const [isFilterExpanded, setIsFilterExpanded] = React.useState(false);
   const [showImportModal, setShowImportModal] = React.useState(false);
   const [showPortalModal, setShowPortalModal] = React.useState(false);
 
@@ -182,92 +238,225 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
     return () => clearTimeout(timer);
   }, [localSearch, searchQuery, setSearchQuery]);
 
+  const hasActiveFilters = categoryFilter !== "All" || filterMode !== "All";
+
   return (
     <>
-      {/* Search and Filters */}
-      <View style={styles.panel}>
-        <Text style={styles.panelTitle}>Search and filters</Text>
-        <TextInput
-          value={localSearch}
-          onChangeText={setLocalSearch}
-          placeholder="Search by name, email, phone, city, or risk profile"
-          placeholderTextColor="#7f90a8"
-          style={styles.input}
-        />
-        <Text style={styles.inputLabel}>Client category</Text>
-        <View style={styles.optionRow}>
-          {CATEGORY_FILTER_OPTIONS.map((category) => {
-            const active = categoryFilter === category;
-            return (
-              <Pressable
-                key={category}
-                style={[styles.optionChip, active ? styles.optionChipActive : null]}
-                onPress={() => setCategoryFilter(category)}
-              >
-                <Text
-                  style={[
-                    styles.optionChipText,
-                    active ? styles.optionChipTextActive : null,
-                  ]}
-                >
-                  {category}
-                </Text>
-              </Pressable>
-            );
-          })}
+      {/* Search and Compact Filters Bar */}
+      <View style={[styles.panel, { borderRadius: 4, borderWidth: 1, padding: 12, marginBottom: 10 }]}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <View style={{ flex: 1 }}>
+            <TextInput
+              value={localSearch}
+              onChangeText={setLocalSearch}
+              placeholder="Search name, email, phone, city, risk, category..."
+              placeholderTextColor="#7f90a8"
+              style={[styles.input, { borderRadius: 4, height: 38, marginBottom: 0 }]}
+            />
+          </View>
+          <Pressable
+            onPress={() => setIsFilterExpanded(!isFilterExpanded)}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 5,
+              paddingHorizontal: 12,
+              paddingVertical: 9,
+              borderRadius: 4,
+              backgroundColor: hasActiveFilters ? theme.colors.brand : theme.colors.surfaceMuted,
+              borderWidth: 1,
+              borderColor: theme.colors.border,
+            }}
+          >
+            <Ionicons
+              name="filter-outline"
+              size={14}
+              color={hasActiveFilters ? "#050914" : theme.colors.textPrimary}
+            />
+            <Text
+              style={{
+                fontSize: 12,
+                fontWeight: "700",
+                color: hasActiveFilters ? "#050914" : theme.colors.textPrimary,
+              }}
+            >
+              Filter{hasActiveFilters ? " (Active)" : ""}
+            </Text>
+            <Ionicons
+              name={isFilterExpanded ? "chevron-up" : "chevron-down"}
+              size={13}
+              color={hasActiveFilters ? "#050914" : theme.colors.textMuted}
+            />
+          </Pressable>
         </View>
-        <Text style={styles.inputLabel}>Focus mode</Text>
-        <View style={styles.optionRow}>
-          {(["All", "Due", "High Priority"] as const).map((mode) => {
-            const active = filterMode === mode;
-            return (
+
+        {/* Active Filters Summary Indicators */}
+        {hasActiveFilters && !isFilterExpanded && (
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
+            <Text style={{ fontSize: 11, color: theme.colors.textMuted }}>Active filters:</Text>
+            {categoryFilter !== "All" && (
               <Pressable
-                key={mode}
-                style={[styles.optionChip, active ? styles.optionChipActive : null]}
-                onPress={() => setFilterMode(mode)}
+                onPress={() => setCategoryFilter("All")}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 4,
+                  paddingHorizontal: 6,
+                  paddingVertical: 2,
+                  borderRadius: 4,
+                  backgroundColor: theme.colors.surfaceStrong,
+                  borderWidth: 1,
+                  borderColor: theme.colors.border,
+                }}
               >
-                <Text
-                  style={[
-                    styles.optionChipText,
-                    active ? styles.optionChipTextActive : null,
-                  ]}
-                >
-                  {mode}
-                </Text>
+                <Text style={{ fontSize: 11, color: theme.colors.textPrimary }}>Category: {categoryFilter}</Text>
+                <Ionicons name="close" size={12} color={theme.colors.textMuted} />
               </Pressable>
-            );
-          })}
-        </View>
+            )}
+            {filterMode !== "All" && (
+              <Pressable
+                onPress={() => setFilterMode("All")}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 4,
+                  paddingHorizontal: 6,
+                  paddingVertical: 2,
+                  borderRadius: 4,
+                  backgroundColor: theme.colors.surfaceStrong,
+                  borderWidth: 1,
+                  borderColor: theme.colors.border,
+                }}
+              >
+                <Text style={{ fontSize: 11, color: theme.colors.textPrimary }}>Focus: {filterMode}</Text>
+                <Ionicons name="close" size={12} color={theme.colors.textMuted} />
+              </Pressable>
+            )}
+            <Pressable
+              onPress={() => {
+                setCategoryFilter("All");
+                setFilterMode("All");
+              }}
+            >
+              <Text style={{ fontSize: 11, color: theme.colors.brand, fontWeight: "600", marginLeft: 4 }}>Reset All</Text>
+            </Pressable>
+          </View>
+        )}
+
+        {/* Collapsible Filter Drawer */}
+        {isFilterExpanded && (
+          <View style={{ marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: theme.colors.border }}>
+            <Text style={[styles.inputLabel, { marginBottom: 6, fontSize: 10, fontWeight: "700", color: theme.colors.textMuted }]}>
+              CLIENT CATEGORY
+            </Text>
+            <View style={[styles.optionRow, { marginBottom: 8 }]}>
+              {CATEGORY_FILTER_OPTIONS.map((category) => {
+                const active = categoryFilter === category;
+                return (
+                  <Pressable
+                    key={category}
+                    style={[styles.optionChip, active ? styles.optionChipActive : null, { borderRadius: 4 }]}
+                    onPress={() => setCategoryFilter(category)}
+                  >
+                    <Text
+                      style={[
+                        styles.optionChipText,
+                        active ? styles.optionChipTextActive : null,
+                      ]}
+                    >
+                      {category}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            <Text style={[styles.inputLabel, { marginBottom: 6, fontSize: 10, fontWeight: "700", color: theme.colors.textMuted }]}>
+              FOCUS MODE
+            </Text>
+            <View style={styles.optionRow}>
+              {(["All", "Due", "High Priority"] as const).map((mode) => {
+                const active = filterMode === mode;
+                return (
+                  <Pressable
+                    key={mode}
+                    style={[styles.optionChip, active ? styles.optionChipActive : null, { borderRadius: 4 }]}
+                    onPress={() => setFilterMode(mode)}
+                  >
+                    <Text
+                      style={[
+                        styles.optionChipText,
+                        active ? styles.optionChipTextActive : null,
+                      ]}
+                    >
+                      {mode}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+        )}
       </View>
 
-      {/* Broadcast Strip */}
-      <View style={styles.broadcastStrip}>
-        <Text style={styles.broadcastStripText}>
-          {selectedClientIds.length} client{selectedClientIds.length === 1 ? "" : "s"} selected for bulk campaign.
-        </Text>
-        <View style={styles.inlineActions}>
-          <Pressable style={styles.linkButton} onPress={selectAllVisibleClients}>
-            <Text style={styles.linkButtonText}>Select Visible</Text>
-          </Pressable>
-          <Pressable style={styles.linkButton} onPress={clearSelectedClients}>
-            <Text style={styles.linkButtonText}>Clear</Text>
-          </Pressable>
-          <Pressable
-            style={styles.linkButton}
-            onPress={() => setIsBroadcastModalOpen(true)}
-          >
-            <Text style={styles.linkButtonText}>Send Bulk Update</Text>
-          </Pressable>
+      {/* Contextual Action Bar (Only occupies space when clients are selected) */}
+      {selectedClientIds.length > 0 && (
+        <View
+          style={[
+            styles.broadcastStrip,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.brand,
+              borderWidth: 1,
+              borderRadius: 4,
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+              marginBottom: 10,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 8,
+            },
+          ]}
+        >
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: theme.colors.brand }} />
+            <Text style={[styles.broadcastStripText, { color: theme.colors.textPrimary, fontWeight: "700", fontSize: 12 }]}>
+              {selectedClientIds.length} client{selectedClientIds.length === 1 ? "" : "s"} selected
+            </Text>
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <Pressable
+              style={[styles.linkButton, { backgroundColor: theme.colors.brand, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4 }]}
+              onPress={() => setIsBroadcastModalOpen(true)}
+            >
+              <Text style={[styles.linkButtonText, { color: "#050914", fontWeight: "800", fontSize: 11 }]}>
+                ✉ Message
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[styles.linkButton, { backgroundColor: theme.colors.surfaceMuted, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, borderWidth: 1, borderColor: theme.colors.border }]}
+              onPress={selectAllVisibleClients}
+            >
+              <Text style={[styles.linkButtonText, { color: theme.colors.textPrimary, fontSize: 11 }]}>Select Visible</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.linkButton, { backgroundColor: theme.colors.surfaceMuted, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, borderWidth: 1, borderColor: theme.colors.border }]}
+              onPress={clearSelectedClients}
+            >
+              <Text style={[styles.linkButtonText, { color: theme.colors.textMuted, fontSize: 11 }]}>Clear</Text>
+            </Pressable>
+          </View>
         </View>
-      </View>
+      )}
 
       {/* Main Dual Column: Roster & Details */}
       <View style={[styles.dualColumn, isDesktop && { flexDirection: "row", alignItems: "flex-start" }]}>
         {/* Left Column: Client List */}
         <View style={styles.column}>
-          <View style={styles.panel}>
-            <Text style={styles.panelTitle}>Client list</Text>
-            <Text style={styles.panelSubtitle}>
+          <View style={[styles.panel, { borderRadius: 4, borderWidth: 1 }]}>
+            <Text style={styles.panelTitle}>Client roster</Text>
+            <Text style={[styles.panelSubtitle, { marginBottom: 10 }]}>
               {filteredClients.length} visible client{filteredClients.length === 1 ? "" : "s"} in this view.
             </Text>
             {filteredClients.length === 0 ? (
@@ -277,7 +466,7 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
                   Adjust your filters, add a client, or load the institutional showcase portfolio.
                 </Text>
                 <Pressable
-                  style={[styles.primaryButton, { marginTop: 14, backgroundColor: theme.colors.brand }]}
+                  style={[styles.primaryButton, { marginTop: 14, backgroundColor: theme.colors.brand, borderRadius: 4 }]}
                   onPress={() => void seedDemoClients()}
                 >
                   <Text style={[styles.primaryButtonText, { color: "#050914", fontWeight: "800" }]}>
@@ -297,6 +486,7 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
                   formattedDate={formatReminderDate(client.reminderDate)}
                   onToggleSelected={toggleSelectedClient}
                   onSelectClient={setSelectedClientId}
+                  theme={theme}
                   styles={styles}
                 />
               ))

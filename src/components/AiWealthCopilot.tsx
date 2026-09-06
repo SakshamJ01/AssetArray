@@ -39,24 +39,34 @@ export interface AiWealthCopilotProps {
 
 const QUICK_PROMPTS = [
   {
-    id: "concentration",
-    label: "⚡ Concentration Risk Diagnostic",
-    prompt: "Perform an institutional concentration risk audit across our client assets.",
+    id: "summarize_client",
+    label: "Summarize this client",
+    prompt: "Provide an executive summary of this client's portfolio, asset allocation, and current wealth status.",
   },
   {
-    id: "rebalance_memo",
-    label: "📝 Client Rebalancing Memo",
-    prompt: "Draft an executive rebalancing memo for our private wealth client.",
+    id: "explain_risk",
+    label: "Explain this risk",
+    prompt: "Explain the primary risk factors, volatility metrics, and downside drawdowns affecting this portfolio.",
+  },
+  {
+    id: "meeting_notes",
+    label: "Prepare meeting notes",
+    prompt: "Prepare comprehensive client review meeting talking points covering YTD returns, allocation drifts, and recommended actions.",
+  },
+  {
+    id: "why_changed",
+    label: "Why did this change?",
+    prompt: "Explain recent asset movements, benchmark divergence, and what changed in the client holdings.",
+  },
+  {
+    id: "research_holding",
+    label: "Research this holding",
+    prompt: "Provide an institutional research brief and risk review for the largest portfolio holding.",
   },
   {
     id: "tax_shield",
-    label: "🛡️ Tax Loss Harvesting & Impact Summary",
-    prompt: "What is the tax-loss harvesting potential across active holdings?",
-  },
-  {
-    id: "macro_rates",
-    label: "🌐 Macro Outlook & Rate Trajectory",
-    prompt: "Provide an institutional macro commentary on RBI and Fed interest rate policy.",
+    label: "Review tax opportunity",
+    prompt: "Assess tax-loss harvesting potential under Section 70/74 and estimated tax shield across active lots.",
   },
 ];
 
@@ -154,18 +164,17 @@ export const AiWealthCopilot: React.FC<AiWealthCopilotProps> = ({
       onStateChange: (state, msg) => {
         setStreamState(state);
         if (state === "CONNECTING") {
-          setStreamStatusText("AI Connecting…");
+          setStreamStatusText("Connecting…");
         } else if (state === "STREAMING") {
-          setStreamStatusText("AI Generating…");
+          setStreamStatusText("Generating…");
         } else if (state === "RETRYING") {
-          setStreamStatusText("AI Retrying with alternate model…");
+          setStreamStatusText("Thinking…");
         } else if (state === "UNAVAILABLE") {
-          setStreamStatusText("AI unavailable · Verified portfolio data remains available.");
+          setStreamStatusText("AI unavailable");
         } else if (state === "FAILED") {
-          setStreamStatusText(`AI failed · ${msg || "Service offline"}`);
+          setStreamStatusText("AI unavailable");
         } else if (state === "COMPLETED") {
-          const durationSec = ((Date.now() - requestStartTime) / 1000).toFixed(1);
-          setStreamStatusText(`AI Complete · ${durationSec}s`);
+          setStreamStatusText("Complete");
         }
       },
       onToken: (token) => {
@@ -313,6 +322,17 @@ export const AiWealthCopilot: React.FC<AiWealthCopilotProps> = ({
                     >
                       {streamStatusText}
                     </Text>
+                    {(streamState === "UNAVAILABLE" || streamState === "FAILED") && (
+                      <Pressable
+                        onPress={() => {
+                          const lastUser = [...messages].reverse().find((m) => m.sender === "user");
+                          handleSend(lastUser?.text || "Summarize this client");
+                        }}
+                        style={styles.retryBadge}
+                      >
+                        <Text style={styles.retryBadgeText}>Retry</Text>
+                      </Pressable>
+                    )}
                   </View>
                 </View>
               </View>
@@ -624,19 +644,19 @@ const styles = StyleSheet.create({
     maxWidth: 540,
     height: "85%",
     maxHeight: 720,
-    borderRadius: 20,
-    borderWidth: 1.5,
+    borderRadius: 12,
+    borderWidth: 1,
     overflow: "hidden",
     shadowColor: "#000",
-    shadowOpacity: 0.5,
-    shadowRadius: 28,
-    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 4 },
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 16,
+    padding: 14,
     borderBottomWidth: 1,
   },
   headerLeft: {
@@ -645,20 +665,20 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   monogramBadge: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
+    width: 36,
+    height: 36,
+    borderRadius: 4,
     borderWidth: 1,
     justifyContent: "center",
     alignItems: "center",
   },
   monogramText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "900",
   },
   copilotTitle: {
-    fontSize: 15,
-    fontWeight: "800",
+    fontSize: 14,
+    fontWeight: "700",
   },
   statusRow: {
     flexDirection: "row",
@@ -673,32 +693,46 @@ const styles = StyleSheet.create({
     backgroundColor: "#10B981",
   },
   statusText: {
-    fontSize: 9,
+    fontSize: 10,
     color: "#10B981",
-    fontWeight: "800",
-    letterSpacing: 0.6,
+    fontWeight: "700",
+    letterSpacing: 0.4,
+  },
+  retryBadge: {
+    marginLeft: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    backgroundColor: "rgba(239, 68, 68, 0.15)",
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: "rgba(239, 68, 68, 0.4)",
+  },
+  retryBadgeText: {
+    fontSize: 10,
+    color: "#EF4444",
+    fontWeight: "700",
   },
   closeBtn: {
-    padding: 8,
-    borderRadius: 8,
+    padding: 6,
+    borderRadius: 4,
   },
   closeBtnText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "700",
   },
   chipsContainer: {
-    paddingVertical: 10,
+    paddingVertical: 8,
     borderBottomWidth: 1,
   },
   promptChip: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 16,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 4,
     borderWidth: 1,
   },
   promptChipText: {
     fontSize: 11,
-    fontWeight: "700",
+    fontWeight: "600",
   },
   messagesScroll: {
     flex: 1,
@@ -714,19 +748,19 @@ const styles = StyleSheet.create({
   },
   messageBubble: {
     maxWidth: "85%",
-    padding: 14,
-    borderRadius: 14,
+    padding: 12,
+    borderRadius: 8,
   },
   aiBubble: {
     borderWidth: 1,
-    borderTopLeftRadius: 4,
+    borderTopLeftRadius: 0,
   },
   userBubble: {
-    borderTopRightRadius: 4,
+    borderTopRightRadius: 0,
   },
   messageText: {
     fontSize: 13,
-    lineHeight: 20,
+    lineHeight: 19,
   },
   aiText: {},
   userText: {
@@ -735,7 +769,7 @@ const styles = StyleSheet.create({
   },
   messageTimestamp: {
     fontSize: 9,
-    marginTop: 6,
+    marginTop: 4,
     alignSelf: "flex-end",
   },
   aiTimestamp: {
@@ -746,29 +780,29 @@ const styles = StyleSheet.create({
   },
   inputBar: {
     flexDirection: "row",
-    padding: 12,
-    gap: 10,
+    padding: 10,
+    gap: 8,
     borderTopWidth: 1,
     alignItems: "center",
   },
   input: {
     flex: 1,
     borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    borderRadius: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     fontSize: 13,
   },
   sendBtn: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 4,
     justifyContent: "center",
     alignItems: "center",
   },
   sendBtnText: {
     color: "#030712",
-    fontSize: 13,
-    fontWeight: "800",
+    fontSize: 12,
+    fontWeight: "700",
   },
 });

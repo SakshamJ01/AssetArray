@@ -1,5 +1,5 @@
 {
-  "executedAt": "2026-09-06T08:12:25.093Z",
+  "executedAt": "2026-09-06T09:35:16.567Z",
   "environment": "mobile-device-emulation",
   "devicesTested": [
     "iPhone 13 (390x844)",
@@ -29,17 +29,7 @@
     },
     {
       "device": "iPhone 13",
-      "screen": "Tools",
-      "hasZeroHorizontalOverflow": true
-    },
-    {
-      "device": "iPhone 13",
       "screen": "AI Research",
-      "hasZeroHorizontalOverflow": true
-    },
-    {
-      "device": "iPhone 13",
-      "screen": "Settings",
       "hasZeroHorizontalOverflow": true
     },
     {
@@ -64,73 +54,25 @@
     },
     {
       "device": "Pixel 7",
-      "screen": "Tools",
-      "hasZeroHorizontalOverflow": true
-    },
-    {
-      "device": "Pixel 7",
       "screen": "AI Research",
-      "hasZeroHorizontalOverflow": true
-    },
-    {
-      "device": "Pixel 7",
-      "screen": "Settings",
       "hasZeroHorizontalOverflow": true
     }
   ],
   "touchTargetAudits": [
     {
       "device": "iPhone 13",
-      "totalInteractive": 3,
-      "smallTargets": [
-        {
-          "tag": "INPUT",
-          "text": "",
-          "width": 40,
-          "height": 20
-        },
-        {
-          "tag": "INPUT",
-          "text": "",
-          "width": 40,
-          "height": 20
-        },
-        {
-          "tag": "INPUT",
-          "text": "",
-          "width": 40,
-          "height": 20
-        }
-      ]
+      "totalInteractive": 1,
+      "smallTargets": []
     },
     {
       "device": "Pixel 7",
-      "totalInteractive": 3,
-      "smallTargets": [
-        {
-          "tag": "INPUT",
-          "text": "",
-          "width": 40,
-          "height": 20
-        },
-        {
-          "tag": "INPUT",
-          "text": "",
-          "width": 40,
-          "height": 20
-        },
-        {
-          "tag": "INPUT",
-          "text": "",
-          "width": 40,
-          "height": 20
-        }
-      ]
+      "totalInteractive": 1,
+      "smallTargets": []
     }
   ],
   "summary": {
-    "totalScreens": 14,
-    "passedScreens": 14,
+    "totalScreens": 10,
+    "passedScreens": 10,
     "failedScreens": 0,
     "horizontalOverflowViolations": 0
   }

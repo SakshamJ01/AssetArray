@@ -339,6 +339,42 @@ export const AiWealthCopilot: React.FC<AiWealthCopilotProps> = ({
               </Pressable>
             </View>
 
+            {/* Trust & Provenance Context Strip */}
+            <View
+              style={{
+                backgroundColor: isDark ? "rgba(14, 23, 44, 0.85)" : "#F1F5F9",
+                borderBottomWidth: 1,
+                borderBottomColor: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(15, 23, 42, 0.08)",
+                paddingHorizontal: 16,
+                paddingVertical: 6,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 10,
+                  fontWeight: "700",
+                  color: brandColor,
+                  textTransform: "uppercase",
+                  letterSpacing: 0.6,
+                }}
+              >
+                CONTEXT
+              </Text>
+              <Text
+                numberOfLines={1}
+                style={{
+                  fontSize: 11,
+                  color: isDark ? "#94A3B8" : "#64748B",
+                  flex: 1,
+                }}
+              >
+                Using: {clientContext?.clientName || "Executive Wealth Overview"}{clientContext?.riskProfile ? ` · ${clientContext.riskProfile}` : ""} · As of {new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+              </Text>
+            </View>
+
             {/* Quick Prompt Chips */}
             <View
               style={[

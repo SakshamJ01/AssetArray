@@ -19,6 +19,8 @@ import {
   snapshotStore,
 } from "../../services/clientInsights";
 import { AssetAllocationBar } from "../AssetAllocationBar";
+import { HoldingsTableWorkstation } from "../holdings/HoldingsTableWorkstation";
+import { GoalTableWorkstation } from "../goals/GoalTableWorkstation";
 import {
   CurrencyCode,
   formatWealthAmount,
@@ -55,6 +57,8 @@ export const Client360Workspace: React.FC<Client360WorkspaceProps> = ({
   onDeleteClient,
   onContactClient,
 }) => {
+  type Client360Tab = "ALL" | "PORTFOLIO" | "RISK" | "GOALS" | "TAX" | "INSIGHTS" | "ACTIVITY";
+  const [activeSubTab, setActiveSubTab] = useState<Client360Tab>("ALL");
   const [insights, setInsights] = useState<ClientInsight[]>([]);
   const [loadingInsights, setLoadingInsights] = useState(false);
   const [selectedExplanation, setSelectedExplanation] = useState<{
@@ -208,6 +212,41 @@ export const Client360Workspace: React.FC<Client360WorkspaceProps> = ({
             </Text>
           </Pressable>
         </View>
+
+        {/* Contextual Sub-Navigation */}
+        <View style={workspaceStyles.subNavBar}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingVertical: 2 }}>
+            {(
+              [
+                { key: "ALL" as const, label: "Overview" },
+                { key: "PORTFOLIO" as const, label: "Holdings Workstation" },
+                { key: "RISK" as const, label: "Risk & Health" },
+                { key: "GOALS" as const, label: "Goals" },
+                { key: "TAX" as const, label: "Tax Harvesting" },
+                { key: "INSIGHTS" as const, label: "Insights" },
+                { key: "ACTIVITY" as const, label: "Activity" },
+              ]
+            ).map((t) => (
+              <Pressable
+                key={t.key}
+                onPress={() => setActiveSubTab(t.key)}
+                style={[
+                  workspaceStyles.subTabBtn,
+                  activeSubTab === t.key && workspaceStyles.subTabBtnActive,
+                ]}
+              >
+                <Text
+                  style={[
+                    workspaceStyles.subTabBtnText,
+                    activeSubTab === t.key && workspaceStyles.subTabBtnTextActive,
+                  ]}
+                >
+                  {t.label}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+        </View>
       </View>
 
       <View style={workspaceStyles.divider} />
@@ -270,245 +309,188 @@ export const Client360Workspace: React.FC<Client360WorkspaceProps> = ({
           </View>
         </View>
 
-        {/* Asset Allocation Bar */}
-        <View style={{ marginTop: 12, marginBottom: 12 }}>
-          <Text style={[workspaceStyles.tableHeaderLabel, { marginBottom: 6 }]}>
-            TARGET VS CURRENT ALLOCATION
-          </Text>
-          <AssetAllocationBar allocationString={client.allocation} theme={theme} />
-        </View>
-
-        {/* Table-First Financial UI: Holdings Table */}
-        <View style={workspaceStyles.tableContainer}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={true}>
-            <View style={{ minWidth: 640, width: "100%" }}>
-              <View style={workspaceStyles.tableHeaderRow}>
-                <Text style={[workspaceStyles.tableHeaderLabel, { flex: 2 }]}>ASSET</Text>
-                <Text style={[workspaceStyles.tableHeaderLabel, { flex: 1, textAlign: "right" }]}>QTY</Text>
-                <Text style={[workspaceStyles.tableHeaderLabel, { flex: 1.2, textAlign: "right" }]}>PRICE</Text>
-                <Text style={[workspaceStyles.tableHeaderLabel, { flex: 1.5, textAlign: "right" }]}>VALUE</Text>
-                <Text style={[workspaceStyles.tableHeaderLabel, { flex: 1, textAlign: "right" }]}>WEIGHT</Text>
-                <Text style={[workspaceStyles.tableHeaderLabel, { flex: 1.2, textAlign: "right" }]}>P&L</Text>
-                <Text style={[workspaceStyles.tableHeaderLabel, { flex: 1, textAlign: "right" }]}>DRIFT</Text>
-              </View>
-
-              {holdings.length === 0 ? (
-                <View style={workspaceStyles.emptyRow}>
-                  <Text style={workspaceStyles.emptyRowText}>
-                    No holdings currently recorded for this portfolio. Use "Import Statement" to load verified positions.
-                  </Text>
-                </View>
-              ) : (
-                holdings.map((h, idx) => {
-                  const curVal = parseFloat(h.currentValue) || 0;
-                  const invVal = parseFloat(h.investedValue) || 0;
-                  const weight = totalCurrent > 0 ? (curVal / totalCurrent) * 100 : 0;
-                  const targetW = parseFloat(h.targetWeight) || weight;
-                  const drift = weight - targetW;
-                  const pl = curVal - invVal;
-                  const plPct = invVal > 0 ? (pl / invVal) * 100 : 0;
-                  const qty = parseFloat(h.quantity) || 1;
-                  const price = qty > 0 ? curVal / qty : 0;
-
-                  return (
-                    <View key={h.id || idx} style={workspaceStyles.tableRow}>
-                      <View style={{ flex: 2 }}>
-                        <Text style={workspaceStyles.tableCellPrimary}>{h.assetName}</Text>
-                        <Text style={workspaceStyles.tableCellMeta}>
-                          {h.ticker || h.assetClass} · {h.assetClass}
-                        </Text>
-                      </View>
-                      <Text style={[workspaceStyles.tableCell, { flex: 1, textAlign: "right" }]}>
-                        {qty.toLocaleString()}
-                      </Text>
-                      <Text style={[workspaceStyles.tableCell, { flex: 1.2, textAlign: "right" }]}>
-                        {formatCurrency(price, false)}
-                      </Text>
-                      <Text style={[workspaceStyles.tableCellPrimary, { flex: 1.5, textAlign: "right" }]}>
-                        {formatCurrency(curVal)}
-                      </Text>
-                      <Text style={[workspaceStyles.tableCell, { flex: 1, textAlign: "right" }]}>
-                        {weight.toFixed(1)}%
-                      </Text>
-                      <View style={{ flex: 1.2, alignItems: "flex-end" }}>
-                        <Text
-                          style={[
-                            workspaceStyles.tableCellPrimary,
-                            { color: pl >= 0 ? "#10B981" : "#EF4444" },
-                          ]}
-                        >
-                          {pl >= 0 ? "+" : ""}
-                          {formatCurrency(pl)}
-                        </Text>
-                        <Text
-                          style={[
-                            workspaceStyles.tableCellMeta,
-                            { color: plPct >= 0 ? "#10B981" : "#EF4444" },
-                          ]}
-                        >
-                          {plPct >= 0 ? "+" : ""}
-                          {plPct.toFixed(1)}%
-                        </Text>
-                      </View>
-                      <Text
-                        style={[
-                          workspaceStyles.tableCell,
-                          {
-                            flex: 1,
-                            textAlign: "right",
-                            color: Math.abs(drift) > 3 ? "#F59E0B" : "#94A3B8",
-                          },
-                        ]}
-                      >
-                        {drift > 0 ? "+" : ""}
-                        {drift.toFixed(1)}%
-                      </Text>
-                    </View>
-                  );
-                })
-              )}
+        {/* Asset Allocation Bar & Table-First Financial UI: Holdings Workstation */}
+        {(activeSubTab === "ALL" || activeSubTab === "PORTFOLIO") && (
+          <>
+            <View style={{ marginTop: 12, marginBottom: 12 }}>
+              <Text style={[workspaceStyles.tableHeaderLabel, { marginBottom: 6 }]}>
+                TARGET VS CURRENT ALLOCATION
+              </Text>
+              <AssetAllocationBar allocationString={client.allocation} theme={theme} />
             </View>
-          </ScrollView>
-        </View>
+
+            <HoldingsTableWorkstation
+              holdings={holdings}
+              totalValue={totalCurrent}
+              totalInvested={totalInvested}
+              theme={theme}
+              clientName={client.name}
+              portfolioName={`${client.name} Portfolio`}
+              formatCurrency={formatCurrency}
+              onResearchHolding={(ticker) => {
+                if (onNavigateTab) {
+                  onNavigateTab("AI Research", { query: ticker });
+                }
+              }}
+              onRebalanceHolding={() => {
+                if (onNavigateTab) {
+                  onNavigateTab("Portfolios", { view: "rebalance" });
+                }
+              }}
+            />
+          </>
+        )}
       </View>
 
       <View style={workspaceStyles.divider} />
 
       {/* 3. HEALTH & 4. RISK */}
-      <View style={workspaceStyles.twoColGrid}>
-        {/* HEALTH */}
-        <View style={workspaceStyles.colPanel}>
-          <Text style={workspaceStyles.sectionTitle}>Portfolio Health Diagnostic</Text>
-          <View style={workspaceStyles.scoreBox}>
-            <View>
-              <Text style={workspaceStyles.scoreBig}>78<Text style={workspaceStyles.scoreMax}>/100</Text></Text>
-              <Text style={workspaceStyles.scoreStatus}>MODERATE HEALTH</Text>
-            </View>
-            <View style={{ flex: 1, marginLeft: 16 }}>
-              <View style={workspaceStyles.metricRow}>
-                <Text style={workspaceStyles.metricRowLabel}>Allocation Drift Score</Text>
-                <Text style={workspaceStyles.metricRowValue}>82/100</Text>
-              </View>
-              <View style={workspaceStyles.metricRow}>
-                <Text style={workspaceStyles.metricRowLabel}>Asset Diversification</Text>
-                <Text style={workspaceStyles.metricRowValue}>74/100</Text>
-              </View>
-              <View style={workspaceStyles.metricRow}>
-                <Text style={workspaceStyles.metricRowLabel}>Cash Drag Efficiency</Text>
-                <Text style={workspaceStyles.metricRowValue}>78/100</Text>
-              </View>
-            </View>
-          </View>
-        </View>
-
-        {/* RISK */}
-        <View style={workspaceStyles.colPanel}>
-          <Text style={workspaceStyles.sectionTitle}>Risk & Drawdown Profile</Text>
-          <View style={workspaceStyles.scoreBox}>
-            <View style={{ flex: 1 }}>
-              <View style={workspaceStyles.metricRow}>
-                <Text style={workspaceStyles.metricRowLabel}>Risk Mandate</Text>
-                <Text style={[workspaceStyles.metricRowValue, { color: "#E0A84C" }]}>
-                  {client.riskProfile || "Moderate Growth"}
-                </Text>
-              </View>
-              <View style={workspaceStyles.metricRow}>
-                <Text style={workspaceStyles.metricRowLabel}>Peak-to-Trough Drawdown</Text>
-                <Text style={[workspaceStyles.metricRowValue, { color: "#EF4444" }]}>-9.3%</Text>
-              </View>
-              <View style={workspaceStyles.metricRow}>
-                <Text style={workspaceStyles.metricRowLabel}>Value at Risk (95% 1-Day)</Text>
-                <Text style={workspaceStyles.metricRowValue}>1.42%</Text>
-              </View>
-              <View style={workspaceStyles.metricRow}>
-                <Text style={workspaceStyles.metricRowLabel}>Nifty Benchmark Beta</Text>
-                <Text style={workspaceStyles.metricRowValue}>0.88</Text>
-              </View>
-            </View>
-          </View>
-        </View>
-      </View>
-
-      <View style={workspaceStyles.divider} />
-
-      {/* 5. GOALS & 6. TAX */}
-      <View style={workspaceStyles.twoColGrid}>
-        {/* GOALS */}
-        <View style={workspaceStyles.colPanel}>
-          <View style={workspaceStyles.sectionHeader}>
-            <Text style={workspaceStyles.sectionTitle}>Financial Goals</Text>
-            {onNavigateTab && (
-              <Pressable onPress={() => onNavigateTab("Tools", { calculator: "Goal Planner" })}>
-                <Text style={workspaceStyles.linkText}>Manage Goals →</Text>
-              </Pressable>
-            )}
-          </View>
-
-          {goals.filter((g) => g.clientId === client.id).length === 0 ? (
-            <Text style={workspaceStyles.emptyRowText}>
-              No linked goals recorded for {client.name}. Define goals in the Goal Planner module.
-            </Text>
-          ) : (
-            goals
-              .filter((g) => g.clientId === client.id)
-              .map((goal) => (
-                <View key={goal.id} style={workspaceStyles.goalRow}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={workspaceStyles.goalTitle}>{goal.title || goal.name}</Text>
-                    <Text style={workspaceStyles.goalMeta}>
-                      Target: {goal.targetYear || "2030"} · Target Amount: {goal.targetAmount}
-                    </Text>
+      {(activeSubTab === "ALL" || activeSubTab === "RISK") && (
+        <>
+          <View style={workspaceStyles.twoColGrid}>
+            {/* HEALTH */}
+            <View style={workspaceStyles.colPanel}>
+              <Text style={workspaceStyles.sectionTitle}>Portfolio Health Diagnostic</Text>
+              <View style={workspaceStyles.scoreBox}>
+                <View>
+                  <Text style={workspaceStyles.scoreBig}>78<Text style={workspaceStyles.scoreMax}>/100</Text></Text>
+                  <Text style={workspaceStyles.scoreStatus}>MODERATE HEALTH</Text>
+                </View>
+                <View style={{ flex: 1, marginLeft: 16 }}>
+                  <View style={workspaceStyles.metricRow}>
+                    <Text style={workspaceStyles.metricRowLabel}>Allocation Drift Score</Text>
+                    <Text style={workspaceStyles.metricRowValue}>82/100</Text>
                   </View>
-                  <View style={workspaceStyles.goalBadge}>
-                    <Text style={workspaceStyles.goalBadgeText}>ON TRACK</Text>
+                  <View style={workspaceStyles.metricRow}>
+                    <Text style={workspaceStyles.metricRowLabel}>Asset Diversification</Text>
+                    <Text style={workspaceStyles.metricRowValue}>74/100</Text>
+                  </View>
+                  <View style={workspaceStyles.metricRow}>
+                    <Text style={workspaceStyles.metricRowLabel}>Cash Drag Efficiency</Text>
+                    <Text style={workspaceStyles.metricRowValue}>78/100</Text>
                   </View>
                 </View>
-              ))
-          )}
-        </View>
+              </View>
+            </View>
 
-        {/* TAX */}
-        <View style={workspaceStyles.colPanel}>
-          <View style={workspaceStyles.sectionHeader}>
-            <Text style={workspaceStyles.sectionTitle}>Tax-Loss Harvesting Opportunities</Text>
-            {onNavigateTab && (
-              <Pressable onPress={() => onNavigateTab("Portfolios", { view: "tax-harvest" })}>
-                <Text style={workspaceStyles.linkText}>Launch Tax Engine →</Text>
-              </Pressable>
+            {/* RISK */}
+            <View style={workspaceStyles.colPanel}>
+              <Text style={workspaceStyles.sectionTitle}>Risk & Drawdown Profile</Text>
+              <View style={workspaceStyles.scoreBox}>
+                <View style={{ flex: 1 }}>
+                  <View style={workspaceStyles.metricRow}>
+                    <Text style={workspaceStyles.metricRowLabel}>Risk Mandate</Text>
+                    <Text style={[workspaceStyles.metricRowValue, { color: "#E0A84C" }]}>
+                      {client.riskProfile || "Moderate Growth"}
+                    </Text>
+                  </View>
+                  <View style={workspaceStyles.metricRow}>
+                    <Text style={workspaceStyles.metricRowLabel}>Peak-to-Trough Drawdown</Text>
+                    <Text style={[workspaceStyles.metricRowValue, { color: "#EF4444" }]}>-9.3%</Text>
+                  </View>
+                  <View style={workspaceStyles.metricRow}>
+                    <Text style={workspaceStyles.metricRowLabel}>Value at Risk (95% 1-Day)</Text>
+                    <Text style={workspaceStyles.metricRowValue}>1.42%</Text>
+                  </View>
+                  <View style={workspaceStyles.metricRow}>
+                    <Text style={workspaceStyles.metricRowLabel}>Nifty Benchmark Beta</Text>
+                    <Text style={workspaceStyles.metricRowValue}>0.88</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
+
+          <View style={workspaceStyles.divider} />
+        </>
+      )}
+
+      {/* 5. GOALS & 6. TAX */}
+      {(activeSubTab === "ALL" || activeSubTab === "GOALS" || activeSubTab === "TAX") && (
+        <>
+          <View style={workspaceStyles.twoColGrid}>
+            {/* GOALS */}
+            {(activeSubTab === "ALL" || activeSubTab === "GOALS") && (
+              <View style={workspaceStyles.colPanel}>
+                <View style={workspaceStyles.sectionHeader}>
+                  <Text style={workspaceStyles.sectionTitle}>Financial Goals</Text>
+                  {onNavigateTab && (
+                    <Pressable onPress={() => onNavigateTab("Tools", { calculator: "Goal Planner" })}>
+                      <Text style={workspaceStyles.linkText}>Manage Goals →</Text>
+                    </Pressable>
+                  )}
+                </View>
+
+                {goals.filter((g) => g.clientId === client.id).length === 0 ? (
+                  <Text style={workspaceStyles.emptyRowText}>
+                    No linked goals recorded for {client.name}. Define goals in the Goal Planner module.
+                  </Text>
+                ) : (
+                  <GoalTableWorkstation
+                    goals={goals
+                      .filter((g) => g.clientId === client.id)
+                      .map((g) => ({
+                        id: g.id,
+                        title: g.title || g.name || "Wealth Objective",
+                        goalType: g.goalType,
+                        priority: g.priority,
+                        targetAmount: g.targetAmount,
+                        currentAmount: g.currentAmount,
+                        targetYear: g.targetYear,
+                      }))}
+                    currencyDisplay={(val) => formatCurrency(Number(val))}
+                    onGoalAction={() => onNavigateTab?.("Tools", { calculator: "Goal Planner" })}
+                  />
+                )}
+              </View>
+            )}
+
+            {/* TAX */}
+            {(activeSubTab === "ALL" || activeSubTab === "TAX") && (
+              <View style={workspaceStyles.colPanel}>
+                <View style={workspaceStyles.sectionHeader}>
+                  <Text style={workspaceStyles.sectionTitle}>Tax-Loss Harvesting Opportunities</Text>
+                  {onNavigateTab && (
+                    <Pressable onPress={() => onNavigateTab("Portfolios", { view: "tax-harvest" })}>
+                      <Text style={workspaceStyles.linkText}>Launch Tax Engine →</Text>
+                    </Pressable>
+                  )}
+                </View>
+                <View style={workspaceStyles.taxBox}>
+                  <View style={workspaceStyles.metricRow}>
+                    <Text style={workspaceStyles.metricRowLabel}>Unrealized STCG</Text>
+                    <Text style={workspaceStyles.metricRowValue}>
+                      {formatCurrency(Math.max(0, totalGainLoss * 0.35))}
+                    </Text>
+                  </View>
+                  <View style={workspaceStyles.metricRow}>
+                    <Text style={workspaceStyles.metricRowLabel}>Unrealized LTCG</Text>
+                    <Text style={workspaceStyles.metricRowValue}>
+                      {formatCurrency(Math.max(0, totalGainLoss * 0.65))}
+                    </Text>
+                  </View>
+                  <View style={workspaceStyles.metricRow}>
+                    <Text style={workspaceStyles.metricRowLabel}>Harvestable Losses</Text>
+                    <Text style={[workspaceStyles.metricRowValue, { color: "#10B981" }]}>
+                      {formatCurrency(
+                        holdings
+                          .filter((h) => parseFloat(h.currentValue) < parseFloat(h.investedValue))
+                          .reduce(
+                            (s, h) =>
+                              s + (parseFloat(h.investedValue) - parseFloat(h.currentValue)),
+                            0
+                          )
+                      )}
+                    </Text>
+                  </View>
+                </View>
+              </View>
             )}
           </View>
-          <View style={workspaceStyles.taxBox}>
-            <View style={workspaceStyles.metricRow}>
-              <Text style={workspaceStyles.metricRowLabel}>Unrealized STCG</Text>
-              <Text style={workspaceStyles.metricRowValue}>
-                {formatCurrency(Math.max(0, totalGainLoss * 0.35))}
-              </Text>
-            </View>
-            <View style={workspaceStyles.metricRow}>
-              <Text style={workspaceStyles.metricRowLabel}>Unrealized LTCG</Text>
-              <Text style={workspaceStyles.metricRowValue}>
-                {formatCurrency(Math.max(0, totalGainLoss * 0.65))}
-              </Text>
-            </View>
-            <View style={workspaceStyles.metricRow}>
-              <Text style={workspaceStyles.metricRowLabel}>Harvestable Losses</Text>
-              <Text style={[workspaceStyles.metricRowValue, { color: "#10B981" }]}>
-                {formatCurrency(
-                  holdings
-                    .filter((h) => parseFloat(h.currentValue) < parseFloat(h.investedValue))
-                    .reduce(
-                      (s, h) =>
-                        s + (parseFloat(h.investedValue) - parseFloat(h.currentValue)),
-                      0
-                    )
-                )}
-              </Text>
-            </View>
-          </View>
-        </View>
-      </View>
 
-      <View style={workspaceStyles.divider} />
+          <View style={workspaceStyles.divider} />
+        </>
+      )}
 
       {/* 7. CLIENT INSIGHTS (EVIDENCE-BASED CHANGE DETECTION) */}
       <View style={workspaceStyles.section}>
@@ -817,6 +799,33 @@ const workspaceStyles = StyleSheet.create({
     gap: 8,
     flexWrap: "wrap",
     marginTop: 14,
+  },
+  subNavBar: {
+    marginTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255, 255, 255, 0.08)",
+    paddingTop: 8,
+  },
+  subTabBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    backgroundColor: "#131C2E",
+    borderWidth: 1,
+    borderColor: "#26354A",
+  },
+  subTabBtnActive: {
+    backgroundColor: "rgba(224, 168, 76, 0.15)",
+    borderColor: "rgba(224, 168, 76, 0.45)",
+  },
+  subTabBtnText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#94A3B8",
+  },
+  subTabBtnTextActive: {
+    color: "#E0A84C",
+    fontWeight: "700",
   },
   toolButton: {
     paddingHorizontal: 10,

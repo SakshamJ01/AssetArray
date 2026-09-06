@@ -8,11 +8,13 @@ import { AttributionModal } from "../components/AttributionModal";
 import { TaxHarvestStudioModal } from "../components/TaxHarvestStudioModal";
 import { ScenarioSandboxModal } from "../components/ScenarioSandboxModal";
 import { CommitteeMemoModal } from "../components/CommitteeMemoModal";
+import { HoldingsTableWorkstation } from "../components/holdings/HoldingsTableWorkstation";
 import { calculateHealthScore } from "../services/healthScore";
 import { Client } from "../types/wealth";
 
 export interface PortfoliosScreenProps {
   theme: AppTheme;
+  onNavigateTab?: (tab: string, params?: any) => void;
   unifiedPortfolioAnalytics: {
     totalCurrent: number;
     totalInvested: number;
@@ -40,6 +42,7 @@ export interface PortfoliosScreenProps {
 
 export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
   theme,
+  onNavigateTab,
   unifiedPortfolioAnalytics,
   taxReporting,
   isMarketRefreshing,
@@ -524,6 +527,26 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
             </View>
           ))
         )}
+
+        {/* Dedicated Flagship Holdings Workstation */}
+        <View style={{ marginTop: 16 }}>
+          <HoldingsTableWorkstation
+            holdings={unifiedPortfolioAnalytics.holdings || []}
+            totalValue={unifiedPortfolioAnalytics.totalCurrent}
+            totalInvested={unifiedPortfolioAnalytics.totalInvested}
+            theme={theme}
+            portfolioName="Unified Discretionary Holdings"
+            formatCurrency={(v) => currencyDisplay(`${v}`)}
+            onResearchHolding={(ticker) => {
+              if (onNavigateTab) {
+                onNavigateTab("AI Research", { query: ticker });
+              }
+            }}
+            onRebalanceHolding={() => {
+              setIsRebalanceOpen(true);
+            }}
+          />
+        </View>
       </View>
 
       {/* Tax Optimization & Reporting */}

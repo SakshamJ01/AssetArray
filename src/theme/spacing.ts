@@ -12,11 +12,12 @@ export const spacing = {
 } as const;
 
 export const radius = {
-  sm: 8,
-  md: 12,
-  card: 14, // Standardized softer card radius for cohesive executive dashboards
-  lg: 16,
-  xl: 20,
+  none: 0,
+  sm: 4,
+  md: 8,
+  card: 8, // Canonical workstation panel radius
+  lg: 12,
+  xl: 12,
   pill: 999,
 } as const;
 

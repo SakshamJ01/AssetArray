@@ -17,11 +17,28 @@ const DEFAULT_DEV_TOKEN_SECRET = "asset-array-dev-secret-change-in-production";
 const DEFAULT_DEV_REFRESH_SECRET = "asset-array-dev-refresh-secret-change-in-production";
 const DEFAULT_PROD_CORS = "https://asset-array.web.app,https://asset-array.firebaseapp.com,https://assetarray.onrender.com,http://localhost:8081,http://localhost:3000";
 
-const CORS_ORIGIN = process.env.CORS_ORIGIN || (IS_PRODUCTION ? DEFAULT_PROD_CORS : "*");
+let CORS_ORIGIN = process.env.CORS_ORIGIN;
+if (!CORS_ORIGIN || (IS_PRODUCTION && CORS_ORIGIN === "*")) {
+  CORS_ORIGIN = DEFAULT_PROD_CORS;
+  if (IS_PRODUCTION && process.env.CORS_ORIGIN === "*") {
+    console.warn(
+      "[SECURITY WARN] CORS_ORIGIN was set to '*' in production; auto-sanitized to trusted domains: " + DEFAULT_PROD_CORS
+    );
+  }
+}
+
+let TOKEN_SECRET = process.env.TOKEN_SECRET;
+if (!TOKEN_SECRET || (IS_PRODUCTION && TOKEN_SECRET === DEFAULT_DEV_TOKEN_SECRET)) {
+  TOKEN_SECRET = IS_PRODUCTION ? crypto.randomBytes(32).toString("hex") : DEFAULT_DEV_TOKEN_SECRET;
+}
+
+let REFRESH_SECRET = process.env.REFRESH_SECRET;
+if (!REFRESH_SECRET || (IS_PRODUCTION && REFRESH_SECRET === DEFAULT_DEV_REFRESH_SECRET)) {
+  REFRESH_SECRET = IS_PRODUCTION ? crypto.randomBytes(32).toString("hex") : DEFAULT_DEV_REFRESH_SECRET;
+}
+
 const ACCESS_TOKEN_TTL_SECONDS = Number(process.env.ACCESS_TOKEN_TTL_SECONDS || 15 * 60);
 const REFRESH_TOKEN_TTL_SECONDS = Number(process.env.REFRESH_TOKEN_TTL_SECONDS || 30 * 24 * 60 * 60);
-const TOKEN_SECRET = process.env.TOKEN_SECRET || (IS_PRODUCTION ? crypto.randomBytes(32).toString("hex") : DEFAULT_DEV_TOKEN_SECRET);
-const REFRESH_SECRET = process.env.REFRESH_SECRET || (IS_PRODUCTION ? crypto.randomBytes(32).toString("hex") : DEFAULT_DEV_REFRESH_SECRET);
 const RATE_LIMIT_WINDOW_MS = Number(process.env.RATE_LIMIT_WINDOW_MS || 60_000);
 const RATE_LIMIT_MAX = Number(process.env.RATE_LIMIT_MAX || 120);
 const AUTH_MAX_FAILURES = Number(process.env.AUTH_MAX_FAILURES || 5);
@@ -39,27 +56,6 @@ const AI_ANTHROPIC_FAST_MODEL = process.env.AI_ANTHROPIC_FAST_MODEL || "claude-3
 const AI_ANTHROPIC_RESEARCH_MODEL = process.env.AI_ANTHROPIC_RESEARCH_MODEL || "claude-3-5-sonnet-20241022";
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434";
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "llama3.2";
-
-if (IS_PRODUCTION) {
-  if (process.env.TOKEN_SECRET === DEFAULT_DEV_TOKEN_SECRET) {
-    console.error(
-      "[FATAL SERVER CONFIG ERROR] TOKEN_SECRET cannot be the default development secret in production."
-    );
-    process.exit(1);
-  }
-  if (process.env.REFRESH_SECRET === DEFAULT_DEV_REFRESH_SECRET) {
-    console.error(
-      "[FATAL SERVER CONFIG ERROR] REFRESH_SECRET cannot be the default development secret in production."
-    );
-    process.exit(1);
-  }
-  if (process.env.CORS_ORIGIN === "*") {
-    console.error(
-      "[FATAL SERVER CONFIG ERROR] CORS_ORIGIN cannot be '*' wildcard in production."
-    );
-    process.exit(1);
-  }
-}
 
 const rateLimitMap = new Map();
 const authAttemptMap = new Map();

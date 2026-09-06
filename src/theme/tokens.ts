@@ -123,3 +123,24 @@ export const semanticStatusColors = {
   simulated: "#6366F1",      // Paper trade, test sandbox
   simulatedMuted: "rgba(99, 102, 241, 0.14)",
 } as const;
+
+export const spacingTokens = {
+  none: 0,
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 24,
+  xxl: 32,
+} as const;
+
+export const surfaceTokens = {
+  background: "#030712",
+  surface: "#0B1222",
+  surfaceMuted: "#101B30",
+  surfaceSubtle: "#16233B",
+  borderHairline: "rgba(255, 255, 255, 0.08)",
+  borderDefault: "rgba(255, 255, 255, 0.12)",
+  brand: "#E0A84C",
+  brandMuted: "rgba(224, 168, 76, 0.14)",
+} as const;

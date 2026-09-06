@@ -1,0 +1,137 @@
+{
+  "executedAt": "2026-09-06T07:35:25.572Z",
+  "environment": "mobile-device-emulation",
+  "devicesTested": [
+    "iPhone 13 (390x844)",
+    "Pixel 7 (412x915)"
+  ],
+  "screenAudits": [],
+  "overflowTests": [
+    {
+      "device": "iPhone 13",
+      "screen": "Login/Lock",
+      "hasZeroHorizontalOverflow": true
+    },
+    {
+      "device": "iPhone 13",
+      "screen": "Dashboard",
+      "hasZeroHorizontalOverflow": true
+    },
+    {
+      "device": "iPhone 13",
+      "screen": "Clients",
+      "hasZeroHorizontalOverflow": true
+    },
+    {
+      "device": "iPhone 13",
+      "screen": "Portfolios",
+      "hasZeroHorizontalOverflow": true
+    },
+    {
+      "device": "iPhone 13",
+      "screen": "Tools",
+      "hasZeroHorizontalOverflow": true
+    },
+    {
+      "device": "iPhone 13",
+      "screen": "AI Research",
+      "hasZeroHorizontalOverflow": true
+    },
+    {
+      "device": "iPhone 13",
+      "screen": "Settings",
+      "hasZeroHorizontalOverflow": true
+    },
+    {
+      "device": "Pixel 7",
+      "screen": "Login/Lock",
+      "hasZeroHorizontalOverflow": true
+    },
+    {
+      "device": "Pixel 7",
+      "screen": "Dashboard",
+      "hasZeroHorizontalOverflow": true
+    },
+    {
+      "device": "Pixel 7",
+      "screen": "Clients",
+      "hasZeroHorizontalOverflow": true
+    },
+    {
+      "device": "Pixel 7",
+      "screen": "Portfolios",
+      "hasZeroHorizontalOverflow": true
+    },
+    {
+      "device": "Pixel 7",
+      "screen": "Tools",
+      "hasZeroHorizontalOverflow": true
+    },
+    {
+      "device": "Pixel 7",
+      "screen": "AI Research",
+      "hasZeroHorizontalOverflow": true
+    },
+    {
+      "device": "Pixel 7",
+      "screen": "Settings",
+      "hasZeroHorizontalOverflow": true
+    }
+  ],
+  "touchTargetAudits": [
+    {
+      "device": "iPhone 13",
+      "totalInteractive": 3,
+      "smallTargets": [
+        {
+          "tag": "INPUT",
+          "text": "",
+          "width": 40,
+          "height": 20
+        },
+        {
+          "tag": "INPUT",
+          "text": "",
+          "width": 40,
+          "height": 20
+        },
+        {
+          "tag": "INPUT",
+          "text": "",
+          "width": 40,
+          "height": 20
+        }
+      ]
+    },
+    {
+      "device": "Pixel 7",
+      "totalInteractive": 3,
+      "smallTargets": [
+        {
+          "tag": "INPUT",
+          "text": "",
+          "width": 40,
+          "height": 20
+        },
+        {
+          "tag": "INPUT",
+          "text": "",
+          "width": 40,
+          "height": 20
+        },
+        {
+          "tag": "INPUT",
+          "text": "",
+          "width": 40,
+          "height": 20
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "totalScreens": 14,
+    "passedScreens": 14,
+    "failedScreens": 0,
+    "horizontalOverflowViolations": 0
+  }
+}

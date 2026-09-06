@@ -19,6 +19,11 @@ import {
   snapshotStore,
 } from "../../services/clientInsights";
 import { AssetAllocationBar } from "../AssetAllocationBar";
+import {
+  CurrencyCode,
+  formatWealthAmount,
+  loadCurrencyPreference,
+} from "../../services/currency";
 
 export interface Client360WorkspaceProps {
   client: Client;
@@ -103,15 +108,16 @@ export const Client360Workspace: React.FC<Client360WorkspaceProps> = ({
   const gainLossPct =
     totalInvested > 0 ? (totalGainLoss / totalInvested) * 100 : 0;
 
+  const [activeCurrency, setActiveCurrency] = useState<CurrencyCode>("INR");
+
+  useEffect(() => {
+    void loadCurrencyPreference().then((c) => setActiveCurrency(c));
+  }, []);
+
   // Format currency helpers
-  const formatCurrency = (val: number) => {
-    if (Math.abs(val) >= 10000000) {
-      return `₹${(val / 10000000).toFixed(2)} Cr`;
-    }
-    if (Math.abs(val) >= 100000) {
-      return `₹${(val / 100000).toFixed(2)} L`;
-    }
-    return `₹${val.toLocaleString("en-IN")}`;
+  const formatCurrency = (val: number, compact: boolean = true) => {
+    if (isNaN(val)) return "-";
+    return formatWealthAmount(val, activeCurrency, compact);
   };
 
   const handleExplain = async (insight: ClientInsight) => {
@@ -274,91 +280,95 @@ export const Client360Workspace: React.FC<Client360WorkspaceProps> = ({
 
         {/* Table-First Financial UI: Holdings Table */}
         <View style={workspaceStyles.tableContainer}>
-          <View style={workspaceStyles.tableHeaderRow}>
-            <Text style={[workspaceStyles.tableHeaderLabel, { flex: 2 }]}>ASSET</Text>
-            <Text style={[workspaceStyles.tableHeaderLabel, { flex: 1, textAlign: "right" }]}>QTY</Text>
-            <Text style={[workspaceStyles.tableHeaderLabel, { flex: 1.2, textAlign: "right" }]}>PRICE</Text>
-            <Text style={[workspaceStyles.tableHeaderLabel, { flex: 1.5, textAlign: "right" }]}>VALUE</Text>
-            <Text style={[workspaceStyles.tableHeaderLabel, { flex: 1, textAlign: "right" }]}>WEIGHT</Text>
-            <Text style={[workspaceStyles.tableHeaderLabel, { flex: 1.2, textAlign: "right" }]}>P&L</Text>
-            <Text style={[workspaceStyles.tableHeaderLabel, { flex: 1, textAlign: "right" }]}>DRIFT</Text>
-          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={true}>
+            <View style={{ minWidth: 640, width: "100%" }}>
+              <View style={workspaceStyles.tableHeaderRow}>
+                <Text style={[workspaceStyles.tableHeaderLabel, { flex: 2 }]}>ASSET</Text>
+                <Text style={[workspaceStyles.tableHeaderLabel, { flex: 1, textAlign: "right" }]}>QTY</Text>
+                <Text style={[workspaceStyles.tableHeaderLabel, { flex: 1.2, textAlign: "right" }]}>PRICE</Text>
+                <Text style={[workspaceStyles.tableHeaderLabel, { flex: 1.5, textAlign: "right" }]}>VALUE</Text>
+                <Text style={[workspaceStyles.tableHeaderLabel, { flex: 1, textAlign: "right" }]}>WEIGHT</Text>
+                <Text style={[workspaceStyles.tableHeaderLabel, { flex: 1.2, textAlign: "right" }]}>P&L</Text>
+                <Text style={[workspaceStyles.tableHeaderLabel, { flex: 1, textAlign: "right" }]}>DRIFT</Text>
+              </View>
 
-          {holdings.length === 0 ? (
-            <View style={workspaceStyles.emptyRow}>
-              <Text style={workspaceStyles.emptyRowText}>
-                No holdings currently recorded for this portfolio. Use "Import Statement" to load verified positions.
-              </Text>
-            </View>
-          ) : (
-            holdings.map((h, idx) => {
-              const curVal = parseFloat(h.currentValue) || 0;
-              const invVal = parseFloat(h.investedValue) || 0;
-              const weight = totalCurrent > 0 ? (curVal / totalCurrent) * 100 : 0;
-              const targetW = parseFloat(h.targetWeight) || weight;
-              const drift = weight - targetW;
-              const pl = curVal - invVal;
-              const plPct = invVal > 0 ? (pl / invVal) * 100 : 0;
-              const qty = parseFloat(h.quantity) || 1;
-              const price = qty > 0 ? curVal / qty : 0;
-
-              return (
-                <View key={h.id || idx} style={workspaceStyles.tableRow}>
-                  <View style={{ flex: 2 }}>
-                    <Text style={workspaceStyles.tableCellPrimary}>{h.assetName}</Text>
-                    <Text style={workspaceStyles.tableCellMeta}>
-                      {h.ticker || h.assetClass} · {h.assetClass}
-                    </Text>
-                  </View>
-                  <Text style={[workspaceStyles.tableCell, { flex: 1, textAlign: "right" }]}>
-                    {qty.toLocaleString()}
-                  </Text>
-                  <Text style={[workspaceStyles.tableCell, { flex: 1.2, textAlign: "right" }]}>
-                    ₹{price.toFixed(2)}
-                  </Text>
-                  <Text style={[workspaceStyles.tableCellPrimary, { flex: 1.5, textAlign: "right" }]}>
-                    {formatCurrency(curVal)}
-                  </Text>
-                  <Text style={[workspaceStyles.tableCell, { flex: 1, textAlign: "right" }]}>
-                    {weight.toFixed(1)}%
-                  </Text>
-                  <View style={{ flex: 1.2, alignItems: "flex-end" }}>
-                    <Text
-                      style={[
-                        workspaceStyles.tableCellPrimary,
-                        { color: pl >= 0 ? "#10B981" : "#EF4444" },
-                      ]}
-                    >
-                      {pl >= 0 ? "+" : ""}
-                      {formatCurrency(pl)}
-                    </Text>
-                    <Text
-                      style={[
-                        workspaceStyles.tableCellMeta,
-                        { color: plPct >= 0 ? "#10B981" : "#EF4444" },
-                      ]}
-                    >
-                      {plPct >= 0 ? "+" : ""}
-                      {plPct.toFixed(1)}%
-                    </Text>
-                  </View>
-                  <Text
-                    style={[
-                      workspaceStyles.tableCell,
-                      {
-                        flex: 1,
-                        textAlign: "right",
-                        color: Math.abs(drift) > 3 ? "#F59E0B" : "#94A3B8",
-                      },
-                    ]}
-                  >
-                    {drift > 0 ? "+" : ""}
-                    {drift.toFixed(1)}%
+              {holdings.length === 0 ? (
+                <View style={workspaceStyles.emptyRow}>
+                  <Text style={workspaceStyles.emptyRowText}>
+                    No holdings currently recorded for this portfolio. Use "Import Statement" to load verified positions.
                   </Text>
                 </View>
-              );
-            })
-          )}
+              ) : (
+                holdings.map((h, idx) => {
+                  const curVal = parseFloat(h.currentValue) || 0;
+                  const invVal = parseFloat(h.investedValue) || 0;
+                  const weight = totalCurrent > 0 ? (curVal / totalCurrent) * 100 : 0;
+                  const targetW = parseFloat(h.targetWeight) || weight;
+                  const drift = weight - targetW;
+                  const pl = curVal - invVal;
+                  const plPct = invVal > 0 ? (pl / invVal) * 100 : 0;
+                  const qty = parseFloat(h.quantity) || 1;
+                  const price = qty > 0 ? curVal / qty : 0;
+
+                  return (
+                    <View key={h.id || idx} style={workspaceStyles.tableRow}>
+                      <View style={{ flex: 2 }}>
+                        <Text style={workspaceStyles.tableCellPrimary}>{h.assetName}</Text>
+                        <Text style={workspaceStyles.tableCellMeta}>
+                          {h.ticker || h.assetClass} · {h.assetClass}
+                        </Text>
+                      </View>
+                      <Text style={[workspaceStyles.tableCell, { flex: 1, textAlign: "right" }]}>
+                        {qty.toLocaleString()}
+                      </Text>
+                      <Text style={[workspaceStyles.tableCell, { flex: 1.2, textAlign: "right" }]}>
+                        {formatCurrency(price, false)}
+                      </Text>
+                      <Text style={[workspaceStyles.tableCellPrimary, { flex: 1.5, textAlign: "right" }]}>
+                        {formatCurrency(curVal)}
+                      </Text>
+                      <Text style={[workspaceStyles.tableCell, { flex: 1, textAlign: "right" }]}>
+                        {weight.toFixed(1)}%
+                      </Text>
+                      <View style={{ flex: 1.2, alignItems: "flex-end" }}>
+                        <Text
+                          style={[
+                            workspaceStyles.tableCellPrimary,
+                            { color: pl >= 0 ? "#10B981" : "#EF4444" },
+                          ]}
+                        >
+                          {pl >= 0 ? "+" : ""}
+                          {formatCurrency(pl)}
+                        </Text>
+                        <Text
+                          style={[
+                            workspaceStyles.tableCellMeta,
+                            { color: plPct >= 0 ? "#10B981" : "#EF4444" },
+                          ]}
+                        >
+                          {plPct >= 0 ? "+" : ""}
+                          {plPct.toFixed(1)}%
+                        </Text>
+                      </View>
+                      <Text
+                        style={[
+                          workspaceStyles.tableCell,
+                          {
+                            flex: 1,
+                            textAlign: "right",
+                            color: Math.abs(drift) > 3 ? "#F59E0B" : "#94A3B8",
+                          },
+                        ]}
+                      >
+                        {drift > 0 ? "+" : ""}
+                        {drift.toFixed(1)}%
+                      </Text>
+                    </View>
+                  );
+                })
+              )}
+            </View>
+          </ScrollView>
         </View>
       </View>
 

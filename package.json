@@ -12,7 +12,11 @@
     "deploy:web": "npm run build:web && npx -y firebase-tools@latest deploy --only hosting",
     "deploy:preview": "npm run build:web && npx -y firebase-tools@latest hosting:channel:deploy preview",
     "typecheck": "tsc --noEmit",
-    "test": "jest --forceExit",
+    "test": "jest --forceExit --maxWorkers=50%",
+    "test:e2e": "node scripts/run-e2e-browser-validation.js",
+    "test:e2e:mobile": "node scripts/run-mobile-e2e-validation.js",
+    "test:ai:integration": "node scripts/run-ai-integration-test.js",
+    "verify:all": "node scripts/verify-all.js",
     "server": "node server.js"
   },
   "dependencies": {

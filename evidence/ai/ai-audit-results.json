@@ -1,0 +1,147 @@
+{
+  "executedAt": "2026-09-06T07:34:49.576Z",
+  "environment": "test",
+  "providerAudit": {
+    "gemini": {
+      "name": "Google Gemini Free API",
+      "configured": false,
+      "status": "NOT_CONFIGURED",
+      "model": "gemini-2.5-flash"
+    },
+    "ollama": {
+      "name": "Ollama Local Daemon",
+      "configured": false,
+      "status": "OFFLINE / NOT_CONFIGURED",
+      "endpoint": "http://localhost:11434"
+    },
+    "openai": {
+      "name": "OpenAI",
+      "configured": false,
+      "status": "NOT_CONFIGURED"
+    },
+    "anthropic": {
+      "name": "Anthropic",
+      "configured": false,
+      "status": "NOT_CONFIGURED"
+    }
+  },
+  "taskMatrix": [
+    {
+      "task": "FAST_SUMMARY",
+      "chain": [
+        "gemini",
+        "ollama",
+        "deterministic-fallback"
+      ],
+      "status": "VERIFIED"
+    },
+    {
+      "task": "ADVISOR_BRIEF",
+      "chain": [
+        "gemini",
+        "ollama",
+        "deterministic-fallback"
+      ],
+      "status": "VERIFIED"
+    },
+    {
+      "task": "CLIENT_INSIGHT",
+      "chain": [
+        "gemini",
+        "ollama",
+        "deterministic-fallback"
+      ],
+      "status": "VERIFIED"
+    },
+    {
+      "task": "PORTFOLIO_EXPLANATION",
+      "chain": [
+        "gemini",
+        "ollama",
+        "deterministic-fallback"
+      ],
+      "status": "VERIFIED"
+    },
+    {
+      "task": "TAX_EXPLANATION",
+      "chain": [
+        "gemini",
+        "ollama",
+        "deterministic-fallback"
+      ],
+      "status": "VERIFIED"
+    },
+    {
+      "task": "GOAL_EXPLANATION",
+      "chain": [
+        "gemini",
+        "ollama",
+        "deterministic-fallback"
+      ],
+      "status": "VERIFIED"
+    },
+    {
+      "task": "DOCUMENT_EXTRACTION",
+      "chain": [
+        "gemini",
+        "ollama",
+        "deterministic-fallback"
+      ],
+      "status": "VERIFIED"
+    },
+    {
+      "task": "DEEP_RESEARCH",
+      "chain": [
+        "gemini",
+        "ollama",
+        "deterministic-fallback"
+      ],
+      "status": "VERIFIED"
+    }
+  ],
+  "groundingTests": [
+    {
+      "name": "Deterministic facts verified against portfolio context",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Fabricated claims detected & flagged",
+      "passed": true,
+      "details": ""
+    }
+  ],
+  "securityTests": [
+    {
+      "name": "Prompt Injection neutralized",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Client A context strictly isolated from Client B",
+      "passed": true,
+      "details": ""
+    }
+  ],
+  "researchTests": [
+    {
+      "name": "Valid citations verified against registered sources",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Unmapped citations successfully flagged and isolated",
+      "passed": true,
+      "details": ""
+    }
+  ],
+  "secretLeakageAudit": {
+    "checkedFiles": 3,
+    "leakFound": false
+  },
+  "summary": {
+    "totalTests": 17,
+    "passed": 17,
+    "failed": 0
+  }
+}

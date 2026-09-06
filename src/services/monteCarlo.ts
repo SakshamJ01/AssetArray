@@ -84,14 +84,24 @@ function createMulberry32(seed: number) {
 
 /**
  * Seeded Box-Muller transform for generating standard normal random variates
+ * Generates and caches pairs of independent variates (cos & sin) to halve transcendental operations.
  */
 function createNormalGenerator(prng: () => number) {
+  let spare: number | null = null;
   return function (): number {
+    if (spare !== null) {
+      const val = spare;
+      spare = null;
+      return val;
+    }
     let u1 = 0;
     let u2 = 0;
     while (u1 === 0) u1 = prng();
     while (u2 === 0) u2 = prng();
-    return Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+    const mag = Math.sqrt(-2.0 * Math.log(u1));
+    const angle = 2.0 * Math.PI * u2;
+    spare = mag * Math.sin(angle);
+    return mag * Math.cos(angle);
   };
 }
 
@@ -127,6 +137,7 @@ export function runMonteCarloSimulation(
 
   const monthlyMean = effectiveAnnualReturn / 12;
   const monthlyVol = annualVolatility / Math.sqrt(12);
+  const drift = monthlyMean - 0.5 * monthlyVol * monthlyVol;
 
   // Array to store paths: boundedSims x (years + 1)
   const yearlyPaths: number[][] = [];
@@ -140,8 +151,7 @@ export function runMonteCarloSimulation(
     for (let m = 1; m <= totalMonths; m++) {
       // Geometric Brownian Motion step with monthly contribution
       const z = randomNormal();
-      const returnRate =
-        monthlyMean - 0.5 * monthlyVol * monthlyVol + monthlyVol * z;
+      const returnRate = drift + monthlyVol * z;
       wealth = wealth * Math.exp(returnRate) + monthlyContribution;
       if (wealth < 0) wealth = 0;
 
@@ -162,17 +172,21 @@ export function runMonteCarloSimulation(
 
   const numYears = Math.ceil(totalMonths / 12);
   const trajectory: TrajectoryPoint[] = [];
+  const yearBuffer = new Float64Array(boundedSims);
 
   for (let y = 0; y <= numYears; y++) {
-    const valuesAtYear = yearlyPaths.map((p) => p[y] ?? p[p.length - 1]);
-    valuesAtYear.sort((a, b) => a - b);
+    for (let i = 0; i < boundedSims; i++) {
+      const p = yearlyPaths[i];
+      yearBuffer[i] = p[y] ?? p[p.length - 1];
+    }
+    yearBuffer.sort();
 
     const getPercentile = (p: number) => {
       const idx = Math.min(
-        valuesAtYear.length - 1,
-        Math.max(0, Math.floor((p / 100) * valuesAtYear.length))
+        boundedSims - 1,
+        Math.max(0, Math.floor((p / 100) * boundedSims))
       );
-      return valuesAtYear[idx];
+      return yearBuffer[idx];
     };
 
     trajectory.push({

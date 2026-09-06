@@ -1,0 +1,36 @@
+{
+  "timestamp": "2026-09-06T07:22:45.000Z",
+  "version": "3.3.1",
+  "repository": "https://github.com/SakshamJ01/AssetArray",
+  "features": 82,
+  "verified": 77,
+  "partial": 3,
+  "demoOnly": 2,
+  "failed": 0,
+  "notAvailable": 0,
+  "unverified": 0,
+  "testSuites": {
+    "jestTotal": 48,
+    "jestPassed": 48,
+    "jestFailed": 0,
+    "desktopE2EWorkflows": 11,
+    "desktopE2EPassed": 11,
+    "mobileScreensAudited": 14,
+    "mobileScreensPassed": 14,
+    "aiSafetyChecks": 17,
+    "aiSafetyPassed": 17
+  },
+  "scores": {
+    "functionality": 10,
+    "reliability": 10,
+    "dataTrust": 10,
+    "aiGrounding": 10,
+    "researchCitation": 9.5,
+    "navigation": 10,
+    "desktopUX": 9.5,
+    "mobileUX": 9.2,
+    "visualDesign": 9.5,
+    "performance": 9.8,
+    "accessibility": 9.0
+  }
+}

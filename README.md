@@ -13,9 +13,9 @@
 
 ![Asset Array Hero Banner](assets/hero-thumbnail.jpg)
 
-**AssetArray** is an advisor operating system for portfolio analytics, risk intelligence, tax estimation, client workflow, governance, and AI-assisted decision support.
+**AssetArray** is an institutional-grade wealth management & advisor operating system engineered for wealth managers, RIAs, family offices, and financial advisors. It unifies portfolio analytics, risk intelligence, tax estimation, client 360 dossiers, AI decision support, and governance into a seamless cross-platform solution.
 
-Engineered with a high-contrast obsidian & champagne gold luxury aesthetic, dual-mode Swiss Private Banking light theme, real-time stochastic share market streaming engine, client-side zero-knowledge AES-256 encryption, multi-user cloud synchronization, responsive cross-platform web/desktop support, and built-in subscription monetization powered by **RevenueCat**.
+Engineered with a high-contrast **Obsidian & Champagne Gold** luxury aesthetic, dual-mode **Swiss Private Banking** light theme, real-time stochastic share market streaming engine, client-side zero-knowledge AES-256 encryption, multi-user cloud synchronization, responsive web/desktop/mobile UX, and built-in subscription monetization powered by **RevenueCat**.
 
 > **Important Positioning & Regulatory Disclosure**:  
 > AssetArray uses performance methodologies informed by GIPS® concepts but is not itself claiming GIPS compliance, certification, or verification. AssetArray provides advisor governance, decision-support, privacy, and analytical tooling; regulatory status, fiduciary responsibility, suitability determination, and compliance adherence remain the sole responsibility of the advisor or registered firm.
@@ -32,109 +32,170 @@ Engineered with a high-contrast obsidian & champagne gold luxury aesthetic, dual
 
 ---
 
-## 🆓 Free-First / Zero-Subscription Architecture
+## 📖 Complete Exhaustive Feature & Functionality Directory
 
-AssetArray is engineered to operate completely in a **100% Free Development & Zero-Subscription Mode**:
-- **Free Cloud AI**: Google Gemini Developer Tier (`gemini-2.5-flash` / `gemini-2.5-pro` via free developer keys from Google AI Studio).
-- **Free Local AI**: Ollama Daemon (`llama3.2`, `mistral`) running locally at `http://localhost:11434` with zero token cost and zero PII exposure.
-- **Deterministic Core**: All institutional analytics (TWR, XIRR, Section 70/74 Indian Capital Gains Tax, Monte Carlo goal planning, Risk metrics) execute 100% offline on CPU without AI or paid subscriptions.
-- **Free Market Feeds**: Official open AMFI NAV data for Indian Mutual Funds, plus quota-guarded free tiers for Finnhub (60 calls/min) and Alpha Vantage (25 calls/day).
-- **Quickstart Guide**: Complete configuration instructions in [`docs/FREE_SETUP.md`](docs/FREE_SETUP.md).
+Below is the deep, exhaustive breakdown of **every single feature, tool, workflow, and micro-functionality** built into AssetArray:
 
 ---
 
-## 🌟 Version 3.3.1 Advisor Command Center & Governance Hardening
-
-Comprehensive institutional methodology, mathematical formulas, claims policy, and statutory compliance documentation are available in the [`docs/`](docs/) directory:
-- [Claims & Terminology Policy](docs/claims-policy.md)
-- [Product Terminology Glossary](docs/terminology.md)
-- [V3.4 Strategic Roadmap (Planned)](docs/v3-4-roadmap.md)
-- [Advisor Command Center Architecture](docs/advisor-command-center.md)
-- [Advisor Workflow & Prioritization Engine](docs/advisor-workflow.md)
-- [Client 360 Workspace](docs/client-360.md)
-- [Advisor Decision Journal & Governance Record](docs/decision-journal.md)
-- [Daily AI Advisor Brief & Grounding Methodology](docs/ai-advisor-brief.md)
-- [System Architecture](docs/architecture.md)
-- [Analytics & Performance Methodology (GIPS-Informed TWR, XIRR, Brinson Attribution)](docs/analytics-methodology.md)
-- [Statutory Indian Tax Methodology (AY 2026-27 & Sec 70/74)](docs/tax-methodology.md)
-- [Risk & Benchmark Analytics (MPT, HWM Drawdowns, Mulberry32 Monte Carlo)](docs/risk-methodology.md)
-- [AI Architecture & DPDP Act PII Sanitization](docs/ai-architecture.md)
-- [Zero-Knowledge Security Model](docs/security.md)
-- [Compliance & Statutory Disclosures](docs/compliance-disclosures.md)
-- [v3.3.0 Release Notes](docs/release-notes-v3.3.md)
-- [v3.2.0 Red-Team Hardening](docs/V3_2_RED_TEAM_REPORT.md)
-- [v3.1.0 Release Notes](docs/release-notes-v3.1.md)
-
-### 🏛️ Brinson-Fachler Performance Attribution Engine
-- **Alpha Decomposition:** Mathematically breaks down active portfolio returns against benchmark indices (NIFTY 50, CRISIL Hybrid 65:35, S&P 500) into **Allocation Effect**, **Selection Effect**, and **Interaction Effect**.
-- **Plain-Language Explainability:** Plain-language synthesis explaining top alpha drivers and drag factors.
-
-### 🛡️ AI Portfolio Health Score Diagnostic (0–100 Multi-Pillar Index)
-- **5 Core Pillars:** Data Completeness, Asset Diversification (HHI-based entropy), Single-Asset Concentration Defense, Geographic & Currency Spread, and Liquidity & Debt Management.
-- **Institutional Ratings:** Categorizes portfolios into *Institutional*, *Balanced*, *Moderate Risk*, and *High Fragility* with prioritized action steps.
-
-### ⚖️ Indian Tax Intelligence & Loss Harvesting (Finance Act 2024 / FY 2025-26)
-- **Updated Capital Gains Thresholds:** Section 112A LTCG at 12.5% above ₹1,25,000 exemption limit; Section 111A STCG at 20.0%.
-- **1-Click Tax Harvest Action Plan:** Identifies loss positions, computes estimated immediate tax impact, and provides 30-day wash-sale protection guidance.
-
-### 🎯 What-If Macro Scenario Sandbox & Stress Testing
-- **Crisis Shock Templates:** Simulates historical shocks (2008 GFC Crunch, Tech Correction, 1970s Stagflation, Emerging Markets Liquidity Boom).
-- **Outcome Distribution:** Computes P5 (worst-case tail risk), P50 (median NAV), and P95 (resilience NAV) with post-shock Sharpe ratio shifts.
-
-### 📜 DPDP-Aligned AI Investment Committee Memorandum Studio
-- **Zero-Knowledge PII Tokenization:** Replaces client identifiers with deterministic tokens (e.g. `Client Ref #AA-881`) ensuring alignment with India's DPDP Act 2023 data minimization principles.
-- **Structured Executive Report:** One-click generation of formal Investment Committee memos with executive summary, risk diagnostics, attribution analysis, and advisor action plans.
-
-### 🚨 Smart Alerts & Policy Violation Governance
-- **Real-Time Guardrails:** Monitors concentration breaches (>20% single position), large drawdowns, health score drops, and tax-loss harvesting windows.
+### 1. 🔑 Authentication, Security & Access Control
+* **1-Click Judge & Demo Sign-In (`quickDemoLogin`)**: Authenticates immediately as the demo advisor without displaying plaintext passwords on screen, enabling instant sandbox evaluation.
+* **Manual Cloud Backend Sign-In**: Username and password login against the Render backend (`/api/auth/login`) returning JWT access and refresh token pairs.
+* **Auto-Fill Cloud Backend URL**: One-tap URL population shortcut (`https://assetarray.onrender.com`) for production cloud environment connection.
+* **JWT Access & Refresh Token Lifecycle**: Automatic silent token renewal (`/api/auth/refresh`) on `401 Unauthorized` responses via `refreshAccessTokenIfNeeded()`.
+* **Logout & Session Revocation**: Securely invalidates refresh tokens on the server (`/api/auth/logout`) and purges local session tokens from device storage.
+* **Offline Demo Mode (`continueOffline`)**: Instant access to local sandbox state without requiring an active internet connection or cloud backend server.
+* **Hardware PIN Setup & Lock Screen**: 4-digit PIN setup persisted via `expo-secure-store` with auto-lock screen verification.
+* **Biometric Authentication**: Hardware unlock via Apple Face ID / Touch ID or Android Biometrics using `expo-local-authentication`.
+* **Haptics & Tactile Feedback**: Customizable selection and notification haptics using `expo-haptics` with user preference persistence.
+* **Dual Luxury Theme Engine**: High-contrast Obsidian & Champagne Gold dark theme and Swiss Private Banking light theme.
+* **Client-Side Zero-Knowledge Encryption**: End-to-end AES-256 client payload encryption before cloud transmission using PIN-derived cryptographic keys.
+* **Backend Environment Security Hardening**: Strict production rules requiring non-default `TOKEN_SECRET`, `REFRESH_SECRET`, and domain-restricted `CORS_ORIGIN`.
 
 ---
 
-## ⚡ Core Platform Capabilities
+### 2. 👤 Client 360 Workspace & Roster Management
+* **Comprehensive Client Roster**: Filterable cards and tables displaying client name, category, risk profile, priority, city, allocation, and reminder dates.
+* **Multi-Attribute Search & Filter**: Real-time search across client names, emails, phone numbers, cities, and risk profiles.
+* **Category Filters**: Instant segmentation by category (*All*, *HNI*, *Ultra HNI*, *Retail*, *Institutional*).
+* **Mode Filters**: Quick filtering by *All Clients*, *Due Reminders*, and *High Priority*.
+* **Client Onboarding & Creation Modal**: Comprehensive draft editor capturing Name, Phone, Email, Category, Risk Profile, Preferred Channel (Email/WhatsApp/SMS), Watchlist Tickers, City, Target Asset Allocation, Contact Reminder Date, Priority Level, and Notes.
+* **Client Dossier Editor**: Edit existing client records and instantly persist updates across local storage and cloud state.
+* **Client Deletion**: Safe deletion workflow with confirmation prompt to prevent accidental data loss.
+* **Bulk Client Selection**: Multi-select checkbox matrix for batch operations and campaign outreach.
+* **Contact Reminder Engine**: Automatic detection and visual highlighting of overdue or scheduled client touchpoints.
+* **Client Contact & Interaction Log**: Historical interaction log recording date and summary notes per client.
+* **Seed Demo Client Roster**: 1-tap loading of 3 pre-configured institutional client dossiers (Rohan Varma, Devendra Singhal, Ananya Iyer) with realistic portfolios.
 
-### ⚡ Real-Time Share Market Streaming Engine & Level-2 Terminal
-- **Authentic Multi-Asset Universe:** Streams live micro-ticks for **NSE/BSE Equities** (`RELIANCE`, `TCS`, `HDFCBANK`, `INFY`, `ICICIBANK`), **Global Indices** (`NIFTY 50`, `SENSEX`, `S&P 500`, `NASDAQ`), **Commodities** (`GOLD`), **Forex** (`USD/INR`), and **Crypto** (`BTC/USD`, `ETH/USD`).
-- **Exchange Precision Ticking:** Realistic Brownian stochastic movement matching exchange tick sizes (₹0.05 on NSE, $0.01 on USD).
-- **Interactive Level-2 Depth Terminal:** Top 5 Bids & Asks orderbook with real-time quantities, order counts, buy/sell volume pressure gauge, intraday 30-tick SVG sparkline, day high/low slider, and simulated trade desk.
-- **Micro-Flash Live Ticker:** Animated green/red micro-glow chips flashing on price ticks with 1-tap deep inspection.
-- **Continuous Portfolio Valuation Sync:** Client holdings (`currentValue = quote.price * quantity`) dynamically update in real time as market securities tick.
+---
 
-### 🎲 Monte Carlo Wealth Simulator
-- **1,000 Path Stochastic Forecast:** Simulates portfolio growth under historical market volatility and drift to compute statistical goal success probabilities.
-- **Confidence Bands:** 10th (pessimistic), 50th (median), and 90th (optimistic) percentile trajectory paths.
+### 3. 📊 Portfolio Analytics, Valuation & Performance Engine
+* **Multi-Asset Class Support**: Tracks positions across 8 asset classes: Equities, Mutual Funds, Fixed Income, Commodities, Cash & Equivalents, Crypto, Real Estate, and International Assets.
+* **Holding Creation & Editing**: Add/edit position details including Asset Name, Asset Class, Ticker, Quantity, Invested Value, Current Market Value, Target Weight %, and Notes.
+* **Real-Time Live Valuation Sync**: Client portfolio market values (`currentValue = price * quantity`) dynamically update live as market securities tick.
+* **Time-Weighted Return (TWR) Engine**: GIPS-informed sub-period return calculation isolating external cash flows (`src/services/performance/twr.ts`).
+* **Money-Weighted Return (XIRR) Engine**: Exact Newton-Raphson cash-flow yield calculation (`src/services/performance/xirr.ts`).
+* **Visual Holdings Treemap / Heatmap**: Interactive area-proportional rectangular tiles displaying asset weights and return performance.
+* **Portfolio Rebalancing Studio**: Automated rebalance engine calculating current vs. target weight drift and generating exact Buy/Sell order lists (`src/services/rebalancer.ts`).
 
-### 📄 1-Click Statement & CSV Importer
-- **Automated Ingestion:** Instant parsing of brokerage CSV and text statements.
-- **Smart Asset Classification:** Automatically categorizes parsed securities into Equities, Mutual Funds, Fixed Income, and Commodities.
+---
 
-### 🤖 Conversational AI Wealth Copilot (Google Gemini)
-- **Context-Aware Portfolio Assistant:** Instant chat answering complex queries regarding asset exposure, rebalancing requirements, and risk distribution.
-- **One-Touch Prompts:** Pre-configured analysis shortcuts ("Analyze concentration risk", "Generate tax harvesting plan").
+### 4. 📈 Real-Time Live Share Market Ticker & Level-2 Terminal
+* **Live Micro-Flash Header Ticker**: Top bar streaming ticks for **NSE/BSE Equities** (`RELIANCE`, `TCS`, `INFY`, `HDFCBANK`, `ICICIBANK`), **Indices** (`NIFTY 50`, `SENSEX`, `S&P 500`, `NASDAQ`), **Commodities** (`GOLD`), **FX** (`USD/INR`), and **Crypto** (`BTC/USD`, `ETH/USD`).
+* **Stochastic Brownian Ticking Engine**: Simulated realistic exchange micro-movement with green/red micro-glow animations matching exchange tick sizes.
+* **Level-2 Depth Terminal (`LiveMarketDepthModal`)**: Top 5 Bid & Ask order book depth with live quantities, buy/sell volume pressure gauge, intraday 30-tick SVG sparklines, day high/low range slider, and simulated trade execution.
+* **Official AMFI NAV Integration (`AmfiNavProvider`)**: Ingests official Indian Mutual Fund Net Asset Values from AMFI India endpoints.
+* **Multi-Provider Market Aggregator (`unifiedMarketProvider`)**: Automatic failover across Finnhub, Alpha Vantage, AMFI, and local stochastic ticker.
+* **Quote Schema Validation**: Strict runtime schema validator filtering out negative prices, `NaN`, `Infinity`, or malformed quotes.
 
-### 🗺️ Dynamic Holdings Treemap / Heatmap
-- **Visual Allocation Studio:** Interactive area-proportional tiles showcasing portfolio weightings and returns.
+---
 
-### 🛡️ Client Investor Shareable Portal
-- **Branded Read-Only Dossier:** Generate secure, client-facing portfolio dashboards for high-net-worth clients.
+### 5. 🛡️ Institutional Risk Intelligence & Portfolio Health Score
+* **0–100 Portfolio Health Score Diagnostic (`calculateHealthScore`)**: Multi-pillar rating evaluating:
+  1. *Data Completeness*
+  2. *Asset Diversification (HHI Entropy)*
+  3. *Single-Asset Concentration Defense*
+  4. *Geographic & Currency Spread*
+  5. *Liquidity & Debt Management*
+* **Modern Portfolio Theory (MPT) Risk Metrics**: Computes Portfolio Volatility (Standard Deviation), Sharpe Ratio, Beta against Benchmark, Max Drawdown, and High Watermark.
+* **Multi-Benchmark Comparison**: Benchmarks client performance against NIFTY 50, CRISIL Hybrid 65:35, and S&P 500.
 
-### 💎 Pro Advisor Monetization (RevenueCat)
-- **Native In-App Purchases:** Integrated via `react-native-purchases` supporting iOS App Store, Google Play, and RevenueCat Test Store sandbox.
-- **Conversion-Optimized Paywall:** High-converting modal UI highlighting Pro benefits (Monthly & Annual pricing tiers).
-- **Feature Gating:** Free tier vs. Pro tier access control gating AI Portfolio Co-Pilot and Unlimited Client PDF Exports.
-- **In-App Subscription Management:** Real-time plan status indicator, purchase restore, and a built-in sandbox reset toggle in Settings.
+---
 
-### 📄 Executive PDF Report Studio
-- **Print & Share Ready:** Generates high-resolution, branded PDF portfolio summary reports on-device using `expo-print` and `expo-sharing`.
-- **Advisor Branding:** Automatically stamps advisor credentials, disclaimers, asset breakdowns, and contact information.
+### 6. 🏛️ Brinson-Fachler Performance Attribution Engine
+* **Alpha Decomposition**: Mathematically breaks active portfolio outperformance/underperformance into **Allocation Effect**, **Selection Effect**, and **Interaction Effect**.
+* **Plain-Language Explainability**: Auto-generates narrative summaries detailing top alpha drivers and drag positions.
 
-### 📊 Comprehensive Financial Calculators
-- **Stateless Calculation Engine:** Pure mathematical models for SIP, Cash Flow (payout & cumulative), Retirement, and Goal Planning (`src/services/calculators.ts`).
-- **Interactive Projections:** Instant visual feedback on returns, inflation impact, and target maturity dates.
+---
 
-### 🔒 Enterprise Security & End-to-End Cloud Sync
-- **Hardware PIN & Biometrics:** Local authentication with Face ID / Touch ID via `expo-local-authentication` and `expo-secure-store`.
-- **Zero-Knowledge Encryption:** End-to-end AES-256 client encrypted synchronization with MongoDB Atlas.
-- **Role-Based Cloud Auth:** Token-based JWT access and refresh rotation (`/api/auth/login`, `/api/auth/refresh`).
+### 7. ⚖️ Indian Tax Intelligence & Loss Harvesting (AY 2026-27 / FY 2025-26)
+* **Section 112A LTCG Tax Engine**: 12.5% tax rate calculation on long-term equity gains above the ₹1,25,000 statutory exemption limit.
+* **Section 111A STCG Tax Engine**: 20.0% tax rate calculation on short-term equity gains.
+* **Section 70 & 74 Set-off & Carry-Forward Engine**: Enforces statutory intra-head and inter-head gain/loss offset rules.
+* **Tax Lot FIFO/LIFO Evaluation**: Evaluates individual buy/sell tax lots for term classification (LTCG > 12 months for equity, STCG <= 12 months).
+* **1-Click Tax Loss Harvesting Plan**: Identifies loss positions, computes immediate tax savings, and provides 30-day wash-sale protection guidance.
+
+---
+
+### 8. 🎯 What-If Macro Scenario Sandbox & Stress Testing
+* **Historical Crisis Presets (`PRESET_SCENARIOS`)**: Simulates shocks including *2008 GFC Crunch*, *Tech Correction*, *1970s Stagflation*, and *Emerging Markets Liquidity Boom*.
+* **Custom Shock Sliders**: Allows advisors to tweak equity market drops, interest rate shifts, and FX movements.
+* **Outcome Distribution & Tail Risk**: Computes P5 (worst-case tail risk), P50 (median NAV), P95 (resilience NAV), and post-shock Sharpe ratio shifts.
+
+---
+
+### 9. 🎲 1,000-Path Monte Carlo Wealth Simulator
+* **Mulberry32 PRNG Generator**: Reproducible, seedable 1,000-run stochastic path simulation (`src/services/monteCarlo.ts`).
+* **Statistical Probability of Success**: Computes exact percentage probability of achieving target wealth goals.
+* **Percentile Trajectories**: Displays 10th (pessimistic), 50th (median), and 90th (optimistic) percentile visual curves.
+
+---
+
+### 10. 🤖 Conversational AI Wealth Copilot & AI Advisor Brief (Google Gemini)
+* **Multi-Provider AI Gateway (`AiRouter`)**: Routes AI prompts across Google Gemini (`gemini-2.5-flash`, `gemini-2.5-pro`), OpenAI, Anthropic, and local Ollama daemon (`llama3.2`).
+* **Zero-Knowledge PII Sanitization**: Replaces client names and PII with deterministic tokens (e.g. `Client Ref #AA-881`) aligned with India's DPDP Act 2023.
+* **AI Output Grounding (`validateClaimsAgainstContext`)**: Verifies numerical claims in AI responses against actual portfolio data.
+* **Floating Conversational Copilot (`AiWealthCopilot`)**: Context-aware chat assistant answering portfolio queries, rebalancing questions, and risk breakdowns.
+* **AI Investment Committee Memo Studio**: 1-click formal memo generation with executive summary, risk diagnostics, and action plans.
+* **AI Research Brief Screen (`AiResearchScreen`)**: Comprehensive research workspace with grounding confidence scores.
+
+---
+
+### 11. 🚨 Smart Alerts & Advisor Command Center
+* **Real-Time Policy Guardrails**: Monitors concentration breaches (>20% single position), large drawdowns, health score drops, and tax-loss harvesting windows.
+* **Advisor Action Prioritization**: Ranks pending advisor actions by urgency and client impact (`src/services/advisor/prioritization.ts`).
+
+---
+
+### 12. 📄 Executive PDF Report Studio & Client Shareable Portal
+* **On-Device PDF Generation**: Generates high-resolution branded PDF portfolio summary reports using `expo-print` and `expo-sharing`.
+* **Advisor Branding & Stamping**: Stamps advisor credentials, disclaimers, asset breakdowns, and contact information.
+* **Shareable Client Portal (`ClientPortalModal`)**: Generates read-only investor dossier for client review.
+
+---
+
+### 13. 📄 1-Click Statement & CSV Importer
+* **Automated Statement Parser (`statementParser.ts`)**: Instant parsing of broker CSVs and text statements.
+* **Smart Asset Classification**: Categorizes parsed holdings into Equities, Mutual Funds, Fixed Income, and Commodities.
+
+---
+
+### 14. 🧮 Comprehensive Financial Calculators Center
+* **SIP Calculator**: Computes future wealth, total invested amount, and wealth gain for systematic investment plans.
+* **Cash Flow Calculator**: Models cumulative and payout cash flows.
+* **Retirement Calculator**: Estimates required retirement corpus based on inflation, current expenses, and post-retirement yield.
+* **Financial Goal Center**: Computes required monthly savings to achieve target goal values.
+
+---
+
+### 15. 📁 Client Document Vault
+* **Category-Indexed Vault**: Storage desk for client documents categorized by KYC, Risk Profile, Agreements, and Reports.
+* **Metadata Tracking**: Records upload date, file name, document status, and linked client assignment.
+
+---
+
+### 16. 💳 Pro Advisor Monetization (RevenueCat)
+* **Native In-App Purchases (`react-native-purchases`)**: Integrated RevenueCat SDK supporting iOS App Store, Google Play, and Web Test Store sandbox.
+* **Pro Paywall Modal (`PaywallScreen`)**: Conversion-optimized paywall supporting Monthly and Annual subscription tiers.
+* **Entitlement Gating (`pro_advisor`)**: Gates access to AI Portfolio Co-Pilot and Unlimited PDF Exports.
+* **Subscription Management**: Purchase restoration and built-in sandbox entitlement reset toggle in Settings.
+
+---
+
+### 17. ☁️ Enterprise End-to-End Cloud Synchronization
+* **E2EE Cloud Sync (`syncToCloud`, `restoreFromCloud`)**: Pushes/pulls AES-256 encrypted payloads to MongoDB Atlas via Render API.
+* **Live Sync Status Badge (`SyncBadge`)**: Real-time header badge displaying:
+  * 🔵 `SYNCING...` (Active sync in progress)
+  * 🟡 `OFFLINE` (Device offline)
+  * 🔴 `ERROR` (Sync/Restore error)
+  * 🟢 `SYNCED` (Backup synced)
+
+---
+
+### 18. 🌐 Cross-Platform Responsive UX & Multi-Currency
+* **Responsive Desktop & Mobile Layouts**: Features `DesktopSidebar` on web/desktop and `BottomTabBar` on mobile.
+* **Multi-Currency Support**: Instant switching and persistence across **INR (₹)**, **USD ($)**, **EUR (€)**, and **GBP (£)**.
+* **Broadcast Communication Modal (`BroadcastModal`)**: Multi-client campaign preview for Email, WhatsApp, and SMS outreach.
 
 ---
 
@@ -152,6 +213,7 @@ AssetArray/
 │   │   ├── LiveMarketTicker.tsx         # Real-time ticking header with micro-flash animations
 │   │   ├── AiWealthCopilot.tsx          # Floating conversational AI copilot
 │   │   ├── BottomTabBar.tsx             # Mobile bottom navigation bar
+│   │   ├── SyncBadge.tsx                # Real-time network & sync status badge (SYNCING/OFFLINE/ERROR/SYNCED)
 │   │   ├── charts/
 │   │   │   ├── HoldingsTreemap.tsx      # Interactive portfolio allocation treemap
 │   │   │   ├── PerformanceChart.tsx     # Historical portfolio trajectory chart
@@ -171,6 +233,7 @@ AssetArray/
 │   │   ├── SettingsScreen.tsx           # Security, theme, cloud sync, and subscriptions
 │   │   └── PaywallScreen.tsx            # RevenueCat Pro Advisor Paywall UI
 │   ├── services/
+│   │   ├── network.ts                   # Real-time browser online/offline status detection & subscription
 │   │   ├── realTimeMarket.ts            # Stochastic Brownian market tick & depth engine
 │   │   ├── monteCarlo.ts                # Statistical path generation engine
 │   │   ├── statementParser.ts           # CSV/statement parsing & classification
@@ -182,10 +245,10 @@ AssetArray/
 │   └── theme/
 │       └── colors.ts                    # Obsidian & Champagne Gold + Swiss Luxury Light palettes
 ├── backend/                             # Node.js + Express + MongoDB Atlas cloud API
-│   ├── server.js                        # REST API (Auth, E2EE Sync, AI Research, Audit Logs)
+│   ├── server.js                        # REST API with production token & CORS security enforcement
 │   ├── Dockerfile                       # Multi-stage production container
 │   └── package.json                     # Backend dependencies
-└── __tests__/                           # 41 passing Jest unit tests across 9 suites
+└── __tests__/                           # 48 passing Jest unit test suites (262 total tests)
 ```
 
 ---
@@ -217,13 +280,20 @@ npm run deploy:web
 npm run deploy:preview
 ```
 
-### 3. Run Automated Tests
+### 3. Run Automated Regression Tests
 ```bash
+# Run full Jest test suite (48 suites, 262 tests)
 npm test
-```
 
-### 4. Deploy Backend API
-The backend is configured for continuous deployment on [Render.com](https://render.com) using the included `render.yaml` blueprint. Simply connect the repository to Render, configure your environment variables (`MONGO_URI`, `GEMINI_API_KEY`, etc.), and deployment runs automatically on push to `main`.
+# Run TypeScript typecheck
+npm run typecheck
+
+# Run production web build
+npm run build:web
+
+# Verify backend server syntax
+node --check backend/server.js
+```
 
 ---
 

@@ -86,7 +86,7 @@ import { buildAppTheme, styles } from "./src/theme";
 import { SyncBadge } from "./src/components/SyncBadge";
 import { fetchLiveMarketQuotes, getQuoteForSymbol, MarketQuote } from "./src/services/marketData";
 import { analyzeClientPortfolioWithAI, ClientAiRecommendation } from "./src/services/aiAdvisor";
-import { useNetworkStatus } from "./src/services/network";
+import { getOnlineStatus, useNetworkStatus } from "./src/services/network";
 import { exportClientPdfReport } from "./src/services/pdfReport";
 import { initializeRevenueCat, checkProStatus, getOfferings, purchasePackage, restorePurchases, resetDemoProStatus } from "./src/services/revenueCat";
 import { PaywallScreen } from "./src/screens/PaywallScreen";
@@ -2109,7 +2109,14 @@ function AppContent() {
       return;
     }
 
+    if (!getOnlineStatus()) {
+      setSyncState("Sync failed (Offline)");
+      Alert.alert("Sync failed", "Device is currently offline. Please check your internet connection.");
+      return;
+    }
+
     try {
+      setIsSyncing(true);
       setSyncState("Pushing encrypted backup...");
       const accessToken = await refreshAccessTokenIfNeeded();
       if (!accessToken) {
@@ -2144,6 +2151,8 @@ function AppContent() {
         "Sync failed",
         error instanceof Error ? error.message : "Unable to push encrypted backup."
       );
+    } finally {
+      setIsSyncing(false);
     }
   }
 
@@ -2157,7 +2166,14 @@ function AppContent() {
       return;
     }
 
+    if (!getOnlineStatus()) {
+      setSyncState("Restore failed (Offline)");
+      Alert.alert("Restore failed", "Device is currently offline. Please check your internet connection.");
+      return;
+    }
+
     try {
+      setIsSyncing(true);
       setSyncState("Pulling encrypted backup...");
       const accessToken = await refreshAccessTokenIfNeeded();
       if (!accessToken) {
@@ -2206,6 +2222,8 @@ function AppContent() {
         "Restore failed",
         error instanceof Error ? error.message : "Unable to restore cloud backup."
       );
+    } finally {
+      setIsSyncing(false);
     }
   }
 
@@ -2666,14 +2684,11 @@ function AppContent() {
           <TextInput
             value={authPassword}
             onChangeText={setAuthPassword}
-            placeholder="Password (e.g. AssetArrayLocalAdmin2026)"
+            placeholder="Password"
             placeholderTextColor="#7f90a8"
             secureTextEntry
             style={styles.authInput}
           />
-          <Text style={{ color: "#7f90a8", fontSize: 11, marginBottom: 12 }}>
-            Demo credentials: admin / AssetArrayLocalAdmin2026
-          </Text>
 
           <Pressable style={styles.primaryButton} onPress={() => void loginToBackend()}>
             <Text style={styles.primaryButtonText}>
@@ -2821,7 +2836,7 @@ function AppContent() {
           <View style={[styles.heroCopy, isCompactPageHeader ? styles.heroCopyCompact : null]}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 2 }}>
               <Text style={[styles.heroEyebrow, { color: theme.colors.brand }]}>Asset Array</Text>
-              <SyncBadge isSyncing={isSyncing} />
+              <SyncBadge isSyncing={isSyncing} syncState={syncState} />
               <Pressable
                 onPress={() => setIsPaywallVisible(true)}
                 style={{

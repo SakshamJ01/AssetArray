@@ -5,14 +5,25 @@ import { useNetworkStatus } from "../services/network";
 
 interface SyncBadgeProps {
   isSyncing?: boolean;
+  syncState?: string;
+  hasError?: boolean;
 }
 
-export const SyncBadge: React.FC<SyncBadgeProps> = ({ isSyncing = false }) => {
+export const SyncBadge: React.FC<SyncBadgeProps> = ({
+  isSyncing = false,
+  syncState = "",
+  hasError = false,
+}) => {
   const { isOnline } = useNetworkStatus();
 
   let badgeColor = "#11c49b"; // Accent green
   let statusText = "Synced";
   let iconName: keyof typeof Ionicons.glyphMap = "cloud-done";
+
+  const isFailed =
+    hasError ||
+    (Boolean(syncState) &&
+      (syncState.toLowerCase().includes("failed") || syncState.toLowerCase().includes("error")));
 
   if (isSyncing) {
     badgeColor = "#3b82f6"; // Brand blue
@@ -21,6 +32,10 @@ export const SyncBadge: React.FC<SyncBadgeProps> = ({ isSyncing = false }) => {
     badgeColor = "#f0b44d"; // Warning yellow
     statusText = "Offline";
     iconName = "cloud-offline";
+  } else if (isFailed) {
+    badgeColor = "#ef4444"; // Danger red
+    statusText = "Sync Error";
+    iconName = "alert-circle";
   }
 
   return (

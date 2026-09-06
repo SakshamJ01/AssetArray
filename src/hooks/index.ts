@@ -1,2 +1,3 @@
-export * from "./useClients";
-export * from "./useAuthDesk";
+// Custom hooks index
+export {};
+

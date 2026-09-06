@@ -36,6 +36,30 @@ const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "llama3.2";
 
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
+const DEFAULT_DEV_TOKEN_SECRET = "asset-array-dev-secret-change-in-production";
+const DEFAULT_DEV_REFRESH_SECRET = "asset-array-dev-refresh-secret-change-in-production";
+
+if (IS_PRODUCTION) {
+  if (!process.env.TOKEN_SECRET || TOKEN_SECRET === DEFAULT_DEV_TOKEN_SECRET) {
+    console.error(
+      "[FATAL SERVER CONFIG ERROR] TOKEN_SECRET must be set and cannot be the default development secret in production."
+    );
+    process.exit(1);
+  }
+  if (!process.env.REFRESH_SECRET || REFRESH_SECRET === DEFAULT_DEV_REFRESH_SECRET) {
+    console.error(
+      "[FATAL SERVER CONFIG ERROR] REFRESH_SECRET must be set and cannot be the default development secret in production."
+    );
+    process.exit(1);
+  }
+  if (!process.env.CORS_ORIGIN || CORS_ORIGIN === "*") {
+    console.error(
+      "[FATAL SERVER CONFIG ERROR] CORS_ORIGIN must be explicitly set and cannot be '*' wildcard in production."
+    );
+    process.exit(1);
+  }
+}
+
 const rateLimitMap = new Map();
 const authAttemptMap = new Map();
 const mongo = new MongoClient(MONGO_URI, {

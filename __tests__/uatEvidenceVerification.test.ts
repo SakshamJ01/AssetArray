@@ -41,6 +41,8 @@ jest.mock("@react-native-async-storage/async-storage", () =>
   require("@react-native-async-storage/async-storage/jest/async-storage-mock")
 );
 
+jest.setTimeout(30000);
+
 describe("UAT Runtime Evidence & Verification Suite", () => {
   const evidenceDir = path.join(__dirname, "..", "docs", "uat-evidence");
 
@@ -61,9 +63,15 @@ describe("UAT Runtime Evidence & Verification Suite", () => {
       webEndpoint: "https://asset-array.web.app",
     };
 
+    const backendController = new AbortController();
+    const backendTimeout = setTimeout(() => backendController.abort(), 25000);
+
     try {
       const startBackend = performance.now();
-      const backendRes = await fetch(results.backendEndpoint, { method: "GET" });
+      const backendRes = await fetch(results.backendEndpoint, {
+        method: "GET",
+        signal: backendController.signal,
+      });
       const backendTime = performance.now() - startBackend;
       results.backendStatus = backendRes.status;
       results.backendResponseTimeMs = Math.round(backendTime);
@@ -72,13 +80,22 @@ describe("UAT Runtime Evidence & Verification Suite", () => {
         results.backendBody = await backendRes.json();
       }
     } catch (err: any) {
-      results.backendStatus = "NETWORK_OR_COLD_START";
+      results.backendStatus = "NETWORK_ERROR";
       results.backendError = err.message;
+      results.backendOk = false;
+    } finally {
+      clearTimeout(backendTimeout);
     }
+
+    const webController = new AbortController();
+    const webTimeout = setTimeout(() => webController.abort(), 25000);
 
     try {
       const startWeb = performance.now();
-      const webRes = await fetch(results.webEndpoint, { method: "GET" });
+      const webRes = await fetch(results.webEndpoint, {
+        method: "GET",
+        signal: webController.signal,
+      });
       const webTime = performance.now() - startWeb;
       results.webStatus = webRes.status;
       results.webResponseTimeMs = Math.round(webTime);
@@ -86,10 +103,18 @@ describe("UAT Runtime Evidence & Verification Suite", () => {
     } catch (err: any) {
       results.webStatus = "NETWORK_ERROR";
       results.webError = err.message;
+      results.webOk = false;
+    } finally {
+      clearTimeout(webTimeout);
     }
 
     expect(results.testId).toBe("EVIDENCE-01");
-  });
+    if (!results.backendOk) {
+      throw new Error(
+        `Backend health check failed: ${results.backendError || `HTTP status ${results.backendStatus}`}`
+      );
+    }
+  }, 30000);
 
   // -------------------------------------------------------------
   // 2. No-History Client Verification (Zero Synthetic Insights)

@@ -1,10 +1,12 @@
 import React from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { AppTheme } from "../theme";
 import { AdvisorMessagesScreen } from "./workspace/AdvisorMessagesScreen";
 
 export interface WorkspaceScreenProps {
   theme: AppTheme;
+  onNavigateTab?: (tab: string, params?: any) => void;
   marketMessage: string;
   setMarketMessage: (msg: string) => void;
   setBroadcastMessage: (msg: string) => void;
@@ -49,6 +51,7 @@ export interface WorkspaceScreenProps {
 
 export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
   theme,
+  onNavigateTab,
   marketMessage,
   setMarketMessage,
   setBroadcastMessage,
@@ -71,8 +74,58 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
 }) => {
   return (
     <>
+      {/* Secondary Destinations / Quick Hub (Rule 45) */}
+      <View
+        style={[
+          styles.panel,
+          {
+            borderRadius: 4,
+            borderWidth: 1,
+            borderColor: theme.colors.border,
+            padding: 14,
+            marginBottom: 14,
+          },
+        ]}
+      >
+        <Text style={[styles.panelTitle, { fontSize: 13, marginBottom: 8 }]}>
+          WORKSTATION DESTINATIONS
+        </Text>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+          {[
+            { label: "Goals Planner", icon: "flag-outline" as const, tab: "Tools", params: { calculator: "Goal Planner" } },
+            { label: "Risk & Tax", icon: "shield-checkmark-outline" as const, tab: "Portfolios", params: { view: "tax-harvest" } },
+            { label: "Research", icon: "search-outline" as const, tab: "AI Research", params: {} },
+            { label: "Calculators", icon: "calculator-outline" as const, tab: "Tools", params: { calculator: "Cash Flow" } },
+            { label: "Settings", icon: "settings-outline" as const, tab: "Settings", params: {} },
+          ].map((dest) => (
+            <Pressable
+              key={dest.label}
+              onPress={() => onNavigateTab && onNavigateTab(dest.tab, dest.params)}
+              style={{
+                flex: 1,
+                minWidth: 100,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 6,
+                paddingHorizontal: 10,
+                paddingVertical: 8,
+                borderRadius: 4,
+                backgroundColor: theme.colors.surfaceMuted,
+                borderWidth: 1,
+                borderColor: theme.colors.border,
+              }}
+            >
+              <Ionicons name={dest.icon} size={15} color={theme.colors.brand} />
+              <Text style={{ fontSize: 11, fontWeight: "700", color: theme.colors.textPrimary }}>
+                {dest.label}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
+
       {/* Daily Market Message */}
-      <View style={styles.panel}>
+      <View style={[styles.panel, { borderRadius: 4, borderWidth: 1 }]}>
         <Text style={styles.panelTitle}>Daily market message</Text>
         <Text style={styles.panelSubtitle}>
           This message becomes your default update for direct outreach and campaigns.
@@ -84,7 +137,7 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
             setMarketMessage(value);
             setBroadcastMessage(value);
           }}
-          style={[styles.input, styles.messageInput]}
+          style={[styles.input, styles.messageInput, { borderRadius: 4 }]}
         />
       </View>
 

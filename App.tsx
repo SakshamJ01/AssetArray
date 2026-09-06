@@ -1456,7 +1456,6 @@ function AppContent() {
   );
 
   const visibleTabs = useMemo(
-
     () => [
       { key: "Dashboard" as AppTab, label: "Dashboard" },
       { key: "Clients" as AppTab, label: "Clients" },
@@ -1465,6 +1464,17 @@ function AppContent() {
       { key: "Workspace" as AppTab, label: "Workspace" },
       { key: "Settings" as AppTab, label: "Settings" },
       { key: "AI Research" as AppTab, label: "AI Research" },
+    ],
+    []
+  );
+
+  const mobileTabs = useMemo(
+    () => [
+      { key: "Dashboard" as AppTab, label: "Dashboard" },
+      { key: "Clients" as AppTab, label: "Clients" },
+      { key: "Portfolios" as AppTab, label: "Portfolios" },
+      { key: "AI Research" as AppTab, label: "AI Research" },
+      { key: "Workspace" as AppTab, label: "Workspace" },
     ],
     []
   );
@@ -2920,6 +2930,10 @@ function AppContent() {
           <>
             <PortfoliosScreen
               theme={theme}
+              onNavigateTab={(tab, params) => {
+                setActiveTab(tab as AppTab);
+                if (params?.query) setAiResearchQuery(params.query);
+              }}
               unifiedPortfolioAnalytics={unifiedPortfolioAnalytics}
               taxReporting={taxReporting}
               isMarketRefreshing={isMarketRefreshing}
@@ -2949,6 +2963,14 @@ function AppContent() {
         {activeTab === "Workspace" ? (
           <WorkspaceScreen
             theme={theme}
+            onNavigateTab={(tab, params) => {
+              setActiveTab(tab as AppTab);
+              if (tab === "Portfolios" && params?.view) {
+                setPortfolioActiveModal(params.view);
+              } else if (tab === "Tools" && params?.calculator) {
+                setActiveCalculator(params.calculator);
+              }
+            }}
             marketMessage={marketMessage}
             setMarketMessage={setMarketMessage}
             setBroadcastMessage={setBroadcastMessage}
@@ -3128,10 +3150,10 @@ function AppContent() {
 
       {!isDesktop && (
         <BottomTabBar
-          activeTab={visibleTabs.some((tab) => tab.key === activeTab) ? activeTab : "Dashboard"}
+          activeTab={mobileTabs.some((tab) => tab.key === activeTab) ? activeTab : "Workspace"}
           bottomInset={insets.bottom}
           onChange={setActiveTab}
-          tabs={visibleTabs}
+          tabs={mobileTabs}
           theme={theme}
         />
       )}

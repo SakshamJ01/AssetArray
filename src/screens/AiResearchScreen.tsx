@@ -63,40 +63,10 @@ export const AiResearchScreen = React.memo(function AiResearchScreen({
   const isWebResearch = resultAny?.isWebResearch;
   const rawSources: ResearchSource[] = resultAny?.sources || [];
   
-  // Default mock sources for grounded presentation if result exists but has no source array
-  const sources: ResearchSource[] = rawSources.length > 0 
-    ? rawSources 
-    : aiResearchResult 
-      ? [
-          {
-            id: "src-1",
-            publisher: "BSE / NSE Regulatory Feed",
-            title: `${aiResearchQuery || "Asset"} Quarterly Disclosures & Corporate Filings`,
-            publishedAt: "Today 10:15 IST",
-            retrievedAt: "Just now",
-            sourceType: isWebResearch ? "CURRENT SOURCE" : "MODEL INTERPRETATION",
-            url: "https://www.bseindia.com",
-          },
-          {
-            id: "src-2",
-            publisher: "AMFI India Mutual Fund NAV Hub",
-            title: "Industry Holdings & Sector Allocation Metrics",
-            publishedAt: "Previous Close",
-            retrievedAt: "Today 09:30 IST",
-            sourceType: "HISTORICAL SOURCE",
-            url: "https://www.amfiindia.com",
-          },
-          {
-            id: "src-3",
-            publisher: "RBI / Macro Pulse Bulletin",
-            title: "Benchmark Yield Curve & Monetary Stance Assessment",
-            publishedAt: "01 Sep 2026",
-            retrievedAt: "Today 08:00 IST",
-            sourceType: "CURRENT SOURCE",
-            url: "https://www.rbi.org.in",
-          },
-        ]
-      : [];
+  // Honesty rule: only retrieved sources are shown. When the backend returns no
+  // source array, the brief is MODEL INTERPRETATION with zero cited sources —
+  // never fabricated publisher names, timestamps, or URLs.
+  const sources: ResearchSource[] = rawSources.length > 0 ? rawSources : [];
 
   const handleOpenSource = (url?: string) => {
     if (url && (url.startsWith("http://") || url.startsWith("https://"))) {
@@ -187,7 +157,11 @@ export const AiResearchScreen = React.memo(function AiResearchScreen({
             {/* 2. SOURCES (Rule 61 & 62) */}
             <View style={localStyles.sourcesSection}>
               <View style={localStyles.sourcesSectionHeader}>
-                <Text style={localStyles.sourcesTitle}>VERIFIED RESEARCH SOURCES ({sources.length})</Text>
+                <Text style={localStyles.sourcesTitle}>
+                  {sources.length > 0
+                    ? `VERIFIED RESEARCH SOURCES (${sources.length})`
+                    : "RESEARCH SOURCES (0 RETRIEVED)"}
+                </Text>
                 <View
                   style={[
                     localStyles.provenanceTag,
@@ -220,6 +194,15 @@ export const AiResearchScreen = React.memo(function AiResearchScreen({
               </Text>
 
               {/* Source Table */}
+              {sources.length === 0 ? (
+                <View style={localStyles.noSourcesBox}>
+                  <Text style={localStyles.noSourcesText}>
+                    No external sources were retrieved for this brief. Treat it as model
+                    interpretation grounded in portfolio records, not as verified current-source
+                    research.
+                  </Text>
+                </View>
+              ) : null}
               <View style={localStyles.sourcesTable}>
                 <View style={localStyles.sourcesTableHeader}>
                   <Text style={[localStyles.sourceHeaderCell, { flex: 2 }]}>PUBLISHER</Text>
@@ -524,6 +507,19 @@ const localStyles = StyleSheet.create({
   provenanceTagText: {
     fontSize: 9,
     fontWeight: "700",
+  },
+  noSourcesBox: {
+    borderRadius: radiusTokens.sm,
+    borderWidth: 1,
+    borderColor: surfaceTokens.borderHairline,
+    backgroundColor: surfaceTokens.surfaceMuted,
+    padding: 10,
+    marginBottom: 8,
+  },
+  noSourcesText: {
+    fontSize: 11,
+    lineHeight: 16,
+    color: "#94A3B8",
   },
   sourcesSubtitle: {
     fontSize: 11,

@@ -5,6 +5,8 @@
  * Required in production:
  *   NODE_ENV=production, TOKEN_SECRET, REFRESH_SECRET, MONGODB/MONGO_URI, CORS_ORIGIN
  * Production rejects: wildcard CORS, dev secrets, default admin password.
+ * Demo access is explicit via DEMO_AUTH_ENABLED=true (restricted role "demo",
+ * never admin). DEMO_USERNAME must not collide with ADMIN_USERNAME.
  */
 
 const DEFAULT_DEV_TOKEN_SECRET = "asset-array-dev-secret-change-in-production";
@@ -27,6 +29,13 @@ function validateEnv({ strict = process.env.NODE_ENV === "production" } = {}) {
   const MONGO_URI = get("MONGO_URI", "") || get("MONGODB_URI", "");
   const CORS_ORIGIN = get("CORS_ORIGIN", "");
   const ADMIN_PASSWORD = get("ADMIN_PASSWORD", DEFAULT_ADMIN_PASSWORD);
+  const DEMO_AUTH_ENABLED = get("DEMO_AUTH_ENABLED", "false") === "true";
+  const DEMO_USERNAME = (get("DEMO_USERNAME", "demo").trim() || "demo");
+  const ADMIN_USERNAME = (get("ADMIN_USERNAME", "admin").trim() || "admin");
+
+  if (DEMO_AUTH_ENABLED && DEMO_USERNAME === ADMIN_USERNAME) {
+    errors.push("DEMO_USERNAME must not collide with ADMIN_USERNAME.");
+  }
 
   if (IS_PRODUCTION && AUTH_REQUIRED) {
     if (!TOKEN_SECRET || TOKEN_SECRET === DEFAULT_DEV_TOKEN_SECRET || TOKEN_SECRET.length < 32) {
@@ -49,10 +58,15 @@ function validateEnv({ strict = process.env.NODE_ENV === "production" } = {}) {
     if (CORS_ORIGIN === "*") warnings.push("CORS wildcard allowed only outside production.");
   }
 
+  if (DEMO_AUTH_ENABLED) {
+    warnings.push("Demo access is explicitly enabled with an isolated restricted identity.");
+  }
+
   return {
     NODE_ENV,
     IS_PRODUCTION,
     AUTH_REQUIRED,
+    DEMO_AUTH_ENABLED,
     errors,
     warnings,
     isValid: strict ? errors.length === 0 : true,

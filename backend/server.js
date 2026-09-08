@@ -57,6 +57,13 @@ const AI_ANTHROPIC_FAST_MODEL = process.env.AI_ANTHROPIC_FAST_MODEL || "claude-3
 const AI_ANTHROPIC_RESEARCH_MODEL = process.env.AI_ANTHROPIC_RESEARCH_MODEL || "claude-3-5-sonnet-20241022";
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434";
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "llama3.2";
+// Server-controlled demo access: explicit opt-in only. The demo identity has
+// role "demo" (never "advisor"/"admin") and its password is a random value
+// that is never exposed — clients authenticate via POST /api/auth/demo-login
+// without any credential. Real admin auth always uses ADMIN_* env only.
+const DEMO_AUTH_ENABLED = process.env.DEMO_AUTH_ENABLED === "true";
+const DEMO_USERNAME = (process.env.DEMO_USERNAME || "demo").trim() || "demo";
+const DEMO_USER_ID = "demo-advisor";
 
 const rateLimitMap = new Map();
 const authAttemptMap = new Map();
@@ -108,59 +115,22 @@ app.use((req, res, next) => {
   next();
 });
 
+const {
+  safeEqual,
+  newPasswordSalt,
+  hashPassword: hashPasswordWith,
+  verifyPasswordHash: verifyPasswordHashWith,
+  signToken,
+  verifyToken,
+  isRefreshSessionUsable,
+} = require("./auth/crypto");
+
 function hashPassword(password, salt) {
-  // New accounts use a per-user random salt. Legacy accounts fall back to
-  // TOKEN_SECRET-derived hashing for backward compatibility (see verifyPasswordHash).
-  const effectiveSalt = salt || TOKEN_SECRET;
-  return crypto.pbkdf2Sync(password, effectiveSalt, 100_000, 64, "sha512").toString("hex");
+  return hashPasswordWith(password, salt, TOKEN_SECRET);
 }
 
 function verifyPasswordHash(password, user) {
-  if (!user || !user.passwordHash) return false;
-  if (user.passwordSalt) {
-    return safeEqual(user.passwordHash, hashPassword(password, user.passwordSalt));
-  }
-  return safeEqual(user.passwordHash, hashPassword(password));
-}
-
-function safeEqual(a, b) {
-  const aBuf = Buffer.from(a || "", "utf8");
-  const bBuf = Buffer.from(b || "", "utf8");
-  if (aBuf.length !== bBuf.length) return false;
-  return crypto.timingSafeEqual(aBuf, bBuf);
-}
-
-function signToken(payload, secret, ttlSeconds) {
-  const header = { alg: "HS256", typ: "JWT" };
-  const exp = Math.floor(Date.now() / 1000) + ttlSeconds;
-  const body = { ...payload, exp };
-  const encodedHeader = Buffer.from(JSON.stringify(header)).toString("base64url");
-  const encodedBody = Buffer.from(JSON.stringify(body)).toString("base64url");
-  const signature = crypto
-    .createHmac("sha256", secret)
-    .update(`${encodedHeader}.${encodedBody}`)
-    .digest("base64url");
-  return `${encodedHeader}.${encodedBody}.${signature}`;
-}
-
-function verifyToken(token, secret) {
-  try {
-    if (typeof token !== "string" || !secret) return null;
-    const parts = token.split(".");
-    if (parts.length !== 3) return null;
-    const [encodedHeader, encodedBody, signature] = parts;
-    if (!encodedHeader || !encodedBody || !signature) return null;
-    const expectedSignature = crypto
-      .createHmac("sha256", secret)
-      .update(`${encodedHeader}.${encodedBody}`)
-      .digest("base64url");
-    if (!safeEqual(signature, expectedSignature)) return null;
-    const payload = JSON.parse(Buffer.from(encodedBody, "base64url").toString("utf8"));
-    if (!payload || typeof payload.exp !== "number" || payload.exp < Math.floor(Date.now() / 1000)) return null;
-    return payload;
-  } catch {
-    return null;
-  }
+  return verifyPasswordHashWith(password, user, TOKEN_SECRET);
 }
 
 function sanitizeUser(user) {
@@ -544,10 +514,11 @@ async function initMongo() {
 
     const adminUsername = process.env.ADMIN_USERNAME || "admin";
     const adminPassword = process.env.ADMIN_PASSWORD || "ChangeMeNow123!";
-    
+    const adminPasswordIsDefault = adminPassword === "ChangeMeNow123!";
+
     const existing = await usersCol.findOne({ username: adminUsername });
     if (!existing) {
-      const passwordSalt = crypto.randomBytes(16).toString("hex");
+      const passwordSalt = newPasswordSalt();
       await usersCol.insertOne({
         id: "advisor-admin",
         username: adminUsername,
@@ -557,6 +528,58 @@ async function initMongo() {
         createdAt: new Date().toISOString(),
         active: true,
       });
+    } else if (!adminPasswordIsDefault && existing.active !== false) {
+      // Repair path for the dedicated admin identity only: if the stored
+      // record no longer matches the configured ADMIN_PASSWORD (rotation or a
+      // stale record created under previous configuration), re-hash it.
+      // Never touches any other user and never deletes accounts.
+      const matches = verifyPasswordHash(adminPassword, existing);
+      if (!matches) {
+        const passwordSalt = newPasswordSalt();
+        await usersCol.updateOne(
+          { username: adminUsername },
+          {
+            $set: {
+              passwordSalt,
+              passwordHash: hashPassword(adminPassword, passwordSalt),
+              active: true,
+              credentialsRepairedAt: new Date().toISOString(),
+            },
+          }
+        );
+        console.log(`[Auth] Admin identity credentials repaired for configured username (no other users touched).`);
+      } else if (!existing.passwordSalt) {
+        // Transparent upgrade of legacy unsalted hashes on match.
+        const passwordSalt = newPasswordSalt();
+        await usersCol.updateOne(
+          { username: adminUsername },
+          { $set: { passwordSalt, passwordHash: hashPassword(adminPassword, passwordSalt) } }
+        );
+      }
+    }
+
+    if (DEMO_AUTH_ENABLED) {
+      if (DEMO_USERNAME === adminUsername) {
+        console.error("[Auth] DEMO_USERNAME collides with ADMIN_USERNAME; demo identity NOT seeded.");
+      } else {
+        const existingDemo = await usersCol.findOne({ username: DEMO_USERNAME });
+        if (!existingDemo) {
+          // Random unusable password: demo login never uses passwords.
+          const passwordSalt = newPasswordSalt();
+          await usersCol.insertOne({
+            id: DEMO_USER_ID,
+            username: DEMO_USERNAME,
+            role: "demo",
+            passwordSalt,
+            passwordHash: hashPassword(crypto.randomBytes(32).toString("hex"), passwordSalt),
+            createdAt: new Date().toISOString(),
+            active: true,
+          });
+          console.log("[Auth] Demo identity seeded with isolated role.");
+        } else if (existingDemo.role !== "demo" || existingDemo.active === false) {
+          console.error("[Auth] Demo username already taken by a non-demo/inactive account; demo login disabled for that name.");
+        }
+      }
     }
 
     isDbConnected = true;
@@ -644,16 +667,13 @@ app.post("/api/auth/refresh", requireDb, async (req, res) => {
       res.status(401).json({ error: "Refresh session not active." });
       return;
     }
-    if (session.expiresAt) {
-      const expiryMs = new Date(session.expiresAt).getTime();
-      if (Number.isFinite(expiryMs) && expiryMs <= Date.now()) {
-        await sessionsCol.updateOne(
-          { id: payload.tokenVersion },
-          { $set: { revoked: true, revokedAt: new Date().toISOString() } }
-        );
-        res.status(401).json({ error: "Refresh session expired." });
-        return;
-      }
+    if (!isRefreshSessionUsable(session, Date.now())) {
+      await sessionsCol.updateOne(
+        { id: payload.tokenVersion },
+        { $set: { revoked: true, revokedAt: new Date().toISOString() } }
+      );
+      res.status(401).json({ error: "Refresh session expired." });
+      return;
     }
     await sessionsCol.updateOne(
       { id: payload.tokenVersion },
@@ -681,6 +701,33 @@ app.post("/api/auth/logout", requireAuth, requireDb, async (req, res) => {
     res.json({ ok: true });
   } catch (error) {
     res.status(500).json({ error: "Logout failed." });
+  }
+});
+
+app.post("/api/auth/demo-login", requireDb, async (req, res) => {
+  try {
+    // Server-controlled demo access: no credential is accepted or required.
+    // Any username/password in the body is ignored by design.
+    if (!DEMO_AUTH_ENABLED) {
+      res.status(403).json({ error: "Demo access is not enabled on this backend." });
+      return;
+    }
+    const user = await usersCol.findOne({ username: DEMO_USERNAME, active: true });
+    if (!user || user.role !== "demo") {
+      res.status(503).json({ error: "Demo identity is not available. Please try again later." });
+      return;
+    }
+    const { accessToken, refreshToken } = await buildTokens(user);
+    await audit("auth.demo_login", { userId: user.id, username: user.username, role: user.role });
+    res.json({
+      ok: true,
+      user: sanitizeUser(user),
+      accessToken,
+      refreshToken,
+      expiresIn: ACCESS_TOKEN_TTL_SECONDS,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Demo login failed." });
   }
 });
 

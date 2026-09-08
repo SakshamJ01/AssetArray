@@ -1,13 +1,16 @@
 async function testBroadcast() {
   try {
+    // Credentials come from the local backend/.env only — never hardcoded.
+    const username = process.env.ADMIN_USERNAME || "admin";
+    const password = process.env.ADMIN_PASSWORD;
+    if (!password) {
+      throw new Error("ADMIN_PASSWORD is required in the environment for this smoke test.");
+    }
     console.log("1. Logging in as admin...");
     const loginRes = await fetch("http://localhost:4000/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        username: "admin",
-        password: "AssetArrayLocalAdmin2026",
-      }),
+      body: JSON.stringify({ username, password }),
     });
 
     const loginData = await loginRes.json();

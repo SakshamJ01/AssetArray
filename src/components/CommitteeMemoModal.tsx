@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 720,
     maxHeight: "92%",
-    borderRadius: 20,
+    borderRadius: 12,
     borderWidth: 1,
     overflow: "hidden",
   },

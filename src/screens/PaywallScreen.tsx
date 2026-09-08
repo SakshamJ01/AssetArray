@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
   badge: {
     paddingHorizontal: 12,
     paddingVertical: 5,
-    borderRadius: 20,
+    borderRadius: 12,
     borderWidth: 1,
   },
   badgeText: {
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
   closeButton: {
     width: 32,
     height: 32,
-    borderRadius: 16,
+    borderRadius: 8,
     backgroundColor: "rgba(255, 255, 255, 0.08)",
     justifyContent: "center",
     alignItems: "center",
@@ -329,7 +329,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-start",
     padding: 14,
-    borderRadius: 14,
+    borderRadius: 8,
     borderWidth: 1,
     marginBottom: 10,
   },
@@ -359,7 +359,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   planCard: {
-    borderRadius: 16,
+    borderRadius: 8,
     borderWidth: 2,
     padding: 16,
     marginBottom: 12,
@@ -371,7 +371,7 @@ const styles = StyleSheet.create({
     right: 16,
     paddingHorizontal: 10,
     paddingVertical: 3,
-    borderRadius: 10,
+    borderRadius: 8,
   },
   bestValueText: {
     color: "#000000",
@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
   radioOuter: {
     width: 20,
     height: 20,
-    borderRadius: 10,
+    borderRadius: 8,
     borderWidth: 2,
     borderColor: "#e0a84c",
     justifyContent: "center",
@@ -415,7 +415,7 @@ const styles = StyleSheet.create({
   },
   primaryCta: {
     paddingVertical: 16,
-    borderRadius: 14,
+    borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#e0a84c",

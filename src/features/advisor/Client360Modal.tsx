@@ -419,7 +419,7 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 680,
     maxHeight: "90%",
-    borderRadius: 16,
+    borderRadius: 8,
     borderWidth: 1,
     overflow: "hidden",
   },
@@ -509,7 +509,7 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: "30%",
     borderWidth: 1,
-    borderRadius: 10,
+    borderRadius: 8,
     padding: 10,
   },
   metricLabel: {
@@ -530,7 +530,7 @@ const styles = StyleSheet.create({
   },
   nextActionBanner: {
     borderWidth: 1,
-    borderRadius: 10,
+    borderRadius: 8,
     padding: 12,
     marginBottom: 16,
   },

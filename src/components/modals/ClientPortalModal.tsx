@@ -452,7 +452,7 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 860,
     maxHeight: "92%",
-    borderRadius: 20,
+    borderRadius: 12,
     borderWidth: 1,
     overflow: "hidden",
     shadowColor: "#000",
@@ -533,7 +533,7 @@ const styles = StyleSheet.create({
   },
   heroCard: {
     borderWidth: 1,
-    borderRadius: 16,
+    borderRadius: 8,
     padding: 18,
     marginBottom: 16,
   },
@@ -592,7 +592,7 @@ const styles = StyleSheet.create({
   },
   allocCard: {
     borderWidth: 1,
-    borderRadius: 16,
+    borderRadius: 8,
     padding: 16,
     marginBottom: 16,
   },
@@ -630,7 +630,7 @@ const styles = StyleSheet.create({
   },
   actionCard: {
     borderWidth: 1.5,
-    borderRadius: 16,
+    borderRadius: 8,
     padding: 18,
   },
   actionHeader: {
@@ -664,7 +664,7 @@ const styles = StyleSheet.create({
   },
   approveBtn: {
     paddingVertical: 12,
-    borderRadius: 10,
+    borderRadius: 8,
     alignItems: "center",
   },
   approveBtnText: {
@@ -691,7 +691,7 @@ const styles = StyleSheet.create({
   },
   doneBtn: {
     paddingVertical: 12,
-    borderRadius: 10,
+    borderRadius: 8,
     alignItems: "center",
   },
   doneBtnText: {

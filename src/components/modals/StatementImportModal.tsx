@@ -626,7 +626,7 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 860,
     maxHeight: "92%",
-    borderRadius: 20,
+    borderRadius: 12,
     borderWidth: 1,
     overflow: "hidden",
     shadowColor: "#000",
@@ -699,7 +699,7 @@ const styles = StyleSheet.create({
   },
   inputCard: {
     borderWidth: 1,
-    borderRadius: 14,
+    borderRadius: 8,
     padding: 16,
     marginBottom: 14,
   },
@@ -760,7 +760,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(239, 68, 68, 0.12)",
     borderWidth: 1,
     borderColor: "rgba(239, 68, 68, 0.35)",
-    borderRadius: 10,
+    borderRadius: 8,
     padding: 12,
     marginBottom: 14,
   },
@@ -777,7 +777,7 @@ const styles = StyleSheet.create({
   },
   tableCard: {
     borderWidth: 1,
-    borderRadius: 14,
+    borderRadius: 8,
     padding: 14,
     marginBottom: 14,
   },
@@ -879,7 +879,7 @@ const styles = StyleSheet.create({
   },
   applyBtn: {
     paddingVertical: 12,
-    borderRadius: 10,
+    borderRadius: 8,
     alignItems: "center",
   },
   applyBtnText: {

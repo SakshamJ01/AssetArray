@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   countBadge: {
-    borderRadius: 10,
+    borderRadius: 8,
     paddingHorizontal: 5,
     paddingVertical: 1,
   },

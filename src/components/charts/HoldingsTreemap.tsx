@@ -338,7 +338,7 @@ export const HoldingsTreemap: React.FC<HoldingsTreemapProps> = ({
 const styles = StyleSheet.create({
   wrapper: {
     borderWidth: 1,
-    borderRadius: 16,
+    borderRadius: 8,
     padding: 16,
     marginVertical: 12,
   },
@@ -410,7 +410,7 @@ const styles = StyleSheet.create({
   canvas: {
     position: "relative",
     width: "100%",
-    borderRadius: 10,
+    borderRadius: 8,
     overflow: "hidden",
     backgroundColor: "rgba(0, 0, 0, 0.2)",
   },

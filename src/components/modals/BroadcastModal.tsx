@@ -271,8 +271,8 @@ const styles = StyleSheet.create({
   },
   modalCard: {
     backgroundColor: "#111a2e",
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
     padding: 24,
     borderWidth: 1,
     borderColor: "#1c2842",
@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
   modalCardCenter: {
     width: "100%",
     maxWidth: 580,
-    borderRadius: 20,
+    borderRadius: 12,
     borderColor: "rgba(224, 168, 76, 0.18)",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 24 },
@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
   },
   optionChip: {
     backgroundColor: "#0d1527",
-    borderRadius: 10,
+    borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderWidth: 1,
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: "#0d1527",
-    borderRadius: 14,
+    borderRadius: 8,
     paddingHorizontal: 14,
     paddingVertical: 12,
     color: "#f8fafc",
@@ -382,14 +382,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 10,
     paddingHorizontal: 12,
-    borderRadius: 10,
+    borderRadius: 8,
     borderWidth: 1,
   },
   analyticsAlert: {
     backgroundColor: "rgba(244, 63, 94, 0.1)",
     borderColor: "rgba(244, 63, 94, 0.25)",
     borderWidth: 1,
-    borderRadius: 10,
+    borderRadius: 8,
     padding: 10,
     color: "#f43f5e",
     fontSize: 12,
@@ -403,7 +403,7 @@ const styles = StyleSheet.create({
   modalSecondary: {
     flex: 1,
     backgroundColor: "#102240",
-    borderRadius: 16,
+    borderRadius: 8,
     paddingVertical: 14,
     alignItems: "center",
   },
@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   primaryButton: {
-    borderRadius: 16,
+    borderRadius: 8,
     paddingVertical: 14,
     alignItems: "center",
     justifyContent: "center",

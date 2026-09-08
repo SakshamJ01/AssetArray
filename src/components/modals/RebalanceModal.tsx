@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#070D1B",
     borderColor: "rgba(224, 168, 76, 0.3)",
     borderWidth: 1,
-    borderRadius: 20,
+    borderRadius: 12,
     width: "100%",
     maxWidth: 680,
     maxHeight: "90%",
@@ -411,7 +411,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.03)",
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.08)",
-    borderRadius: 10,
+    borderRadius: 8,
     padding: 12,
     marginBottom: 8,
   },
@@ -474,7 +474,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(16, 185, 129, 0.04)",
     borderWidth: 1,
     borderColor: "rgba(16, 185, 129, 0.2)",
-    borderRadius: 14,
+    borderRadius: 8,
     padding: 14,
   },
   tlhHeader: {
@@ -555,7 +555,7 @@ const styles = StyleSheet.create({
   doneBtn: {
     backgroundColor: "#E0A84C",
     paddingVertical: 12,
-    borderRadius: 10,
+    borderRadius: 8,
     alignItems: "center",
   },
   doneBtnText: {

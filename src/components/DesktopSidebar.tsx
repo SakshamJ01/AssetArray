@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
   brandIconWrap: {
     width: 38,
     height: 38,
-    borderRadius: 10,
+    borderRadius: 8,
     backgroundColor: "rgba(224, 168, 76, 0.15)",
     borderWidth: 1,
     borderColor: "rgba(224, 168, 76, 0.4)",
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(16, 185, 129, 0.25)",
     paddingVertical: 6,
     paddingHorizontal: 12,
-    borderRadius: 20,
+    borderRadius: 12,
     marginBottom: 24,
     alignSelf: "flex-start",
     marginLeft: 8,
@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 11,
     paddingHorizontal: 12,
-    borderRadius: 10,
+    borderRadius: 8,
     position: "relative",
   },
   navItemActive: {
@@ -360,7 +360,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(239, 68, 68, 0.4)",
     paddingVertical: 2,
     paddingHorizontal: 7,
-    borderRadius: 10,
+    borderRadius: 8,
   },
   badgeText: {
     fontSize: 10,
@@ -381,7 +381,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 10,
     paddingHorizontal: 14,
-    borderRadius: 10,
+    borderRadius: 8,
   },
   actionPrimary: {
     backgroundColor: "#E0A84C",
@@ -440,7 +440,7 @@ const styles = StyleSheet.create({
   advisorAvatar: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: 12,
     backgroundColor: "#1E293B",
     borderWidth: 1,
     borderColor: "rgba(224, 168, 76, 0.3)",

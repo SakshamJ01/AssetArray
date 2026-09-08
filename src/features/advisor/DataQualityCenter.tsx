@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 120,
     borderWidth: 1,
-    borderRadius: 10,
+    borderRadius: 8,
     padding: 10,
   },
   kpiLabel: {

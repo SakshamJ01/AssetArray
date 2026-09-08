@@ -376,7 +376,7 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 680,
     maxHeight: "90%",
-    borderRadius: 20,
+    borderRadius: 12,
     borderWidth: 1,
     overflow: "hidden",
   },
@@ -421,7 +421,7 @@ const styles = StyleSheet.create({
   pill: {
     paddingHorizontal: 12,
     paddingVertical: 7,
-    borderRadius: 20,
+    borderRadius: 12,
     borderWidth: 1,
   },
   pillText: {
@@ -430,7 +430,7 @@ const styles = StyleSheet.create({
   },
   kpiContainer: {
     flexDirection: "row",
-    borderRadius: 14,
+    borderRadius: 8,
     borderWidth: 1,
     padding: 14,
     alignItems: "center",

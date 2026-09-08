@@ -409,7 +409,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(11, 19, 38, 0.75)",
     borderWidth: 1,
     borderColor: "rgba(224, 168, 76, 0.22)",
-    borderRadius: 16,
+    borderRadius: 8,
     padding: 16,
     marginVertical: 8,
     shadowColor: "#000",

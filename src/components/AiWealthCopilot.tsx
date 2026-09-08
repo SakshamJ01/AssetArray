@@ -610,7 +610,7 @@ const styles = StyleSheet.create({
     zIndex: 9999,
     paddingVertical: 10,
     paddingHorizontal: 16,
-    borderRadius: 30,
+    borderRadius: 12,
     borderWidth: 1.5,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.35,

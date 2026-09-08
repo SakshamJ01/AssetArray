@@ -632,7 +632,7 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 820,
     maxHeight: "92%",
-    borderRadius: 20,
+    borderRadius: 12,
     borderWidth: 1.5,
     overflow: "hidden",
     shadowColor: "#000",
@@ -696,7 +696,7 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: 16,
     padding: 16,
-    borderRadius: 14,
+    borderRadius: 8,
     borderWidth: 1.5,
     marginBottom: 14,
   },
@@ -759,7 +759,7 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: 10,
     padding: 12,
-    borderRadius: 10,
+    borderRadius: 8,
     marginBottom: 14,
   },
   metricItem: {
@@ -815,7 +815,7 @@ const styles = StyleSheet.create({
   },
   depthCard: {
     borderWidth: 1,
-    borderRadius: 14,
+    borderRadius: 8,
     padding: 16,
     marginBottom: 14,
   },
@@ -913,7 +913,7 @@ const styles = StyleSheet.create({
   },
   tradeCard: {
     borderWidth: 1,
-    borderRadius: 14,
+    borderRadius: 8,
     padding: 16,
   },
   tradeTitle: {
@@ -957,7 +957,7 @@ const styles = StyleSheet.create({
   tradeBtn: {
     flex: 1,
     paddingVertical: 12,
-    borderRadius: 10,
+    borderRadius: 8,
     alignItems: "center",
   },
   tradeBtnText: {

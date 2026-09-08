@@ -418,7 +418,7 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 620,
     maxHeight: "90%",
-    borderRadius: 16,
+    borderRadius: 8,
     borderWidth: 1,
     overflow: "hidden",
   },
@@ -543,7 +543,7 @@ const styles = StyleSheet.create({
   },
   decisionCard: {
     borderWidth: 1,
-    borderRadius: 10,
+    borderRadius: 8,
     padding: 12,
     marginBottom: 10,
   },

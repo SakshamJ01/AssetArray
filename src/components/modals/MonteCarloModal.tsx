@@ -733,7 +733,7 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 860,
     maxHeight: "92%",
-    borderRadius: 20,
+    borderRadius: 12,
     borderWidth: 1,
     overflow: "hidden",
     shadowColor: "#000",
@@ -789,7 +789,7 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: 16,
     padding: 16,
-    borderRadius: 14,
+    borderRadius: 8,
     borderWidth: 1.5,
     marginBottom: 16,
   },
@@ -829,7 +829,7 @@ const styles = StyleSheet.create({
   },
   chartCard: {
     borderWidth: 1,
-    borderRadius: 14,
+    borderRadius: 8,
     padding: 16,
     marginBottom: 16,
   },
@@ -872,7 +872,7 @@ const styles = StyleSheet.create({
   },
   controlsCard: {
     borderWidth: 1,
-    borderRadius: 14,
+    borderRadius: 8,
     padding: 16,
     marginBottom: 16,
   },
@@ -972,7 +972,7 @@ const styles = StyleSheet.create({
   },
   doneBtn: {
     paddingVertical: 12,
-    borderRadius: 10,
+    borderRadius: 8,
     alignItems: "center",
   },
   doneBtnText: {

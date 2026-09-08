@@ -164,6 +164,61 @@ describe("Institutional UX Regression & Workstation Invariants", () => {
     });
   });
 
+  describe("6b. Source & Status Honesty Invariants (core-integrity + UX pass)", () => {
+    const fs = require("fs") as typeof import("fs");
+    const path = require("path") as typeof import("path");
+    const readSrc = (rel: string) =>
+      fs.readFileSync(path.join(__dirname, "..", rel), "utf8");
+
+    test("research screen never fabricates publishers, timestamps, or URLs", () => {
+      const src = readSrc("src/screens/AiResearchScreen.tsx");
+      expect(src).not.toMatch(/Default mock sources/);
+      expect(src).not.toMatch(/BSE \/ NSE Regulatory Feed/);
+      expect(src).not.toMatch(/RBI \/ Macro Pulse Bulletin/);
+      expect(src).toMatch(/RESEARCH SOURCES \(0 RETRIEVED\)/);
+    });
+
+    test("settings data sources report backend state, never hardcoded crypto claims", () => {
+      const src = readSrc("src/screens/SettingsScreen.tsx");
+      expect(src).not.toMatch(/AES-GCM-256/);
+      expect(src).not.toMatch(/Streaming Live/);
+      expect(src).not.toMatch(/05 Sep 2026/);
+      expect(src).toMatch(/buildDataSources/);
+      expect(src).toMatch(/Backend-reported state/);
+    });
+
+    test("no real-time valuation overclaims in client-facing copy", () => {
+      for (const rel of [
+        "src/screens/ClientsScreen.tsx",
+        "src/screens/PortfoliosScreen.tsx",
+        "src/components/client360/Client360Workspace.tsx",
+      ]) {
+        const src = readSrc(rel);
+        expect(src).not.toMatch(/[Rr]eal-time (Client 360|multi-asset|Valuation)/);
+      }
+    });
+
+    test("no non-canonical border radii in shipped stylesheets", () => {
+      const { execSync } = require("child_process") as typeof import("child_process");
+      let files: string[] = [];
+      try {
+        const out = execSync("git ls-files src", { encoding: "utf-8" });
+        files = out.split("\n").map((s: string) => s.trim()).filter(Boolean);
+      } catch {
+        files = [];
+      }
+      expect(files.length).toBeGreaterThan(0);
+      const bad: string[] = [];
+      for (const rel of files) {
+        if (!/\.(tsx?|ts)$/.test(rel)) continue;
+        const content = readSrc(rel);
+        const matches = content.match(/border\w*Radius(\s*:\s*)(10|14|16|18|20|22|24|26|28|30|32)\b/g);
+        if (matches) bad.push(`${rel}: ${matches.join(", ")}`);
+      }
+      expect(bad).toEqual([]);
+    });
+  });
+
   describe("6. GIPS-informed & DPDP Terminology Invariants (Rule 121 & 124)", () => {
     test("verifies proper advisor governance terminology without false certification claims", () => {
       const properTerms = [

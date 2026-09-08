@@ -374,7 +374,7 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
           <PerformanceChart
             theme={theme}
             title="Consolidated Portfolio Trajectory"
-            subtitle="Real-time multi-asset aggregate return curve"
+            subtitle="Multi-asset aggregate return curve"
           />
         )}
 

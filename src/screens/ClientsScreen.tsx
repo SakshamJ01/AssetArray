@@ -526,7 +526,7 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
               <View style={styles.emptyState}>
                 <Text style={styles.emptyTitle}>Select a client</Text>
                 <Text style={styles.emptyText}>
-                  Select a client from the roster to open their real-time Client 360 workspace, portfolio holdings, change detection insights, and follow-up plans.
+                  Select a client from the roster to open their Client 360 workspace, portfolio holdings, change detection insights, and follow-up plans.
                 </Text>
               </View>
             </View>

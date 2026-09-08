@@ -256,7 +256,7 @@ export const Client360Workspace: React.FC<Client360WorkspaceProps> = ({
         <View style={workspaceStyles.sectionHeader}>
           <Text style={workspaceStyles.sectionTitle}>Portfolio Snapshot</Text>
           <Text style={workspaceStyles.sectionMeta}>
-            As of {new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })} · Real-time Valuation
+            As of {new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
           </Text>
         </View>
 

@@ -343,6 +343,27 @@ export async function getAdvisorProfile({ endpoint, accessToken }: TokenOptions)
   }>;
 }
 
+export type AiProviderState = {
+  id: string;
+  name: string;
+  isConfigured: boolean;
+  status: string;
+};
+
+export async function getAiProviderStatus({ endpoint, accessToken }: TokenOptions) {
+  const response = await fetch(`${normalizeEndpoint(endpoint)}/api/ai/status`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Unable to load provider status.");
+  }
+
+  return response.json() as Promise<Record<string, AiProviderState>>;
+}
+
 export async function logoutAdvisor({ endpoint, accessToken, refreshToken }: LogoutOptions) {
   const response = await fetch(`${normalizeEndpoint(endpoint)}/api/auth/logout`, {
     method: "POST",

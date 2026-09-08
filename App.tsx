@@ -72,7 +72,9 @@ import {
   buildOwnerId,
   decryptPayload,
   encryptPayload,
+  AiProviderState,
   getAdvisorProfile,
+  getAiProviderStatus,
   loginAdvisor,
   logoutAdvisor,
   pullPayload,
@@ -503,6 +505,7 @@ function AppContent() {
   const [authPassword, setAuthPassword] = useState("");
   const [authState, setAuthState] = useState("Not connected");
   const [isAuthChecking, setIsAuthChecking] = useState(false);
+  const [aiProviderStatus, setAiProviderStatus] = useState<Record<string, AiProviderState> | null>(null);
   const [aiResearchQuery, setAiResearchQuery] = useState("");
   const [aiResearchResult, setAiResearchResult] = useState<AiResearchResult | null>(null);
   const [aiResearchState, setAiResearchState] = useState("Ready");
@@ -840,6 +843,15 @@ function AppContent() {
           accessToken,
         });
         setAuthState(`Connected as ${profile.user.username}`);
+        try {
+          const providers = await getAiProviderStatus({
+            endpoint: cloudSettings.endpoint,
+            accessToken,
+          });
+          setAiProviderStatus(providers);
+        } catch {
+          setAiProviderStatus(null);
+        }
       } catch {
         const refreshed = await refreshAccessTokenIfNeeded();
         if (refreshed) {
@@ -3126,6 +3138,11 @@ function AppContent() {
             openTermsAndConditions={openTermsAndConditions}
             contactSupport={contactSupport}
             reportBug={reportBug}
+            aiProviderStatus={aiProviderStatus}
+            finnhubConfigured={
+              typeof process !== "undefined" &&
+              Boolean(process.env?.EXPO_PUBLIC_FINNHUB_API_KEY)
+            }
             styles={styles}
           />
         ) : null}

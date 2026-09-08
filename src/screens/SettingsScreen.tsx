@@ -29,48 +29,63 @@ export interface SettingsScreenProps {
   openTermsAndConditions: () => void;
   contactSupport: () => Promise<void> | void;
   reportBug: () => Promise<void> | void;
+  aiProviderStatus?: Record<string, { status: string }> | null;
+  finnhubConfigured?: boolean;
   styles: any;
 }
 
 interface DataSourceRow {
   provider: string;
-  status: "AVAILABLE" | "NOT CONFIGURED" | "SYNCING" | "DELAYED";
+  status: "AVAILABLE" | "NOT CONFIGURED" | "SYNCING" | "DELAYED" | "UNKNOWN";
   lastUpdated: string;
   coverage: string;
 }
 
-const DATA_SOURCES: DataSourceRow[] = [
-  {
-    provider: "Gemini 2.5 Flash",
-    status: "AVAILABLE",
-    lastUpdated: "Active (Grounded)",
-    coverage: "Global Market & Web Intelligence",
-  },
-  {
-    provider: "Ollama (Local Engine)",
-    status: "NOT CONFIGURED",
-    lastUpdated: "Offline",
-    coverage: "Air-Gapped Private Client Memos",
-  },
-  {
-    provider: "AMFI India",
-    status: "AVAILABLE",
-    lastUpdated: "Daily NAV (05 Sep 2026)",
-    coverage: "Indian Mutual Funds & Liquid Schemes",
-  },
-  {
-    provider: "Finnhub Market Data",
-    status: "AVAILABLE",
-    lastUpdated: "Streaming Live",
-    coverage: "Equities, ETFs, Indices & FX",
-  },
-  {
-    provider: "Zero-Knowledge Vault",
-    status: "AVAILABLE",
-    lastUpdated: "Synced (AES-GCM-256)",
-    coverage: "Client Records & Private Documents",
-  },
-];
+function buildDataSources(
+  aiProviderStatus: Record<string, { status: string }> | null | undefined,
+  finnhubConfigured: boolean | undefined,
+  syncState: string
+): DataSourceRow[] {
+  const pick = (id: string): DataSourceRow["status"] => {
+    const s = aiProviderStatus?.[id]?.status;
+    if (s === "AVAILABLE") return "AVAILABLE";
+    if (s === "NOT_CONFIGURED") return "NOT CONFIGURED";
+    if (s === "DEGRADED" || s === "RATE_LIMITED") return "DELAYED";
+    return aiProviderStatus ? "NOT CONFIGURED" : "UNKNOWN";
+  };
+  return [
+    {
+      provider: "Gemini 2.5 Flash",
+      status: pick("gemini"),
+      lastUpdated: aiProviderStatus ? "Backend-reported state" : "Sign in to check",
+      coverage: "Global Market & Web Intelligence",
+    },
+    {
+      provider: "Ollama (Local Engine)",
+      status: pick("ollama"),
+      lastUpdated: aiProviderStatus ? "Backend-reported state" : "Sign in to check",
+      coverage: "Air-Gapped Private Client Memos",
+    },
+    {
+      provider: "AMFI India",
+      status: "AVAILABLE",
+      lastUpdated: "Daily NAV (public feed)",
+      coverage: "Indian Mutual Funds & Liquid Schemes",
+    },
+    {
+      provider: "Finnhub Market Data",
+      status: finnhubConfigured ? "AVAILABLE" : "NOT CONFIGURED",
+      lastUpdated: finnhubConfigured ? "On-demand quotes" : "Set EXPO_PUBLIC_FINNHUB_API_KEY",
+      coverage: "Equities, ETFs, Indices & FX",
+    },
+    {
+      provider: "Encrypted Vault",
+      status: "AVAILABLE",
+      lastUpdated: syncState || "PBKDF2 + AES backup",
+      coverage: "Client Records & Private Documents",
+    },
+  ];
+}
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   theme,
@@ -98,8 +113,14 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   openTermsAndConditions,
   contactSupport,
   reportBug,
+  aiProviderStatus,
+  finnhubConfigured,
   styles,
 }) => {
+  const dataSources = React.useMemo(
+    () => buildDataSources(aiProviderStatus, finnhubConfigured, syncState),
+    [aiProviderStatus, finnhubConfigured, syncState]
+  );
   const getStatusBadgeStyle = (status: DataSourceRow["status"]) => {
     switch (status) {
       case "AVAILABLE":
@@ -223,7 +244,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             <Text style={[localStyles.thCell, { flex: 3 }]}>COVERAGE</Text>
           </View>
 
-          {DATA_SOURCES.map((ds, i) => {
+          {dataSources.map((ds, i) => {
             const badge = getStatusBadgeStyle(ds.status);
             return (
               <View key={i} style={localStyles.tableRow}>

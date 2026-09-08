@@ -28,7 +28,7 @@ async function ensureUnlocked(page) {
     await page.waitForTimeout(1500);
   }
 
-  const quickSignIn = page.getByText("1-Click Sign In").or(page.getByText("Continue in Offline Mode")).first();
+  const quickSignIn = page.getByText("1-Click Demo Sign In").or(page.getByText("Continue in Offline Mode")).first();
   const isAuthScreenVisible = await quickSignIn.isVisible({ timeout: 2000 }).catch(() => false);
   if (isAuthScreenVisible) {
     await quickSignIn.click();
@@ -44,7 +44,7 @@ async function runMobileAudit() {
   console.log("================================================================================");
 
   const browser = await chromium.launch({
-    executablePath: CHROME_PATH,
+    ...(CHROME_PATH ? { executablePath: CHROME_PATH } : {}),
     headless: true,
   });
 

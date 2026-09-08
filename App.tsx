@@ -71,6 +71,7 @@ import {
   AuthUser,
   buildOwnerId,
   decryptPayload,
+  demoLoginAdvisor,
   encryptPayload,
   AiProviderState,
   getAdvisorProfile,
@@ -1790,28 +1791,24 @@ function AppContent() {
   }
 
   async function quickDemoLogin() {
+    // Server-controlled demo sign-in: no password exists in this bundle.
+    // The backend issues tokens for its isolated demo identity only when
+    // demo access is explicitly enabled there.
     const targetEndpoint = cloudSettings.endpoint.trim() || DEFAULT_BACKEND_ENDPOINT;
-    const targetUser = "admin";
-    const targetPass = "AssetArrayLocalAdmin2026";
 
     setCloudSettings((c) => ({
       ...c,
       endpoint: targetEndpoint,
-      authUsername: targetUser,
     }));
-    setAuthPassword(targetPass);
 
     try {
-      setAuthState("Signing in as demo admin...");
+      setAuthState("Signing in to demo workspace...");
       await persistCloudSettings({
         ...cloudSettings,
         endpoint: targetEndpoint,
-        authUsername: targetUser,
       });
-      const response = await loginAdvisor({
+      const response = await demoLoginAdvisor({
         endpoint: targetEndpoint,
-        username: targetUser,
-        password: targetPass,
       });
       const session: AuthSession = {
         user: response.user,
@@ -1822,9 +1819,9 @@ function AppContent() {
       setAuthSession(session);
       await persistAuthSession(session);
       setAuthPassword("");
-      setAuthState(`Connected as ${session.user.username}`);
-      setSyncState("Cloud sync configured + auth active");
-      Alert.alert("Login successful", `Signed in as ${session.user.username}.`);
+      setAuthState(`Connected as ${session.user.username} (demo)`);
+      setSyncState("Demo workspace active");
+      Alert.alert("Demo sign-in successful", `Signed in as ${session.user.username} (demo workspace).`);
     } catch (error) {
       setAuthState("Login failed");
       Alert.alert(
@@ -2630,7 +2627,7 @@ function AppContent() {
             onPress={() => void quickDemoLogin()}
           >
             <Text style={[styles.primaryButtonText, { color: "#030712", fontWeight: "800" }]}>
-              ⚡ 1-Click Sign In (Judge / Demo Admin)
+              ⚡ 1-Click Demo Sign In
             </Text>
           </Pressable>
 

@@ -31,7 +31,7 @@ async function ensureUnlocked(page) {
   }
 
   // Stage 2: Advisor Workspace Login
-  const quickSignIn = page.getByText("1-Click Sign In").or(page.getByText("Continue in Offline Mode")).first();
+  const quickSignIn = page.getByText("1-Click Demo Sign In").or(page.getByText("Continue in Offline Mode")).first();
   const isAuthScreenVisible = await quickSignIn.isVisible({ timeout: 2000 }).catch(() => false);
   if (isAuthScreenVisible) {
     console.log("  [Auth] Advisor workspace login visible. Signing in with 1-Click...");
@@ -71,7 +71,7 @@ async function runFullE2EValidation() {
   };
 
   const browser = await chromium.launch({
-    executablePath: CHROME_PATH,
+    ...(CHROME_PATH ? { executablePath: CHROME_PATH } : {}),
     headless: true,
   });
 

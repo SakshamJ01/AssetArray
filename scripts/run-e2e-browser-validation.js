@@ -2,9 +2,9 @@ const { chromium } = require("playwright-core");
 const fs = require("fs");
 const path = require("path");
 
-const CHROME_PATH = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
-const TARGET_URL = "https://asset-array.web.app";
-const BACKEND_URL = "https://assetarray.onrender.com/api/health";
+const CHROME_PATH = process.env.CHROME_PATH || null; // null lets playwright-core discover Chrome; Windows override via CHROME_PATH
+const TARGET_URL = process.env.E2E_BASE_URL || "https://asset-array.web.app";
+const BACKEND_URL = process.env.E2E_API_URL || "https://assetarray.onrender.com/api/health";
 const SCREENSHOT_DIR = path.join(__dirname, "..", "docs", "uat-evidence", "screenshots");
 const EVIDENCE_FILE = path.join(__dirname, "..", "docs", "uat-evidence", "e2e-evidence.json");
 const WORKFLOW_FILE = path.join(__dirname, "..", "docs", "uat-evidence", "workflow-results.json");
@@ -16,8 +16,9 @@ async function ensureUnlocked(page) {
   const pinInput = page.locator('input[type="password"]').first();
   const isPinVisible = await pinInput.isVisible({ timeout: 2000 }).catch(() => false);
   if (isPinVisible) {
-    console.log("  [Auth] Entering PIN '1234'...");
-    await pinInput.fill("1234");
+    const e2ePin = process.env.E2E_TEST_PIN || "1234";
+    console.log("  [Auth] Entering E2E PIN from env...");
+    await pinInput.fill(e2ePin);
     const saveBtn = page.getByText("Save PIN & Enter").first();
     const unlockBtn = page.getByText("Unlock with PIN").first();
 

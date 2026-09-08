@@ -72,12 +72,13 @@ describe("Platform Abstraction Layer (PAL) - Enterprise Test Suite", () => {
   });
 
   describe("Auth Guard (Universal Biometrics)", () => {
-    it("should report availability and authenticate gracefully", async () => {
+    it("should report availability and require explicit PIN on web (no auto-bypass)", async () => {
       const hasHardware = await localAuth.hasHardwareAsync();
       expect(typeof hasHardware).toBe("boolean");
 
       const authResult = await localAuth.authenticateAsync();
-      expect(authResult.success).toBe(true);
+      // Core-integrity #19: web must NOT auto-succeed; callers show PIN UI.
+      expect(authResult.success).toBe(false);
     });
   });
 });

@@ -2,8 +2,8 @@ const { chromium, devices } = require("playwright-core");
 const fs = require("fs");
 const path = require("path");
 
-const CHROME_PATH = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
-const TARGET_URL = "https://asset-array.web.app";
+const CHROME_PATH = process.env.CHROME_PATH || null;
+const TARGET_URL = process.env.E2E_BASE_URL || "https://asset-array.web.app";
 const MOBILE_SCREENSHOT_DIR = path.join(__dirname, "..", "evidence", "screenshots", "mobile");
 const REPORT_OUTPUT = path.join(__dirname, "..", "evidence", "workflow-results", "mobile-audit-results.json");
 
@@ -16,7 +16,7 @@ async function ensureUnlocked(page) {
   const pinInput = page.locator('input[type="password"]').first();
   const isPinVisible = await pinInput.isVisible({ timeout: 2000 }).catch(() => false);
   if (isPinVisible) {
-    await pinInput.fill("1234");
+    await pinInput.fill(process.env.E2E_TEST_PIN || "1234");
     const saveBtn = page.getByText("Save PIN & Enter").first();
     const unlockBtn = page.getByText("Unlock with PIN").first();
 

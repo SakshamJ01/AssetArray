@@ -6,6 +6,11 @@ const indexPath = path.join(distDir, 'index.html');
 const manifestPath = path.join(distDir, 'manifest.json');
 const swPath = path.join(distDir, 'service-worker.js');
 
+if (!fs.existsSync(distDir)) {
+  console.error(`postbuild: dist/ not found at ${distDir}. Run expo export first.`);
+  process.exit(1);
+}
+
 // 1. Write manifest.json
 const manifestContent = {
   short_name: "Asset Array",
@@ -83,12 +88,15 @@ self.addEventListener("fetch", (event) => {
 `;
 fs.writeFileSync(swPath, swContent, 'utf8');
 
-// 3. Patch index.html
+// 3. Patch index.html (idempotent: marker comment prevents double-injection)
 if (fs.existsSync(indexPath)) {
   let html = fs.readFileSync(indexPath, 'utf8');
+  const MARKER = "<!-- asset-array-postbuild-v1 -->";
 
+  if (!html.includes(MARKER)) {
   // Insert Inter font preconnect
   const fontLink = `
+    ${MARKER}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -111,7 +119,7 @@ if (fs.existsSync(indexPath)) {
 
   // Insert service-worker registration script before </body>
   const swScript = `
-  <script>
+  <script data-aa-postbuild="sw">
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
         navigator.serviceWorker.register('/service-worker.js').catch(function() {});
@@ -119,8 +127,13 @@ if (fs.existsSync(indexPath)) {
     }
   </script>`;
 
-  html = html.replace('</body>', `${swScript}\n</body>`);
+  if (!html.includes('data-aa-postbuild="sw"')) {
+    html = html.replace('</body>', `${swScript}\n</body>`);
+  }
 
   fs.writeFileSync(indexPath, html, 'utf8');
   console.log('Successfully injected PWA assets, font preconnect, and dark reset into dist/index.html');
+  } else {
+    console.log('postbuild: already applied, skipping duplicate injection.');
+  }
 }

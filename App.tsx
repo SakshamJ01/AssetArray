@@ -55,7 +55,6 @@ if (Platform.OS === "web" && typeof document !== "undefined") {
 }
 import { BottomTabBar } from "./src/components/BottomTabBar";
 import { DesktopSidebar } from "./src/components/DesktopSidebar";
-import { DashboardScreen } from "./src/components/DashboardScreen";
 import { AiWealthCopilot } from "./src/components/AiWealthCopilot";
 import { AdvisorCommandCenter } from "./src/features/advisor";
 import { AdvisorMessagesScreen } from "./src/screens/workspace/AdvisorMessagesScreen";
@@ -112,6 +111,7 @@ import { dataQualityEngine, DataQualitySummary } from "./src/services/dataQualit
 import { CurrencyCode, loadCurrencyPreference, saveCurrencyPreference } from "./src/services/currency";
 import { realTimeMarket } from "./src/services/realTimeMarket";
 import { marketHealthMonitor } from "./src/services/market";
+import { VISIBLE_TABS, MOBILE_TABS } from "./src/navigation/tabs";
 import {
   Channel,
   Category,
@@ -518,16 +518,18 @@ function AppContent() {
     void loadCurrencyPreference().then((c) => setActiveCurrency(c));
   }, []);
 
-  // Continuous real-time portfolio valuation sync when securities tick (throttled to 3s for maximum UI responsiveness)
+  // Continuous real-time portfolio valuation sync: throttled + incremental.
+  // Only affected instruments trigger position updates; hidden tabs pause work.
   useEffect(() => {
     let lastSyncTime = 0;
-    const THROTTLE_MS = 3000;
+    const THROTTLE_MS = 5000;
 
     const unsubscribe = realTimeMarket.subscribe((instruments) => {
       const now = Date.now();
-      if (now - lastSyncTime < THROTTLE_MS) {
-        return;
-      }
+      if (now - lastSyncTime < THROTTLE_MS) return;
+      if (typeof document !== "undefined" && document.hidden) return;
+      const tickKeys = new Set(Object.keys(instruments || {}).map((k) => k.toUpperCase().trim()));
+      if (tickKeys.size === 0) return;
       lastSyncTime = now;
 
       setClients((prevClients) => {
@@ -540,6 +542,7 @@ function AppContent() {
 
           const nextPortfolio = client.portfolio.map((holding) => {
             const symbolKey = (holding.ticker || holding.assetName).toUpperCase().trim();
+            if (!tickKeys.has(symbolKey) && !realTimeMarket.getInstrument(symbolKey)) return holding;
             const inst = instruments[symbolKey] || realTimeMarket.getInstrument(symbolKey);
             if (inst) {
               const qty = Number(holding.quantity) || 1;
@@ -773,34 +776,39 @@ function AppContent() {
     void load();
   }, []);
 
+  // Debounced persistence: local state updates immediately, storage writes
+  // fire after state settles (800ms), avoiding a write per keystroke/tick.
   useEffect(() => {
-    if (!isReady || !isUnlocked) {
-      return;
-    }
-
-    void persistClients(clients);
-    void storageService.setSecureItem(MARKET_MESSAGE_KEY, marketMessage);
+    if (!isReady || !isUnlocked) return;
+    const t = setTimeout(() => {
+      void persistClients(clients);
+      void storageService.setSecureItem(MARKET_MESSAGE_KEY, marketMessage);
+    }, 800);
+    return () => clearTimeout(t);
   }, [clients, isReady, isUnlocked, marketMessage]);
 
   useEffect(() => {
-    if (!isReady || !isUnlocked) {
-      return;
-    }
-    void persistGoals(goals);
+    if (!isReady || !isUnlocked) return;
+    const t = setTimeout(() => {
+      void persistGoals(goals);
+    }, 800);
+    return () => clearTimeout(t);
   }, [goals, isReady, isUnlocked]);
 
   useEffect(() => {
-    if (!isReady || !isUnlocked) {
-      return;
-    }
-    void persistAdvisorMessages(advisorMessages);
+    if (!isReady || !isUnlocked) return;
+    const t = setTimeout(() => {
+      void persistAdvisorMessages(advisorMessages);
+    }, 800);
+    return () => clearTimeout(t);
   }, [advisorMessages, isReady, isUnlocked]);
 
   useEffect(() => {
-    if (!isReady || !isUnlocked) {
-      return;
-    }
-    void persistVaultDocuments(vaultDocuments);
+    if (!isReady || !isUnlocked) return;
+    const t = setTimeout(() => {
+      void persistVaultDocuments(vaultDocuments);
+    }, 800);
+    return () => clearTimeout(t);
   }, [vaultDocuments, isReady, isUnlocked]);
 
   useEffect(() => {
@@ -1455,29 +1463,8 @@ function AppContent() {
     [recentClients]
   );
 
-  const visibleTabs = useMemo(
-    () => [
-      { key: "Dashboard" as AppTab, label: "Dashboard" },
-      { key: "Clients" as AppTab, label: "Clients" },
-      { key: "Portfolios" as AppTab, label: "Portfolios" },
-      { key: "Tools" as AppTab, label: "Tools" },
-      { key: "Workspace" as AppTab, label: "Workspace" },
-      { key: "Settings" as AppTab, label: "Settings" },
-      { key: "AI Research" as AppTab, label: "AI Research" },
-    ],
-    []
-  );
-
-  const mobileTabs = useMemo(
-    () => [
-      { key: "Dashboard" as AppTab, label: "Dashboard" },
-      { key: "Clients" as AppTab, label: "Clients" },
-      { key: "Portfolios" as AppTab, label: "Portfolios" },
-      { key: "AI Research" as AppTab, label: "AI Research" },
-      { key: "Workspace" as AppTab, label: "Workspace" },
-    ],
-    []
-  );
+  const visibleTabs = useMemo(() => VISIBLE_TABS, []);
+  const mobileTabs = useMemo(() => MOBILE_TABS, []);
 
   async function handleBiometricUnlock() {
     const result = await localAuth.authenticateAsync({

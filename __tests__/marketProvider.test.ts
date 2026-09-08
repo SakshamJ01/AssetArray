@@ -28,12 +28,13 @@ describe("Market Data Provider, Custodian Aggregator & News Services", () => {
       expect(history[0]).toHaveProperty("date");
     });
 
-    it("returns UNAVAILABLE with null price for unknown symbols (zero fabricated 100/0.5%)", async () => {
+    it("returns UNAVAILABLE with absent price for unknown symbols (zero fabricated 100/0.5%)", async () => {
       const quote = await unifiedMarketProvider.getQuote("XYZ_UNKNOWN_SYMBOL_999");
       expect(quote.symbol).toBe("XYZ_UNKNOWN_SYMBOL_999");
-      expect(quote.price).toBeNull();
-      expect(quote.change).toBeNull();
-      expect(quote.changePercent).toBeNull();
+      // Core-integrity #25: no `null as any`; price omitted when unavailable.
+      expect(quote.price).toBeUndefined();
+      expect(quote.change).toBeUndefined();
+      expect(quote.changePercent).toBeUndefined();
     });
 
     it("validates quote schemas and rejects negative, NaN, and Infinite prices", () => {

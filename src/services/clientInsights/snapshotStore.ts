@@ -88,6 +88,21 @@ export class SnapshotStore {
   }
 
   /**
+   * Bulk count for data-quality evaluation: single load, in-memory grouping.
+   * Avoids N sequential getSnapshots calls from callers.
+   */
+  public async getSnapshotCountsByEntity(entityIds: string[]): Promise<Map<string, number>> {
+    const list = await this.load();
+    const wanted = new Set(entityIds);
+    const counts = new Map<string, number>();
+    for (const id of entityIds) counts.set(id, 0);
+    for (const s of list) {
+      if (wanted.has(s.entityId)) counts.set(s.entityId, (counts.get(s.entityId) || 0) + 1);
+    }
+    return counts;
+  }
+
+  /**
    * Retrieves the latest snapshot and the closest prior snapshot within a lookback window (e.g. 30, 60, 90 days).
    */
   public async getHistoricalComparison(

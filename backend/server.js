@@ -15,11 +15,12 @@ const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
 const DEFAULT_DEV_TOKEN_SECRET = "asset-array-dev-secret-change-in-production";
 const DEFAULT_DEV_REFRESH_SECRET = "asset-array-dev-refresh-secret-change-in-production";
-const DEFAULT_PROD_CORS = "https://asset-array.web.app,https://asset-array.firebaseapp.com,https://assetarray.onrender.com,http://localhost:8081,http://localhost:3000";
+const DEFAULT_PROD_CORS = "https://asset-array.web.app,https://asset-array.firebaseapp.com,https://assetarray.onrender.com";
+const DEFAULT_DEV_CORS = "https://asset-array.web.app,https://asset-array.firebaseapp.com,https://assetarray.onrender.com,http://localhost:8081,http://localhost:3000,http://localhost:4000";
 
 let CORS_ORIGIN = process.env.CORS_ORIGIN;
 if (!CORS_ORIGIN || (IS_PRODUCTION && CORS_ORIGIN === "*")) {
-  CORS_ORIGIN = DEFAULT_PROD_CORS;
+  CORS_ORIGIN = IS_PRODUCTION ? DEFAULT_PROD_CORS : DEFAULT_DEV_CORS;
   if (IS_PRODUCTION && process.env.CORS_ORIGIN === "*") {
     console.warn(
       "[SECURITY WARN] CORS_ORIGIN was set to '*' in production; auto-sanitized to trusted domains: " + DEFAULT_PROD_CORS
@@ -101,11 +102,25 @@ app.use((req, res, next) => {
   res.setHeader("X-Frame-Options", "DENY");
   res.setHeader("Referrer-Policy", "no-referrer");
   res.setHeader("Cache-Control", "no-store");
+  if (IS_PRODUCTION) {
+    res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  }
   next();
 });
 
-function hashPassword(password) {
-  return crypto.pbkdf2Sync(password, TOKEN_SECRET, 100_000, 64, "sha512").toString("hex");
+function hashPassword(password, salt) {
+  // New accounts use a per-user random salt. Legacy accounts fall back to
+  // TOKEN_SECRET-derived hashing for backward compatibility (see verifyPasswordHash).
+  const effectiveSalt = salt || TOKEN_SECRET;
+  return crypto.pbkdf2Sync(password, effectiveSalt, 100_000, 64, "sha512").toString("hex");
+}
+
+function verifyPasswordHash(password, user) {
+  if (!user || !user.passwordHash) return false;
+  if (user.passwordSalt) {
+    return safeEqual(user.passwordHash, hashPassword(password, user.passwordSalt));
+  }
+  return safeEqual(user.passwordHash, hashPassword(password));
 }
 
 function safeEqual(a, b) {
@@ -129,16 +144,23 @@ function signToken(payload, secret, ttlSeconds) {
 }
 
 function verifyToken(token, secret) {
-  const [encodedHeader, encodedBody, signature] = (token || "").split(".");
-  if (!encodedHeader || !encodedBody || !signature) return null;
-  const expectedSignature = crypto
-    .createHmac("sha256", secret)
-    .update(`${encodedHeader}.${encodedBody}`)
-    .digest("base64url");
-  if (!safeEqual(signature, expectedSignature)) return null;
-  const payload = JSON.parse(Buffer.from(encodedBody, "base64url").toString("utf8"));
-  if (!payload.exp || payload.exp < Math.floor(Date.now() / 1000)) return null;
-  return payload;
+  try {
+    if (typeof token !== "string" || !secret) return null;
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    const [encodedHeader, encodedBody, signature] = parts;
+    if (!encodedHeader || !encodedBody || !signature) return null;
+    const expectedSignature = crypto
+      .createHmac("sha256", secret)
+      .update(`${encodedHeader}.${encodedBody}`)
+      .digest("base64url");
+    if (!safeEqual(signature, expectedSignature)) return null;
+    const payload = JSON.parse(Buffer.from(encodedBody, "base64url").toString("utf8"));
+    if (!payload || typeof payload.exp !== "number" || payload.exp < Math.floor(Date.now() / 1000)) return null;
+    return payload;
+  } catch {
+    return null;
+  }
 }
 
 function sanitizeUser(user) {
@@ -380,6 +402,18 @@ function clearAuthFailures(req, username) {
 }
 
 function validateStartupSecurity() {
+  // Centralized env validation (backend/config/env.js is authoritative).
+  try {
+    const { validateEnv } = require("./config/env");
+    const result = validateEnv({ strict: true });
+    if (IS_PRODUCTION && AUTH_REQUIRED && result.errors.length > 0) {
+      throw new Error(`Production config invalid: ${result.errors.join(" ")}`);
+    }
+    return;
+  } catch (e) {
+    if (e && e.message && e.message.startsWith("Production config invalid")) throw e;
+    // Fallback to inline checks if config module unavailable.
+  }
   const usingDefaultTokenSecret =
     TOKEN_SECRET === "asset-array-dev-secret-change-in-production";
   const usingDefaultRefreshSecret =
@@ -440,8 +474,7 @@ function requireAuth(req, res, next) {
     return next();
   }
   const authHeader = req.headers.authorization || "";
-  const queryToken = typeof req.query?.token === "string" ? req.query.token : null;
-  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : queryToken;
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
   const payload = verifyToken(token, TOKEN_SECRET);
   if (!payload || payload.type !== "access") {
     res.status(401).json({ error: "Unauthorized." });
@@ -514,11 +547,13 @@ async function initMongo() {
     
     const existing = await usersCol.findOne({ username: adminUsername });
     if (!existing) {
+      const passwordSalt = crypto.randomBytes(16).toString("hex");
       await usersCol.insertOne({
         id: "advisor-admin",
         username: adminUsername,
         role: "advisor",
-        passwordHash: hashPassword(adminPassword),
+        passwordSalt,
+        passwordHash: hashPassword(adminPassword, passwordSalt),
         createdAt: new Date().toISOString(),
         active: true,
       });
@@ -569,7 +604,7 @@ app.post("/api/auth/login", requireDb, async (req, res) => {
     }
 
     const user = await usersCol.findOne({ username, active: true });
-    if (!user || !safeEqual(user.passwordHash, hashPassword(password))) {
+    if (!user || !verifyPasswordHash(password, user)) {
       const failure = recordAuthFailure(req, username);
       await audit("auth.login_failed", {
         username,
@@ -608,6 +643,17 @@ app.post("/api/auth/refresh", requireDb, async (req, res) => {
     if (!session || !user) {
       res.status(401).json({ error: "Refresh session not active." });
       return;
+    }
+    if (session.expiresAt) {
+      const expiryMs = new Date(session.expiresAt).getTime();
+      if (Number.isFinite(expiryMs) && expiryMs <= Date.now()) {
+        await sessionsCol.updateOne(
+          { id: payload.tokenVersion },
+          { $set: { revoked: true, revokedAt: new Date().toISOString() } }
+        );
+        res.status(401).json({ error: "Refresh session expired." });
+        return;
+      }
     }
     await sessionsCol.updateOne(
       { id: payload.tokenVersion },
@@ -652,7 +698,7 @@ app.get("/api/audit", requireAuth, requireRole(["advisor"]), requireDb, async (_
   res.json({ ok: true, total: logs.length, logs });
 });
 
-app.post("/api/ai/research", requireAuth, async (req, res) => {
+app.post("/api/ai/research", requireAuth, requireDb, async (req, res) => {
   const query = typeof req.body?.query === "string" ? req.body.query.trim() : "";
 
   if (!query || query.length < 2 || query.length > 4000) {
@@ -684,13 +730,22 @@ app.post("/api/ai/research", requireAuth, async (req, res) => {
     const response = parseGeminiJson(geminiResponse.text);
     const timestamp = new Date().toISOString();
 
-    await aiResearchCol.insertOne({
-      query,
-      userId: req.user.id,
-      username: req.user.username,
-      response,
-      timestamp,
-    });
+    try {
+      if (!aiResearchCol) {
+        res.status(503).json({ error: "Research store unavailable. Please retry shortly." });
+        return;
+      }
+      await aiResearchCol.insertOne({
+        query,
+        userId: req.user.id,
+        username: req.user.username,
+        response,
+        timestamp,
+      });
+    } catch (dbError) {
+      res.status(503).json({ error: "Research store unavailable. Please retry shortly." });
+      return;
+    }
 
     await audit("ai.research_requested", {
       query,
@@ -715,22 +770,22 @@ app.post("/api/ai/research", requireAuth, async (req, res) => {
 });
 
 // Provider status endpoint for multi-model observability
-app.get("/api/ai/status", (req, res) => {
+// Authenticated + minimal disclosure: no internal URLs, no secret presence details beyond NOT_CONFIGURED/AVAILABLE.
+app.get("/api/ai/status", requireAuth, (req, res) => {
   res.json({
     gemini: {
       id: "gemini",
-      name: "Google Gemini (Free Cloud Tier)",
+      name: "Google Gemini",
       isConfigured: Boolean(GEMINI_API_KEY),
       status: GEMINI_API_KEY ? "AVAILABLE" : "NOT_CONFIGURED",
       models: { fast: AI_GEMINI_FAST_MODEL, research: AI_GEMINI_RESEARCH_MODEL },
     },
     ollama: {
       id: "ollama",
-      name: "Ollama Local (Zero-Cost Daemon)",
-      isConfigured: true,
-      status: "AVAILABLE",
+      name: "Ollama Local",
+      isConfigured: false,
+      status: "NOT_CONFIGURED",
       models: { fast: OLLAMA_MODEL, research: OLLAMA_MODEL },
-      baseUrl: OLLAMA_BASE_URL,
     },
     openai: {
       id: "openai",
@@ -1068,7 +1123,7 @@ app.post("/api/broadcast", requireAuth, requireDb, async (req, res) => {
   const queuedCount = deliveries.filter((item) => item.status === "queued").length;
   const skippedCount = deliveries.filter((item) => item.status === "skipped").length;
   const campaign = {
-    campaignId: `${Date.now()}`,
+    campaignId: crypto.randomUUID(),
     ownerName: ownerName || "Asset Array Owner",
     channel: channel || "Preferred",
     message,
@@ -1637,7 +1692,8 @@ app.patch("/api/advisor/tasks/:id", requireAuth, async (req, res) => {
         { $set: updateDoc },
         { returnDocument: "after" }
       );
-      updated = result?.value || result;
+      // mongodb v6 returns { value } ; v7 may return the document directly.
+      updated = result && typeof result === "object" && "value" in result ? result.value : result;
     } else {
       const idx = memAdvisorTasks.findIndex((t) => t.id === taskId && t.userId === userId);
       if (idx !== -1) {

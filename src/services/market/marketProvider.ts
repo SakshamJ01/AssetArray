@@ -23,7 +23,15 @@ export class FinnhubProvider implements MarketDataProvider {
   private apiKey: string | null;
 
   constructor(apiKey?: string) {
-    this.apiKey = apiKey || (typeof process !== "undefined" ? process.env?.FINNHUB_API_KEY || null : null);
+    // Expo/browser-safe: only EXPO_PUBLIC_* is readable at runtime. process.env
+    // access is guarded and never throws when process is undefined (web).
+    const envKey =
+      typeof process !== "undefined"
+        ? (process.env?.EXPO_PUBLIC_FINNHUB_API_KEY as string | undefined) ||
+          (process.env?.FINNHUB_API_KEY as string | undefined) ||
+          null
+        : null;
+    this.apiKey = apiKey || envKey;
   }
 
   async isAvailable(): Promise<boolean> {
@@ -145,20 +153,20 @@ export class UnifiedMarketProvider {
       }
     }
 
-    // For unknown quote in live mode: explicitly unavailable (zero numerical fabrication)
+    // For unknown quote in live mode: explicitly unavailable (zero numerical fabrication).
+    // Partial<LiveInstrument> keeps price optional — no `null as any` casts.
     const unavailableQuote: Partial<LiveInstrument> = {
       symbol: sym,
-      price: null as any,
-      change: null as any,
-      changePercent: null as any,
       lastUpdated: Date.now(),
     };
     return unavailableQuote;
   }
 
   private hasConfiguredKey(): boolean {
+    if (typeof process === "undefined" || !process.env) return false;
     return Boolean(
-      typeof process !== "undefined" && process.env?.FINNHUB_API_KEY
+      (process.env as Record<string, string | undefined>).EXPO_PUBLIC_FINNHUB_API_KEY ||
+        (process.env as Record<string, string | undefined>).FINNHUB_API_KEY
     );
   }
 

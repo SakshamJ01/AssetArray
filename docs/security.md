@@ -1,4 +1,22 @@
-# AssetArray v3.2 Security & Cryptographic Model
+# AssetArray Security & Cryptographic Model
+
+> 3.3.x core-integrity corrections (actual implementation, supersedes overclaims below):
+> - Cloud backup crypto is `src/services/pinCrypto.ts`: PBKDF2 (100k, 16-byte salt) → AES-CBC
+>   via CryptoJS (`AA1.` envelope with salt+IV). Legacy AES(passphrase=PIN) payloads still
+>   decrypt (backward compat). This is NOT AES-GCM; GCM claim below is aspirational.
+> - Local `AsyncStorage` clients/goals/vault are PLAINTEXT (see
+>   `docs/core-integrity/STORAGE_CLASSIFICATION.md`). Device-keychain encryption of local
+>   state is NOT implemented. PIN gates UI only.
+> - Backend headers are `nosniff/DENY/no-referrer/no-store` + HSTS in production only.
+>   There is NO Helmet/CSP in code. TLS is provided by hosting (Render/Firebase), not enforced in app.
+> - Web `SecureStore` is same-origin web storage (explicit downgrade, logged in dev).
+>   Native fallback is explicit `__insecure_fallback_` namespace, never silent.
+> - Web biometric `authenticateAsync` returns `{ success:false }` (explicit PIN required).
+> - `DEMO_PRO` local flag is NEVER authoritative for entitlement.
+> - Tokens: Bearer header only (no `?token=`), refresh checks expiry+revocation, logout 503s
+>   honestly when DB is down.
+
+# AssetArray v3.2 Security & Cryptographic Model (historical, partially aspirational)
 
 ## 1. Zero-Knowledge Cryptographic Architecture
 

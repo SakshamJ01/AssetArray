@@ -13,8 +13,9 @@ class WebAuthGuard implements IAuthGuard {
   }
 
   async authenticateAsync(): Promise<{ success: boolean; error?: string }> {
-    // Web fallback delegates to PIN entry
-    return { success: true };
+    // Web has no OS biometric gate. NEVER auto-succeed: force explicit PIN entry.
+    // Callers must present PIN UI when success=false with reason web-pin-required.
+    return { success: false, error: "web-pin-required" };
   }
 }
 

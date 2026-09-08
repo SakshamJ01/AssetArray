@@ -41,11 +41,31 @@ class WebStorageService implements IStorageService {
     }
   }
 
+  /**
+   * WEB SECURITY NOTE (3.3.x core-integrity): browsers have no SecureStore.
+   * Secure items are persisted to AsyncStorage/localStorage and are readable
+   * by same-origin JS. Do NOT store raw PINs, full tokens, or unencrypted
+   * PII via setSecureItem on web. Callers must encrypt first or keep
+   * secrets in memory only. This downgrade is explicit by design.
+   */
+  private devWarn(msg: string): void {
+    try {
+      const g = globalThis as Record<string, unknown>;
+      if (g.__DEV__) {
+        console.warn(msg);
+      }
+    } catch {
+      // never throw from storage diagnostics
+    }
+  }
+
   async getSecureItem(key: string): Promise<string | null> {
+    this.devWarn(`[storage.web] getSecureItem("${key}") is NOT hardware-backed on web.`);
     return this.getItem(`__sec_${key}`);
   }
 
   async setSecureItem(key: string, value: string): Promise<void> {
+    this.devWarn(`[storage.web] setSecureItem("${key}") persists to web storage (not secure).`);
     await this.setItem(`__sec_${key}`, value);
   }
 

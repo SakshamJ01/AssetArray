@@ -15,19 +15,35 @@ class NativeStorageService implements IStorageService {
     await AsyncStorage.removeItem(key);
   }
 
+  /**
+   * NATIVE SECURITY NOTE (3.3.x): SecureStore failures used to silently
+   * fall back to AsyncStorage (plaintext). That hides a security
+   * downgrade. Now the fallback is explicit: the plaintext copy is
+   * namespaced `__insecure_fallback_` and a warning is emitted so audits
+   * can detect affected keys.
+   */
+  private fallbackKey(key: string): string {
+    return `__insecure_fallback_${key}`;
+  }
+
   async getSecureItem(key: string): Promise<string | null> {
     try {
-      return await SecureStore.getItemAsync(key);
-    } catch {
-      return AsyncStorage.getItem(key);
+      const v = await SecureStore.getItemAsync(key);
+      if (v !== null) return v;
+    } catch (e) {
+      console.warn(`[storage.native] SecureStore unavailable for "${key}", checking explicit fallback.`);
     }
+    return AsyncStorage.getItem(this.fallbackKey(key));
   }
 
   async setSecureItem(key: string, value: string): Promise<void> {
     try {
       await SecureStore.setItemAsync(key, value);
+      await AsyncStorage.removeItem(this.fallbackKey(key));
+      return;
     } catch {
-      await AsyncStorage.setItem(key, value);
+      console.warn(`[storage.native] SecureStore write failed for "${key}"; using explicit insecure fallback.`);
+      await AsyncStorage.setItem(this.fallbackKey(key), value);
     }
   }
 
@@ -35,8 +51,9 @@ class NativeStorageService implements IStorageService {
     try {
       await SecureStore.deleteItemAsync(key);
     } catch {
-      await AsyncStorage.removeItem(key);
+      // explicit fallback cleanup below
     }
+    await AsyncStorage.removeItem(this.fallbackKey(key));
   }
 }
 

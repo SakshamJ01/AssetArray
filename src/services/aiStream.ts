@@ -7,6 +7,13 @@
 import { aiRouter, AiStreamState, AiTaskType, StreamContextPayload } from "./aiGateway";
 import { marketNewsService } from "./market/newsFeed";
 
+export type StreamEvidence = {
+  metric: string;
+  value: string | number;
+  asOf?: string;
+  source?: string;
+};
+
 export interface StreamContext {
   clientName?: string;
   totalAum?: number;
@@ -15,7 +22,7 @@ export interface StreamContext {
   criticalAlertsCount?: number;
   taxLossAvailable?: number;
   topHoldings?: string[];
-  evidence?: Record<string, any>;
+  evidence?: StreamEvidence[];
 }
 
 export interface StreamOptions {

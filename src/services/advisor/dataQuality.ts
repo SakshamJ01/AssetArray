@@ -2,8 +2,9 @@ import { DataQualityReport, MissingDataItem } from "../../types/advisor";
 import { Client } from "../../types/wealth";
 
 /**
- * Evaluates institutional data hygiene across all clients and holdings.
- * Ensures the platform never fabricates missing financial figures.
+ * @deprecated Canonical engine is `src/services/dataQuality/dataQualityEngine.ts`.
+ * This legacy sync wrapper is retained for AdvisorCommandCenter until migration
+ * completes. It no longer contains hardcoded percentages.
  */
 export function evaluateDataQuality(clients: Client[]): DataQualityReport {
   let totalHoldingsCount = 0;
@@ -84,8 +85,13 @@ export function evaluateDataQuality(clients: Client[]): DataQualityReport {
     (holdingsWithAcquisitionDate / totalHoldings) * 100
   );
 
-  const historicalNavCoveragePct = 82; // Institutional NAV history index
-  const benchmarkCoveragePct = 96; // Standard benchmark mapping index
+  // Honest coverage: this legacy path has no snapshot/benchmark inputs, so it
+  // reports target-weight coverage (measurable) and 0 for NAV history (unknown),
+  // instead of hardcoded 82/96.
+  const holdingsWithTargetWeightPct =
+    totalHoldingsCount === 0 ? 0 : Math.round((holdingsWithTargetWeight / totalHoldings) * 100);
+  const historicalNavCoveragePct = 0;
+  const benchmarkCoveragePct = holdingsWithTargetWeightPct;
 
   const overallScore = Math.round(
     portfolioDataCompletenessPct * 0.4 +

@@ -1,3 +1,9 @@
+/**
+ * @deprecated Legacy compat shim over realTimeMarket.
+ * Canonical: src/services/market/marketProvider.ts `UnifiedMarketProvider`.
+ * DEFAULT_QUOTES below are SIMULATED fallback only (offline/first-paint),
+ * never LIVE. New code must use UnifiedMarketProvider + freshness labels.
+ */
 import { realTimeMarket, LiveInstrument } from "./realTimeMarket";
 
 export interface MarketQuote {

@@ -131,8 +131,9 @@ export class DataQualityEngine {
           });
         }
 
-        // Tax lot check (valid acquisition date)
-        const acqDate = h.acquisitionDate || (h as any).acquiredAt;
+        // Tax lot check (valid acquisition date). Canonical field is
+        // `acquisitionDate`; `acquiredAt` is accepted only as legacy alias.
+        const acqDate = h.acquisitionDate || (h as { acquiredAt?: string }).acquiredAt;
         if (acqDate && acqDate.length >= 10) {
           validTaxLotsCount++;
         } else {
@@ -166,13 +167,11 @@ export class DataQualityEngine {
       }
     }
 
-    // 2. Historical Snapshots Check
+    // 2. Historical Snapshots Check — single bulk load, in-memory grouping.
     let clientsWithHistory = 0;
+    const counts = await snapshotStore.getSnapshotCountsByEntity(clients.map((c) => c.id));
     for (const client of clients) {
-      const snaps = await snapshotStore.getSnapshots(client.id);
-      if (snaps.length >= 2) {
-        clientsWithHistory++;
-      }
+      if ((counts.get(client.id) || 0) >= 2) clientsWithHistory++;
     }
 
     // 3. Goals Check

@@ -102,6 +102,10 @@ export interface PortfolioHolding {
   currency?: string;
   sector?: string;
   industry?: string;
+  /**
+   * Canonical acquisition date is `acquisitionDate` (ISO 8601).
+   * `acquiredAt` is a legacy alias accepted on read, never written by new code.
+   */
   acquiredAt?: string;
   acquisitionDate?: string;
   taxLots?: TaxLot[];

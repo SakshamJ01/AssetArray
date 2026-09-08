@@ -7,12 +7,14 @@ import {
 
 describe("Market Provider Truth & Data Hygiene Suite", () => {
   describe("Rule 19: Unknown Quote Rule", () => {
-    it("returns null price for unknown symbols without inventing 100 or 0.5%", async () => {
+    it("returns absent price for unknown symbols without inventing 100 or 0.5%", async () => {
       const quote = await unifiedMarketProvider.getQuote("FAKE_SYMBOL_UNKNOWN_9999");
       expect(quote.symbol).toBe("FAKE_SYMBOL_UNKNOWN_9999");
-      expect(quote.price).toBeNull();
-      expect(quote.change).toBeNull();
-      expect(quote.changePercent).toBeNull();
+      // Core-integrity #25: unavailable quotes omit price (no `null as any`).
+      expect(quote.price).toBeUndefined();
+      expect(quote.change).toBeUndefined();
+      expect(quote.changePercent).toBeUndefined();
+      expect(validateQuoteSchema(quote).isValid).toBe(false);
 
       // Zero fabricated numbers
       expect(quote.price).not.toBe(100);

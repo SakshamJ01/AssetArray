@@ -61,11 +61,15 @@ async function runAiAudit() {
   };
   assertTest("PROVIDER", "Gemini Provider Status", true, results.providerAudit.gemini.status);
 
-  // Check Ollama reachable
+  // Check Ollama reachable (cross-platform: fetch with timeout, never fails the suite)
   let ollamaReachable = false;
+  const ollamaUrl = process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434";
   try {
-    const res = execSync('curl -s --connect-timeout 2 http://localhost:11434/api/tags', { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'ignore'] });
-    ollamaReachable = res && res.includes("models");
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 2000);
+    const r = await fetch(`${ollamaUrl}/api/tags`, { signal: ctrl.signal });
+    clearTimeout(t);
+    ollamaReachable = r.ok;
   } catch (e) {
     ollamaReachable = false;
   }
@@ -88,13 +92,20 @@ async function runAiAudit() {
     status: process.env.ANTHROPIC_API_KEY ? "CONFIGURED" : "NOT_CONFIGURED",
   };
 
-  // 2. Secret Leakage Audit
+  // 2. Secret Leakage Audit (whole src, names only — never print values)
   console.log("\n--- 2. Frontend Secret Leakage Audit ---");
-  const clientFiles = [
-    path.join(__dirname, "../src/App.tsx"),
-    path.join(__dirname, "../src/services/aiGateway/router.ts"),
-    path.join(__dirname, "../src/services/aiGateway/providers/gemini.ts"),
-  ];
+  const { execSync: _exec } = require("child_process");
+  let clientFiles = [];
+  try {
+    const out = _exec("git ls-files src backend/config backend/server.js", { encoding: "utf-8" });
+    clientFiles = out.split("\n").map((s) => s.trim()).filter(Boolean).map((f) => path.join(__dirname, "..", f));
+  } catch {
+    clientFiles = [
+      path.join(__dirname, "../App.tsx"),
+      path.join(__dirname, "../src/services/aiGateway/router.ts"),
+      path.join(__dirname, "../src/services/aiGateway/providers/gemini.ts"),
+    ];
+  }
   let leakFound = false;
   const sensitivePatterns = [
     /AIzaSy[0-9A-Za-z-_]{33}/g, // Google API key

@@ -1,5 +1,3 @@
-import CryptoJS from "crypto-js";
-
 type PushOptions = {
   endpoint: string;
   ownerId: string;
@@ -143,24 +141,7 @@ async function authorizedFetch(
   return response;
 }
 
-export function buildOwnerId(pin: string) {
-  return CryptoJS.SHA256(pin).toString().slice(0, 24);
-}
-
-export function encryptPayload(payload: unknown, pin: string) {
-  return CryptoJS.AES.encrypt(JSON.stringify(payload), pin).toString();
-}
-
-export function decryptPayload<T>(ciphertext: string, pin: string): T {
-  const bytes = CryptoJS.AES.decrypt(ciphertext, pin);
-  const raw = bytes.toString(CryptoJS.enc.Utf8);
-
-  if (!raw) {
-    throw new Error("Unable to decrypt backup. Check your PIN and cloud data.");
-  }
-
-  return JSON.parse(raw) as T;
-}
+export { buildOwnerId, encryptPayload, decryptPayload } from "./pinCrypto";
 
 export async function pushPayload({
   endpoint,

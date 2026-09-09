@@ -57,13 +57,6 @@ const AI_ANTHROPIC_FAST_MODEL = process.env.AI_ANTHROPIC_FAST_MODEL || "claude-3
 const AI_ANTHROPIC_RESEARCH_MODEL = process.env.AI_ANTHROPIC_RESEARCH_MODEL || "claude-3-5-sonnet-20241022";
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434";
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "llama3.2";
-// Server-controlled demo access: explicit opt-in only. The demo identity has
-// role "demo" (never "advisor"/"admin") and its password is a random value
-// that is never exposed — clients authenticate via POST /api/auth/demo-login
-// without any credential. Real admin auth always uses ADMIN_* env only.
-const DEMO_AUTH_ENABLED = process.env.DEMO_AUTH_ENABLED === "true";
-const DEMO_USERNAME = (process.env.DEMO_USERNAME || "demo").trim() || "demo";
-const DEMO_USER_ID = "demo-advisor";
 
 const rateLimitMap = new Map();
 const authAttemptMap = new Map();
@@ -558,30 +551,6 @@ async function initMongo() {
       }
     }
 
-    if (DEMO_AUTH_ENABLED) {
-      if (DEMO_USERNAME === adminUsername) {
-        console.error("[Auth] DEMO_USERNAME collides with ADMIN_USERNAME; demo identity NOT seeded.");
-      } else {
-        const existingDemo = await usersCol.findOne({ username: DEMO_USERNAME });
-        if (!existingDemo) {
-          // Random unusable password: demo login never uses passwords.
-          const passwordSalt = newPasswordSalt();
-          await usersCol.insertOne({
-            id: DEMO_USER_ID,
-            username: DEMO_USERNAME,
-            role: "demo",
-            passwordSalt,
-            passwordHash: hashPassword(crypto.randomBytes(32).toString("hex"), passwordSalt),
-            createdAt: new Date().toISOString(),
-            active: true,
-          });
-          console.log("[Auth] Demo identity seeded with isolated role.");
-        } else if (existingDemo.role !== "demo" || existingDemo.active === false) {
-          console.error("[Auth] Demo username already taken by a non-demo/inactive account; demo login disabled for that name.");
-        }
-      }
-    }
-
     isDbConnected = true;
     console.log(`[MongoDB] Connected successfully to database: ${MONGO_DB_NAME}`);
   } catch (err) {
@@ -701,33 +670,6 @@ app.post("/api/auth/logout", requireAuth, requireDb, async (req, res) => {
     res.json({ ok: true });
   } catch (error) {
     res.status(500).json({ error: "Logout failed." });
-  }
-});
-
-app.post("/api/auth/demo-login", requireDb, async (req, res) => {
-  try {
-    // Server-controlled demo access: no credential is accepted or required.
-    // Any username/password in the body is ignored by design.
-    if (!DEMO_AUTH_ENABLED) {
-      res.status(403).json({ error: "Demo access is not enabled on this backend." });
-      return;
-    }
-    const user = await usersCol.findOne({ username: DEMO_USERNAME, active: true });
-    if (!user || user.role !== "demo") {
-      res.status(503).json({ error: "Demo identity is not available. Please try again later." });
-      return;
-    }
-    const { accessToken, refreshToken } = await buildTokens(user);
-    await audit("auth.demo_login", { userId: user.id, username: user.username, role: user.role });
-    res.json({
-      ok: true,
-      user: sanitizeUser(user),
-      accessToken,
-      refreshToken,
-      expiresIn: ACCESS_TOKEN_TTL_SECONDS,
-    });
-  } catch (error) {
-    res.status(500).json({ error: "Demo login failed." });
   }
 });
 

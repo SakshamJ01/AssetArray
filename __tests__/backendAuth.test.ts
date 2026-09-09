@@ -1,12 +1,11 @@
 /**
  * Auth regression (no DB, no network): exercises the real backend auth crypto
- * module plus contract tripwires on server.js and the frontend demo client.
+ * module plus contract tripwires on server.js and the frontend auth client.
  *
  * TEST 1: configured admin credentials verify (login success path).
  * TEST 2: wrong password fails.
- * TEST 3: 1-click demo login succeeds without any frontend password
- *         (route exists, ignores credentials, mints demo-identity tokens).
- * TEST 4: demo login never requires a plaintext frontend password.
+ * TEST 3: production demo-login shortcut is fully removed.
+ * TEST 4: the app bundle ships no demo login path or demo password literal.
  * TEST 5: production without valid admin config fails safely.
  * TEST 6: expired/malformed access tokens are rejected.
  * TEST 7: expired/revoked refresh sessions are rejected.
@@ -47,21 +46,18 @@ describe("AUTH REGRESSION", () => {
     expect(authCrypto.verifyPasswordHash(undefined, storedUser)).toBe(false);
   });
 
-  test("TEST 3: demo-login route exists and mints tokens without credentials", () => {
+  test("TEST 3: demo-login shortcut is fully removed from the backend", () => {
     const serverSrc = readRepo("backend/server.js");
-    expect(serverSrc).toMatch(/app\.post\("\/api\/auth\/demo-login"/);
-    // Demo gate: explicit enable flag, 403 when disabled.
-    expect(serverSrc).toMatch(/DEMO_AUTH_ENABLED/);
-    expect(serverSrc).toMatch(/Demo access is not enabled/);
-    // Demo identity is role-restricted and looked up server-side.
-    expect(serverSrc).toMatch(/role !== "demo"|role: "demo"/);
-    // Tokens are minted via the same session pipeline as normal login.
-    const demoBlock = serverSrc.slice(serverSrc.indexOf("/api/auth/demo-login"));
-    expect(demoBlock).toMatch(/buildTokens\(user\)/);
-    expect(demoBlock).toMatch(/expiresIn/);
+    // The passwordless demo endpoint must not exist.
+    expect(serverSrc).not.toMatch(/app\.post\("\/api\/auth\/demo-login"/);
+    // No demo identity constants, seeding, or disable-flag remain.
+    expect(serverSrc).not.toMatch(/DEMO_AUTH_ENABLED/);
+    expect(serverSrc).not.toMatch(/DEMO_USERNAME/);
+    expect(serverSrc).not.toMatch(/role: "demo"/);
+    expect(serverSrc).not.toMatch(/Demo identity/);
   });
 
-  test("TEST 4: demo login never requires a plaintext frontend password", () => {
+  test("TEST 4: app bundle ships no demo login path or demo password literal", () => {
     const appSrc = readRepo("App.tsx");
     const syncSrc = readRepo("src/services/secureSync.ts");
     // No demo password literal anywhere in the app bundle sources.
@@ -69,15 +65,13 @@ describe("AUTH REGRESSION", () => {
       expect(`${name} has no hardcoded demo password`).toBeTruthy();
       expect(src).not.toMatch(/AssetArrayLocalAdmin/);
     }
-    // The demo client sends an empty body — no password field exists.
-    expect(syncSrc).toMatch(/demoLoginAdvisor/);
-    const demoFn = syncSrc.slice(syncSrc.indexOf("demoLoginAdvisor"));
-    expect(demoFn).toMatch(/\/api\/auth\/demo-login/);
-    expect(demoFn).not.toMatch(/password/);
-    // quickDemoLogin no longer sets or sends any password.
-    const quickDemo = appSrc.slice(appSrc.indexOf("async function quickDemoLogin"));
-    expect(quickDemo).not.toMatch(/targetPass|demoPass|password:\s*target|loginAdvisor\(\{/);
-    expect(quickDemo).toMatch(/demoLoginAdvisor/);
+    // The demo client helper and offline bypass are gone.
+    // No demo-login fetch path may exist in the frontend auth client.
+    expect(syncSrc).not.toMatch(/demo-login/);
+    expect(syncSrc).not.toMatch(/demoLoginAdvisor/);
+    // quickDemoLogin and continueOffline must not exist in App.tsx.
+    expect(appSrc).not.toMatch(/async function quickDemoLogin/);
+    expect(appSrc).not.toMatch(/async function continueOffline/);
     // Admin password must never travel via public env into the bundle.
     expect(appSrc).not.toMatch(/EXPO_PUBLIC_.*(PASSWORD|SECRET)/);
     expect(syncSrc).not.toMatch(/EXPO_PUBLIC_.*(PASSWORD|SECRET)/);
@@ -151,6 +145,7 @@ describe("AUTH REGRESSION", () => {
     expect(serverSrc).toMatch(/username and password are required/); // 400 branch
     expect(serverSrc).toMatch(/Invalid credentials/); // 401 branch
     expect(serverSrc).toMatch(/Database initializing or reconnecting/); // 503 branch
-    expect(serverSrc).toMatch(/Demo identity is not available/); // demo 503 branch
+    // The removed demo-login surface must not resurface.
+    expect(serverSrc).not.toMatch(/Demo identity is not available/);
   });
 });

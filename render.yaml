@@ -26,10 +26,6 @@ services:
         sync: false
       - key: ADMIN_PASSWORD
         sync: false
-      - key: DEMO_AUTH_ENABLED
-        value: "true"
-      - key: DEMO_USERNAME
-        value: demo
       - key: GEMINI_API_KEY
         sync: false
       - key: GEMINI_MODEL

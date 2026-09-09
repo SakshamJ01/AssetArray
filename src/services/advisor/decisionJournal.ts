@@ -4,38 +4,8 @@ import { logActivity } from "./activityTimeline";
 
 const STORAGE_KEY_DECISIONS = "@asset_array_advisor_decisions_v3_3";
 
-const INITIAL_DEMO_DECISIONS: AdvisorDecision[] = [
-  {
-    id: "dec_demo_1",
-    date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-    clientId: "c1",
-    clientName: "Rahul Mehta",
-    portfolioId: "port_c1",
-    issue: "Technology concentration: TCS reached 27.4% of portfolio",
-    evidence: "Risk Engine concentration diagnostic: limit 20.0%, current 27.4%",
-    decision: "Staged reduction: Rebalance 7.4% from TCS to Nifty 50 Index Fund over 30 days",
-    rationale: "Mitigate single-stock drawdown risk while preserving overall large-cap equity exposure",
-    advisorFollowUp: "Review execution progress on September 15",
-    status: "RECORDED",
-    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: "dec_demo_2",
-    date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-    clientId: "c2",
-    clientName: "Ananya Sharma",
-    portfolioId: "port_c2",
-    issue: "Tax loss harvesting opportunity: ₹1.2L harvestable losses",
-    evidence: "Tax Intelligence Engine Section 70/74 harvestable loss report",
-    decision: "Book ₹85,000 short-term losses in underperforming mid-cap lot to offset realized gains",
-    rationale: "Maximize current-year tax shield prior to financial year-end",
-    advisorFollowUp: "Send updated capital gains realization statement to client CA",
-    status: "EXECUTED",
-    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-];
-
-let inMemoryDecisions: AdvisorDecision[] = [...INITIAL_DEMO_DECISIONS];
+let inMemoryDecisions: AdvisorDecision[] = [];
+let decisionsLoadedFromStorage = false;
 
 /**
  * Records an advisor decision in the fiduciary decision journal.
@@ -79,11 +49,12 @@ export async function recordDecision(
  * Retrieves recorded decisions, optionally filtered by clientId.
  */
 export async function getDecisions(clientId?: string): Promise<AdvisorDecision[]> {
-  if (inMemoryDecisions.length <= INITIAL_DEMO_DECISIONS.length) {
+  if (!decisionsLoadedFromStorage && inMemoryDecisions.length === 0) {
     const loaded = await loadPersistedDecisions();
-    if (loaded && loaded.length > 0) {
+    if (loaded.length > 0) {
       inMemoryDecisions = loaded;
     }
+    decisionsLoadedFromStorage = true;
   }
 
   if (clientId) {
@@ -98,15 +69,15 @@ export async function getDecisions(clientId?: string): Promise<AdvisorDecision[]
 export async function loadPersistedDecisions(): Promise<AdvisorDecision[]> {
   try {
     const raw = await storageService.getItem(STORAGE_KEY_DECISIONS);
-    if (!raw) return INITIAL_DEMO_DECISIONS;
+    if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) {
       return parsed;
     }
-    return INITIAL_DEMO_DECISIONS;
+    return [];
   } catch (err) {
     console.warn("Error loading persisted decisions:", err);
-    return INITIAL_DEMO_DECISIONS;
+    return [];
   }
 }
 

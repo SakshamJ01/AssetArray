@@ -57,10 +57,9 @@ describe("Market Data Provider, Custodian Aggregator & News Services", () => {
   });
 
   describe("CustodianSyncService", () => {
-    it("retrieves client custodial accounts", () => {
+    it("starts with no pre-seeded accounts (no fabricated holdings at runtime)", () => {
       const accounts = custodianSyncService.getClientAccounts("client-1");
-      expect(accounts.length).toBeGreaterThanOrEqual(1);
-      expect(accounts[0].custodian).toMatch(/BridgeFT|Plaid/);
+      expect(accounts.length).toBe(0);
     });
 
     it("links a new custodial account", async () => {
@@ -73,13 +72,31 @@ describe("Market Data Provider, Custodian Aggregator & News Services", () => {
       expect(acc.institutionName).toBe("Morgan Stanley Wealth");
       expect(acc.custodian).toBe("BridgeFT");
       expect(acc.status).toBe("connected");
+
+      const list = custodianSyncService.getClientAccounts("client-test-2");
+      expect(list.length).toBe(1);
     });
 
     it("synchronizes custodial accounts and updates holdings", async () => {
-      const syncResult = await custodianSyncService.syncClientAccounts("client-1");
+      await custodianSyncService.linkAccount(
+        "client-sync-1",
+        "Charles Schwab & Co.",
+        "BridgeFT",
+        "Taxable"
+      );
+      const syncResult = await custodianSyncService.syncClientAccounts("client-sync-1");
       expect(syncResult.success).toBe(true);
-      expect(syncResult.syncedAccounts).toBeGreaterThanOrEqual(1);
+      expect(syncResult.syncedAccounts).toBe(1);
       expect(syncResult.reconciledPositions).toBeGreaterThanOrEqual(1);
+      expect(syncResult.message).toMatch(/Successfully synchronized/);
+    });
+
+    it("reports an honest empty result when no accounts exist", async () => {
+      const syncResult = await custodianSyncService.syncClientAccounts("client-empty");
+      expect(syncResult.success).toBe(true);
+      expect(syncResult.syncedAccounts).toBe(0);
+      expect(syncResult.reconciledPositions).toBe(0);
+      expect(syncResult.message).toMatch(/No connected custodial accounts/);
     });
   });
 

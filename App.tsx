@@ -72,7 +72,6 @@ import {
   AuthUser,
   buildOwnerId,
   decryptPayload,
-  demoLoginAdvisor,
   encryptPayload,
   AiProviderState,
   getAdvisorProfile,
@@ -91,7 +90,7 @@ import { fetchLiveMarketQuotes, getQuoteForSymbol, MarketQuote } from "./src/ser
 import { analyzeClientPortfolioWithAI, ClientAiRecommendation } from "./src/services/aiAdvisor";
 import { getOnlineStatus, useNetworkStatus } from "./src/services/network";
 import { exportClientPdfReport } from "./src/services/pdfReport";
-import { initializeRevenueCat, checkProStatus, getOfferings, purchasePackage, restorePurchases, resetDemoProStatus } from "./src/services/revenueCat";
+import { initializeRevenueCat, checkProStatus, getOfferings, purchasePackage, restorePurchases } from "./src/services/revenueCat";
 import { PaywallScreen } from "./src/screens/PaywallScreen";
 import {
   ClientsScreen,
@@ -102,7 +101,7 @@ import {
   AiResearchScreen,
 } from "./src/screens";
 import { PortfolioManagerSection } from "./src/components/PortfolioManagerSection";
-import { DEMO_CLIENTS, getClientAvatar } from "./src/services/demoData";
+import { getClientAvatar } from "./src/services/avatars";
 import { AssetAllocationBar } from "./src/components/AssetAllocationBar";
 import { storageService } from "./src/platform/storage";
 import { localAuth } from "./src/platform/auth";
@@ -724,7 +723,7 @@ function AppContent() {
         setStoredPin(pin);
         setBiometricEnabled(parseStoredJson(rawBiometric, false));
         const loadedClients = parseStoredJson(rawClients, [] as Client[]);
-        const enrichedClients = (loadedClients.length > 0 ? loadedClients : DEMO_CLIENTS).map((c) => ({
+        const enrichedClients = loadedClients.map((c) => ({
           ...c,
           avatarUrl: getClientAvatar(c),
         }));
@@ -1598,16 +1597,6 @@ function AppContent() {
     });
   }
 
-  async function seedDemoClients() {
-    const nonDemo = clients.filter((c) => !c.id.startsWith("demo-client-"));
-    const updated = [...(DEMO_CLIENTS as unknown as Client[]), ...nonDemo];
-    setClients(updated);
-    await persistClients(updated);
-    setSelectedClientId(updated[0].id);
-    await triggerSuccessHaptic();
-    Alert.alert("Demo Roster Loaded", "Loaded 3 institutional client portfolios with holdings for judge evaluation!");
-  }
-
   function toggleSelectedClient(clientId: string) {
     setSelectedClientIds((current) =>
       current.includes(clientId)
@@ -1804,67 +1793,6 @@ function AppContent() {
       setAuthState("Login failed");
       Alert.alert("Login failed", error instanceof Error ? error.message : "Unable to login.");
     }
-  }
-
-  async function quickDemoLogin() {
-    // Server-controlled demo sign-in: no password exists in this bundle.
-    // The backend issues tokens for its isolated demo identity only when
-    // demo access is explicitly enabled there.
-    const targetEndpoint = cloudSettings.endpoint.trim() || DEFAULT_BACKEND_ENDPOINT;
-
-    setCloudSettings((c) => ({
-      ...c,
-      endpoint: targetEndpoint,
-    }));
-
-    try {
-      setAuthState("Signing in to demo workspace...");
-      await persistCloudSettings({
-        ...cloudSettings,
-        endpoint: targetEndpoint,
-      });
-      const response = await demoLoginAdvisor({
-        endpoint: targetEndpoint,
-      });
-      const session: AuthSession = {
-        user: response.user,
-        accessToken: response.accessToken,
-        refreshToken: response.refreshToken,
-        expiresAt: Date.now() + response.expiresIn * 1000,
-      };
-      setAuthSession(session);
-      await persistAuthSession(session);
-      setAuthPassword("");
-      setAuthState(`Connected as ${session.user.username} (demo)`);
-      setSyncState("Demo workspace active");
-      Alert.alert("Demo sign-in successful", `Signed in as ${session.user.username} (demo workspace).`);
-    } catch (error) {
-      setAuthState("Login failed");
-      Alert.alert(
-        "Backend Connection Notice",
-        (error instanceof Error ? error.message : "Unable to login.") +
-          "\n\nTip: If the Render cloud backend was asleep, please retry in 10-15 seconds, or tap 'Continue in Offline Mode'."
-      );
-    }
-  }
-
-  async function continueOffline() {
-    const offlineSession: AuthSession = {
-      user: {
-        id: "advisor-offline",
-        username: cloudSettings.ownerName.trim() || "Lead Advisor",
-        role: "advisor",
-        createdAt: new Date().toISOString(),
-        active: true,
-      },
-      accessToken: "offline-access-token",
-      refreshToken: "offline-refresh-token",
-      expiresAt: Date.now() + 86400 * 1000 * 30,
-    };
-    setAuthSession(offlineSession);
-    await persistAuthSession(offlineSession);
-    setAuthState("Offline mode active");
-    setSyncState("Local storage only");
   }
 
   async function logoutFromBackend() {
@@ -2629,34 +2557,13 @@ function AppContent() {
           <Text style={styles.authEyebrow}>Asset Array</Text>
           <Text style={styles.authTitle}>Sign in to your advisor workspace</Text>
           <Text style={styles.authText}>
-            Connect to the Asset Array backend before opening client records, cloud backup, and campaigns.
+            Sign in with your secure advisor credential to access client records, cloud backup, and campaigns.
           </Text>
-
-          <Pressable
-            style={[styles.primaryButton, { backgroundColor: "#E0A84C", marginBottom: 10 }]}
-            onPress={() => void quickDemoLogin()}
-          >
-            <Text style={[styles.primaryButtonText, { color: "#030712", fontWeight: "800" }]}>
-              ⚡ 1-Click Demo Sign In
-            </Text>
-          </Pressable>
-
-          <Pressable
-            style={[
-              styles.secondaryButton,
-              { width: "100%", justifyContent: "center", alignItems: "center", marginBottom: 8 },
-            ]}
-            onPress={() => void continueOffline()}
-          >
-            <Text style={[styles.secondaryButtonText, { color: "#E0A84C" }]}>
-              Continue in Offline Mode (Demo)
-            </Text>
-          </Pressable>
 
           <View style={{ flexDirection: "row", alignItems: "center", marginVertical: 12, width: "100%" }}>
             <View style={{ flex: 1, height: 1, backgroundColor: "rgba(255,255,255,0.12)" }} />
             <Text style={{ color: "#7f90a8", paddingHorizontal: 10, fontSize: 11, fontWeight: "600" }}>
-              OR SIGN IN MANUALLY
+              SIGN IN TO YOUR WORKSPACE
             </Text>
             <View style={{ flex: 1, height: 1, backgroundColor: "rgba(255,255,255,0.12)" }} />
           </View>
@@ -3085,7 +2992,7 @@ function AppContent() {
               advisorName={authSession?.user?.username || cloudSettings.ownerName || "Asset Array Advisor"}
               openEditModal={openEditModal}
               deleteClient={deleteClient}
-              seedDemoClients={seedDemoClients}
+              onAddClient={openAddModal}
               selectedClientInsights={selectedClientInsights}
               selectedClientMessageDraft={selectedClientMessageDraft}
               selectedClientReportDraft={selectedClientReportDraft}
@@ -3125,9 +3032,7 @@ function AppContent() {
             syncState={syncState}
             isPro={isPro}
             setIsPro={setIsPro}
-            resetDemoProStatus={resetDemoProStatus}
             setIsPaywallVisible={setIsPaywallVisible}
-            seedDemoClients={seedDemoClients}
             biometricEnabled={biometricEnabled}
             toggleBiometric={toggleBiometric}
             hapticsEnabled={hapticsEnabled}

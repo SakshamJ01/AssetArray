@@ -9,9 +9,7 @@ export interface SettingsScreenProps {
   syncState: string;
   isPro: boolean;
   setIsPro: (val: boolean) => void;
-  resetDemoProStatus: () => Promise<void>;
   setIsPaywallVisible: (val: boolean) => void;
-  seedDemoClients: () => Promise<void> | void;
   biometricEnabled: boolean;
   toggleBiometric: (val: boolean) => Promise<void>;
   hapticsEnabled: boolean;
@@ -93,9 +91,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   syncState,
   isPro,
   setIsPro,
-  resetDemoProStatus,
   setIsPaywallVisible,
-  seedDemoClients,
   biometricEnabled,
   toggleBiometric,
   hapticsEnabled,
@@ -311,16 +307,13 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         </Pressable>
       </View>
 
-      {/* 7. SUBSCRIPTION & DEMO HARNESS (Rule 69: Visibly labeled SIMULATED / DEMO) */}
+      {/* 7. SUBSCRIPTION */}
       <View style={localStyles.sectionPanel}>
         <View style={localStyles.headerRow}>
-          <Text style={localStyles.sectionTitle}>Subscription & Simulation Harness</Text>
-          <View style={localStyles.demoTag}>
-            <Text style={localStyles.demoTagText}>DEMO / SIMULATED</Text>
-          </View>
+          <Text style={localStyles.sectionTitle}>Subscription</Text>
         </View>
         <Text style={localStyles.sectionSubtitle}>
-          RevenueCat advisor subscription tier management and test roster generator.
+          RevenueCat advisor subscription tier management.
         </Text>
 
         <View style={localStyles.rowItem}>
@@ -334,40 +327,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             <Text style={localStyles.btnPaywallText}>Review Tiers</Text>
           </Pressable>
         </View>
-
-        <Pressable
-          style={localStyles.actionRowItem}
-          onPress={async () => {
-            if (isPro) {
-              await resetDemoProStatus();
-              setIsPro(false);
-              Alert.alert("Tier Reset", "Switched back to Free Plan.");
-            } else {
-              setIsPro(true);
-              Alert.alert("Pro Activated", "Institutional Pro features unlocked.");
-            }
-          }}
-        >
-          <View style={{ flex: 1 }}>
-            <Text style={localStyles.rowTitle}>{isPro ? "Simulate Free Tier" : "Simulate Pro Tier"}</Text>
-            <Text style={localStyles.rowSubtitle}>Toggle license state for evaluation without live billing.</Text>
-          </View>
-          <View style={localStyles.actionBadge}>
-            <Text style={[localStyles.actionBadgeText, { color: isPro ? semanticStatusColors.negative : surfaceTokens.brand }]}>
-              {isPro ? "Revert Free" : "Activate Pro"}
-            </Text>
-          </View>
-        </Pressable>
-
-        <Pressable style={localStyles.actionRowItem} onPress={() => void seedDemoClients()}>
-          <View style={{ flex: 1 }}>
-            <Text style={localStyles.rowTitle}>Seed Demonstration Client Roster</Text>
-            <Text style={localStyles.rowSubtitle}>Populates 3 institutional client portfolios with holdings for validation.</Text>
-          </View>
-          <View style={[localStyles.actionBadge, { backgroundColor: "rgba(224, 168, 76, 0.12)", borderColor: surfaceTokens.brand }]}>
-            <Text style={[localStyles.actionBadgeText, { color: surfaceTokens.brand }]}>Seed Roster</Text>
-          </View>
-        </Pressable>
       </View>
 
       {/* 8. ABOUT & GOVERNANCE */}

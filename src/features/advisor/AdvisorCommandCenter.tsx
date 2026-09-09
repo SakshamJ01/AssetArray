@@ -218,14 +218,31 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
     const overdue = actions.filter(
       (a) => a.dueAt && a.dueAt < todayStr && a.status !== "DONE" && a.status !== "CANCELLED"
     ).length;
+    const portfolioReviews = actions.filter((a) => a.type === "PORTFOLIO_REVIEW").length;
+    const reportsThisMonth = actions.filter(
+      (a) => a.type === "REPORT_REVIEW" || a.type === "COMMUNICATION"
+    ).length;
 
     return {
       tasksCompletedToday: completedToday,
       overdueTasksCount: overdue,
-      clientReviewsCompletedThisMonth: 14,
-      reportsSentThisMonth: 18,
+      clientReviewsCompletedThisMonth: portfolioReviews,
+      reportsSentThisMonth: reportsThisMonth,
       openAlertsCount: criticalCount + highPriorityCount,
-      avgResolutionTimeHours: 4.2,
+      avgResolutionTimeHours: completedToday > 0
+        ? Math.round(
+            (actions
+              .filter((a) => a.status === "DONE" && a.completedAt)
+              .reduce(
+                (sum, a) =>
+                  sum +
+                  Math.max(0, new Date(a.completedAt as string).getTime() - new Date(a.createdAt).getTime()),
+                0
+              ) /
+              completedToday /
+              3600000) * 10
+          ) / 10
+        : 0,
     };
   }, [actions, criticalCount, highPriorityCount]);
 
@@ -247,7 +264,7 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
     } else if (totalAum > 0) {
       return `₹${Math.round(totalAum).toLocaleString("en-IN")}`;
     }
-    return "$2.45M";
+    return "₹0";
   }, [totalAum]);
 
   const [isSyncingAccounts, setIsSyncingAccounts] = useState(false);
@@ -256,8 +273,19 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
   const handleSyncCustodianAccounts = async () => {
     setIsSyncingAccounts(true);
     try {
-      const res = await custodianSyncService.syncClientAccounts("client-1");
-      setSyncToastMessage(`✓ ${res.message}`);
+      const synced = [];
+      for (const client of clients) {
+        const res = await custodianSyncService.syncClientAccounts(client.id);
+        synced.push(res);
+      }
+      const totalValue = synced.reduce((sum, r) => sum + r.totalHoldingsValue, 0);
+      const reconciled = synced.reduce((sum, r) => sum + r.reconciledPositions, 0);
+      const accounts = synced.reduce((sum, r) => sum + r.syncedAccounts, 0);
+      const fmtValue =
+        totalValue >= 10_000_000
+          ? `₹${(totalValue / 10_000_000).toFixed(2)} Cr`
+          : `₹${Math.round(totalValue).toLocaleString("en-IN")}`;
+      setSyncToastMessage(`✓ Synchronized ${accounts} custodial accounts · ${reconciled} positions · ${fmtValue}`);
       setTimeout(() => setSyncToastMessage(null), 4000);
       refreshCommandCenter();
     } catch {

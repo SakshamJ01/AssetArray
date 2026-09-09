@@ -49,7 +49,7 @@ export interface ClientsScreenProps {
   advisorName: string;
   openEditModal: (client: Client) => void;
   deleteClient: (client: Client) => void;
-  seedDemoClients: () => void | Promise<void>;
+  onAddClient: () => void;
   selectedClientInsights: string[];
   selectedClientMessageDraft: string;
   selectedClientReportDraft: string;
@@ -211,7 +211,7 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
   advisorName,
   openEditModal,
   deleteClient,
-  seedDemoClients,
+  onAddClient,
   selectedClientInsights,
   selectedClientMessageDraft,
   selectedClientReportDraft,
@@ -461,16 +461,16 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
             </Text>
             {filteredClients.length === 0 ? (
               <View style={styles.emptyState}>
-                <Text style={styles.emptyTitle}>No matching clients</Text>
+                <Text style={styles.emptyTitle}>No clients yet</Text>
                 <Text style={styles.emptyText}>
-                  Adjust your filters, add a client, or load the institutional showcase portfolio.
+                  Add your first client to begin building the advisory roster.
                 </Text>
                 <Pressable
                   style={[styles.primaryButton, { marginTop: 14, backgroundColor: theme.colors.brand, borderRadius: 4 }]}
-                  onPress={() => void seedDemoClients()}
+                  onPress={() => void onAddClient()}
                 >
                   <Text style={[styles.primaryButtonText, { color: "#050914", fontWeight: "800" }]}>
-                    ⚡ Load Demo Roster & Holdings (Judge Showcase)
+                    + Add Client
                   </Text>
                 </Pressable>
               </View>

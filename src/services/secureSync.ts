@@ -304,37 +304,6 @@ export async function loginAdvisor({ endpoint, username, password }: LoginOption
     expiresIn: number;
   }>;
 }
-export type DemoLoginOptions = {
-  endpoint: string;
-};
-
-/**
- * Server-controlled demo login: no credential is sent. The backend issues
- * tokens for its isolated demo identity only when DEMO_AUTH_ENABLED=true.
- */
-export async function demoLoginAdvisor({ endpoint }: DemoLoginOptions) {
-  const response = await fetch(`${normalizeEndpoint(endpoint)}/api/auth/demo-login`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({}),
-  });
-
-  if (!response.ok) {
-    throw new Error(
-      await readErrorMessage(response, "Demo sign-in is unavailable on this backend.")
-    );
-  }
-
-  return response.json() as Promise<{
-    ok: true;
-    user: AuthUser;
-    accessToken: string;
-    refreshToken: string;
-    expiresIn: number;
-  }>;
-}
 export async function refreshAdvisorToken({ endpoint, refreshToken }: RefreshOptions) {
   const response = await fetch(`${normalizeEndpoint(endpoint)}/api/auth/refresh`, {
     method: "POST",

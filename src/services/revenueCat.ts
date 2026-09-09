@@ -21,7 +21,3 @@ export async function checkProStatus(): Promise<boolean> {
 export async function restorePurchases(): Promise<boolean> {
   return billingService.restorePurchases();
 }
-
-export async function resetDemoProStatus(): Promise<void> {
-  return billingService.resetDemoProStatus();
-}

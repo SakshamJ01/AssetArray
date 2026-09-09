@@ -15,7 +15,6 @@ export interface HistoricalSnapshot {
   timestamp: string;
   source: string;
   methodologyVersion: string;
-  isDemo?: boolean;
 }
 
 export type InsightType =
@@ -43,7 +42,6 @@ export interface InsightEvidence {
   source: string;
   confidence: InsightConfidence;
   threshold?: number;
-  isDemo?: boolean;
 }
 
 export interface InsightExplanation {
@@ -64,5 +62,4 @@ export interface ClientInsight {
   severity: "CRITICAL" | "HIGH" | "MEDIUM" | "INFO";
   detectedAt: string;
   explanation?: InsightExplanation;
-  isDemo?: boolean;
 }

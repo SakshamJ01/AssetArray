@@ -170,7 +170,7 @@ export class UnifiedMarketProvider {
     );
   }
 
-  public async getSectorPerformance(isDemoMode = false): Promise<SectorPerformance[]> {
+  public async getSectorPerformance(): Promise<SectorPerformance[]> {
     if (this.sectorCache && this.sectorCache.expires > Date.now()) {
       return this.sectorCache.data;
     }
@@ -189,19 +189,13 @@ export class UnifiedMarketProvider {
       }
     }
 
-    // In demo/test mode: load from isolated simulation provider
-    if (isDemoMode) {
-      return simulationProvider.getSectorPerformance();
-    }
-
-    // In live mode: do not fabricate sector returns if unavailable
+    // Live mode: do not fabricate sector returns if unavailable
     return [];
   }
 
   public async getHistoricalPrices(
     symbol: string,
-    days = 30,
-    isDemoMode = false
+    days = 30
   ): Promise<HistoricalPricePoint[]> {
     for (const p of this.providers) {
       if (await p.isAvailable()) {
@@ -214,12 +208,7 @@ export class UnifiedMarketProvider {
       }
     }
 
-    // In demo mode: load from isolated simulation provider
-    if (isDemoMode) {
-      return simulationProvider.getHistoricalPrices(symbol, days);
-    }
-
-    // In live mode (isDemoMode = false): missing history returned as empty (HISTORY_UNAVAILABLE)
+    // Live mode: missing history returned as empty (HISTORY_UNAVAILABLE)
     return [];
   }
 }

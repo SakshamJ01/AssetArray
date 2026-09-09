@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BillingPackage, IBillingService } from "./types";
 
-const DEMO_PRO_STORAGE_KEY = "asset_array_demo_is_pro";
+
 
 export const WEB_MOCK_PACKAGES: BillingPackage[] = [
   {
@@ -36,12 +36,7 @@ class WebBillingService implements IBillingService {
   }
 
   async checkProStatus(): Promise<boolean> {
-    try {
-      const demoVal = await AsyncStorage.getItem(DEMO_PRO_STORAGE_KEY);
-      return demoVal === "true";
-    } catch {
-      return false;
-    }
+    return false;
   }
 
   async getOfferings(): Promise<BillingPackage[]> {
@@ -50,7 +45,6 @@ class WebBillingService implements IBillingService {
 
   async purchasePackage(pkg: BillingPackage): Promise<boolean> {
     console.log("[RevenueCat Web] Processed purchase for:", pkg.identifier);
-    await AsyncStorage.setItem(DEMO_PRO_STORAGE_KEY, "true");
     return true;
   }
 
@@ -58,9 +52,6 @@ class WebBillingService implements IBillingService {
     return this.checkProStatus();
   }
 
-  async resetDemoProStatus(): Promise<void> {
-    await AsyncStorage.removeItem(DEMO_PRO_STORAGE_KEY);
-  }
 }
 
 export const billingService: IBillingService = new WebBillingService();

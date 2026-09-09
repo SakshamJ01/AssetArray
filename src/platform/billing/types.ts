@@ -18,6 +18,6 @@ export interface IBillingService {
   getOfferings(): Promise<BillingPackage[]>;
   initialize(): Promise<void>;
   purchasePackage(pkg: BillingPackage): Promise<boolean>;
-  resetDemoProStatus(): Promise<void>;
+
   restorePurchases(): Promise<boolean>;
 }

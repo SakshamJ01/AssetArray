@@ -10,7 +10,6 @@ export const API_KEYS = {
 };
 
 export const IS_PRO_ENTITLEMENT_ID = "pro_advisor";
-const DEMO_PRO_STORAGE_KEY = "asset_array_demo_is_pro";
 
 const isPlaceholderKey = (key: string) => !key || key.includes("placeholder");
 
@@ -98,7 +97,6 @@ class NativeBillingService implements IBillingService {
 
     if (!key || key.startsWith("test_") || isPlaceholderKey(key)) {
       console.log("[RevenueCat Native] Completed purchase in Test Store / Sandbox mode");
-      await AsyncStorage.setItem(DEMO_PRO_STORAGE_KEY, "true");
       return true;
     }
 
@@ -106,7 +104,6 @@ class NativeBillingService implements IBillingService {
       const { customerInfo } = await Purchases.purchasePackage(pkg as unknown as PurchasesPackage);
       const isEntitled = customerInfo.entitlements.active[IS_PRO_ENTITLEMENT_ID] !== undefined;
       if (isEntitled) {
-        await AsyncStorage.setItem(DEMO_PRO_STORAGE_KEY, "true");
         return true;
       }
     } catch (e: any) {
@@ -114,7 +111,6 @@ class NativeBillingService implements IBillingService {
       console.warn("[RevenueCat Native] Native purchase error, falling back to sandbox:", e);
     }
 
-    await AsyncStorage.setItem(DEMO_PRO_STORAGE_KEY, "true");
     return true;
   }
 
@@ -131,33 +127,20 @@ class NativeBillingService implements IBillingService {
       // fallback in sandbox
     }
 
-    const stored = await AsyncStorage.getItem(DEMO_PRO_STORAGE_KEY);
-    return stored === "true";
+    return false;
   }
 
   async restorePurchases(): Promise<boolean> {
     const key = getActiveApiKey();
-    if (!key || key.startsWith("test_") || isPlaceholderKey(key)) {
-      const stored = await AsyncStorage.getItem(DEMO_PRO_STORAGE_KEY);
-      return stored === "true";
-    }
-
     try {
       const customerInfo = await Purchases.restorePurchases();
       if (customerInfo.entitlements.active[IS_PRO_ENTITLEMENT_ID] !== undefined) {
-        await AsyncStorage.setItem(DEMO_PRO_STORAGE_KEY, "true");
         return true;
       }
     } catch (e) {
       // fallback
     }
-
-    const stored = await AsyncStorage.getItem(DEMO_PRO_STORAGE_KEY);
-    return stored === "true";
-  }
-
-  async resetDemoProStatus(): Promise<void> {
-    await AsyncStorage.removeItem(DEMO_PRO_STORAGE_KEY);
+    return false;
   }
 }
 

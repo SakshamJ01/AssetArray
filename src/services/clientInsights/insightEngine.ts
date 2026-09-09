@@ -85,11 +85,11 @@ export class InsightEngine {
             source: techComparison.current.source,
             confidence,
             threshold: 25.0,
-            isDemo: techComparison.current.isDemo,
+            
           },
           severity: techComparison.current.value > 25.0 ? "HIGH" : "MEDIUM",
           detectedAt: new Date().toISOString(),
-          isDemo: techComparison.current.isDemo,
+          
         });
       }
     }
@@ -120,11 +120,11 @@ export class InsightEngine {
             source: healthComp.current.source,
             confidence,
             threshold: 70,
-            isDemo: healthComp.current.isDemo,
+            
           },
           severity: healthComp.current.value < 70 ? "CRITICAL" : "HIGH",
           detectedAt: new Date().toISOString(),
-          isDemo: healthComp.current.isDemo,
+          
         });
       }
     }
@@ -155,11 +155,11 @@ export class InsightEngine {
             source: drawdownComp.current.source,
             confidence,
             threshold: 8.0,
-            isDemo: drawdownComp.current.isDemo,
+            
           },
           severity: drawdownComp.current.value >= 10.0 ? "CRITICAL" : "HIGH",
           detectedAt: new Date().toISOString(),
-          isDemo: drawdownComp.current.isDemo,
+          
         });
       }
     }
@@ -190,11 +190,11 @@ export class InsightEngine {
             source: cashComp.current.source,
             confidence,
             threshold: 10.0,
-            isDemo: cashComp.current.isDemo,
+            
           },
           severity: "MEDIUM",
           detectedAt: new Date().toISOString(),
-          isDemo: cashComp.current.isDemo,
+          
         });
       }
     }
@@ -227,11 +227,11 @@ export class InsightEngine {
               source: goalComp.current.source,
               confidence,
               threshold: 75.0,
-              isDemo: goalComp.current.isDemo,
+
             },
             severity: goalComp.current.value < 75.0 ? "HIGH" : "MEDIUM",
             detectedAt: new Date().toISOString(),
-            isDemo: goalComp.current.isDemo,
+            
           });
         }
       }

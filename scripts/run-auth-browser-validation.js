@@ -42,31 +42,75 @@ async function passPinGate(page) {
 const demoButton = (page) =>
   page.getByText("1-Click Demo Sign In").or(page.getByText("1-Click Sign In")).first();
 
+// React Native Web renders interactive elements as plain spans/divs with no
+// roles, and same label renders multiple times (hidden duplicates) — so
+// locator-based getByText().first() picks invisible nodes. Click through the
+// DOM instead: find the deepest leaf element whose exact text matches and that
+// is actually rendered, then trigger a real click (bubbles to the Pressable).
+async function clickVisibleText(page, label, waitMs = 5000) {
+  const ok = await page.waitForFunction(
+    (lbl) => {
+      const leaves = [...document.querySelectorAll("span, div, a, button")];
+      const hit = leaves.find((el) => {
+        const t = (el.textContent || "").trim();
+        return t === lbl && t.length > 0 && el.children.length === 0 &&
+               el.getClientRects().length > 0 &&
+               getComputedStyle(el).visibility !== "hidden";
+      });
+      return !!hit;
+    },
+    label,
+    { timeout: waitMs }
+  ).then(() => true).catch(() => false);
+  if (!ok) return false;
+  await page.evaluate((lbl) => {
+    const leaves = [...document.querySelectorAll("span, div, a, button")];
+    const hit = leaves.find((el) => {
+      const t = (el.textContent || "").trim();
+      return t === lbl && t.length > 0 && el.children.length === 0 &&
+             el.getClientRects().length > 0 &&
+             getComputedStyle(el).visibility !== "hidden";
+    });
+    hit && hit.click();
+  }, label);
+  return true;
+}
+
 async function loginScreenVisible(page) {
-  return await demoButton(page).isVisible({ timeout: 10000 }).catch(() => false);
+  return await page.waitForFunction(() => {
+    const t = document.body && document.body.innerText || "";
+    return (t.includes("1-Click Demo Sign In") || t.includes("1-Click Sign In")) &&
+           t.includes("Sign in to your advisor workspace");
+  }, { timeout: 10000 }).then(() => true).catch(() => false);
 }
 
 async function isAuthenticated(page) {
-  // Login screen is gone AND workspace chrome is present.
-  const loginGone = await demoButton(page).isHidden({ timeout: 2000 }).catch(() => false);
-  const clientsTab = await page.getByText("Clients", { exact: false }).first().isVisible({ timeout: 2000 }).catch(() => false);
-  return loginGone && clientsTab;
+  // Login screen is gone AND workspace chrome is present. AUTH-01 must not
+  // resolve while "Verifying secure session..." is still on screen (the demo
+  // call to the backend round-trips for a few seconds), so wait for a visible
+  // workspace marker (sidebar "Clients" is matched by its visible tab, not the
+  // first DOM hit which can be a hidden duplicate).
+  const loginGone = await demoButton(page).isHidden({ timeout: 5000 }).catch(() => false);
+  const marker = await page.getByText("DEMO WORKSPACE ACTIVE", { exact: false }).first()
+    .isVisible({ timeout: 20000 }).catch(() => false)
+    || await page.getByRole("link", { name: /Clients/ }).first()
+      .isVisible({ timeout: 5000 }).catch(() => false)
+    || await page.getByText("Client roster", { exact: false }).first()
+      .isVisible({ timeout: 5000 }).catch(() => false);
+  return loginGone && marker;
 }
 
 async function logout(page) {
-  // Logout lives in the workspace/settings area; open More tab first on mobile widths.
-  const moreTab = page.getByText("More", { exact: true }).first();
-  if (await moreTab.isVisible({ timeout: 2000 }).catch(() => false)) {
-    await moreTab.click();
-    await page.waitForTimeout(800);
-  }
-  const logoutBtn = page.getByText("Logout", { exact: true }).first();
-  if (await logoutBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
-    await logoutBtn.click();
-    await page.waitForTimeout(1500);
-    return true;
-  }
-  return false;
+  // Logout lives inside Settings → "Configure Keys" → SyncConfigModal ("Sign Out").
+  // Open the More tab first on mobile widths.
+  await clickVisibleText(page, "More").catch(() => false);
+  const settingsOk = await clickVisibleText(page, "Settings");
+  if (settingsOk) await page.waitForTimeout(1200);
+  const configureOk = await clickVisibleText(page, "Configure Keys");
+  if (configureOk) await page.waitForTimeout(800);
+  const signOutOk = await clickVisibleText(page, "Sign Out");
+  if (signOutOk) await page.waitForTimeout(1500);
+  return signOutOk;
 }
 
 async function runAuthE2E() {
@@ -92,30 +136,43 @@ async function runAuthE2E() {
     process.exitCode = 1;
     return;
   }
-  record("PRE", "backend reachable", "PASS");
+record("PRE", "backend reachable", "PASS");
 
   // ---------------------------------------------------------------- AUTH-01: demo
   {
     const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
     const page = await ctx.newPage();
+    const demoTrace = [];
+    const traceT0 = Date.now();
+    const stamp = () => `t+${Math.round((Date.now() - traceT0) / 1000)}s`;
+    page.on("request", (req) => {
+      if (req.url().includes("/api/")) demoTrace.push(`${stamp()} > ${req.method()} ${req.url().replace("https://assetarray.onrender.com", "")}`);
+    });
+    page.on("response", (res) => {
+      if (res.url().includes("/api/")) demoTrace.push(`${stamp()} < ${res.status()} ${res.url().replace("https://assetarray.onrender.com", "")}`);
+    });
+    page.on("console", (m) => { if (m.type() === "error") demoTrace.push(`[console.error] ${m.text().slice(0, 150)}`); });
+    page.on("requestfailed", (req) => demoTrace.push(`[req-fail] ${req.url().replace("https://assetarray.onrender.com", "").slice(0, 100)} ${req.failure() && req.failure().errorText}`));
     try {
       await page.goto(TARGET_URL, { waitUntil: "networkidle", timeout: 45000 });
       await passPinGate(page);
       await demoButton(page).click({ timeout: 10000 });
-      const authed = await page.waitForFunction(
-        () => !document.body.innerText.includes("1-Click Demo Sign In") &&
-              !document.body.innerText.includes("1-Click Sign In (Judge"),
-        { timeout: 30000 }
-      ).then(() => true).catch(() => false);
-      const workspace = await isAuthenticated(page);
-      if (authed && workspace) {
+      // Poll plain body text for the workspace marker. This mirrors the
+      // deterministic probe flow: locator+isVisible combinations proved flaky
+      // here, while innerText polling resolves the moment the workspace appends
+      // "DEMO WORKSPACE ACTIVE".
+      const authed = await page.waitForFunction(() => {
+        const t = document.body && document.body.innerText || "";
+        return t.includes("DEMO WORKSPACE ACTIVE") || t.includes("Client roster");
+      }, { timeout: 45000 }).then(() => true).catch(() => false);
+      if (authed) {
         record("AUTH-01", "1-click demo login reaches authenticated workspace", "PASS");
       } else {
         const bodyText = await page.evaluate(() => document.body.innerText.slice(0, 400)).catch(() => "?");
         try {
           await page.screenshot({ path: require("path").join(require("os").tmpdir(), "auth-e2e-auth01.png") });
         } catch {}
-        record("AUTH-01", "1-click demo login reaches authenticated workspace", "FAIL", `screen: ${JSON.stringify(bodyText)}`);
+        record("AUTH-01", "1-click demo login reaches authenticated workspace", "FAIL", `screen: ${JSON.stringify(bodyText)} | trace: ${JSON.stringify(demoTrace)}`);
       }
       // AUTH-02: logout returns to login screen.
       if (await logout(page)) {

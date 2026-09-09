@@ -16,7 +16,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "AUTH-02",
@@ -35,7 +35,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "AUTH-03",
@@ -54,26 +54,7 @@
       "ios",
       "web"
     ],
-    "status": "PARTIALLY_VERIFIED"
-  },
-  {
-    "id": "AUTH-04",
-    "name": "1-Click Demo / Judge Sign-In",
-    "screen": "LoginScreen",
-    "entryPoint": "App.tsx:quickDemoLogin",
-    "action": "Click ⚡ 1-Click Sign In (Judge / Demo Admin)",
-    "handler": "quickDemoLogin",
-    "service": "secureSync:loginAdvisor",
-    "api": "POST /api/auth/login",
-    "persistence": "SecureStore / asset_array_auth_session",
-    "dataSource": "MongoDB / Demo Credential",
-    "aiDependency": "NONE",
-    "platforms": [
-      "web",
-      "android",
-      "ios"
-    ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "AUTH-05",
@@ -92,7 +73,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "AUTH-06",
@@ -111,26 +92,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
-  },
-  {
-    "id": "AUTH-07",
-    "name": "Offline Demo Mode",
-    "screen": "LoginScreen",
-    "entryPoint": "App.tsx:continueOffline",
-    "action": "Click Continue in Offline Mode (Demo)",
-    "handler": "continueOffline",
-    "service": "localState",
-    "api": "NONE",
-    "persistence": "Memory session",
-    "dataSource": "Local Mock Session",
-    "aiDependency": "NONE",
-    "platforms": [
-      "web",
-      "android",
-      "ios"
-    ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "AUTH-08",
@@ -149,7 +111,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "AUTH-09",
@@ -168,7 +130,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "AUTH-10",
@@ -187,7 +149,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "CLIENT-01",
@@ -206,7 +168,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "CLIENT-02",
@@ -225,7 +187,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "CLIENT-03",
@@ -244,7 +206,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "CLIENT-04",
@@ -263,7 +225,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "CLIENT-05",
@@ -282,7 +244,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "CLIENT-06",
@@ -301,7 +263,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "CLIENT-07",
@@ -320,7 +282,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "CLIENT-08",
@@ -339,7 +301,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "CLIENT-09",
@@ -358,26 +320,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
-  },
-  {
-    "id": "CLIENT-10",
-    "name": "Seed Institutional Demo Client Roster",
-    "screen": "ClientsScreen",
-    "entryPoint": "App.tsx:seedDemoClients",
-    "action": "Click Load Demo Roster button",
-    "handler": "seedDemoClients",
-    "service": "persistClients",
-    "api": "NONE",
-    "persistence": "AsyncStorage / asset_array_clients",
-    "dataSource": "DEMO_CLIENTS fixture",
-    "aiDependency": "NONE",
-    "platforms": [
-      "web",
-      "android",
-      "ios"
-    ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "C360-01",
@@ -396,7 +339,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "C360-02",
@@ -415,7 +358,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "C360-03",
@@ -434,7 +377,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "C360-04",
@@ -453,7 +396,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "C360-05",
@@ -472,7 +415,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "C360-06",
@@ -491,7 +434,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "C360-07",
@@ -510,7 +453,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "C360-08",
@@ -529,7 +472,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "C360-09",
@@ -548,7 +491,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "PORT-01",
@@ -567,7 +510,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "PORT-02",
@@ -586,7 +529,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "PORT-03",
@@ -605,7 +548,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "PORT-04",
@@ -624,7 +567,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "PORT-05",
@@ -643,7 +586,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "PORT-06",
@@ -662,7 +605,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "PORT-07",
@@ -681,7 +624,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "PORT-08",
@@ -700,7 +643,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "PORT-09",
@@ -719,7 +662,7 @@
       "ios",
       "web"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "MKT-01",
@@ -738,7 +681,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "MKT-02",
@@ -757,7 +700,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "MKT-03",
@@ -776,7 +719,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "MKT-04",
@@ -795,7 +738,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "MKT-05",
@@ -814,7 +757,7 @@
       "android",
       "ios"
     ],
-    "status": "DEMO_ONLY"
+    "status": "UNVERIFIED"
   },
   {
     "id": "MKT-06",
@@ -833,7 +776,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "MKT-07",
@@ -852,7 +795,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "MKT-08",
@@ -871,7 +814,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "PERF-01",
@@ -890,7 +833,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "PERF-02",
@@ -909,7 +852,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "PERF-03",
@@ -928,7 +871,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "TAX-01",
@@ -947,7 +890,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "TAX-02",
@@ -966,7 +909,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "TAX-03",
@@ -985,7 +928,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "RISK-01",
@@ -1004,7 +947,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "RISK-02",
@@ -1023,7 +966,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "RISK-03",
@@ -1042,7 +985,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "AI-01",
@@ -1061,7 +1004,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "AI-02",
@@ -1080,7 +1023,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "AI-03",
@@ -1099,7 +1042,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "AI-04",
@@ -1118,7 +1061,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "AI-05",
@@ -1137,7 +1080,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "AI-06",
@@ -1156,7 +1099,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "AI-07",
@@ -1175,7 +1118,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "ADV-01",
@@ -1194,7 +1137,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "ADV-02",
@@ -1213,7 +1156,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "ADV-03",
@@ -1232,7 +1175,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "ADV-04",
@@ -1251,7 +1194,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "ADV-05",
@@ -1270,7 +1213,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "CALC-01",
@@ -1289,7 +1232,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "CALC-02",
@@ -1308,7 +1251,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "CALC-03",
@@ -1327,7 +1270,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "CALC-04",
@@ -1346,7 +1289,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "ING-01",
@@ -1365,7 +1308,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "VAULT-01",
@@ -1384,7 +1327,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "REP-01",
@@ -1403,7 +1346,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "REP-02",
@@ -1422,7 +1365,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "COMM-01",
@@ -1441,7 +1384,7 @@
       "android",
       "ios"
     ],
-    "status": "DEMO_ONLY"
+    "status": "UNVERIFIED"
   },
   {
     "id": "REV-01",
@@ -1460,15 +1403,15 @@
       "ios",
       "web"
     ],
-    "status": "PARTIALLY_VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "REV-02",
-    "name": "RevenueCat Restore Purchases & Sandbox Reset",
-    "screen": "SettingsScreen",
-    "entryPoint": "src/screens/SettingsScreen.tsx",
-    "action": "Click Restore Purchases or Reset Sandbox Pro Status",
-    "handler": "restorePurchases / resetDemoProStatus",
+    "name": "RevenueCat Restore Purchases",
+    "screen": "PaywallScreen",
+    "entryPoint": "src/screens/PaywallScreen.tsx",
+    "action": "Click Restore Purchases",
+    "handler": "restorePurchases",
     "service": "src/services/revenueCat.ts",
     "api": "react-native-purchases",
     "persistence": "Entitlements State",
@@ -1479,7 +1422,7 @@
       "ios",
       "web"
     ],
-    "status": "PARTIALLY_VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "SYNC-01",
@@ -1498,7 +1441,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "SYNC-02",
@@ -1517,7 +1460,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "SYNC-03",
@@ -1536,7 +1479,7 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   },
   {
     "id": "CURR-01",
@@ -1555,6 +1498,6 @@
       "android",
       "ios"
     ],
-    "status": "VERIFIED"
+    "status": "UNVERIFIED"
   }
 ]

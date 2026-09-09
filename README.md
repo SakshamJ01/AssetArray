@@ -39,12 +39,10 @@ Below is the deep, exhaustive breakdown of **every single feature, tool, workflo
 ---
 
 ### 1. 🔑 Authentication, Security & Access Control
-* **1-Click Judge & Demo Sign-In (`quickDemoLogin`)**: Authenticates immediately as the demo advisor without displaying plaintext passwords on screen, enabling instant sandbox evaluation.
 * **Manual Cloud Backend Sign-In**: Username and password login against the Render backend (`/api/auth/login`) returning JWT access and refresh token pairs.
 * **Auto-Fill Cloud Backend URL**: One-tap URL population shortcut (`https://assetarray.onrender.com`) for production cloud environment connection.
 * **JWT Access & Refresh Token Lifecycle**: Automatic silent token renewal (`/api/auth/refresh`) on `401 Unauthorized` responses via `refreshAccessTokenIfNeeded()`.
 * **Logout & Session Revocation**: Securely invalidates refresh tokens on the server (`/api/auth/logout`) and purges local session tokens from device storage.
-* **Offline Demo Mode (`continueOffline`)**: Instant access to local sandbox state without requiring an active internet connection or cloud backend server.
 * **Hardware PIN Setup & Lock Screen**: 4-digit PIN setup persisted via `expo-secure-store` with auto-lock screen verification.
 * **Biometric Authentication**: Hardware unlock via Apple Face ID / Touch ID or Android Biometrics using `expo-local-authentication`.
 * **Haptics & Tactile Feedback**: Customizable selection and notification haptics using `expo-haptics` with user preference persistence.
@@ -65,7 +63,6 @@ Below is the deep, exhaustive breakdown of **every single feature, tool, workflo
 * **Bulk Client Selection**: Multi-select checkbox matrix for batch operations and campaign outreach.
 * **Contact Reminder Engine**: Automatic detection and visual highlighting of overdue or scheduled client touchpoints.
 * **Client Contact & Interaction Log**: Historical interaction log recording date and summary notes per client.
-* **Seed Demo Client Roster**: 1-tap loading of 3 pre-configured institutional client dossiers (Rohan Varma, Devendra Singhal, Ananya Iyer) with realistic portfolios.
 
 ---
 
@@ -303,7 +300,7 @@ The app is pre-configured with RevenueCat's Test Store key for instant sandbox t
 - **Test Key:** Pre-configured in `src/services/revenueCat.ts`.
 - **Entitlement ID:** `pro_advisor`.
 - **Testing Flow:** Open the app ➔ Go to **Clients** ➔ Tap **Export PDF Report** ➔ Experience the **Paywall** ➔ Tap **Subscribe** to unlock Pro features.
-- **Sandbox Reset:** Navigate to **Settings** ➔ **Subscription (RevenueCat)** ➔ **Reset to Free Plan**.
+- **Restore Purchases:** Navigate to the **Paywall** ➔ **Restore Purchases** to re-attach previously purchased entitlements.
 
 ---
 

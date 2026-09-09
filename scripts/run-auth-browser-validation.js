@@ -1,5 +1,6 @@
 /**
- * Auth browser E2E (production web): demo sign-in, manual sign-in, logout.
+ * Auth browser E2E (production web): pure production login, logout, and the
+ * security invariant that NO demo/offline shortcut exists.
  * Strict pass criteria — a test passes ONLY when the authenticated workspace
  * actually appears (login screen detached + workspace markers visible),
  * never merely because a button was clickable.
@@ -39,9 +40,6 @@ async function passPinGate(page) {
   }
 }
 
-const demoButton = (page) =>
-  page.getByText("1-Click Demo Sign In").or(page.getByText("1-Click Sign In")).first();
-
 // React Native Web renders interactive elements as plain spans/divs with no
 // roles, and same label renders multiple times (hidden duplicates) — so
 // locator-based getByText().first() picks invisible nodes. Click through the
@@ -76,28 +74,37 @@ async function clickVisibleText(page, label, waitMs = 5000) {
   return true;
 }
 
+const DEMO_STRINGS = ["1-Click Demo Sign In", "1-Click Sign In", "Continue in Offline Mode", "Offline Demo"];
+
 async function loginScreenVisible(page) {
   return await page.waitForFunction(() => {
     const t = document.body && document.body.innerText || "";
-    return (t.includes("1-Click Demo Sign In") || t.includes("1-Click Sign In")) &&
-           t.includes("Sign in to your advisor workspace");
+    return t.includes("Sign in to your advisor workspace");
   }, { timeout: 10000 }).then(() => true).catch(() => false);
 }
 
+async function noDemoShortcuts(page) {
+  return await page.evaluate(() => {
+    const t = document.body && document.body.innerText || "";
+    return !t.includes("1-Click Demo Sign In") &&
+           !t.includes("1-Click Sign In") &&
+           !t.includes("Continue in Offline Mode") &&
+           !t.includes("Offline Demo");
+  });
+}
+
 async function isAuthenticated(page) {
-  // Login screen is gone AND workspace chrome is present. AUTH-01 must not
-  // resolve while "Verifying secure session..." is still on screen (the demo
-  // call to the backend round-trips for a few seconds), so wait for a visible
-  // workspace marker (sidebar "Clients" is matched by its visible tab, not the
-  // first DOM hit which can be a hidden duplicate).
-  const loginGone = await demoButton(page).isHidden({ timeout: 5000 }).catch(() => false);
-  const marker = await page.getByText("DEMO WORKSPACE ACTIVE", { exact: false }).first()
-    .isVisible({ timeout: 20000 }).catch(() => false)
-    || await page.getByRole("link", { name: /Clients/ }).first()
-      .isVisible({ timeout: 5000 }).catch(() => false)
-    || await page.getByText("Client roster", { exact: false }).first()
-      .isVisible({ timeout: 5000 }).catch(() => false);
-  return loginGone && marker;
+  // Login screen is gone AND workspace chrome is present. The workspace is
+  // proven real by the absence of the DEMO banner plus a visible sidebar /
+  // roster marker — there is no synthetic session marker anymore.
+  const t = await page.evaluate(() => document.body && document.body.innerText || "");
+  if (DEMO_STRINGS.some((s) => t.includes(s))) return false;
+  const roster = await page.getByText("Client roster", { exact: false }).first()
+    .isVisible({ timeout: 5000 }).catch(() => false);
+  const clients = await page.getByRole("link", { name: /Clients/ }).first()
+    .isVisible({ timeout: 5000 }).catch(() => false);
+  const dashboard = t.includes("Dashboard");
+  return (roster || clients || dashboard) && !t.includes("Verifying secure session");
 }
 
 async function logout(page) {
@@ -115,7 +122,7 @@ async function logout(page) {
 
 async function runAuthE2E() {
   console.log("================================================================================");
-  console.log("🔐 AUTH BROWSER E2E — demo sign-in, manual sign-in, logout");
+  console.log("🔐 AUTH BROWSER E2E — production login, logout, no-demo-security");
   console.log("Target:", TARGET_URL);
   console.log("================================================================================");
 
@@ -136,88 +143,58 @@ async function runAuthE2E() {
     process.exitCode = 1;
     return;
   }
-record("PRE", "backend reachable", "PASS");
+  record("PRE", "backend reachable", "PASS");
 
-  // ---------------------------------------------------------------- AUTH-01: demo
+  // ------------------------------------------------- SEC-01: no demo/offline shortcut
   {
     const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
     const page = await ctx.newPage();
-    const demoTrace = [];
-    const traceT0 = Date.now();
-    const stamp = () => `t+${Math.round((Date.now() - traceT0) / 1000)}s`;
-    page.on("request", (req) => {
-      if (req.url().includes("/api/")) demoTrace.push(`${stamp()} > ${req.method()} ${req.url().replace("https://assetarray.onrender.com", "")}`);
-    });
-    page.on("response", (res) => {
-      if (res.url().includes("/api/")) demoTrace.push(`${stamp()} < ${res.status()} ${res.url().replace("https://assetarray.onrender.com", "")}`);
-    });
-    page.on("console", (m) => { if (m.type() === "error") demoTrace.push(`[console.error] ${m.text().slice(0, 150)}`); });
-    page.on("requestfailed", (req) => demoTrace.push(`[req-fail] ${req.url().replace("https://assetarray.onrender.com", "").slice(0, 100)} ${req.failure() && req.failure().errorText}`));
     try {
       await page.goto(TARGET_URL, { waitUntil: "networkidle", timeout: 45000 });
       await passPinGate(page);
-      await demoButton(page).click({ timeout: 10000 });
-      // Poll plain body text for the workspace marker. This mirrors the
-      // deterministic probe flow: locator+isVisible combinations proved flaky
-      // here, while innerText polling resolves the moment the workspace appends
-      // "DEMO WORKSPACE ACTIVE".
-      const authed = await page.waitForFunction(() => {
-        const t = document.body && document.body.innerText || "";
-        return t.includes("DEMO WORKSPACE ACTIVE") || t.includes("Client roster");
-      }, { timeout: 45000 }).then(() => true).catch(() => false);
-      if (authed) {
-        record("AUTH-01", "1-click demo login reaches authenticated workspace", "PASS");
-      } else {
-        const bodyText = await page.evaluate(() => document.body.innerText.slice(0, 400)).catch(() => "?");
-        try {
-          await page.screenshot({ path: require("path").join(require("os").tmpdir(), "auth-e2e-auth01.png") });
-        } catch {}
-        record("AUTH-01", "1-click demo login reaches authenticated workspace", "FAIL", `screen: ${JSON.stringify(bodyText)} | trace: ${JSON.stringify(demoTrace)}`);
-      }
-      // AUTH-02: logout returns to login screen.
-      if (await logout(page)) {
-        const loginBack = await loginScreenVisible(page);
-        record("AUTH-02", "logout returns to login screen", loginBack ? "PASS" : "FAIL", loginBack ? "" : "login screen did not return");
-      } else {
-        record("AUTH-02", "logout returns to login screen", "FAIL", "logout control not found");
-      }
+      const loginShown = await loginScreenVisible(page);
+      const clean = loginShown && (await noDemoShortcuts(page));
+      const bodyText = await page.evaluate(() => document.body.innerText.slice(0, 300)).catch(() => "?");
+      record("SEC-01", "login screen offers NO demo/offline shortcut", clean ? "PASS" : "FAIL", clean ? "" : `screen: ${JSON.stringify(bodyText)}`);
     } catch (e) {
-      record("AUTH-01/02", "demo login + logout", "FAIL", String(e && e.message || e));
+      record("SEC-01", "login screen offers NO demo/offline shortcut", "FAIL", String(e && e.message || e));
     }
     await ctx.close();
   }
 
-  // ---------------------------------------------------------------- AUTH-03/04: manual
+  // ---------------------------------------------------------------- AUTH-01/02: manual
   if (!MANUAL_USER || !MANUAL_PASS) {
-    record("AUTH-03", "manual login with configured credentials", "SKIP", "E2E_TEST_USERNAME/PASSWORD not set");
-    record("AUTH-04", "invalid login fails with Login failed", "SKIP", "E2E_TEST_USERNAME/PASSWORD not set");
+    record("AUTH-01", "manual login with configured credentials", "SKIP", "E2E_TEST_USERNAME/PASSWORD not set");
+    record("AUTH-03", "invalid login fails with Login failed", "SKIP", "E2E_TEST_USERNAME/PASSWORD not set");
+    record("AUTH-02", "manual session logout returns to login", "SKIP", "E2E_TEST_USERNAME/PASSWORD not set");
   } else {
     const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
     const page = await ctx.newPage();
     try {
       await page.goto(TARGET_URL, { waitUntil: "networkidle", timeout: 45000 });
       await passPinGate(page);
+      await loginScreenVisible(page);
       await page.getByPlaceholder("Username (e.g. admin)").fill(MANUAL_USER);
       await page.getByPlaceholder("Password").fill(MANUAL_PASS);
       await page.getByText("Sign In", { exact: true }).first().click();
       const workspace = await page.waitForFunction(
-        () => !document.body.innerText.includes("1-Click Demo Sign In") &&
-              !document.body.innerText.includes("1-Click Sign In (Judge"),
+        () => !document.body.innerText.includes("Sign in to your advisor workspace"),
         { timeout: 30000 }
       ).then(() => isAuthenticated(page)).catch(() => false);
-      record("AUTH-03", "manual login with configured credentials", workspace ? "PASS" : "FAIL", workspace ? "" : "workspace markers absent");
+      record("AUTH-01", "manual login with configured credentials", workspace ? "PASS" : "FAIL", workspace ? "" : "workspace markers absent");
       if (workspace && (await logout(page))) {
         const loginBack = await loginScreenVisible(page);
-        record("AUTH-03b", "manual session logout returns to login", loginBack ? "PASS" : "FAIL");
+        record("AUTH-02", "manual session logout returns to login", loginBack ? "PASS" : "FAIL", loginBack ? "" : "login screen did not return");
       }
       // Invalid credentials must fail visibly.
+      await loginScreenVisible(page);
       await page.getByPlaceholder("Username (e.g. admin)").fill(MANUAL_USER);
       await page.getByPlaceholder("Password").fill(`${MANUAL_PASS}-wrong`);
       await page.getByText("Sign In", { exact: true }).first().click();
       const failed = await page.getByText("Login failed").first().isVisible({ timeout: 15000 }).catch(() => false);
-      record("AUTH-04", "invalid login fails with Login failed", failed ? "PASS" : "FAIL", failed ? "" : "no failure state shown");
+      record("AUTH-03", "invalid login fails with Login failed", failed ? "PASS" : "FAIL", failed ? "" : "no failure state shown");
     } catch (e) {
-      record("AUTH-03/04", "manual login flows", "FAIL", String(e && e.message || e));
+      record("AUTH-01/02/03", "manual login flows", "FAIL", String(e && e.message || e));
     }
     await ctx.close();
   }

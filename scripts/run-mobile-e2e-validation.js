@@ -28,11 +28,19 @@ async function ensureUnlocked(page) {
     await page.waitForTimeout(1500);
   }
 
-  const quickSignIn = page.getByText("1-Click Demo Sign In").or(page.getByText("Continue in Offline Mode")).first();
-  const isAuthScreenVisible = await quickSignIn.isVisible({ timeout: 2000 }).catch(() => false);
+  const loginScreen = page.getByText("Sign in to your advisor workspace").first();
+  const isAuthScreenVisible = await loginScreen.isVisible({ timeout: 2000 }).catch(() => false);
   if (isAuthScreenVisible) {
-    await quickSignIn.click();
-    await page.waitForTimeout(2500);
+    const e2eUser = process.env.E2E_TEST_USERNAME;
+    const e2ePass = process.env.E2E_TEST_PASSWORD;
+    if (!e2eUser || !e2ePass) {
+      throw new Error("E2E_TEST_USERNAME/E2E_TEST_PASSWORD required for advisor workspace login");
+    }
+    await page.getByPlaceholder("Username (e.g. admin)").fill(e2eUser);
+    await page.getByPlaceholder("Password").fill(e2ePass);
+    await page.getByText("Sign In", { exact: true }).first().click();
+    await page.waitForFunction(() => !document.body.innerText.includes("Sign in to your advisor workspace"), { timeout: 30000 });
+    await page.waitForTimeout(1500);
   }
 }
 

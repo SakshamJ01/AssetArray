@@ -18,7 +18,7 @@ const VIEWPORTS = (process.env.INTERACTION_VIEWPORTS || "1440x900,390x844")
   .split(",").map((s) => { const [w, h] = s.trim().split("x").map(Number); return { width: w, height: h, label: `${w}x${h}` }; });
 const REPORT_PATH = process.env.INTERACTION_REPORT || path.join(os.tmpdir(), "interaction-qa.json");
 
-const U = { id: "demo-advisor", username: "demo", role: "demo", active: true };
+const U = { id: "qa-advisor", username: "qa-smoke", role: "advisor", active: true };
 const T = { accessToken: "stub-access", refreshToken: "stub-refresh", expiresIn: 900 };
 const results = [];
 function check(vp, id, name, pass, details = "") {
@@ -26,7 +26,10 @@ function check(vp, id, name, pass, details = "") {
   console.log(`  ${pass ? "✓" : "✗"} [${vp}/${id}] ${name}${details ? " — " + details : ""}`);
 }
 async function stubAuth(page) {
-  await page.route("**/api/auth/demo-login", (r) => r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, user: U, ...T }) }));
+  await page.route("**/api/auth/login", (r) => {
+    if (r.request().method() === "OPTIONS") return r.fulfill({ status: 204 });
+    return r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, user: U, ...T }) });
+  });
   await page.route("**/api/auth/me", (r) => r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, user: U }) }));
   await page.route("**/api/auth/refresh", (r) => r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, user: U, ...T }) }));
 }
@@ -42,13 +45,15 @@ async function unlock(page) {
 async function login(page) {
   await page.goto(TARGET_URL, { waitUntil: "networkidle", timeout: 45000 });
   await unlock(page);
-  const demo = page.getByText("1-Click Demo Sign In").first();
-  if (await demo.isVisible({ timeout: 12000 }).catch(() => false)) {
-    await demo.click();
-    await page.waitForFunction(() => !document.body.innerText.includes("1-Click Demo Sign In"), { timeout: 60000 });
+  const form = page.getByPlaceholder("Username (e.g. admin)").first();
+  if (await form.isVisible({ timeout: 12000 }).catch(() => false)) {
+    await form.fill(U.username);
+    await page.getByPlaceholder("Password").fill("stub-password");
+    await page.getByText("Sign In", { exact: true }).first().click();
+    await page.waitForFunction(() => !document.body.innerText.includes("Sign in to your advisor workspace"), { timeout: 60000 });
   } else {
     const snap = await page.evaluate(() => document.body.innerText.slice(0, 300)).catch(() => "?");
-    throw new Error("demo button never appeared. screen: " + JSON.stringify(snap));
+    throw new Error("login form never appeared. screen: " + JSON.stringify(snap));
   }
   await page.waitForTimeout(2500);
 }
@@ -66,7 +71,7 @@ async function runViewport(browser, vp) {
   };
   try {
     await login(page);
-    check(vp.label, "AUTH-01", "demo login reaches workspace", await has(page, "Clients"));
+    check(vp.label, "AUTH-01", "advisor login reaches workspace", await has(page, "Clients"));
 
     // --- client validation: empty save keeps modal open
     desktop ? await tab("Dashboard") : await tab("Home");

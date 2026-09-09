@@ -1,12 +1,14 @@
 /**
  * Forensic product QA engine (3.3.x): real-browser, per-element geometry audit.
- * - Authenticated via local PIN gate + server demo-login (no passwords anywhere).
+ * - Authenticated via local PIN gate + advisor login (stubbed locally for
+ *   geometry QA — no synthetic sessions, no demo identity).
  * - Per viewport x per tab: page overflow, per-element clipping/offscreen,
  *   text-collapse detection (tiny/vertical text containers), overlap detection,
  *   touch-target audit, screenshots.
  * - Writes JSON report to FORENSIC_REPORT (default: os.tmpdir()/forensic-qa.json).
- * Env: E2E_BASE_URL (default http://127.0.0.1:8123/), E2E_API_URL, E2E_TEST_PIN,
- *   CHROME_PATH (optional), FORENSIC_VIEWPORTS (e.g. "360x800,390x844").
+ * Env: E2E_BASE_URL, E2E_API_URL, E2E_TEST_PIN, E2E_TEST_USERNAME,
+ *   E2E_TEST_PASSWORD (live login), CHROME_PATH (optional),
+ *   FORENSIC_VIEWPORTS (e.g. "360x800,390x844"), STUB_AUTH=1 (geometry QA only).
  */
 const { chromium } = require("playwright-core");
 const fs = require("fs");
@@ -17,19 +19,22 @@ const CHROME_PATH = process.env.CHROME_PATH || null;
 const TARGET_URL = process.env.E2E_BASE_URL || "http://127.0.0.1:8123/";
 const BACKEND_URL = process.env.E2E_API_URL || "https://assetarray.onrender.com/api/health";
 const E2E_PIN = process.env.E2E_TEST_PIN || "1234";
+const MANUAL_USER = process.env.E2E_TEST_USERNAME || "";
+const MANUAL_PASS = process.env.E2E_TEST_PASSWORD || "";
 const REPORT_PATH = process.env.FORENSIC_REPORT || path.join(os.tmpdir(), "forensic-qa.json");
 const SHOT_DIR = process.env.FORENSIC_SHOTS || path.join(os.tmpdir(), "forensic-shots");
 // STUB_AUTH=1: fulfill auth endpoints locally (UI-geometry QA only — the live
 // backend rejects cross-origin localhost. API truth is covered separately by
 // direct HTTPS checks + backend unit tests, and is recorded in the report).
 const STUB_AUTH = process.env.STUB_AUTH === "1";
-const STUB_USER = { id: "demo-advisor", username: "demo", role: "demo", active: true };
+const STUB_USER = { id: "qa-advisor", username: "qa-smoke", role: "advisor", active: true };
 const STUB_TOKENS = { accessToken: "stub-access", refreshToken: "stub-refresh", expiresIn: 900 };
 
 async function stubAuthRoutes(page) {
-  await page.route("**/api/auth/demo-login", (route) =>
-    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, user: STUB_USER, ...STUB_TOKENS }) })
-  );
+  await page.route("**/api/auth/login", (route) => {
+    if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204 });
+    return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, user: STUB_USER, ...STUB_TOKENS }) });
+  });
   await page.route("**/api/auth/me", (route) =>
     route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, user: STUB_USER }) })
   );
@@ -66,12 +71,18 @@ async function passPinGate(page) {
   }
 }
 
-async function demoLogin(page, viewportLabel) {
-  const demoBtn = page.getByText("1-Click Demo Sign In").or(page.getByText("1-Click Sign In")).first();
-  await demoBtn.click({ timeout: 15000 });
+async function login(page, viewportLabel) {
+  if (!STUB_AUTH) {
+    if (!MANUAL_USER || !MANUAL_PASS) {
+      throw new Error("E2E_TEST_USERNAME/E2E_TEST_PASSWORD required when STUB_AUTH is not set");
+    }
+  }
+  await page.getByPlaceholder("Username (e.g. admin)").fill(MANUAL_USER || STUB_USER.username);
+  await page.getByPlaceholder("Password").fill(MANUAL_PASS || "stub-password");
+  await page.getByText("Sign In", { exact: true }).first().click();
   try {
     await page.waitForFunction(
-      () => !document.body.innerText.includes("1-Click Demo Sign In") && !document.body.innerText.includes("1-Click Sign In (Judge"),
+      () => !document.body.innerText.includes("Sign in to your advisor workspace"),
       { timeout: 45000 }
     );
   } catch (e) {
@@ -79,7 +90,7 @@ async function demoLogin(page, viewportLabel) {
     try {
       await page.screenshot({ path: path.join(SHOT_DIR, `${viewportLabel}-authfail.png`) });
     } catch {}
-    throw new Error(`demo login did not complete. screen: ${JSON.stringify(bodyText)}`);
+    throw new Error(`login did not complete. screen: ${JSON.stringify(bodyText)}`);
   }
 }
 
@@ -216,7 +227,7 @@ async function run() {
     try {
       await page.goto(TARGET_URL, { waitUntil: "networkidle", timeout: 45000 });
       await passPinGate(page);
-      await demoLogin(page, vp.label);
+      await login(page, vp.label);
       await page.waitForTimeout(2000);
       const tabs = vp.width >= 1024 ? DESKTOP_TABS : MOBILE_TABS;
       for (const tab of tabs) {
@@ -232,7 +243,9 @@ async function run() {
           // again — selected state changes the status bar, 360 panels, and
           // downstream tabs, and must be covered, not assumed.
           if (tab === "Clients" || tab === "Home" || tab === "Dashboard") {
-            const firstRow = page.getByText("Elena Rostova").first();
+            // Select the first real client row if one exists (honest roster
+            // may legitimately be empty on a fresh workspace).
+            const firstRow = page.locator("text=/[A-Z][a-z]+ [A-Z][a-z]+/").first();
             if (await firstRow.isVisible({ timeout: 3000 }).catch(() => false)) {
               await firstRow.scrollIntoViewIfNeeded().catch(() => {});
               await firstRow.click({ timeout: 8000 }).catch(() => {});

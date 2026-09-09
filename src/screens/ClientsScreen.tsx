@@ -150,13 +150,13 @@ const ClientRowItem = React.memo<ClientRowItemProps>(
                 </Text>
               </View>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 3, flexWrap: "wrap" }}>
-                <View style={{ paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4, backgroundColor: theme.colors.surfaceStrong, borderWidth: 1, borderColor: theme.colors.border }}>
-                  <Text style={{ fontSize: 9, fontWeight: "700", color: theme.colors.textSecondary }}>
+                <View style={{ paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4, backgroundColor: theme.colors.surfaceStrong, borderWidth: 1, borderColor: theme.colors.border, maxWidth: "100%", flexShrink: 1 }}>
+                  <Text style={{ fontSize: 9, fontWeight: "700", color: theme.colors.textSecondary }} numberOfLines={1}>
                     {client.category || "HNI"}
                   </Text>
                 </View>
-                <View style={{ paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4, backgroundColor: theme.colors.surfaceStrong, borderWidth: 1, borderColor: theme.colors.border }}>
-                  <Text style={{ fontSize: 9, fontWeight: "700", color: theme.colors.textMuted }}>
+                <View style={{ paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4, backgroundColor: theme.colors.surfaceStrong, borderWidth: 1, borderColor: theme.colors.border, maxWidth: "100%", flexShrink: 1 }}>
+                  <Text style={{ fontSize: 9, fontWeight: "700", color: theme.colors.textMuted }} numberOfLines={1}>
                     {client.riskProfile || "Moderate"}
                   </Text>
                 </View>

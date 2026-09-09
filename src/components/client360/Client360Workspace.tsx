@@ -1098,6 +1098,9 @@ const workspaceStyles = StyleSheet.create({
   },
   evidenceTable: {
     flexDirection: "row",
+    flexWrap: "wrap",
+    rowGap: 10,
+    columnGap: 8,
     backgroundColor: "#0B111E",
     borderRadius: 4,
     borderWidth: 1,
@@ -1106,7 +1109,10 @@ const workspaceStyles = StyleSheet.create({
     padding: 8,
   },
   evidenceCell: {
-    flex: 1,
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 90,
+    minWidth: 0,
   },
   evidenceLabel: {
     fontSize: 9,

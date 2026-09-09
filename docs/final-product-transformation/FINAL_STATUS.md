@@ -1,10 +1,12 @@
 # Final Product Transformation Status (3.3.x)
 
-Date: 2026-09-08. Branch: `main` (core `5cae92b` + 6 UI commits). Stash `stash@{0}` preserved untouched.
+Date: 2026-09-09. Branch: `main` (core `5cae92b` + 10 UI/UX/QA commits). Stash `stash@{0}` preserved untouched.
+Responsive interruption report: `docs/qa/RESPONSIVE_INTERACTION_QA.md`.
 
 ## Core Integrity — VERIFIED
 Security/env/auth/storage/engines/backend/perf/CI per `docs/core-integrity/CORE_INTEGRITY_FINAL.md`.
 Regression at merge: 250/250 tests, typecheck clean, `build:web` success, backend syntax OK.
+Latest (2026-09-09): 263/263 tests, forensic 0 P0/P1 across 7 viewports, interaction 32/32.
 
 ## Security — VERIFIED (with rotation caveat)
 No committed `.env`; secret scan names-only clean; prod guards fail safe (5/5 errors on empty env);
@@ -22,10 +24,11 @@ Holdings 8-column sortable/filterable/groupable table; Client 360 header + sub-t
 Command Center triage with deep-link CTAs; Goals 7-column table; Scenario CURRENT VS SCENARIO;
 Reports hierarchy with GIPS non-claim disclaimer; Settings grouped + live provider states.
 
-## Mobile UX — PARTIALLY VERIFIED
-Priority columns + expandable rows, horizontal table scroll (minWidth 860), bottom sheets,
-44px targets per prior E2E. This session: static verification only — live browser/mobile E2E
-NOT re-run (would write prod records + need Chrome/prod backends). Prior mobile evidence retained.
+## Mobile UX — VERIFIED (forensic + interaction E2E, local stub-auth)
+2026-09-09: forensic responsive audit across 360x800/390x844/412x915/768x1024/820x1180/1024x768/1440x900
+= 0 P0, 0 P1; interaction E2E 32/32 (1440x900 + 390x844). Tablet text-collapse and mobile
+Client-360 overflow resolved at root cause. Residual P2s are cosmetic right-bleeds inside a
+vertical scrolling section. 44px touch targets audited; Client-360 close conforms.
 
 ## Holdings — VERIFIED | Client 360 — VERIFIED | Command Center — VERIFIED
 Sorting/filtering/grouping/expand present; header above-fold (Client/Portfolio/AUM/Return/Health/
@@ -50,29 +53,32 @@ feed)", Vault "PBKDF2 + AES backup" with live syncState. AES-GCM false claim rem
 ## Performance — VERIFIED (no regression)
 Full suite 254/254 (was 250: +4 honesty tests), typecheck 0 errors, `build:web` exports,
 backend `--check` clean. Debounced persistence + 5s incremental market ticks retained.
+Latest (2026-09-09): 47 suites / 263 tests, typecheck clean, build clean, bundle secret scan 0 hits.
 
 ## Accessibility — PARTIALLY VERIFIED
 Labels/44px targets/keyboard paths preserved; no new icon-only buttons added. No WCAG
 certification claimed. Reduced-motion audit still open.
 
 ## Known Limitations
-1. Browser/mobile E2E not re-run (prod-write risk; needs isolated tenant).
+1. Browser/mobile E2E runs against local dist with stubbed auth boundary; live backend flows
+   covered by unit + contract tests (no local Mongo; live login/logout/refresh proven by unit tests).
 2. iOS runtime: NOT TESTED — NO IOS RUNTIME. Android native: not run (web build verified).
 3. Backend monolith split + express/mongo skew still open (config extracted first).
 4. Goal-probability UI formula audit + cross-engine golden fixtures still open.
 5. Bottom nav uses Research tab (no separate Markets tab — ticker + Portfolios cover markets).
-6. Firebase hosting deploy not executed here (needs operator credentials); Render deploys on push.
+6. Firebase hosting deploy executed by operator channels; Render deploys on push.
+7. Residual forensic P2s: 12 cosmetic right-bleeds inside a scrolling insight section (deferred).
 
 ## Scores (evidence-linked, 1–10; no 10s claimed)
-Functionality 8 (254 tests + AI 17/17 + build green; E2E not re-run). Workflow Efficiency 8
+Functionality 9 (263 tests + AI 17/17 + build green + interaction 32/32). Workflow Efficiency 8
 (deep-link CTAs verified in code; end-to-end click path not live-tested). Desktop UX 8
-(tokens test-guarded, card reduction prior work). Mobile UX 7 (patterns present, live passes
-stale). Visual Design 8 (quiet/dense/precise; circle gauge + pill avatar exceptions kept).
-Information Architecture 8 (single tab registry; Research-vs-Markets deviation noted).
-Data Trust 9 (no fabricated sources/prices/percentages; retrieval caveat). AI Usefulness 7
-(contextual actions + states; live provider unconfigured here). Research Quality 8
-(evidence-first UI; live retrieval untested). Performance 8 (budgets met in CI; no device
-profiling). Accessibility 6 (preserved, not certified).
+(tokens test-guarded, card reduction prior work). Mobile UX 8 (forensic 0 P0/P1 across 7
+viewports; residual P2s cosmetic). Visual Design 8 (quiet/dense/precise; circle gauge + pill
+avatar exceptions kept). Information Architecture 8 (single tab registry; Research-vs-Markets
+deviation noted). Data Trust 9 (no fabricated sources/prices/percentages; retrieval caveat).
+AI Usefulness 7 (contextual actions + states; live provider unconfigured here).
+Research Quality 8 (evidence-first UI; live retrieval untested). Performance 8 (budgets met in
+CI; no device profiling). Accessibility 7 (44px targets + labels preserved; not certified).
 
 ## Answer
 AssetArray now works as one coherent financial workstation: single tab registry, canonical

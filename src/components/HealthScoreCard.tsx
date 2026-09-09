@@ -125,6 +125,9 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: "row",
+    flexWrap: "wrap",
+    rowGap: 8,
+    columnGap: 12,
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 14,
@@ -132,6 +135,9 @@ const styles = StyleSheet.create({
   titleRow: {
     flexDirection: "row",
     alignItems: "center",
+    flexShrink: 1,
+    flexBasis: 180,
+    minWidth: 0,
     gap: 8,
   },
   title: {

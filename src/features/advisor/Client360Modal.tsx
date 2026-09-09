@@ -65,6 +65,19 @@ export const Client360Modal: React.FC<Client360ModalProps> = ({
       });
   }, [visible, clientId, clients, goals, actions]);
 
+  // Escape closes this topmost layer on web (keyboard parity with App shell).
+  useEffect(() => {
+    if (!visible || Platform.OS !== "web" || typeof window === "undefined") return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [visible, onClose]);
+
   if (!visible || !clientId || !snapshot) return null;
 
   const { client } = snapshot;
@@ -101,7 +114,12 @@ export const Client360Modal: React.FC<Client360ModalProps> = ({
                 </Text>
               </View>
             </View>
-            <Pressable onPress={onClose} style={styles.closeButton}>
+            <Pressable
+              onPress={onClose}
+              style={styles.closeButton}
+              accessibilityLabel="Close Client 360"
+              accessibilityRole="button"
+            >
               <Ionicons name="close" size={20} color={theme.colors.textPrimary} />
             </Pressable>
           </View>
@@ -115,7 +133,7 @@ export const Client360Modal: React.FC<Client360ModalProps> = ({
               ]}
             >
               <View style={styles.identityRow}>
-                <View>
+                <View style={styles.identityNameBlock}>
                   <Text style={[styles.clientNameBig, { color: theme.colors.textPrimary }]}>
                     {client.name}
                   </Text>
@@ -454,7 +472,10 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   closeButton: {
-    padding: 6,
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
     borderRadius: 8,
   },
   scrollArea: {
@@ -470,17 +491,25 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
+    gap: 8,
     marginBottom: 8,
+  },
+  identityNameBlock: {
+    flex: 1,
+    minWidth: 0,
   },
   clientNameBig: {
     fontSize: 18,
     fontWeight: "800",
+    flexShrink: 1,
+    minWidth: 0,
   },
   clientCategory: {
     fontSize: 12,
     marginTop: 2,
   },
   tierPill: {
+    flexShrink: 0,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
@@ -493,7 +522,9 @@ const styles = StyleSheet.create({
   },
   contactRow: {
     flexDirection: "row",
-    gap: 16,
+    flexWrap: "wrap",
+    gap: 8,
+    rowGap: 2,
     marginTop: 4,
   },
   contactSnippet: {

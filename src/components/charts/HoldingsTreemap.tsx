@@ -206,7 +206,7 @@ export const HoldingsTreemap: React.FC<HoldingsTreemapProps> = ({
     >
       {/* Treemap Header & Inspector */}
       <View style={styles.headerRow}>
-        <View>
+        <View style={{ flexGrow: 1, flexShrink: 1, flexBasis: 180, minWidth: 0 }}>
           <Text
             style={[
               styles.headerTitle,
@@ -362,8 +362,12 @@ const styles = StyleSheet.create({
   },
   legendWrap: {
     flexDirection: "row",
-    gap: 10,
+    flexWrap: "wrap",
+    rowGap: 6,
+    columnGap: 10,
     alignItems: "center",
+    flexShrink: 1,
+    minWidth: 0,
   },
   legendItem: {
     flexDirection: "row",

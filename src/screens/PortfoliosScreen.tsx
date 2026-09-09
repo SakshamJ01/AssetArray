@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { AppTheme } from "../theme";
 import { PerformanceChart, Sparkline, HoldingsTreemap } from "../components/charts";
 import { RebalanceModal, StressTestModal } from "../components/modals";
@@ -107,15 +107,15 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
   return (
     <>
       <View style={[styles.panel, styles.analyticsPanel]}>
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-          <View style={{ flex: 1 }}>
+        <View style={styles.sectionHeaderRow}>
+          <View style={styles.sectionHeaderTitle}>
             <Text style={styles.panelTitle}>Unified portfolio view & analytics</Text>
             <Text style={styles.panelSubtitle}>
               All tracked client portfolios in one place with performance, allocation,
               and risk visibility.
             </Text>
           </View>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginLeft: 12, justifyContent: "flex-end" }}>
+          <View style={[styles.actionGroupWrap, { justifyContent: "flex-start" }]}>
             <Pressable
               style={[
                 styles.secondaryButton,
@@ -232,6 +232,9 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
         <View
           style={{
             flexDirection: "row",
+            flexWrap: "wrap",
+            rowGap: 6,
+            columnGap: 12,
             alignItems: "center",
             justifyContent: "space-between",
             backgroundColor: "rgba(34, 197, 94, 0.08)",
@@ -272,6 +275,9 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
               fontSize: 10,
               color: theme.colors.textSecondary,
               fontWeight: "600",
+              flexShrink: 1,
+              flexBasis: 150,
+              minWidth: 0,
             }}
           >
             Simulated Market Model • Portfolio Values Auto-Updated
@@ -319,7 +325,12 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
           onPressDetails={() => setIsAttributionOpen(true)}
         />
 
-        <View style={{ flexDirection: "row", gap: 8, marginVertical: 12 }}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ flexDirection: "row", gap: 8, paddingRight: 4 }}
+          style={{ marginVertical: 12 }}
+        >
           <Pressable
             style={[
               styles.optionChip,
@@ -368,7 +379,7 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
               🗺️ Treemap Heatmap
             </Text>
           </Pressable>
-        </View>
+        </ScrollView>
 
         {(activeVisualization === "both" || activeVisualization === "chart") && (
           <PerformanceChart

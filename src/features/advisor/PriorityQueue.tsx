@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { View, Text, StyleSheet, Pressable, TextInput } from "react-native";
+import { View, Text, StyleSheet, Pressable, ScrollView, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { AdvisorAction, AdvisorActionStatus } from "../../types/advisor";
 import { AppTheme } from "../../theme";
@@ -165,8 +165,13 @@ export const PriorityQueue: React.FC<PriorityQueueProps> = ({
         </View>
       </View>
 
-      {/* Horizon Tabs Row */}
-      <View style={[styles.tabsRow, { borderBottomColor: theme.colors.border }]}>
+      {/* Horizon Tabs Row: single-line tabs scroll intentionally on narrow screens */}
+      <View style={{ borderBottomWidth: 1, borderBottomColor: theme.colors.border, marginBottom: 14 }}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={[styles.tabsRow, { borderBottomWidth: 0, marginBottom: 0 }]}
+        >
         {tabs.map((tab) => {
           const isActive = activeFilter === tab.key;
           return (
@@ -211,9 +216,10 @@ export const PriorityQueue: React.FC<PriorityQueueProps> = ({
                   {tab.count}
                 </Text>
               </View>
-            </Pressable>
+              </Pressable>
           );
         })}
+        </ScrollView>
       </View>
 
       {/* Action Cards List */}

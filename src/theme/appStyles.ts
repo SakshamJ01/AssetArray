@@ -252,6 +252,33 @@ export const styles = StyleSheet.create({
     color: "#8ba2c5",
     fontSize: 12,
   },
+  // Canonical section header: title + actions share a row on wide screens and
+  // wrap intentionally on narrow ones. The title keeps a 200px basis so it
+  // can never be flex-crushed into per-character vertical stacking.
+  sectionHeaderRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    justifyContent: "space-between",
+    rowGap: 8,
+    columnGap: 12,
+  },
+  sectionHeaderTitle: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 200,
+    minWidth: 0,
+  },
+  // Canonical wrapping action group. MUST take the full row (basis 100% +
+  // minWidth 0): a wrapping container with basis auto keeps its single-line
+  // max-content width and overflows instead of wrapping its own children.
+  actionGroupWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    flexBasis: "100%",
+    minWidth: 0,
+  },
   panel: {
     backgroundColor: "#111a2e",
     borderRadius: 8,
@@ -385,12 +412,15 @@ export const styles = StyleSheet.create({
     marginBottom: 8,
   },
   selectorPill: {
-    width: 78,
+    // Compact multi-select control: a 78px pill here starved the client row
+    // and stacked roster text vertically on tablet widths.
+    width: 30,
+    flexShrink: 0,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#17233d",
     borderRadius: 6,
-    paddingHorizontal: 8,
+    paddingHorizontal: 4,
     borderWidth: 1,
     borderColor: "#23355b",
   },
@@ -409,6 +439,7 @@ export const styles = StyleSheet.create({
   },
   clientRow: {
     flex: 1,
+    minWidth: 0,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",

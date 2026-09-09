@@ -9,3 +9,4 @@ export * from "./MonteCarloModal";
 export * from "./StatementImportModal";
 export * from "./ClientPortalModal";
 export * from "./LiveMarketDepthModal";
+export * from "./ConfirmModal";

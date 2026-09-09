@@ -7,6 +7,7 @@ import {
   Pressable,
   Platform,
   RefreshControl,
+  useWindowDimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -81,6 +82,8 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
   const [dataQuality, setDataQuality] = useState<DataQualityReport | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
+  const { width: windowWidth } = useWindowDimensions();
+  const compactActions = windowWidth < 560;
   // Modals state
   const [client360Id, setClient360Id] = useState<string | null>(null);
   const [isDecisionModalOpen, setIsDecisionModalOpen] = useState(false);
@@ -307,7 +310,7 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
         ]}
       >
         <View style={styles.headerTopRow}>
-          <View>
+          <View style={{ flexGrow: 1, flexShrink: 1, flexBasis: 200, minWidth: 0 }}>
             <Text style={[styles.greetingLabel, { color: theme.colors.brand }]}>
               ADVISOR COMMAND CENTER
             </Text>
@@ -322,8 +325,17 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
             </Text>
           </View>
 
-          {/* Quick Header Actions */}
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          {/* Quick Header Actions: full-width stacked group on narrow screens */}
+          <View
+            style={{
+              flexDirection: "row",
+              flexWrap: "wrap",
+              alignItems: "center",
+              gap: 8,
+              minWidth: 0,
+              ...(compactActions ? { flexBasis: "100%" } : null),
+            }}
+          >
             <Pressable
               onPress={handleSyncCustodianAccounts}
               disabled={isSyncingAccounts}
@@ -570,7 +582,12 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
 
       {/* HORIZON PERSPECTIVE & MODULE TABS */}
       <View style={[styles.subnavBar, { borderBottomColor: theme.colors.border }]}>
-        <View style={styles.moduleTabs}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={[styles.moduleTabs, { flexGrow: 1 }]}
+          style={{ flexGrow: 1, flexShrink: 1, flexBasis: 220, minWidth: 0 }}
+        >
           {[
             { key: "ACTIONS", label: "Priority Actions" },
             { key: "OPPORTUNITIES", label: `Opportunities (${opportunities.length})` },
@@ -604,7 +621,7 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
               </Pressable>
             );
           })}
-        </View>
+        </ScrollView>
 
         {/* Perspective Switcher */}
         <View
@@ -852,6 +869,9 @@ const styles = StyleSheet.create({
   },
   headerTopRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
+    rowGap: 10,
+    columnGap: 12,
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 14,
@@ -1003,6 +1023,7 @@ const styles = StyleSheet.create({
   moduleTabs: {
     flexDirection: "row",
     gap: 4,
+    paddingRight: 4,
   },
   moduleTabBtn: {
     paddingVertical: 8,

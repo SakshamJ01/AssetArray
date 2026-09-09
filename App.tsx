@@ -1,6 +1,6 @@
 import "react-native-get-random-values";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   FlatList,
@@ -65,6 +65,7 @@ import {
   SyncConfigModal,
   BroadcastModal,
   AboutLegalModal,
+  ConfirmModal,
 } from "./src/components/modals";
 import {
   AiResearchResult,
@@ -491,6 +492,12 @@ function AppContent() {
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [pendingConfirm, setPendingConfirm] = useState<{
+    title: string;
+    message: string;
+    confirmLabel: string;
+    action: () => void;
+  } | null>(null);
   const [editorMode, setEditorMode] = useState<"add" | "edit">("add");
   const [draft, setDraft] = useState<ClientDraft>(emptyDraft);
   const [marketMessage, setMarketMessage] = useState(defaultMessage);
@@ -664,6 +671,10 @@ function AppContent() {
         e.preventDefault();
         setIsUnlocked(false);
       } else if (e.key === "Escape") {
+        if (pendingConfirmRef.current) {
+          setPendingConfirm(null);
+          return;
+        }
         setIsEditorOpen(false);
         setIsBroadcastModalOpen(false);
         setIsSyncModalOpen(false);
@@ -1532,6 +1543,15 @@ function AppContent() {
     setDraft(emptyDraft);
   }
 
+  function requestConfirm(confirm: NonNullable<typeof pendingConfirm>) {
+    setPendingConfirm(confirm);
+  }
+
+  const pendingConfirmRef = useRef(pendingConfirm);
+  useEffect(() => {
+    pendingConfirmRef.current = pendingConfirm;
+  }, [pendingConfirm]);
+
   function updateDraft<K extends keyof ClientDraft>(key: K, value: ClientDraft[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
   }
@@ -1558,28 +1578,24 @@ function AppContent() {
   }
 
   function deleteClient(client: Client) {
-    Alert.alert(
-      "Delete client",
-      `Remove ${client.name} and all linked notes from Asset Array?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            setClients((current) =>
-              current.filter((item) => item.id !== client.id)
-            );
-            setSelectedClientIds((current) =>
-              current.filter((clientId) => clientId !== client.id)
-            );
-            if (selectedClientId === client.id) {
-              setSelectedClientId(null);
-            }
-          },
-        },
-      ]
-    );
+    // In-app confirm: Alert.alert buttons do not render on web, so a web
+    // delete gated behind Alert.alert would silently never execute.
+    requestConfirm({
+      title: "Delete client",
+      message: `Remove ${client.name} and all linked notes from Asset Array?`,
+      confirmLabel: "Delete",
+      action: () => {
+        setClients((current) =>
+          current.filter((item) => item.id !== client.id)
+        );
+        setSelectedClientIds((current) =>
+          current.filter((clientId) => clientId !== client.id)
+        );
+        if (selectedClientId === client.id) {
+          setSelectedClientId(null);
+        }
+      },
+    });
   }
 
   async function seedDemoClients() {
@@ -2308,31 +2324,25 @@ function AppContent() {
       return;
     }
 
-    Alert.alert(
-      "Delete portfolio item",
-      `Remove ${holding.assetName} from ${selectedClient.name}'s portfolio?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            setClients((current) =>
-              current.map((client) =>
-                client.id === selectedClient.id
-                  ? {
-                      ...client,
-                      portfolio: client.portfolio.filter(
-                        (item) => item.id !== holding.id
-                      ),
-                    }
-                  : client
-              )
-            );
-          },
-        },
-      ]
-    );
+    requestConfirm({
+      title: "Delete portfolio item",
+      message: `Remove ${holding.assetName} from ${selectedClient.name}'s portfolio?`,
+      confirmLabel: "Delete",
+      action: () => {
+        setClients((current) =>
+          current.map((client) =>
+            client.id === selectedClient.id
+              ? {
+                  ...client,
+                  portfolio: client.portfolio.filter(
+                    (item) => item.id !== holding.id
+                  ),
+                }
+              : client
+          )
+        );
+      },
+    });
   }
 
   function handleImportClientHoldings(
@@ -3178,6 +3188,20 @@ function AppContent() {
         updateHoldingDraft={updateHoldingDraft}
         onClose={closeHoldingModal}
         onSave={saveHolding}
+        theme={theme}
+      />
+
+      <ConfirmModal
+        visible={pendingConfirm !== null}
+        isDesktop={isDesktop}
+        title={pendingConfirm?.title ?? ""}
+        message={pendingConfirm?.message ?? ""}
+        confirmLabel={pendingConfirm?.confirmLabel ?? "Delete"}
+        onCancel={() => setPendingConfirm(null)}
+        onConfirm={() => {
+          pendingConfirm?.action();
+          setPendingConfirm(null);
+        }}
         theme={theme}
       />
 

@@ -445,6 +445,7 @@ const localStyles = StyleSheet.create({
   },
   dominantInput: {
     flex: 1,
+    minWidth: 0,
     height: 44,
     backgroundColor: surfaceTokens.surfaceMuted,
     borderRadius: radiusTokens.sm, // 4
@@ -456,6 +457,7 @@ const localStyles = StyleSheet.create({
   },
   searchButton: {
     height: 44,
+    flexShrink: 0,
     paddingHorizontal: 18,
     backgroundColor: surfaceTokens.brand,
     borderRadius: radiusTokens.sm, // 4

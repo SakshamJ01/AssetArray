@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, Pressable } from "react-native";
+import { View, Text, StyleSheet, Pressable, useWindowDimensions } from "react-native";
 import { AppTheme } from "../theme";
 import { Client } from "../types/wealth";
 import { marketHealthMonitor } from "../services/market";
@@ -47,6 +47,13 @@ export const GlobalStatusBar: React.FC<GlobalStatusBarProps> = ({
     return () => clearInterval(interval);
   }, []);
 
+  const { width: windowWidth } = useWindowDimensions();
+  // Progressive disclosure for the 34px bar: PORTFOLIO detail lives on the
+  // Portfolio tab, shortcuts duplicate sidebar/tabs, and AS OF repeats
+  // per-screen headers. Each hides below the width where the bar overflows,
+  // so CLIENT + Market + Data always remain readable.
+  const compact = windowWidth < 560;
+  const roomy = windowWidth >= 1280;
   const clientName = selectedClient ? selectedClient.name : "All Clients (Consolidated)";
   const portfolioName = selectedClient ? `${selectedClient.name} Growth Portfolio` : "Firm-wide Assets";
 
@@ -66,27 +73,39 @@ export const GlobalStatusBar: React.FC<GlobalStatusBarProps> = ({
           )}
         </View>
 
-        <View style={barStyles.divider} />
+        {roomy && (
+          <>
+            <View style={barStyles.divider} />
 
-        <View style={barStyles.contextItem}>
-          <Text style={barStyles.label}>PORTFOLIO:</Text>
-          <Text style={barStyles.value} numberOfLines={1}>
-            {portfolioName}
-          </Text>
-        </View>
+            <View style={barStyles.contextItem}>
+              <Text style={barStyles.label}>PORTFOLIO:</Text>
+              <Text style={barStyles.value} numberOfLines={1}>
+                {portfolioName}
+              </Text>
+            </View>
+          </>
+        )}
 
-        <View style={barStyles.divider} />
+        {!compact && (
+          <>
+            <View style={barStyles.divider} />
 
-        <View style={barStyles.contextItem}>
-          <Text style={barStyles.label}>AS OF:</Text>
-          <Text style={barStyles.value}>{currentTime}</Text>
-        </View>
+            <View style={barStyles.contextItem}>
+              <Text style={barStyles.label}>AS OF:</Text>
+              <Text style={barStyles.value} numberOfLines={1}>
+                {currentTime}
+              </Text>
+            </View>
+          </>
+        )}
       </View>
 
       {/* Right side: Market status, data quality, contextual shortcuts */}
       <View style={barStyles.rightSide}>
-        {/* Contextual Navigation (Item 34) */}
-        {selectedClient && (
+        {/* Contextual Navigation (Item 34): roomy-desktop convenience only.
+            Below 1280px these destinations are one tap away via sidebar/tabs,
+            and the four buttons would crush the client segment to zero width. */}
+        {selectedClient && roomy && (
           <View style={barStyles.shortcutGroup}>
             <Pressable
               style={[
@@ -202,11 +221,14 @@ const barStyles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+    flexShrink: 0,
   },
   contextItem: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
+    flexShrink: 1,
+    minWidth: 0,
   },
   label: {
     fontSize: 9,

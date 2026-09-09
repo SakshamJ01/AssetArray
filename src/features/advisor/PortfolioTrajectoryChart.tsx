@@ -79,7 +79,7 @@ export const PortfolioTrajectoryChart: React.FC<PortfolioTrajectoryChartProps> =
     >
       {/* Header with Title & Range Switcher */}
       <View style={styles.headerRow}>
-        <View>
+        <View style={{ flex: 1, minWidth: 0 }}>
           <View style={styles.titleWithBadge}>
             <Ionicons name="trending-up" size={16} color={theme.colors.brand} />
             <Text style={[styles.title, { color: theme.colors.textPrimary }]}>
@@ -229,13 +229,17 @@ const styles = StyleSheet.create({
   },
   titleWithBadge: {
     flexDirection: "row",
+    flexWrap: "wrap",
+    rowGap: 6,
+    columnGap: 8,
     alignItems: "center",
-    gap: 8,
   },
   title: {
     fontSize: 15,
     fontWeight: "700",
     letterSpacing: -0.2,
+    flexShrink: 1,
+    minWidth: 0,
   },
   alphaBadge: {
     paddingHorizontal: 7,
@@ -311,6 +315,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexWrap: "wrap",
     gap: 14,
+    flex: 1,
+    minWidth: 0,
   },
   legendItem: {
     flexDirection: "row",

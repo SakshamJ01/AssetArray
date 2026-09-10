@@ -31,15 +31,16 @@ export interface AiResearchScreenProps {
   clients: Client[];
   aiResearchQuery: string;
   setAiResearchQuery: (query: string) => void;
-  runAiResearch: () => void | Promise<void>;
+  runAiResearch: () => Promise<void>;
   isAiResearchLoading: boolean;
   aiResearchState: string;
   aiResearchResult: AiResearchResult | null;
   selectedAiClient: Client | null;
-  setSelectedAiClient: (client: Client | null) => void;
-  runClientAiCoPilot: (client: Client) => void | Promise<void>;
+  setSelectedAiClient: (c: Client | null) => void;
+  runClientAiCoPilot: (c: Client) => Promise<void>;
   isClientAiLoading: boolean;
   clientAiRecommendation: ClientAiRecommendation | null;
+  onNavigateTab?: (tab: string, params?: any) => void;
   styles?: AppStyles;
 }
 
@@ -57,6 +58,7 @@ export const AiResearchScreen = React.memo(function AiResearchScreen({
   runClientAiCoPilot,
   isClientAiLoading,
   clientAiRecommendation,
+  onNavigateTab,
   styles = defaultStyles,
 }: AiResearchScreenProps) {
   const resultAny = aiResearchResult as any;
@@ -423,6 +425,19 @@ export const AiResearchScreen = React.memo(function AiResearchScreen({
                 >
                   <Text style={localStyles.emailButtonText}>
                     Open Draft in Email Client
+                  </Text>
+                </Pressable>
+
+                <Pressable
+                  style={[localStyles.coPilotButton, { marginTop: 12, backgroundColor: theme.colors.brand }]}
+                  onPress={() => {
+                    if (onNavigateTab && selectedAiClient) {
+                      onNavigateTab("Clients", { clientId: selectedAiClient.id });
+                    }
+                  }}
+                >
+                  <Text style={[localStyles.coPilotButtonText, { color: "#000000" }]}>
+                    📊 Manage Portfolio & Holdings for {selectedAiClient.name}
                   </Text>
                 </Pressable>
               </View>

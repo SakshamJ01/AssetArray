@@ -49,7 +49,7 @@ export async function recordDecision(
  * Retrieves recorded decisions, optionally filtered by clientId.
  */
 export async function getDecisions(clientId?: string): Promise<AdvisorDecision[]> {
-  if (!decisionsLoadedFromStorage && inMemoryDecisions.length === 0) {
+  if (!decisionsLoadedFromStorage || inMemoryDecisions.length === 0) {
     const loaded = await loadPersistedDecisions();
     if (loaded.length > 0) {
       inMemoryDecisions = loaded;

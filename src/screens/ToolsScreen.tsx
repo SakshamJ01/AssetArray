@@ -478,19 +478,36 @@ export const ToolsScreen: React.FC<ToolsScreenProps> = React.memo(({
                         <Text style={styles.miniStatLabel}>Expected growth</Text>
                       </View>
                     </View>
-                    <Pressable
-                      style={[styles.goldButton, { marginTop: 12 }]}
-                      onPress={() => {
-                        setMonteCarloConfig({
-                          target: Number(goalTargetAmount) || 100000000,
-                          years: Number(goalYears) || 15,
-                          monthlySip: goalPlannerResults.requiredMonthlySip || 50000,
-                        });
-                        setShowMonteCarlo(true);
-                      }}
-                    >
-                      <Text style={styles.goldButtonText}>Run Monte Carlo Goal Simulator (1,000 Paths)</Text>
-                    </Pressable>
+                    <View style={{ flexDirection: "row", gap: 8, marginTop: 12 }}>
+                      <Pressable
+                        style={[styles.goldButton, { flex: 1 }]}
+                        onPress={() => {
+                          setMonteCarloConfig({
+                            target: Number(goalTargetAmount) || 100000000,
+                            years: Number(goalYears) || 15,
+                            monthlySip: goalPlannerResults.requiredMonthlySip || 50000,
+                          });
+                          setShowMonteCarlo(true);
+                        }}
+                      >
+                        <Text style={styles.goldButtonText}>Run Monte Carlo (1k Paths)</Text>
+                      </Pressable>
+
+                      <Pressable
+                        style={[styles.primaryButton, { flex: 1, paddingVertical: 10 }]}
+                        onPress={() => {
+                          updateGoalDraft("title", "Planned Wealth Target");
+                          updateGoalDraft("goalType", "Wealth");
+                          updateGoalDraft("targetAmount", goalTargetAmount);
+                          updateGoalDraft("monthlyContribution", String(Math.round(goalPlannerResults.requiredMonthlySip)));
+                          updateGoalDraft("targetYear", String(new Date().getFullYear() + (Number(goalYears) || 5)));
+                          saveGoalFromDraft();
+                          setActiveCalculator("Goal Planner");
+                        }}
+                      >
+                        <Text style={styles.primaryButtonText}>➕ Save to Goal Tracker</Text>
+                      </Pressable>
+                    </View>
                   </>
                 ) : (
                   <View style={styles.emptyState}>
@@ -569,19 +586,35 @@ export const ToolsScreen: React.FC<ToolsScreenProps> = React.memo(({
                         <Text style={styles.miniStatLabel}>Required monthly SIP</Text>
                       </View>
                     </View>
-                    <Pressable
-                      style={[styles.goldButton, { marginTop: 12 }]}
-                      onPress={() => {
-                        setMonteCarloConfig({
-                          target: retirementResults.targetCorpus || 100000000,
-                          years: Number(retirementYearsToRetire) || 15,
-                          monthlySip: retirementResults.requiredMonthlySip || 50000,
-                        });
-                        setShowMonteCarlo(true);
-                      }}
-                    >
-                      <Text style={styles.goldButtonText}>Run Monte Carlo Retirement Simulator (1,000 Paths)</Text>
-                    </Pressable>
+                    <View style={{ flexDirection: "row", gap: 8, marginTop: 12 }}>
+                      <Pressable
+                        style={[styles.goldButton, { flex: 1 }]}
+                        onPress={() => {
+                          setMonteCarloConfig({
+                            target: retirementResults.targetCorpus || 100000000,
+                            years: Number(retirementYearsToRetire) || 15,
+                            monthlySip: retirementResults.requiredMonthlySip || 50000,
+                          });
+                          setShowMonteCarlo(true);
+                        }}
+                      >
+                        <Text style={styles.goldButtonText}>Run Monte Carlo (1k Paths)</Text>
+                      </Pressable>
+
+                      <Pressable
+                        style={[styles.primaryButton, { flex: 1, paddingVertical: 10 }]}
+                        onPress={() => {
+                          updateGoalDraft("title", "Retirement Corpus Target");
+                          updateGoalDraft("goalType", "Retirement");
+                          updateGoalDraft("targetAmount", String(Math.round(retirementResults.targetCorpus)));
+                          updateGoalDraft("monthlyContribution", String(Math.round(retirementResults.requiredMonthlySip)));
+                          updateGoalDraft("targetYear", String(new Date().getFullYear() + (Number(retirementYearsToRetire) || 15)));
+                          saveGoalFromDraft();
+                        }}
+                      >
+                        <Text style={styles.primaryButtonText}>➕ Save to Goal Tracker</Text>
+                      </Pressable>
+                    </View>
                   </>
                 ) : (
                   <View style={styles.emptyState}>

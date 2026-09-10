@@ -1590,6 +1590,12 @@ function AppContent() {
         setSelectedClientIds((current) =>
           current.filter((clientId) => clientId !== client.id)
         );
+        setAdvisorMessages((current) =>
+          current.filter((m) => m.clientName.toLowerCase() !== client.name.toLowerCase())
+        );
+        setVaultDocuments((current) =>
+          current.filter((v) => v.clientName.toLowerCase() !== client.name.toLowerCase())
+        );
         if (selectedClientId === client.id) {
           setSelectedClientId(null);
         }
@@ -2834,6 +2840,10 @@ function AppContent() {
             runClientAiCoPilot={runClientAiCoPilot}
             isClientAiLoading={isClientAiLoading}
             clientAiRecommendation={clientAiRecommendation}
+            onNavigateTab={(tab, params) => {
+              setActiveTab(tab as AppTab);
+              if (params?.clientId) setSelectedClientId(params.clientId);
+            }}
             styles={styles}
           />
         ) : null}

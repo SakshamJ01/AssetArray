@@ -41,6 +41,7 @@ describe("Macro Stress-Testing Crisis Simulation Engine", () => {
     expect(result.totalDrawdownDollars).toBe(390000);
     expect(result.totalDrawdownPercentage).toBe(19.5);
     expect(result.resilienceRating).toBe("AA Resilient");
+    expect(result.cvar95Percent).toBe(24.4); // 19.5 * 1.25 = 24.375 -> 24.4
     expect(result.projectedRecoveryMonths).toBeGreaterThan(15);
   });
 
@@ -54,11 +55,33 @@ describe("Macro Stress-Testing Crisis Simulation Engine", () => {
     expect(result.totalDrawdownDollars).toBeGreaterThan(0);
   });
 
+  it("models Geopolitical Energy Crisis with energy/commodity spike", () => {
+    const geoScenario = CRISIS_SCENARIOS.find((s) => s.id === "geopolitical_oil_shock")!;
+    expect(geoScenario).toBeDefined();
+
+    const result = runStressTest(mockHoldings, geoScenario);
+    const altItem = result.breakdown.find((b) => b.assetClass === "Alternative");
+    expect(altItem?.shockPercentage).toBe(45.0);
+    expect(altItem?.dollarChange).toBe(135000); // 300k * 0.45
+    expect(result.cvar95Percent).toBeGreaterThan(0);
+  });
+
+  it("models Interbank Liquidity Freeze credit squeeze", () => {
+    const creditScenario = CRISIS_SCENARIOS.find((s) => s.id === "liquidity_freeze")!;
+    expect(creditScenario).toBeDefined();
+
+    const result = runStressTest(mockHoldings, creditScenario);
+    expect(result.totalDrawdownPercentage).toBeGreaterThan(20);
+    expect(result.resilienceRating).toBe("A Moderate");
+  });
+
   it("handles empty portfolio safely", () => {
     const result = runStressTest([]);
     expect(result.initialTotalAum).toBe(0);
     expect(result.projectedTotalAum).toBe(0);
     expect(result.totalDrawdownDollars).toBe(0);
+    expect(result.cvar95Percent).toBe(0);
     expect(result.breakdown.length).toBe(0);
   });
 });
+

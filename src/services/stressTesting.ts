@@ -25,6 +25,7 @@ export const CRISIS_SCENARIOS: CrisisScenario[] = [
       Equity: -42.0,
       Debt: 12.0,
       Alternative: 18.0,
+      Cash: 1.5,
     },
     historicalRecoveryMonths: 28,
     fiduciaryCommentary: "Sovereign duration buffer and precious metals dampen deep equity drawdowns.",
@@ -38,6 +39,7 @@ export const CRISIS_SCENARIOS: CrisisScenario[] = [
       Equity: -28.0,
       Debt: -6.0,
       Alternative: -5.0,
+      Cash: 2.0,
     },
     historicalRecoveryMonths: 15,
     fiduciaryCommentary: "Value tilt, dividend yield, and private credit insulate against high-beta compression.",
@@ -51,6 +53,7 @@ export const CRISIS_SCENARIOS: CrisisScenario[] = [
       Equity: -22.0,
       Debt: -18.0,
       Alternative: 32.0,
+      Cash: 1.0,
     },
     historicalRecoveryMonths: 34,
     fiduciaryCommentary: "Standard 60/40 correlations break down; gold and commodities become vital capital anchors.",
@@ -64,9 +67,38 @@ export const CRISIS_SCENARIOS: CrisisScenario[] = [
       Equity: -14.0,
       Debt: -12.0,
       Alternative: -2.0,
+      Cash: 3.5,
     },
     historicalRecoveryMonths: 11,
     fiduciaryCommentary: "Low-duration floating-rate notes and liquid reserves allow opportunistic re-entry.",
+  },
+  {
+    id: "geopolitical_oil_shock",
+    name: "Geopolitical Energy Crisis & Commodity Spike",
+    yearReference: "Geopolitical Shock",
+    description: "Escalation in global energy corridors driving oil supply contraction and cross-asset volatility.",
+    impactShocks: {
+      Equity: -32.0,
+      Debt: -8.0,
+      Alternative: 45.0,
+      Cash: 1.0,
+    },
+    historicalRecoveryMonths: 24,
+    fiduciaryCommentary: "Real assets, broad commodities, and energy producers hedge severe stagflationary shocks.",
+  },
+  {
+    id: "liquidity_freeze",
+    name: "Interbank Liquidity Freeze & Credit Squeeze",
+    yearReference: "Credit Crunch",
+    description: "Severe credit spread widening, commercial paper disruption, and capital preservation squeeze.",
+    impactShocks: {
+      Equity: -36.0,
+      Debt: -16.0,
+      Alternative: -10.0,
+      Cash: 2.5,
+    },
+    historicalRecoveryMonths: 22,
+    fiduciaryCommentary: "Short-duration treasury bills and prime liquidity buffers protect capital during credit freezes.",
   },
 ];
 
@@ -86,6 +118,7 @@ export interface StressTestResult {
   totalDrawdownPercentage: number;
   resilienceRating: "AAA Fiduciary" | "AA Resilient" | "A Moderate" | "BBB Vulnerable";
   projectedRecoveryMonths: number;
+  cvar95Percent: number; // Conditional Value at Risk (Expected Shortfall) in percent
   breakdown: StressTestImpactItem[];
   fiduciaryRecommendation: string;
 }
@@ -105,6 +138,7 @@ export function runStressTest(
       totalDrawdownPercentage: 0,
       resilienceRating: "AAA Fiduciary",
       projectedRecoveryMonths: 0,
+      cvar95Percent: 0,
       breakdown: [],
       fiduciaryRecommendation: "No tracked holdings to stress test.",
     };
@@ -115,14 +149,17 @@ export function runStressTest(
     Equity: 0,
     Debt: 0,
     Alternative: 0,
+    Cash: 0,
   };
 
   holdings.forEach((h) => {
     const rawClass = (h.assetClass || "Alternative").trim().toLowerCase();
     const normalizedClass =
-      rawClass.includes("stock") || rawClass.includes("equity")
+      rawClass.includes("cash") || rawClass.includes("liquid") || rawClass.includes("money")
+        ? "Cash"
+        : rawClass.includes("stock") || rawClass.includes("equity")
         ? "Equity"
-        : rawClass.includes("bond") || rawClass.includes("debt")
+        : rawClass.includes("bond") || rawClass.includes("debt") || rawClass.includes("fixed")
         ? "Debt"
         : "Alternative";
 
@@ -130,24 +167,29 @@ export function runStressTest(
   });
 
   let projectedTotal = 0;
-  const breakdown: StressTestImpactItem[] = Object.keys(classValuations).map((cls) => {
-    const initialVal = classValuations[cls] || 0;
-    const shock = scenario.impactShocks[cls as keyof typeof scenario.impactShocks] || 0;
-    const projVal = initialVal * (1 + shock / 100);
-    const change = projVal - initialVal;
-    projectedTotal += projVal;
+  const breakdown: StressTestImpactItem[] = Object.keys(classValuations)
+    .filter((cls) => classValuations[cls] > 0 || scenario.impactShocks[cls as keyof typeof scenario.impactShocks] !== undefined)
+    .map((cls) => {
+      const initialVal = classValuations[cls] || 0;
+      const shock = scenario.impactShocks[cls as keyof typeof scenario.impactShocks] || 0;
+      const projVal = initialVal * (1 + shock / 100);
+      const change = projVal - initialVal;
+      projectedTotal += projVal;
 
-    return {
-      assetClass: cls,
-      initialValue: parseFloat(initialVal.toFixed(2)),
-      shockPercentage: shock,
-      projectedValue: parseFloat(projVal.toFixed(2)),
-      dollarChange: parseFloat(change.toFixed(2)),
-    };
-  });
+      return {
+        assetClass: cls,
+        initialValue: parseFloat(initialVal.toFixed(2)),
+        shockPercentage: shock,
+        projectedValue: parseFloat(projVal.toFixed(2)),
+        dollarChange: parseFloat(change.toFixed(2)),
+      };
+    });
 
   const totalDrawdownDollars = initialTotal - projectedTotal;
   const totalDrawdownPct = (totalDrawdownDollars / initialTotal) * 100;
+
+  // Calculate Conditional Value at Risk 95% (CVaR approximation based on tail drawdown)
+  const cvar95Percent = parseFloat((Math.max(0, totalDrawdownPct) * 1.25).toFixed(1));
 
   // Derive Fiduciary Resilience Rating
   let resilienceRating: StressTestResult["resilienceRating"] = "AAA Fiduciary";
@@ -178,6 +220,7 @@ export function runStressTest(
     totalDrawdownPercentage: parseFloat(totalDrawdownPct.toFixed(1)),
     resilienceRating,
     projectedRecoveryMonths,
+    cvar95Percent,
     breakdown,
     fiduciaryRecommendation: recommendation,
   };

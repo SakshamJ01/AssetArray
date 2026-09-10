@@ -202,6 +202,7 @@ export const LiveMarketDepthModal: React.FC<LiveMarketDepthModalProps> = ({
 
             <Pressable
               onPress={onClose}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
               style={[
                 styles.closeBtn,
                 {

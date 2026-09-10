@@ -355,6 +355,7 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
                 return (
                   <Pressable
                     key={category}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                     style={[styles.optionChip, active ? styles.optionChipActive : null, { borderRadius: 4 }]}
                     onPress={() => setCategoryFilter(category)}
                   >
@@ -379,6 +380,7 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
                 return (
                   <Pressable
                     key={mode}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                     style={[styles.optionChip, active ? styles.optionChipActive : null, { borderRadius: 4 }]}
                     onPress={() => setFilterMode(mode)}
                   >

@@ -7,6 +7,8 @@ import {
   ScrollView,
   Pressable,
   StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { AppTheme } from "../../theme";
 import { HoldingDraft, ASSET_CLASS_OPTIONS } from "../../types/wealth";
@@ -32,100 +34,118 @@ export const HoldingEditorModal: React.FC<HoldingEditorModalProps> = ({
   onSave,
   theme,
 }) => {
+  const isDark = theme.colors.background === "#030712" || theme.colors.textPrimary === "#ffffff" || theme.colors.textPrimary === "#FFFFFF";
+
   return (
     <Modal visible={visible} transparent animationType={isDesktop ? "fade" : "slide"}>
-      <View style={[styles.modalBackdrop, isDesktop && styles.modalBackdropCenter]}>
-        <View style={[styles.modalCard, isDesktop && styles.modalCardCenter]}>
-          <Text style={styles.modalTitle}>
-            {portfolioMode === "add" ? "Add portfolio item" : "Edit portfolio item"}
-          </Text>
-          <ScrollView showsVerticalScrollIndicator={false}>
-            <TextInput
-              value={holdingDraft.assetName}
-              onChangeText={(value) => updateHoldingDraft("assetName", value)}
-              placeholder="Asset name"
-              placeholderTextColor="#7f90a8"
-              style={styles.input}
-            />
-            <Text style={styles.inputLabel}>Asset class</Text>
-            <View style={styles.optionRow}>
-              {ASSET_CLASS_OPTIONS.map((option) => {
-                const active = holdingDraft.assetClass === option;
-                return (
-                  <Pressable
-                    key={option}
-                    style={[styles.optionChip, active ? styles.optionChipActive : null]}
-                    onPress={() => updateHoldingDraft("assetClass", option)}
-                  >
-                    <Text
-                      style={[
-                        styles.optionChipText,
-                        active ? styles.optionChipTextActive : null,
-                      ]}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={{ flex: 1 }}
+      >
+        <View style={[styles.modalBackdrop, isDesktop && styles.modalBackdropCenter]}>
+          <View style={[styles.modalCard, isDesktop && styles.modalCardCenter, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
+            <Text style={[styles.modalTitle, { color: theme.colors.textPrimary }]}>
+              {portfolioMode === "add" ? "Add portfolio item" : "Edit portfolio item"}
+            </Text>
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+              <TextInput
+                value={holdingDraft.assetName}
+                onChangeText={(value) => updateHoldingDraft("assetName", value)}
+                placeholder="Asset name"
+                placeholderTextColor={isDark ? "#7f90a8" : "#64748b"}
+                style={[styles.input, { color: theme.colors.textPrimary, borderColor: theme.colors.border, backgroundColor: theme.colors.surfaceStrong }]}
+              />
+              <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>Asset class</Text>
+              <View style={styles.optionRow}>
+                {ASSET_CLASS_OPTIONS.map((option) => {
+                  const active = holdingDraft.assetClass === option;
+                  return (
+                    <Pressable
+                      key={option}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      style={[styles.optionChip, active ? styles.optionChipActive : null]}
+                      onPress={() => updateHoldingDraft("assetClass", option)}
                     >
-                      {option}
-                    </Text>
-                  </Pressable>
-                );
-              })}
+                      <Text
+                        style={[
+                          styles.optionChipText,
+                          active ? styles.optionChipTextActive : null,
+                        ]}
+                      >
+                        {option}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+              <TextInput
+                value={holdingDraft.ticker}
+                onChangeText={(value) => updateHoldingDraft("ticker", value)}
+                placeholder="Ticker / ISIN (optional)"
+                placeholderTextColor={isDark ? "#7f90a8" : "#64748b"}
+                autoCapitalize="characters"
+                style={[styles.input, { color: theme.colors.textPrimary, borderColor: theme.colors.border, backgroundColor: theme.colors.surfaceStrong }]}
+              />
+              <TextInput
+                value={holdingDraft.quantity}
+                onChangeText={(value) => updateHoldingDraft("quantity", value)}
+                placeholder="Quantity"
+                placeholderTextColor={isDark ? "#7f90a8" : "#64748b"}
+                keyboardType="numeric"
+                style={[styles.input, { color: theme.colors.textPrimary, borderColor: theme.colors.border, backgroundColor: theme.colors.surfaceStrong }]}
+              />
+              <TextInput
+                value={holdingDraft.investedValue}
+                onChangeText={(value) => updateHoldingDraft("investedValue", value)}
+                placeholder="Invested value"
+                placeholderTextColor={isDark ? "#7f90a8" : "#64748b"}
+                keyboardType="numeric"
+                style={[styles.input, { color: theme.colors.textPrimary, borderColor: theme.colors.border, backgroundColor: theme.colors.surfaceStrong }]}
+              />
+              <TextInput
+                value={holdingDraft.currentValue}
+                onChangeText={(value) => updateHoldingDraft("currentValue", value)}
+                placeholder="Current market value"
+                placeholderTextColor={isDark ? "#7f90a8" : "#64748b"}
+                keyboardType="numeric"
+                style={[styles.input, { color: theme.colors.textPrimary, borderColor: theme.colors.border, backgroundColor: theme.colors.surfaceStrong }]}
+              />
+              <TextInput
+                value={holdingDraft.targetWeight}
+                onChangeText={(value) => updateHoldingDraft("targetWeight", value)}
+                placeholder="Target weight %"
+                placeholderTextColor={isDark ? "#7f90a8" : "#64748b"}
+                keyboardType="numeric"
+                style={[styles.input, { color: theme.colors.textPrimary, borderColor: theme.colors.border, backgroundColor: theme.colors.surfaceStrong }]}
+              />
+              <TextInput
+                value={holdingDraft.notes}
+                onChangeText={(value) => updateHoldingDraft("notes", value)}
+                placeholder="Notes"
+                placeholderTextColor={isDark ? "#7f90a8" : "#64748b"}
+                multiline
+                style={[styles.input, styles.notesInput, { color: theme.colors.textPrimary, borderColor: theme.colors.border, backgroundColor: theme.colors.surfaceStrong }]}
+              />
+            </ScrollView>
+            <View style={styles.modalActions}>
+              <Pressable
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                style={styles.modalSecondary}
+                onPress={onClose}
+              >
+                <Text style={[styles.modalSecondaryText, { color: theme.colors.textSecondary }]}>Cancel</Text>
+              </Pressable>
+              <Pressable
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                style={[styles.primaryButton, { backgroundColor: theme.colors.brand }]}
+                onPress={onSave}
+              >
+                <Text style={[styles.primaryButtonText, { color: "#030712" }]}>Save Holding</Text>
+              </Pressable>
             </View>
-            <TextInput
-              value={holdingDraft.ticker}
-              onChangeText={(value) => updateHoldingDraft("ticker", value)}
-              placeholder="Ticker or label"
-              placeholderTextColor="#7f90a8"
-              style={styles.input}
-            />
-            <TextInput
-              value={holdingDraft.quantity}
-              onChangeText={(value) => updateHoldingDraft("quantity", value)}
-              placeholder="Quantity"
-              placeholderTextColor="#7f90a8"
-              keyboardType="decimal-pad"
-              style={styles.input}
-            />
-            <TextInput
-              value={holdingDraft.investedValue}
-              onChangeText={(value) => updateHoldingDraft("investedValue", value)}
-              placeholder="Invested value"
-              placeholderTextColor="#7f90a8"
-              keyboardType="decimal-pad"
-              style={styles.input}
-            />
-            <TextInput
-              value={holdingDraft.currentValue}
-              onChangeText={(value) => updateHoldingDraft("currentValue", value)}
-              placeholder="Current value"
-              placeholderTextColor="#7f90a8"
-              keyboardType="decimal-pad"
-              style={styles.input}
-            />
-            <TextInput
-              value={holdingDraft.targetWeight}
-              onChangeText={(value) => updateHoldingDraft("targetWeight", value)}
-              placeholder="Target weight, e.g. 15%"
-              placeholderTextColor="#7f90a8"
-              style={styles.input}
-            />
-            <TextInput
-              value={holdingDraft.notes}
-              onChangeText={(value) => updateHoldingDraft("notes", value)}
-              placeholder="Holding notes"
-              placeholderTextColor="#7f90a8"
-              multiline
-              style={[styles.input, styles.notesInput]}
-            />
-          </ScrollView>
-          <View style={styles.modalActions}>
-            <Pressable style={styles.modalSecondary} onPress={onClose}>
-              <Text style={styles.modalSecondaryText}>Cancel</Text>
-            </Pressable>
-            <Pressable style={[styles.primaryButton, { backgroundColor: theme.colors.brand }]} onPress={onSave}>
-              <Text style={[styles.primaryButtonText, { color: "#030712" }]}>Save Holding</Text>
-            </Pressable>
           </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };

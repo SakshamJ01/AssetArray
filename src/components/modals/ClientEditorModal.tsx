@@ -7,6 +7,8 @@ import {
   ScrollView,
   Pressable,
   StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { AppTheme } from "../../theme";
 import {
@@ -37,158 +39,176 @@ export const ClientEditorModal: React.FC<ClientEditorModalProps> = ({
   onSubmit,
   theme,
 }) => {
+  const isDark = theme.colors.background === "#030712" || theme.colors.textPrimary === "#ffffff" || theme.colors.textPrimary === "#FFFFFF";
+
   return (
     <Modal visible={visible} transparent animationType={isDesktop ? "fade" : "slide"}>
-      <View style={[styles.modalBackdrop, isDesktop && styles.modalBackdropCenter]}>
-        <View style={[styles.modalCard, isDesktop && styles.modalCardCenter]}>
-          <Text style={styles.modalTitle}>
-            {editorMode === "add" ? "Add client" : "Edit client"}
-          </Text>
-          <ScrollView showsVerticalScrollIndicator={false}>
-            <TextInput
-              value={draft.name}
-              onChangeText={(value) => updateDraft("name", value)}
-              placeholder="Client name"
-              placeholderTextColor="#7f90a8"
-              style={styles.input}
-            />
-            <TextInput
-              value={draft.phone}
-              onChangeText={(value) => updateDraft("phone", value)}
-              placeholder="Phone number"
-              placeholderTextColor="#7f90a8"
-              keyboardType="phone-pad"
-              style={styles.input}
-            />
-            <TextInput
-              value={draft.email}
-              onChangeText={(value) => updateDraft("email", value)}
-              placeholder="Email address"
-              placeholderTextColor="#7f90a8"
-              autoCapitalize="none"
-              keyboardType="email-address"
-              style={styles.input}
-            />
-            <TextInput
-              value={draft.city}
-              onChangeText={(value) => updateDraft("city", value)}
-              placeholder="City"
-              placeholderTextColor="#7f90a8"
-              style={styles.input}
-            />
-            <Text style={styles.inputLabel}>Category</Text>
-            <View style={styles.optionRow}>
-              {CATEGORY_OPTIONS.map((option) => {
-                const active = draft.category === option;
-                return (
-                  <Pressable
-                    key={option}
-                    style={[styles.optionChip, active ? styles.optionChipActive : null]}
-                    onPress={() => updateDraft("category", option)}
-                  >
-                    <Text
-                      style={[
-                        styles.optionChipText,
-                        active ? styles.optionChipTextActive : null,
-                      ]}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={{ flex: 1 }}
+      >
+        <View style={[styles.modalBackdrop, isDesktop && styles.modalBackdropCenter]}>
+          <View style={[styles.modalCard, isDesktop && styles.modalCardCenter, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
+            <Text style={[styles.modalTitle, { color: theme.colors.textPrimary }]}>
+              {editorMode === "add" ? "Add client" : "Edit client"}
+            </Text>
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+              <TextInput
+                value={draft.name}
+                onChangeText={(value) => updateDraft("name", value)}
+                placeholder="Client name"
+                placeholderTextColor={isDark ? "#7f90a8" : "#64748b"}
+                style={[styles.input, { color: theme.colors.textPrimary, borderColor: theme.colors.border, backgroundColor: theme.colors.surfaceStrong }]}
+              />
+              <TextInput
+                value={draft.phone}
+                onChangeText={(value) => updateDraft("phone", value)}
+                placeholder="Phone number"
+                placeholderTextColor={isDark ? "#7f90a8" : "#64748b"}
+                keyboardType="phone-pad"
+                style={[styles.input, { color: theme.colors.textPrimary, borderColor: theme.colors.border, backgroundColor: theme.colors.surfaceStrong }]}
+              />
+              <TextInput
+                value={draft.email}
+                onChangeText={(value) => updateDraft("email", value)}
+                placeholder="Email address"
+                placeholderTextColor={isDark ? "#7f90a8" : "#64748b"}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                style={[styles.input, { color: theme.colors.textPrimary, borderColor: theme.colors.border, backgroundColor: theme.colors.surfaceStrong }]}
+              />
+              <TextInput
+                value={draft.city}
+                onChangeText={(value) => updateDraft("city", value)}
+                placeholder="City"
+                placeholderTextColor={isDark ? "#7f90a8" : "#64748b"}
+                style={[styles.input, { color: theme.colors.textPrimary, borderColor: theme.colors.border, backgroundColor: theme.colors.surfaceStrong }]}
+              />
+              <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>Category</Text>
+              <View style={styles.optionRow}>
+                {CATEGORY_OPTIONS.map((option) => {
+                  const active = draft.category === option;
+                  return (
+                    <Pressable
+                      key={option}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      style={[styles.optionChip, active ? styles.optionChipActive : null]}
+                      onPress={() => updateDraft("category", option)}
                     >
-                      {option}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-            <TextInput
-              value={draft.riskProfile}
-              onChangeText={(value) => updateDraft("riskProfile", value)}
-              placeholder="Risk profile"
-              placeholderTextColor="#7f90a8"
-              style={styles.input}
-            />
-            <TextInput
-              value={draft.allocation}
-              onChangeText={(value) => updateDraft("allocation", value)}
-              placeholder="Allocation summary"
-              placeholderTextColor="#7f90a8"
-              style={styles.input}
-            />
-            <Text style={styles.inputLabel}>Priority</Text>
-            <View style={styles.optionRow}>
-              {PRIORITY_OPTIONS.map((option) => {
-                const active = draft.priority === option;
-                return (
-                  <Pressable
-                    key={option}
-                    style={[styles.optionChip, active ? styles.optionChipActive : null]}
-                    onPress={() => updateDraft("priority", option)}
-                  >
-                    <Text
-                      style={[
-                        styles.optionChipText,
-                        active ? styles.optionChipTextActive : null,
-                      ]}
+                      <Text
+                        style={[
+                          styles.optionChipText,
+                          active ? styles.optionChipTextActive : null,
+                        ]}
+                      >
+                        {option}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+              <TextInput
+                value={draft.riskProfile}
+                onChangeText={(value) => updateDraft("riskProfile", value)}
+                placeholder="Risk profile"
+                placeholderTextColor={isDark ? "#7f90a8" : "#64748b"}
+                style={[styles.input, { color: theme.colors.textPrimary, borderColor: theme.colors.border, backgroundColor: theme.colors.surfaceStrong }]}
+              />
+              <TextInput
+                value={draft.allocation}
+                onChangeText={(value) => updateDraft("allocation", value)}
+                placeholder="Allocation summary"
+                placeholderTextColor={isDark ? "#7f90a8" : "#64748b"}
+                style={[styles.input, { color: theme.colors.textPrimary, borderColor: theme.colors.border, backgroundColor: theme.colors.surfaceStrong }]}
+              />
+              <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>Priority</Text>
+              <View style={styles.optionRow}>
+                {PRIORITY_OPTIONS.map((option) => {
+                  const active = draft.priority === option;
+                  return (
+                    <Pressable
+                      key={option}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      style={[styles.optionChip, active ? styles.optionChipActive : null]}
+                      onPress={() => updateDraft("priority", option)}
                     >
-                      {option}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-            <Text style={styles.inputLabel}>Preferred contact channel</Text>
-            <View style={styles.optionRow}>
-              {CHANNEL_OPTIONS.map((option) => {
-                const active = draft.preferredChannel === option;
-                return (
-                  <Pressable
-                    key={option}
-                    style={[styles.optionChip, active ? styles.optionChipActive : null]}
-                    onPress={() => updateDraft("preferredChannel", option)}
-                  >
-                    <Text
-                      style={[
-                        styles.optionChipText,
-                        active ? styles.optionChipTextActive : null,
-                      ]}
+                      <Text
+                        style={[
+                          styles.optionChipText,
+                          active ? styles.optionChipTextActive : null,
+                        ]}
+                      >
+                        {option}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+              <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>Preferred contact channel</Text>
+              <View style={styles.optionRow}>
+                {CHANNEL_OPTIONS.map((option) => {
+                  const active = draft.preferredChannel === option;
+                  return (
+                    <Pressable
+                      key={option}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      style={[styles.optionChip, active ? styles.optionChipActive : null]}
+                      onPress={() => updateDraft("preferredChannel", option)}
                     >
-                      {option}
-                    </Text>
-                  </Pressable>
-                );
-              })}
+                      <Text
+                        style={[
+                          styles.optionChipText,
+                          active ? styles.optionChipTextActive : null,
+                        ]}
+                      >
+                        {option}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+              <TextInput
+                value={draft.watchlist}
+                onChangeText={(value) => updateDraft("watchlist", value)}
+                placeholder="Watchlist, comma separated"
+                placeholderTextColor={isDark ? "#7f90a8" : "#64748b"}
+                style={[styles.input, { color: theme.colors.textPrimary, borderColor: theme.colors.border, backgroundColor: theme.colors.surfaceStrong }]}
+              />
+              <TextInput
+                value={draft.reminderDate}
+                onChangeText={(value) => updateDraft("reminderDate", value)}
+                placeholder="Next reminder date (YYYY-MM-DD)"
+                placeholderTextColor={isDark ? "#7f90a8" : "#64748b"}
+                style={[styles.input, { color: theme.colors.textPrimary, borderColor: theme.colors.border, backgroundColor: theme.colors.surfaceStrong }]}
+              />
+              <TextInput
+                value={draft.notes}
+                onChangeText={(value) => updateDraft("notes", value)}
+                placeholder="Private notes"
+                placeholderTextColor={isDark ? "#7f90a8" : "#64748b"}
+                multiline
+                style={[styles.input, styles.notesInput, { color: theme.colors.textPrimary, borderColor: theme.colors.border, backgroundColor: theme.colors.surfaceStrong }]}
+              />
+            </ScrollView>
+            <View style={styles.modalActions}>
+              <Pressable
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                style={styles.modalSecondary}
+                onPress={onClose}
+              >
+                <Text style={[styles.modalSecondaryText, { color: theme.colors.textSecondary }]}>Cancel</Text>
+              </Pressable>
+              <Pressable
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                style={[styles.primaryButton, { backgroundColor: theme.colors.brand }]}
+                onPress={onSubmit}
+              >
+                <Text style={[styles.primaryButtonText, { color: "#030712" }]}>Save Client</Text>
+              </Pressable>
             </View>
-            <TextInput
-              value={draft.watchlist}
-              onChangeText={(value) => updateDraft("watchlist", value)}
-              placeholder="Watchlist, comma separated"
-              placeholderTextColor="#7f90a8"
-              style={styles.input}
-            />
-            <TextInput
-              value={draft.reminderDate}
-              onChangeText={(value) => updateDraft("reminderDate", value)}
-              placeholder="Next reminder date (YYYY-MM-DD)"
-              placeholderTextColor="#7f90a8"
-              style={styles.input}
-            />
-            <TextInput
-              value={draft.notes}
-              onChangeText={(value) => updateDraft("notes", value)}
-              placeholder="Private notes"
-              placeholderTextColor="#7f90a8"
-              multiline
-              style={[styles.input, styles.notesInput]}
-            />
-          </ScrollView>
-          <View style={styles.modalActions}>
-            <Pressable style={styles.modalSecondary} onPress={onClose}>
-              <Text style={styles.modalSecondaryText}>Cancel</Text>
-            </Pressable>
-            <Pressable style={[styles.primaryButton, { backgroundColor: theme.colors.brand }]} onPress={onSubmit}>
-              <Text style={[styles.primaryButtonText, { color: "#030712" }]}>Save Client</Text>
-            </Pressable>
           </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };

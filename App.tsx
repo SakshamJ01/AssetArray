@@ -371,6 +371,7 @@ function buildClientFromDraft(draft: ClientDraft, existing?: Client): Client {
     allocation: draft.allocation.trim(),
     reminderDate: draft.reminderDate,
     priority: draft.priority,
+    avatarUrl: draft.avatarUrl?.trim() || existing?.avatarUrl || "",
     lastContact: existing?.lastContact ?? "Not contacted yet",
     updateHistory: existing?.updateHistory ?? [],
     portfolio: existing?.portfolio ?? [],
@@ -391,6 +392,7 @@ function buildDraftFromClient(client: Client): ClientDraft {
     allocation: client.allocation,
     reminderDate: client.reminderDate,
     priority: client.priority,
+    avatarUrl: client.avatarUrl || "",
   };
 }
 

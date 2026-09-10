@@ -144,6 +144,7 @@ export type ClientDraft = {
   allocation: string;
   reminderDate: string;
   priority: Priority;
+  avatarUrl?: string;
 };
 
 export type HoldingDraft = {
@@ -227,6 +228,7 @@ export const emptyDraft: ClientDraft = {
   allocation: "",
   reminderDate: "",
   priority: "Medium",
+  avatarUrl: "",
 };
 
 export const emptyHoldingDraft: HoldingDraft = {

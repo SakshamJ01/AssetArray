@@ -84,6 +84,14 @@ export const ClientEditorModal: React.FC<ClientEditorModalProps> = ({
                 placeholderTextColor={isDark ? "#7f90a8" : "#64748b"}
                 style={[styles.input, { color: theme.colors.textPrimary, borderColor: theme.colors.border, backgroundColor: theme.colors.surfaceStrong }]}
               />
+              <TextInput
+                value={draft.avatarUrl || ""}
+                onChangeText={(value) => updateDraft("avatarUrl", value)}
+                placeholder="Client photo / avatar URL (https://...)"
+                placeholderTextColor={isDark ? "#7f90a8" : "#64748b"}
+                autoCapitalize="none"
+                style={[styles.input, { color: theme.colors.textPrimary, borderColor: theme.colors.border, backgroundColor: theme.colors.surfaceStrong }]}
+              />
               <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>Category</Text>
               <View style={styles.optionRow}>
                 {CATEGORY_OPTIONS.map((option) => {

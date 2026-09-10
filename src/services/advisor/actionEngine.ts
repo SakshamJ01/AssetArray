@@ -66,6 +66,11 @@ export function scanAdvisorActions(params: ScanWorkflowParams): AdvisorAction[] 
     const clientId = alert.clientId || "unknown";
     const isCritical = String(alert.severity).toLowerCase() === "critical";
 
+    const portfolioVal = client?.portfolio?.reduce(
+      (sum, h) => sum + (Number(h.currentValue) || 0),
+      0
+    ) || 0;
+
     let actionType: AdvisorAction["type"] = "ALERT_REVIEW";
     let sourceEngine: AdvisorAction["sourceEngine"] = "risk";
     let reason = "Portfolio parameter breached institutional policy threshold.";
@@ -74,50 +79,74 @@ export function scanAdvisorActions(params: ScanWorkflowParams): AdvisorAction[] 
     let deepLinkScreen = "Risk";
 
     switch (alert.condition) {
-      case "CONCENTRATION_BREACH":
+      case "CONCENTRATION_BREACH": {
         actionType = "REBALANCE_REVIEW";
         sourceEngine = "risk";
-        reason = `Single-asset concentration exceeds risk guidelines. Reduces portfolio diversification.`;
-        recommendedNextStep = `Model reallocation in Scenario Sandbox or reduce position to policy target.`;
+        const concHolding = (client?.portfolio || []).find(h => {
+          const val = Number(h.currentValue) || 0;
+          return portfolioVal > 0 && (val / portfolioVal) * 100 > (alert.threshold || 20);
+        }) || client?.portfolio?.[0];
+
+        const concAssetName = concHolding?.assetName || concHolding?.ticker || "Single asset";
+        const concWeight = typeof alert.observedValue === "number" ? alert.observedValue : 25;
+        const excessVal = portfolioVal > 0 ? (concWeight / 100 - (alert.threshold || 20) / 100) * portfolioVal : 0;
+        const fmtExcess = excessVal > 0 ? ` (₹${Math.round(excessVal).toLocaleString("en-IN")} over policy cap)` : "";
+
+        reason = `${concAssetName} constitutes ${concWeight}% of ${clientName}'s portfolio, breaching the ${alert.threshold || 20}% risk policy limit${fmtExcess}.`;
+        recommendedNextStep = excessVal > 0
+          ? `Trim ${concAssetName} by ₹${Math.round(excessVal).toLocaleString("en-IN")} in Rebalancer.`
+          : `Model position reduction for ${concAssetName} to restore portfolio diversification.`;
         deepLinkTab = "Portfolios";
         deepLinkScreen = "Concentration";
         break;
+      }
 
-      case "HEALTH_SCORE_DROP":
+      case "HEALTH_SCORE_DROP": {
         actionType = "PORTFOLIO_REVIEW";
         sourceEngine = "health";
-        reason = `Overall portfolio composite health score has degraded below benchmark standards.`;
-        recommendedNextStep = `Inspect health diagnostics to address asset-allocation drift or risk drag.`;
+        const scoreVal = alert.observedValue ?? 55;
+        reason = `${clientName}'s overall composite health score dropped to ${scoreVal}/100 (Threshold: ${alert.threshold || 60}/100). High risk drag / asset allocation drift.`;
+        recommendedNextStep = `Inspect health diagnostics for ${clientName} to address asset-allocation drift.`;
         deepLinkTab = "Portfolios";
         deepLinkScreen = "Health";
         break;
+      }
 
-      case "TAX_HARVEST_WINDOW":
+      case "TAX_HARVEST_WINDOW": {
         actionType = "TAX_REVIEW";
         sourceEngine = "tax";
-        reason = `Unrealized capital losses are available to offset realized taxable gains under Section 70/74.`;
-        recommendedNextStep = `Execute tax-loss harvesting run before financial year-end.`;
+        const harvestLoss = typeof alert.observedValue === "number" ? alert.observedValue : 50000;
+        const lossHolding = (client?.portfolio || []).find(h => (Number(h.investedValue) || 0) > (Number(h.currentValue) || 0));
+        const holdingName = lossHolding?.assetName ? ` in ${lossHolding.assetName}` : "";
+
+        reason = `Unrealized capital loss of ₹${Math.round(harvestLoss).toLocaleString("en-IN")}${holdingName} available to offset realized capital gains under Section 70/74.`;
+        recommendedNextStep = `Execute tax-loss harvest of ₹${Math.round(harvestLoss).toLocaleString("en-IN")} before financial year-end.`;
         deepLinkTab = "Portfolios";
         deepLinkScreen = "Tax";
         break;
+      }
 
-      case "DRAWDOWN_EVENT":
+      case "DRAWDOWN_EVENT": {
         actionType = "PORTFOLIO_REVIEW";
         sourceEngine = "risk";
-        reason = `Portfolio has experienced significant peak-to-trough drawdown exceeding threshold.`;
-        recommendedNextStep = `Conduct defensive mandate review and communicate risk mitigation to client.`;
+        const ddVal = alert.observedValue ?? 12;
+        reason = `${clientName}'s portfolio experienced ${ddVal}% peak-to-trough drawdown, exceeding ${alert.threshold || 10}% mandate limit.`;
+        recommendedNextStep = `Conduct defensive mandate review and schedule risk mitigation talk with ${clientName}.`;
         deepLinkTab = "Portfolios";
         deepLinkScreen = "Drawdown";
         break;
+      }
 
-      case "REBALANCE_DRIFT":
+      case "REBALANCE_DRIFT": {
         actionType = "REBALANCE_REVIEW";
         sourceEngine = "risk";
-        reason = `Asset category has drifted from strategic asset allocation target weight.`;
-        recommendedNextStep = `Execute target weight rebalancing order schedule.`;
+        const driftVal = alert.observedValue ?? 6.5;
+        reason = `Strategic asset allocation drifted by ${driftVal}% from target policy weights for ${clientName}.`;
+        recommendedNextStep = `Execute target weight rebalancing order schedule in Rebalancer.`;
         deepLinkTab = "Portfolios";
         deepLinkScreen = "Rebalancer";
         break;
+      }
 
       default:
         break;
@@ -126,11 +155,6 @@ export function scanAdvisorActions(params: ScanWorkflowParams): AdvisorAction[] 
     const canonicalKey = buildCanonicalKey(clientId, "smart_alert", alert.id, actionType);
 
     // Calculate priority
-    const portfolioVal = client?.portfolio?.reduce(
-      (sum, h) => sum + (Number(h.currentValue) || 0),
-      0
-    ) || 0;
-
     const prioResult = calculatePriorityScore({
       severity: isCritical ? "critical" : "warning",
       clientCategory: client?.category,

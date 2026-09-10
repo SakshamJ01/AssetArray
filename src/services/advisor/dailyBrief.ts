@@ -20,6 +20,8 @@ export interface BriefGeneratorInput {
  * Generates the deterministic Daily AI Advisor Brief.
  * Every numeric claim is grounded in structured, deterministic input metrics.
  */
+import { realTimeMarket, LiveInstrument } from "../realTimeMarket";
+
 export function generateDailyAdvisorBrief(input: BriefGeneratorInput): AdvisorBrief {
   const asOf = input.asOfDate || new Date().toISOString();
   const dateStr = asOf.split("T")[0];
@@ -115,11 +117,27 @@ export function generateDailyAdvisorBrief(input: BriefGeneratorInput): AdvisorBr
     recommendedNextStep: a.recommendedNextStep || "Review portfolio metrics",
   }));
 
-  const marketContext = (input.marketQuotes || [
-    { symbol: "NIFTY 50", name: "NIFTY 50", price: 24850.3, changePercent: 0.82 },
-    { symbol: "SENSEX", name: "SENSEX", price: 81340.5, changePercent: 0.74 },
-    { symbol: "USD/INR", name: "USD / INR", price: 83.92, changePercent: 0.18 },
-  ]).map((q) => ({
+  // Fetch live ticks from realTimeMarketService if not explicitly provided
+  let rawQuotes = input.marketQuotes;
+  if (!rawQuotes) {
+    try {
+      const liveMap = realTimeMarket.getQuotes();
+      rawQuotes = (Object.values(liveMap) as LiveInstrument[]).map((inst) => ({
+        symbol: inst.symbol,
+        name: inst.name,
+        price: inst.price,
+        changePercent: inst.changePercent,
+      }));
+    } catch {
+      rawQuotes = [
+        { symbol: "NIFTY 50", name: "NIFTY 50", price: 24850.3, changePercent: 0.82 },
+        { symbol: "SENSEX", name: "SENSEX", price: 81340.5, changePercent: 0.74 },
+        { symbol: "USD/INR", name: "USD / INR", price: 83.92, changePercent: 0.18 },
+      ];
+    }
+  }
+
+  const marketContext = rawQuotes.slice(0, 4).map((q) => ({
     symbol: q.symbol,
     name: q.name,
     changePct: q.changePercent,

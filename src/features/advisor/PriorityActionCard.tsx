@@ -40,6 +40,60 @@ export const PriorityActionCard: React.FC<PriorityActionCardProps> = ({
     ? theme.colors.warningSoft
     : theme.colors.accentSoft;
 
+  const [isAiAnalysisOpen, setIsAiAnalysisOpen] = useState(false);
+  const [aiText, setAiText] = useState<string>("");
+  const [isAiLoading, setIsAiLoading] = useState(false);
+
+  const handleGenerateAiAnalysis = async () => {
+    if (aiText) {
+      setIsAiAnalysisOpen(!isAiAnalysisOpen);
+      return;
+    }
+
+    setIsAiAnalysisOpen(true);
+    setIsAiLoading(true);
+    setAiText("");
+
+    const prompt = `Analyze this advisor action item for client ${action.clientName}:
+Issue: ${action.title}
+Severity: ${action.severity}
+Reason: ${action.reason}
+Observed Metric: ${action.evidence.metric} = ${String(action.evidence.observedValue)} (Limit: ${String(action.evidence.threshold ?? "N/A")})
+Recommended Step: ${action.recommendedNextStep}
+
+Provide:
+1. Short strategic fiduciary recommendation.
+2. A 2-sentence client outreach message script for WhatsApp/Phone.`;
+
+    try {
+      const { aiRouter } = require("../../services/aiGateway/router");
+      await aiRouter.executeStream(
+        prompt,
+        "PORTFOLIO_EXPLANATION",
+        {
+          portfolioValue: action.evidence.observedValue,
+          currency: "INR",
+          holdingsCount: 1,
+        },
+        {
+          onToken: (token: string) => {
+            setAiText((prev) => prev + token);
+          },
+          onComplete: () => {
+            setIsAiLoading(false);
+          },
+          onError: () => {
+            setIsAiLoading(false);
+            setAiText(`Strategic Recommendation: ${action.recommendedNextStep}\n\nClient Script: "Hi ${action.clientName}, I reviewed your portfolio and noticed ${action.title.toLowerCase()}. Let's connect briefly to discuss optimizing your asset allocation."`);
+          },
+        }
+      );
+    } catch {
+      setIsAiLoading(false);
+      setAiText(`Strategic Recommendation: ${action.recommendedNextStep}\n\nClient Script: "Hi ${action.clientName}, I reviewed your portfolio and noticed ${action.title.toLowerCase()}. Let's connect briefly to discuss optimizing your asset allocation."`);
+    }
+  };
+
   return (
     <View
       style={[
@@ -188,6 +242,29 @@ export const PriorityActionCard: React.FC<PriorityActionCardProps> = ({
         </View>
       )}
 
+      {/* AI Copilot Inline Card */}
+      {isAiAnalysisOpen && (
+        <View
+          style={[
+            styles.aiCopilotBox,
+            { backgroundColor: theme.colors.surfaceMuted, borderColor: theme.colors.brand },
+          ]}
+        >
+          <View style={styles.aiCopilotHeader}>
+            <Ionicons name="sparkles" size={14} color={theme.colors.brand} />
+            <Text style={[styles.aiCopilotTitle, { color: theme.colors.brand }]}>
+              AI COPILOT ANALYSIS & CLIENT SCRIPT
+            </Text>
+            {isAiLoading && (
+              <Text style={[styles.aiLoadingBadge, { color: theme.colors.brand }]}>Analyzing...</Text>
+            )}
+          </View>
+          <Text style={[styles.aiCopilotBody, { color: theme.colors.textPrimary }]}>
+            {aiText || "Synthesizing portfolio analysis via Wealth AI..."}
+          </Text>
+        </View>
+      )}
+
       {/* Action Buttons Bar */}
       <View style={[styles.actionBar, { borderTopColor: theme.colors.border }]}>
         {/* Deep-Link Button */}
@@ -198,6 +275,23 @@ export const PriorityActionCard: React.FC<PriorityActionCardProps> = ({
           <Ionicons name="flash-outline" size={14} color="#000000" />
           <Text style={styles.primaryButtonText}>
             {action.deepLink.actionLabel || "Review Action"}
+          </Text>
+        </Pressable>
+
+        {/* Ask AI Copilot Button */}
+        <Pressable
+          onPress={handleGenerateAiAnalysis}
+          style={[
+            styles.secondaryButton,
+            {
+              borderColor: theme.colors.brand,
+              backgroundColor: isAiAnalysisOpen ? theme.colors.surfaceStrong : "transparent",
+            },
+          ]}
+        >
+          <Ionicons name="sparkles" size={13} color={theme.colors.brand} />
+          <Text style={[styles.secondaryButtonText, { color: theme.colors.brand, fontWeight: "700" }]}>
+            {isAiAnalysisOpen ? "Hide AI" : "Ask AI Copilot"}
           </Text>
         </Pressable>
 
@@ -422,6 +516,33 @@ const styles = StyleSheet.create({
     fontSize: 12,
     flex: 1,
     lineHeight: 16,
+  },
+  aiCopilotBox: {
+    borderWidth: 1,
+    borderRadius: 6,
+    padding: 10,
+    marginBottom: 10,
+  },
+  aiCopilotHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 6,
+  },
+  aiCopilotTitle: {
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 0.5,
+    flex: 1,
+  },
+  aiLoadingBadge: {
+    fontSize: 10,
+    fontWeight: "700",
+    fontStyle: "italic",
+  },
+  aiCopilotBody: {
+    fontSize: 12,
+    lineHeight: 17,
   },
   actionBar: {
     flexDirection: "row",

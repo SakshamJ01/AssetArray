@@ -43,7 +43,7 @@ import { evaluateDataQuality } from "../../services/advisor/dataQuality";
 import { evaluateSmartAlerts } from "../../services/smartAlerts";
 
 export type HorizonPerspective = "TODAY" | "THIS_WEEK" | "THIS_MONTH";
-export type CommandCenterTab = "ACTIONS" | "OPPORTUNITIES" | "DATA_QUALITY" | "KPIS";
+export type CommandCenterTab = "ACTIONS" | "OPPORTUNITIES" | "ANALYTICS" | "DATA_QUALITY" | "KPIS";
 
 export interface AdvisorCommandCenterProps {
   clients: Client[];
@@ -564,13 +564,6 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
         </Pressable>
       </View>
 
-      {/* CONTEXT / TREND CHART (Directly below summary KPIs) */}
-      <PortfolioTrajectoryChart
-        theme={theme}
-        totalAum={totalAum}
-        onViewAttribution={() => onNavigateTab("Portfolios", { view: "attribution" })}
-      />
-
       {/* AI ADVISOR BRIEF BANNER */}
       {brief && (
         <View
@@ -619,6 +612,7 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
           {[
             { key: "ACTIONS", label: "Priority Actions" },
             { key: "OPPORTUNITIES", label: `Opportunities (${opportunities.length})` },
+            { key: "ANALYTICS", label: "Portfolio Analytics" },
             { key: "DATA_QUALITY", label: "Data Quality" },
             { key: "KPIS", label: "Workflow KPIs" },
           ].map((tab) => {
@@ -704,6 +698,14 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
             onNavigateTab(opp.deepLink.tab, opp.deepLink.params);
           }}
           onOpenClient360={(cid) => setClient360Id(cid)}
+        />
+      )}
+
+      {activeSection === "ANALYTICS" && (
+        <PortfolioTrajectoryChart
+          theme={theme}
+          totalAum={totalAum}
+          onViewAttribution={() => onNavigateTab("Portfolios", { view: "attribution" })}
         />
       )}
 

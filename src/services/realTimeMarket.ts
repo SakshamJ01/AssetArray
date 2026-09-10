@@ -638,6 +638,10 @@ class RealTimeMarketService {
     });
   }
 
+  public getQuotes(): Record<string, LiveInstrument> {
+    return this.instruments;
+  }
+
   public triggerManualSync() {
     this.generateMarketTick();
   }

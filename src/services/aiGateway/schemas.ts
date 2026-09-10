@@ -19,6 +19,7 @@ export function buildTaskPrompt(
   parts.push("2. If a specific metric, holding, or tax lot is not provided, state that it is unavailable.");
   parts.push("3. NEVER invent AUM, percentage returns, health scores, tax losses, or security holdings.");
   parts.push("4. Differentiate clearly between OBSERVED FACTS, MODEL PROJECTIONS, and ADVISOR ACTION ITEMS.");
+  parts.push("5. If the inquiry asks about a security, asset class, or holding NOT in VERIFIED PORTFOLIO DATA, explicitly refuse: 'There is no record of [requested asset] in this client\\'s verified portfolio.' Never invent holdings.");
   parts.push(`TIMESTAMP: ${new Date().toISOString()}`);
 
   if (context) {

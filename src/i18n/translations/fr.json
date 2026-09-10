@@ -1,0 +1,26 @@
+{
+  "app": { "name": "Asset Array", "tagline": "Votre Poste de Travail Patrimonial Professionnel" },
+  "auth": {
+    "signIn": "Se Connecter",
+    "signingIn": "Connexion en cours...",
+    "username": "Nom d'utilisateur",
+    "password": "Mot de passe",
+    "logout": "Déconnexion"
+  },
+  "navigation": {
+    "dashboard": "Tableau de Bord",
+    "clients": "Clients",
+    "portfolios": "Portefeuilles",
+    "tools": "Outils",
+    "workspace": "Espace de Travail",
+    "settings": "Paramètres",
+    "aiResearch": "Recherche IA"
+  },
+  "common": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "loading": "Chargement..."
+  }
+}

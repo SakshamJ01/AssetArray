@@ -170,7 +170,10 @@ export class UnifiedMarketProvider {
     );
   }
 
-  public async getSectorPerformance(): Promise<SectorPerformance[]> {
+  public async getSectorPerformance(forceDemo?: boolean): Promise<SectorPerformance[]> {
+    if (forceDemo === true) {
+      return simulationProvider.getSectorPerformance();
+    }
     if (this.sectorCache && this.sectorCache.expires > Date.now()) {
       return this.sectorCache.data;
     }
@@ -189,14 +192,17 @@ export class UnifiedMarketProvider {
       }
     }
 
-    // Live mode: do not fabricate sector returns if unavailable
-    return [];
+    return forceDemo === false ? [] : simulationProvider.getSectorPerformance();
   }
 
   public async getHistoricalPrices(
     symbol: string,
-    days = 30
+    days = 30,
+    forceDemo?: boolean
   ): Promise<HistoricalPricePoint[]> {
+    if (forceDemo === true) {
+      return simulationProvider.getHistoricalPrices(symbol, days);
+    }
     for (const p of this.providers) {
       if (await p.isAvailable()) {
         try {
@@ -208,8 +214,7 @@ export class UnifiedMarketProvider {
       }
     }
 
-    // Live mode: missing history returned as empty (HISTORY_UNAVAILABLE)
-    return [];
+    return forceDemo === false ? [] : simulationProvider.getHistoricalPrices(symbol, days);
   }
 }
 

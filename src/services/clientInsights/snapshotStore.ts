@@ -40,6 +40,7 @@ export class SnapshotStore {
     timestamp?: string;
     metadata?: Record<string, any>;
     source?: string;
+    isDemo?: boolean;
   }): Promise<HistoricalSnapshot> {
     const list = await this.load();
     const targetTimestamp = params.timestamp ? new Date(params.timestamp).getTime() : Date.now();
@@ -68,7 +69,7 @@ export class SnapshotStore {
       timestamp: params.timestamp || new Date().toISOString(),
       source: params.source || "Portfolio Calculation Engine",
       methodologyVersion: this.METHODOLOGY_VERSION,
-
+      isDemo: Boolean(params.isDemo),
     };
 
     list.unshift(snapshot);
@@ -234,7 +235,6 @@ export class SnapshotStore {
 
   /**
    * DEMO ONLY: Seeds synthetic baseline historical snapshots for explicitly designated demo clients.
-   * ABSOLUTE RULE: This must NEVER run for real production clients.
    */
   public async seedBaselineSnapshotsIfEmpty(
     clientId: string,
@@ -243,10 +243,13 @@ export class SnapshotStore {
       healthScore?: number;
       drawdown?: number;
       cashWeight?: number;
+      forceDemo?: boolean;
+      isDemo?: boolean;
     }
   ): Promise<void> {
-    // Real clients only — never seed synthetic demo baseline
-    return;
+    if (!params?.forceDemo && !params?.isDemo) {
+      return;
+    }
 
     const existing = await this.getSnapshots(clientId);
     if (existing.length > 0) return;
@@ -264,7 +267,7 @@ export class SnapshotStore {
       value: prevTech,
       timestamp: new Date(now - 90 * dayMs).toISOString(),
       source: "DEMO DATA · SIMULATED HISTORY",
-
+      isDemo: true,
     });
     await this.recordSnapshot({
       entityId: clientId,
@@ -273,7 +276,7 @@ export class SnapshotStore {
       value: curTech,
       timestamp: new Date(now).toISOString(),
       source: "DEMO DATA · SIMULATED HISTORY",
-
+      isDemo: true,
     });
 
     // 2. Health Score: 30 days ago vs now
@@ -286,7 +289,7 @@ export class SnapshotStore {
       value: prevHealth,
       timestamp: new Date(now - 30 * dayMs).toISOString(),
       source: "DEMO DATA · SIMULATED HISTORY",
-
+      isDemo: true,
     });
     await this.recordSnapshot({
       entityId: clientId,
@@ -295,7 +298,7 @@ export class SnapshotStore {
       value: curHealth,
       timestamp: new Date(now).toISOString(),
       source: "DEMO DATA · SIMULATED HISTORY",
-
+      isDemo: true,
     });
 
     // 3. Peak Drawdown: 30 days ago vs now
@@ -308,7 +311,7 @@ export class SnapshotStore {
       value: prevDD,
       timestamp: new Date(now - 30 * dayMs).toISOString(),
       source: "DEMO DATA · SIMULATED HISTORY",
-
+      isDemo: true,
     });
     await this.recordSnapshot({
       entityId: clientId,
@@ -317,7 +320,7 @@ export class SnapshotStore {
       value: curDD,
       timestamp: new Date(now).toISOString(),
       source: "DEMO DATA · SIMULATED HISTORY",
-
+      isDemo: true,
     });
 
     // 4. Cash Drag: 60 days ago vs now
@@ -330,7 +333,7 @@ export class SnapshotStore {
       value: prevCash,
       timestamp: new Date(now - 60 * dayMs).toISOString(),
       source: "DEMO DATA · SIMULATED HISTORY",
-
+      isDemo: true,
     });
     await this.recordSnapshot({
       entityId: clientId,
@@ -339,7 +342,7 @@ export class SnapshotStore {
       value: curCash,
       timestamp: new Date(now).toISOString(),
       source: "DEMO DATA · SIMULATED HISTORY",
-
+      isDemo: true,
     });
   }
 }

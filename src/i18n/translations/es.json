@@ -1,0 +1,26 @@
+{
+  "app": { "name": "Asset Array", "tagline": "Su Estación de Trabajo de Patrimonio Profesional" },
+  "auth": {
+    "signIn": "Iniciar Sesión",
+    "signingIn": "Iniciando sesión...",
+    "username": "Usuario",
+    "password": "Contraseña",
+    "logout": "Cerrar Sesión"
+  },
+  "navigation": {
+    "dashboard": "Tablero",
+    "clients": "Clientes",
+    "portfolios": "Portafolios",
+    "tools": "Herramientas",
+    "workspace": "Espacio de Trabajo",
+    "settings": "Ajustes",
+    "aiResearch": "Investigación IA"
+  },
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "loading": "Cargando..."
+  }
+}

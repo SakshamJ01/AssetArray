@@ -31,12 +31,14 @@ export const WEB_MOCK_PACKAGES: BillingPackage[] = [
 ];
 
 class WebBillingService implements IBillingService {
+  private isPro = false;
+
   async initialize(): Promise<void> {
     console.log("[RevenueCat Web] Web Billing initialized in Sandbox/Stripe mode.");
   }
 
   async checkProStatus(): Promise<boolean> {
-    return false;
+    return this.isPro;
   }
 
   async getOfferings(): Promise<BillingPackage[]> {
@@ -45,6 +47,7 @@ class WebBillingService implements IBillingService {
 
   async purchasePackage(pkg: BillingPackage): Promise<boolean> {
     console.log("[RevenueCat Web] Processed purchase for:", pkg.identifier);
+    this.isPro = true;
     return true;
   }
 
@@ -52,6 +55,10 @@ class WebBillingService implements IBillingService {
     return this.checkProStatus();
   }
 
+  async resetDemoProStatus(): Promise<void> {
+    console.log("[RevenueCat Web] Resetting demo Pro status.");
+    this.isPro = false;
+  }
 }
 
 export const billingService: IBillingService = new WebBillingService();

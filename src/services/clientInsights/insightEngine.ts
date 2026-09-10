@@ -85,11 +85,10 @@ export class InsightEngine {
             source: techComparison.current.source,
             confidence,
             threshold: 25.0,
-            
           },
           severity: techComparison.current.value > 25.0 ? "HIGH" : "MEDIUM",
           detectedAt: new Date().toISOString(),
-          
+          isDemo: Boolean(techComparison.current.isDemo),
         });
       }
     }
@@ -120,11 +119,10 @@ export class InsightEngine {
             source: healthComp.current.source,
             confidence,
             threshold: 70,
-            
           },
           severity: healthComp.current.value < 70 ? "CRITICAL" : "HIGH",
           detectedAt: new Date().toISOString(),
-          
+          isDemo: Boolean(healthComp.current.isDemo),
         });
       }
     }
@@ -155,11 +153,10 @@ export class InsightEngine {
             source: drawdownComp.current.source,
             confidence,
             threshold: 8.0,
-            
           },
           severity: drawdownComp.current.value >= 10.0 ? "CRITICAL" : "HIGH",
           detectedAt: new Date().toISOString(),
-          
+          isDemo: Boolean(drawdownComp.current.isDemo),
         });
       }
     }
@@ -190,11 +187,10 @@ export class InsightEngine {
             source: cashComp.current.source,
             confidence,
             threshold: 10.0,
-            
           },
           severity: "MEDIUM",
           detectedAt: new Date().toISOString(),
-          
+          isDemo: Boolean(cashComp.current.isDemo),
         });
       }
     }
@@ -227,11 +223,10 @@ export class InsightEngine {
               source: goalComp.current.source,
               confidence,
               threshold: 75.0,
-
             },
             severity: goalComp.current.value < 75.0 ? "HIGH" : "MEDIUM",
             detectedAt: new Date().toISOString(),
-            
+            isDemo: Boolean(goalComp.current.isDemo),
           });
         }
       }

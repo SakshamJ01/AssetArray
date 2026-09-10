@@ -142,6 +142,10 @@ class NativeBillingService implements IBillingService {
     }
     return false;
   }
+
+  async resetDemoProStatus(): Promise<void> {
+    console.log("[RevenueCat Native] Resetting demo Pro status.");
+  }
 }
 
 export const billingService: IBillingService = new NativeBillingService();

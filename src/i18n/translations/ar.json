@@ -1,0 +1,26 @@
+{
+  "app": { "name": "Asset Array", "tagline": "محطة عمل الثروة المهنية الخاصة بك" },
+  "auth": {
+    "signIn": "تسجيل الدخول",
+    "signingIn": "جاري تسجيل الدخول...",
+    "username": "اسم المستخدم",
+    "password": "كلمة المرور",
+    "logout": "تسجيل الخروج"
+  },
+  "navigation": {
+    "dashboard": "لوحة القيادة",
+    "clients": "العملاء",
+    "portfolios": "المحافظ",
+    "tools": "الأدوات",
+    "workspace": "مساحة العمل",
+    "settings": "الإعدادات",
+    "aiResearch": "بحث الذكاء الاصطناعي"
+  },
+  "common": {
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "loading": "جاري التحميل..."
+  }
+}

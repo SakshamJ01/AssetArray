@@ -1,0 +1,26 @@
+{
+  "app": { "name": "Asset Array", "tagline": "Ihre Professionelle Wealth-Workstation" },
+  "auth": {
+    "signIn": "Anmelden",
+    "signingIn": "Wird angemeldet...",
+    "username": "Benutzername",
+    "password": "Passwort",
+    "logout": "Abmelden"
+  },
+  "navigation": {
+    "dashboard": "Übersicht",
+    "clients": "Kunden",
+    "portfolios": "Portfolios",
+    "tools": "Werkzeuge",
+    "workspace": "Arbeitsbereich",
+    "settings": "Einstellungen",
+    "aiResearch": "KI-Forschung"
+  },
+  "common": {
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "loading": "Wird geladen..."
+  }
+}

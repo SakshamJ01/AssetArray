@@ -64,6 +64,28 @@ export const PortfolioManagerSection: React.FC<PortfolioManagerSectionProps> = (
                   </Text>
                   <Text style={styles.miniStatLabel}>Current</Text>
                 </View>
+                <View style={styles.miniStat}>
+                  {(() => {
+                    const gain = portfolioStats.current - portfolioStats.invested;
+                    const gainPct = portfolioStats.invested > 0 ? (gain / portfolioStats.invested) * 100 : 0;
+                    const isPositive = gain >= 0;
+                    return (
+                      <>
+                        <Text
+                          style={[
+                            styles.miniStatValue,
+                            { color: isPositive ? "#10b981" : "#ef4444" },
+                          ]}
+                        >
+                          {isPositive ? "+" : ""}{gainPct.toFixed(1)}%
+                        </Text>
+                        <Text style={styles.miniStatLabel}>
+                          {isPositive ? "+" : ""}{currencyDisplay(`${Math.round(gain)}`)}
+                        </Text>
+                      </>
+                    );
+                  })()}
+                </View>
               </View>
               <Pressable style={styles.goldButton} onPress={openAddHoldingModal}>
                 <Text style={styles.goldButtonText}>+ Add Holding</Text>
@@ -76,45 +98,61 @@ export const PortfolioManagerSection: React.FC<PortfolioManagerSectionProps> = (
                   </Text>
                 </View>
               ) : (
-                selectedClient.portfolio.map((holding) => (
-                  <View key={holding.id} style={styles.holdingCard}>
-                    <Text style={styles.holdingTitle}>
-                      {holding.assetName}
-                      {holding.ticker ? ` (${holding.ticker})` : ""}
-                    </Text>
-                    <Text style={styles.holdingMeta}>
-                      Class: {holding.assetClass ?? "Stocks"}
-                    </Text>
-                    <Text style={styles.holdingMeta}>
-                      Qty: {holding.quantity || "-"} | Target: {holding.targetWeight || "-"}
-                    </Text>
-                    <Text style={styles.holdingMeta}>
-                      Invested: {holding.investedValue ? currencyDisplay(holding.investedValue) : "-"}
-                    </Text>
-                    <Text style={styles.holdingMeta}>
-                      Current: {holding.currentValue ? currencyDisplay(holding.currentValue) : "-"}
-                    </Text>
-                    {holding.notes ? (
-                      <Text style={styles.holdingNote}>{holding.notes}</Text>
-                    ) : null}
-                    <View style={styles.inlineActions}>
-                      <Pressable
-                        style={styles.linkButton}
-                        onPress={() => openEditHoldingModal(holding)}
-                      >
-                        <Text style={styles.linkButtonText}>Edit / Rename</Text>
-                      </Pressable>
-                      <Pressable
-                        style={styles.linkButton}
-                        onPress={() => deleteHolding(holding)}
-                      >
-                        <Text style={[styles.linkButtonText, styles.linkDanger]}>
-                          Remove
+                selectedClient.portfolio.map((holding) => {
+                  const hCost = parseFloat(holding.investedValue) || 0;
+                  const hCurr = parseFloat(holding.currentValue) || 0;
+                  const hGain = hCurr - hCost;
+                  const hGainPct = hCost > 0 ? (hGain / hCost) * 100 : 0;
+                  const hasPnl = hCost > 0;
+                  const isPositive = hGain >= 0;
+
+                  return (
+                    <View key={holding.id} style={styles.holdingCard}>
+                      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
+                        <Text style={styles.holdingTitle}>
+                          {holding.assetName}
+                          {holding.ticker ? ` (${holding.ticker})` : ""}
                         </Text>
-                      </Pressable>
+                        {hasPnl && (
+                          <Text style={{ fontSize: 11, fontWeight: "700", color: isPositive ? "#10b981" : "#ef4444" }}>
+                            {isPositive ? "+" : ""}{hGainPct.toFixed(1)}% ({isPositive ? "+" : ""}{currencyDisplay(`${Math.round(hGain)}`)})
+                          </Text>
+                        )}
+                      </View>
+                      <Text style={styles.holdingMeta}>
+                        Class: {holding.assetClass ?? "Stocks"}
+                      </Text>
+                      <Text style={styles.holdingMeta}>
+                        Qty: {holding.quantity || "-"} | Target: {holding.targetWeight || "-"}
+                      </Text>
+                      <Text style={styles.holdingMeta}>
+                        Invested: {holding.investedValue ? currencyDisplay(holding.investedValue) : "-"}
+                      </Text>
+                      <Text style={styles.holdingMeta}>
+                        Current: {holding.currentValue ? currencyDisplay(holding.currentValue) : "-"}
+                      </Text>
+                      {holding.notes ? (
+                        <Text style={styles.holdingNote}>{holding.notes}</Text>
+                      ) : null}
+                      <View style={styles.inlineActions}>
+                        <Pressable
+                          style={styles.linkButton}
+                          onPress={() => openEditHoldingModal(holding)}
+                        >
+                          <Text style={styles.linkButtonText}>Edit / Rename</Text>
+                        </Pressable>
+                        <Pressable
+                          style={styles.linkButton}
+                          onPress={() => deleteHolding(holding)}
+                        >
+                          <Text style={[styles.linkButtonText, styles.linkDanger]}>
+                            Remove
+                          </Text>
+                        </Pressable>
+                      </View>
                     </View>
-                  </View>
-                ))
+                  );
+                })
               )}
             </>
           ) : (

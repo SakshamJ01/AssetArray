@@ -58,8 +58,21 @@ const AI_ANTHROPIC_RESEARCH_MODEL = process.env.AI_ANTHROPIC_RESEARCH_MODEL || "
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434";
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "llama3.2";
 
+const { DatabaseManager } = require("./db/mongo");
+const { MigrationService, DEFAULT_FIRM_ID } = require("./db/migration");
+const { auditLogger } = require("./audit/auditLogger");
+const { ROLES, PERMISSIONS, normalizeRole, hasPermission } = require("./auth/rbac");
+const { resolveTenant, requirePermission, enforceTenantScope } = require("./auth/middleware");
+const { createFirmRouter } = require("./firms/firmRoutes");
+const { createUserRouter } = require("./users/userRoutes");
+const { createClientRouter } = require("./clients/clientRoutes");
+const { createHouseholdRouter } = require("./households/householdRoutes");
+const { createPortfolioRouter } = require("./portfolios/portfolioRoutes");
+const { createAuditRouter } = require("./audit/auditRoutes");
+
 const rateLimitMap = new Map();
 const authAttemptMap = new Map();
+const dbManager = new DatabaseManager(MONGO_URI, MONGO_DB_NAME);
 const mongo = new MongoClient(MONGO_URI, {
   serverSelectionTimeoutMS: 5000,
   connectTimeoutMS: 10000,
@@ -130,7 +143,8 @@ function sanitizeUser(user) {
   return {
     id: user.id,
     username: user.username,
-    role: user.role,
+    role: normalizeRole(user.role),
+    firmId: user.firmId || DEFAULT_FIRM_ID,
     createdAt: user.createdAt,
     active: user.active,
   };
@@ -401,13 +415,15 @@ function validateStartupSecurity() {
 
 async function buildTokens(user) {
   const tokenVersion = crypto.randomUUID();
+  const firmId = user.firmId || DEFAULT_FIRM_ID;
+  const role = normalizeRole(user.role);
   const accessToken = signToken(
-    { sub: user.id, username: user.username, role: user.role, type: "access" },
+    { sub: user.id, username: user.username, role, firmId, type: "access" },
     TOKEN_SECRET,
     ACCESS_TOKEN_TTL_SECONDS
   );
   const refreshToken = signToken(
-    { sub: user.id, username: user.username, role: user.role, type: "refresh", tokenVersion },
+    { sub: user.id, username: user.username, role, firmId, type: "refresh", tokenVersion },
     REFRESH_SECRET,
     REFRESH_TOKEN_TTL_SECONDS
   );
@@ -415,6 +431,7 @@ async function buildTokens(user) {
   await sessionsCol.insertOne({
     id: tokenVersion,
     userId: user.id,
+    firmId,
     issuedAt: new Date().toISOString(),
     expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL_SECONDS * 1000).toISOString(),
     revoked: false,
@@ -437,7 +454,8 @@ function rateLimiter(req, res, next) {
 
 function requireAuth(req, res, next) {
   if (!AUTH_REQUIRED) {
-    req.user = { id: "dev-owner", username: "dev-owner", role: "advisor" };
+    req.user = { id: "dev-owner", username: "dev-owner", role: "ADVISOR", firmId: DEFAULT_FIRM_ID };
+    req.tenant = { firmId: DEFAULT_FIRM_ID };
     return next();
   }
   const authHeader = req.headers.authorization || "";
@@ -447,13 +465,17 @@ function requireAuth(req, res, next) {
     res.status(401).json({ error: "Unauthorized." });
     return;
   }
-  req.user = { id: payload.sub, username: payload.username, role: payload.role };
+  const firmId = payload.firmId || DEFAULT_FIRM_ID;
+  const role = normalizeRole(payload.role);
+  req.user = { id: payload.sub, username: payload.username, role, firmId };
+  req.tenant = { firmId };
   next();
 }
 
 function requireRole(roles) {
+  const normRoles = roles.map((r) => normalizeRole(r));
   return (req, res, next) => {
-    if (!req.user || !roles.includes(req.user.role)) {
+    if (!req.user || (!roles.includes(req.user.role) && !normRoles.includes(normalizeRole(req.user.role)))) {
       res.status(403).json({ error: "Forbidden." });
       return;
     }
@@ -479,35 +501,24 @@ async function initMongo() {
 
   try {
     console.log(`[MongoDB] Attempting connection to: ${MONGO_DB_NAME}...`);
-    await mongo.connect();
-    const db = mongo.db(MONGO_DB_NAME);
-    usersCol = db.collection("users");
-    sessionsCol = db.collection("refresh_sessions");
-    syncCol = db.collection("encrypted_sync_blobs");
-    broadcastsCol = db.collection("broadcast_campaigns");
-    auditCol = db.collection("audit_logs");
-    aiResearchCol = db.collection("ai_research_history");
-    advisorTasksCol = db.collection("advisor_tasks");
-    advisorActivityCol = db.collection("advisor_activity");
-    advisorDecisionsCol = db.collection("advisor_decisions");
+    const db = await dbManager.connect();
+    usersCol = dbManager.getCollection("users");
+    sessionsCol = dbManager.getCollection("sessions");
+    syncCol = dbManager.getCollection("sync");
+    broadcastsCol = dbManager.getCollection("broadcasts");
+    auditCol = dbManager.getCollection("legacyAudit");
+    aiResearchCol = dbManager.getCollection("aiResearch");
+    advisorTasksCol = dbManager.getCollection("advisorTasks");
+    advisorActivityCol = dbManager.getCollection("advisorActivity");
+    advisorDecisionsCol = dbManager.getCollection("advisorDecisions");
 
-    await Promise.allSettled([
-      usersCol.createIndex({ id: 1 }, { unique: true }),
-      usersCol.createIndex({ username: 1 }, { unique: true }),
-      sessionsCol.createIndex({ id: 1 }, { unique: true }),
-      sessionsCol.createIndex({ userId: 1 }),
-      sessionsCol.createIndex({ expiresAt: 1 }),
-      syncCol.createIndex({ ownerId: 1 }, { unique: true }),
-      broadcastsCol.createIndex({ campaignId: 1 }, { unique: true }),
-      broadcastsCol.createIndex({ createdAt: -1 }),
-      auditCol.createIndex({ date: -1 }),
-      aiResearchCol.createIndex({ timestamp: -1 }),
-      aiResearchCol.createIndex({ userId: 1, timestamp: -1 }),
-      advisorTasksCol.createIndex({ id: 1 }, { unique: true }),
-      advisorTasksCol.createIndex({ userId: 1, canonicalKey: 1 }),
-      advisorActivityCol.createIndex({ userId: 1, timestamp: -1 }),
-      advisorDecisionsCol.createIndex({ userId: 1, createdAt: -1 }),
-    ]);
+    auditLogger.setCollection(dbManager.getCollection("auditEvents"));
+
+    // Run idempotent single-firm data migration
+    const migrationReport = await MigrationService.runMigration(db);
+    if (migrationReport.usersMigrated > 0 || migrationReport.defaultFirmCreated) {
+      console.log(`[Migration] V4 Migration complete: ${JSON.stringify(migrationReport)}`);
+    }
 
     const adminUsername = process.env.ADMIN_USERNAME || "admin";
     const adminPassword = process.env.ADMIN_PASSWORD || "ChangeMeNow123!";
@@ -518,12 +529,14 @@ async function initMongo() {
       const passwordSalt = newPasswordSalt();
       await usersCol.insertOne({
         id: "advisor-admin",
+        firmId: DEFAULT_FIRM_ID,
         username: adminUsername,
-        role: "advisor",
+        role: "ADMIN",
         passwordSalt,
         passwordHash: hashPassword(adminPassword, passwordSalt),
         createdAt: new Date().toISOString(),
         active: true,
+        status: "ACTIVE",
       });
     } else if (!adminPasswordIsDefault && existing.active !== false) {
       // Repair path for the dedicated admin identity only: if the stored
@@ -540,6 +553,8 @@ async function initMongo() {
               passwordSalt,
               passwordHash: hashPassword(adminPassword, passwordSalt),
               active: true,
+              firmId: existing.firmId || DEFAULT_FIRM_ID,
+              role: "ADMIN",
               credentialsRepairedAt: new Date().toISOString(),
             },
           }
@@ -550,7 +565,7 @@ async function initMongo() {
         const passwordSalt = newPasswordSalt();
         await usersCol.updateOne(
           { username: adminUsername },
-          { $set: { passwordSalt, passwordHash: hashPassword(adminPassword, passwordSalt) } }
+          { $set: { passwordSalt, passwordHash: hashPassword(adminPassword, passwordSalt), firmId: existing.firmId || DEFAULT_FIRM_ID } }
         );
       }
     }
@@ -1068,17 +1083,19 @@ app.post("/api/sync", requireAuth, requireDb, async (req, res) => {
     res.status(400).json({ error: "ownerId and ciphertext are required." });
     return;
   }
-  // Enforce server-side ownership: non-admin users cannot write to other users' sync data
-  if (req.user.role !== "admin" && ownerId !== req.user.id && ownerId !== req.user.username) {
+  // Enforce server-side ownership and tenant boundary: non-admin users cannot write to other users' sync data
+  const userRole = normalizeRole(req.user.role);
+  if (userRole !== "ADMIN" && ownerId !== req.user.id && ownerId !== req.user.username) {
     res.status(403).json({ error: "Forbidden: You cannot modify sync data for another owner." });
     return;
   }
   const nextUpdatedAt = updatedAt || new Date().toISOString();
   await syncCol.updateOne(
-    { ownerId },
+    { ownerId, firmId: req.tenant.firmId },
     {
       $set: {
         ownerId,
+        firmId: req.tenant.firmId,
         ciphertext,
         updatedAt: nextUpdatedAt,
         updatedBy: req.user.username,
@@ -1087,22 +1104,23 @@ app.post("/api/sync", requireAuth, requireDb, async (req, res) => {
     },
     { upsert: true }
   );
-  await audit("sync.saved", { ownerId, userId: req.user.id, by: req.user.username });
+  await audit("sync.saved", { ownerId, firmId: req.tenant.firmId, userId: req.user.id, by: req.user.username });
   res.json({ ok: true, ownerId, updatedAt: nextUpdatedAt });
 });
 
 app.get("/api/sync/:ownerId", requireAuth, requireDb, async (req, res) => {
   // Enforce server-side ownership: non-admin users cannot read other users' sync data
-  if (req.user.role !== "admin" && req.params.ownerId !== req.user.id && req.params.ownerId !== req.user.username) {
+  const userRole = normalizeRole(req.user.role);
+  if (userRole !== "ADMIN" && req.params.ownerId !== req.user.id && req.params.ownerId !== req.user.username) {
     res.status(403).json({ error: "Forbidden: You cannot access sync data for another owner." });
     return;
   }
-  const record = await syncCol.findOne({ ownerId: req.params.ownerId });
+  const record = await syncCol.findOne({ ownerId: req.params.ownerId, firmId: req.tenant.firmId });
   if (!record) {
     res.status(404).json({ error: "Encrypted backup not found." });
     return;
   }
-  await audit("sync.read", { ownerId: req.params.ownerId, userId: req.user.id, by: req.user.username });
+  await audit("sync.read", { ownerId: req.params.ownerId, firmId: req.tenant.firmId, userId: req.user.id, by: req.user.username });
   res.json({ ciphertext: record.ciphertext, updatedAt: record.updatedAt });
 });
 
@@ -1905,6 +1923,17 @@ app.post("/api/advisor/brief", requireAuth, async (req, res) => {
     res.status(500).json({ error: "Failed to generate grounded advisor brief." });
   }
 });
+
+// ==========================================
+// ASSETARRAY V4.0 — DOMAIN MODULAR MONOLITH
+// ==========================================
+
+app.use("/api/v4/firms", requireAuth, resolveTenant, createFirmRouter(dbManager));
+app.use("/api/v4/users", requireAuth, resolveTenant, createUserRouter(dbManager, TOKEN_SECRET));
+app.use("/api/v4/clients", requireAuth, resolveTenant, createClientRouter(dbManager));
+app.use("/api/v4/households", requireAuth, resolveTenant, createHouseholdRouter(dbManager));
+app.use("/api/v4/portfolios", requireAuth, resolveTenant, createPortfolioRouter(dbManager));
+app.use("/api/v4/audit", requireAuth, resolveTenant, createAuditRouter());
 
 app.use((_req, res) => {
   res.status(404).json({ error: "Not found." });

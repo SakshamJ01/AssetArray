@@ -594,4 +594,117 @@ export interface WhatIfScenario {
   };
 }
 
+// ==========================================
+// ASSETARRAY V4.0 — FOUNDATION ENTITY TYPES
+// ==========================================
+
+export type V4Role = "ADMIN" | "ADVISOR" | "ANALYST" | "OPERATIONS" | "COMPLIANCE";
+
+export type V4Permission =
+  | "client:read"
+  | "client:write"
+  | "household:read"
+  | "household:write"
+  | "portfolio:read"
+  | "portfolio:write"
+  | "financial:read"
+  | "tax:read"
+  | "tax:write"
+  | "reports:read"
+  | "reports:generate"
+  | "documents:read"
+  | "documents:write"
+  | "tasks:read"
+  | "tasks:write"
+  | "decisions:read"
+  | "decisions:write"
+  | "audit:read"
+  | "users:manage"
+  | "firm:configure"
+  | "sync:manage";
+
+export interface FirmBranding {
+  logoUrl?: string | null;
+  primaryColor?: string;
+  accentColor?: string;
+  firmDisplayName?: string;
+}
+
+export interface FirmSettings {
+  baseCurrency?: string;
+  defaultBenchmark?: string;
+  taxYear?: string;
+  complianceEnforcement?: boolean;
+}
+
+export interface Firm {
+  id: string;
+  name: string;
+  sebiRegistrationNo?: string | null;
+  riaLicense?: string | null;
+  status: "ACTIVE" | "SUSPENDED" | "INACTIVE";
+  tier?: string;
+  branding: FirmBranding;
+  settings: FirmSettings;
+  createdAt: string;
+}
+
+export interface Household {
+  id: string;
+  firmId: string;
+  name: string;
+  primaryClientId?: string | null;
+  memberClientIds: string[];
+  consolidatedAum: number;
+  currency: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface ClientMember {
+  id: string;
+  firmId: string;
+  householdId?: string | null;
+  name: string;
+  email?: string | null;
+  phone?: string | null;
+  category: Category;
+  riskProfile: string;
+  riskProfileScore: number;
+  pan?: string | null;
+  taxStatus: "Resident" | "NRI" | "HUF" | "Corporate";
+  kycStatus: "VERIFIED" | "PENDING" | "EXPIRED";
+  relationshipRole: "PRIMARY" | "SPOUSE" | "CHILD" | "HUF_KARTA" | "MEMBER";
+  status: "Active" | "Lead" | "Inactive";
+  createdAt: string;
+}
+
+export interface V4AuditEvent {
+  id: string;
+  firmId: string;
+  actorId: string;
+  actorUsername: string;
+  actorRole: string;
+  action: string;
+  entityType: string;
+  entityId?: string | null;
+  timestamp: string;
+  beforeSnapshot?: any;
+  afterSnapshot?: any;
+  reason?: string | null;
+  metadata?: Record<string, any>;
+  prevHash?: string | null;
+  sha256Hash: string;
+  ipAddress?: string;
+}
+
+export interface TenantContext {
+  firmId: string;
+  firmName: string;
+  role: V4Role;
+  permissions: V4Permission[];
+}
+
+
 

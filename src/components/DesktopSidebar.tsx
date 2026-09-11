@@ -18,6 +18,8 @@ export interface DesktopSidebarProps {
   onLockDesk: () => void;
   dueClientsCount?: number;
   advisorName?: string;
+  advisorRole?: string;
+  firmName?: string;
   syncStatus?: string;
   isPro?: boolean;
   onOpenProModal?: () => void;
@@ -43,6 +45,8 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
   onLockDesk,
   dueClientsCount = 0,
   advisorName = "Senior Wealth Advisor",
+  advisorRole = "ADVISOR",
+  firmName = "Primary Practice",
   syncStatus = "Vault Synced",
   isPro = true,
   onOpenProModal,
@@ -202,7 +206,7 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
           <Text style={[styles.advisorNameText, { color: theme.colors.textPrimary }]} numberOfLines={1}>
             {advisorName}
           </Text>
-          <Text style={styles.advisorRoleText}>Managing Director</Text>
+          <Text style={styles.advisorRoleText} numberOfLines={1}>{advisorRole} • {firmName}</Text>
         </View>
         <Pressable
           onPress={onLockDesk}

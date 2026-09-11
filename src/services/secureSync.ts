@@ -63,6 +63,7 @@ export type AuthUser = {
   id: string;
   username: string;
   role: string;
+  firmId?: string;
   createdAt?: string;
   active?: boolean;
 };

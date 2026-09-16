@@ -32,42 +32,13 @@ const manifestContent = {
 };
 fs.writeFileSync(manifestPath, JSON.stringify(manifestContent, null, 2), 'utf8');
 
-const buildTimestamp = Date.now();
-const swContent = `const CACHE_NAME = "asset-array-pwa-v5-" + ${buildTimestamp};
-const STATIC_ASSETS = ["/", "/index.html", "/manifest.json", "/favicon.ico"];
-
-self.addEventListener("install", (event) => {
-  self.skipWaiting();
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
-  );
-});
-
+// 2. Write self-destructing service-worker.js to unregister legacy PWA SWs
+const swContent = `self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
-      )
-    )
-  );
-  self.clients.claim();
-});
-
-self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET" || event.request.url.includes("/api/")) {
-    return;
-  }
-  event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        if (response && response.status === 200) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-        }
-        return response;
-      })
-      .catch(() => caches.match(event.request).then((cached) => cached || caches.match("/index.html")))
+    caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k))))
+      .then(() => self.registration.unregister())
+      .then(() => self.clients.claim())
   );
 });
 `;
@@ -76,11 +47,11 @@ fs.writeFileSync(swPath, swContent, 'utf8');
 // 3. Patch index.html (idempotent: marker comment prevents double-injection)
 if (fs.existsSync(indexPath)) {
   let html = fs.readFileSync(indexPath, 'utf8');
-  const MARKER = "<!-- asset-array-postbuild-v1 -->";
+  const MARKER = "<!-- asset-array-postbuild-v2 -->";
 
   if (!html.includes(MARKER)) {
-  // Insert Inter font preconnect
-  const fontLink = `
+  // Insert Inter font preconnect & resilience script in head
+  const headAdditions = `
     ${MARKER}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -88,9 +59,19 @@ if (fs.existsSync(indexPath)) {
     <link rel="manifest" href="/manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Asset Array">`;
+    <meta name="apple-mobile-web-app-title" content="Asset Array">
+    <script>
+      window.addEventListener('error', function(e) {
+        if (e.target && (e.target.tagName === 'SCRIPT' || e.target.tagName === 'LINK')) {
+          if (!sessionStorage.getItem('aa_reloaded')) {
+            sessionStorage.setItem('aa_reloaded', '1');
+            window.location.reload(true);
+          }
+        }
+      }, true);
+    </script>`;
 
-  html = html.replace('</head>', `${fontLink}\n</head>`);
+  html = html.replace('</head>', `${headAdditions}\n</head>`);
 
   // Insert dark background & Inter font into reset style
   html = html.replace(
@@ -102,24 +83,27 @@ if (fs.existsSync(indexPath)) {
     '#root {\n        display: flex;\n        height: 100%;\n        flex: 1;\n        background-color: #030712;\n      }'
   );
 
-  // Insert service-worker registration script before </body>
-  const swScript = `
-  <script data-aa-postbuild="sw">
+  // Insert service-worker cleanup script before </body>
+  const swCleanupScript = `
+  <script data-aa-postbuild="sw-cleanup">
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function() {
-        navigator.serviceWorker.register('/service-worker.js').then(function(reg) {
-          reg.update();
-        }).catch(function() {});
-      });
+      navigator.serviceWorker.getRegistrations().then(function(regs) {
+        for (var r of regs) { r.unregister(); }
+      }).catch(function() {});
+    }
+    if (typeof caches !== 'undefined') {
+      caches.keys().then(function(keys) {
+        keys.forEach(function(k) { caches.delete(k); });
+      }).catch(function() {});
     }
   </script>`;
 
-  if (!html.includes('data-aa-postbuild="sw"')) {
-    html = html.replace('</body>', `${swScript}\n</body>`);
+  if (!html.includes('data-aa-postbuild="sw-cleanup"')) {
+    html = html.replace('</body>', `${swCleanupScript}\n</body>`);
   }
 
   fs.writeFileSync(indexPath, html, 'utf8');
-  console.log('Successfully injected PWA assets, font preconnect, and dark reset into dist/index.html');
+  console.log('Successfully injected font preconnect, dark reset, and cache cleanup into dist/index.html');
   } else {
     console.log('postbuild: already applied, skipping duplicate injection.');
   }

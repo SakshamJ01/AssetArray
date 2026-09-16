@@ -32,15 +32,15 @@ const manifestContent = {
 };
 fs.writeFileSync(manifestPath, JSON.stringify(manifestContent, null, 2), 'utf8');
 
-// 2. Write service-worker.js
-const swContent = `const CACHE_NAME = "asset-array-pwa-v3";
+const buildTimestamp = Date.now();
+const swContent = `const CACHE_NAME = "asset-array-pwa-v5-" + ${buildTimestamp};
 const STATIC_ASSETS = ["/", "/index.html", "/manifest.json", "/favicon.ico"];
 
 self.addEventListener("install", (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
   );
-  self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
@@ -59,30 +59,15 @@ self.addEventListener("fetch", (event) => {
     return;
   }
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) {
-        fetch(event.request)
-          .then((res) => {
-            if (res && res.status === 200) {
-              caches.open(CACHE_NAME).then((c) => c.put(event.request, res));
-            }
-          })
-          .catch(() => {});
-        return cached;
-      }
-      return fetch(event.request)
-        .then((res) => {
-          if (!res || res.status !== 200 || res.type !== "basic") return res;
-          const clone = res.clone();
-          caches.open(CACHE_NAME).then((c) => c.put(event.request, clone));
-          return res;
-        })
-        .catch(() => {
-          if (event.request.mode === "navigate") {
-            return caches.match("/index.html");
-          }
-        });
-    })
+    fetch(event.request)
+      .then((response) => {
+        if (response && response.status === 200) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        }
+        return response;
+      })
+      .catch(() => caches.match(event.request).then((cached) => cached || caches.match("/index.html")))
   );
 });
 `;
@@ -122,7 +107,9 @@ if (fs.existsSync(indexPath)) {
   <script data-aa-postbuild="sw">
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
-        navigator.serviceWorker.register('/service-worker.js').catch(function() {});
+        navigator.serviceWorker.register('/service-worker.js').then(function(reg) {
+          reg.update();
+        }).catch(function() {});
       });
     }
   </script>`;

@@ -37,6 +37,37 @@ export class OllamaProvider implements AiProvider {
     return true; // Local Ollama is always considered configured as zero-cost local tier
   }
 
+  private resolvedModel?: string;
+
+  public async getActiveModel(): Promise<string> {
+    if (this.resolvedModel) return this.resolvedModel;
+    const envModel =
+      typeof process !== "undefined"
+        ? process.env?.OLLAMA_MODEL || process.env?.EXPO_PUBLIC_OLLAMA_MODEL
+        : undefined;
+    if (envModel) {
+      this.resolvedModel = envModel;
+      return this.resolvedModel;
+    }
+    try {
+      const res = await fetch(`${this.localBaseUrl}/api/tags`);
+      if (res.ok) {
+        const data = (await res.json()) as { models?: Array<{ name: string; model?: string }> };
+        if (data?.models && data.models.length > 0) {
+          const match = data.models.find(
+            (m) => m.name === this.defaultModel || m.model === this.defaultModel
+          );
+          this.resolvedModel = match ? this.defaultModel : data.models[0].name;
+          return this.resolvedModel;
+        }
+      }
+    } catch {
+      // ignore discovery failure and fallback to defaultModel
+    }
+    this.resolvedModel = this.defaultModel;
+    return this.resolvedModel;
+  }
+
   public async streamResponse(
     query: string,
     taskType: AiTaskType,
@@ -44,24 +75,25 @@ export class OllamaProvider implements AiProvider {
     callbacks: AiStreamCallbacks,
     options?: { timeoutMs?: number; signal?: AbortSignal }
   ): Promise<void> {
+    const activeModel = await this.getActiveModel();
     const timeout = options?.timeoutMs || 20000;
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeout);
 
-    callbacks.onStateChange?.("CONNECTING", `Connecting to local Ollama model (${this.defaultModel})...`);
+    callbacks.onStateChange?.("CONNECTING", `Connecting to local Ollama model (${activeModel})...`);
 
     const prompt = buildTaskPrompt(query, taskType, context);
     const startTime = Date.now();
 
     // 1. First attempt through backend proxy
     try {
-      callbacks.onStateChange?.("STREAMING", `Streaming from Ollama (${this.defaultModel})...`);
+      callbacks.onStateChange?.("STREAMING", `Streaming from Ollama (${activeModel})...`);
       const response = await fetch(`${this.backendUrl}/api/ai/stream`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           provider: "ollama",
-          model: this.defaultModel,
+          model: activeModel,
           query: prompt,
           taskType,
           portfolioContext: {
@@ -147,7 +179,7 @@ export class OllamaProvider implements AiProvider {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: this.defaultModel,
+          model: activeModel,
           prompt,
           stream: true,
         }),
@@ -183,7 +215,7 @@ export class OllamaProvider implements AiProvider {
               callbacks.onStateChange?.("COMPLETED");
               callbacks.onComplete?.({
                 provider: this.id,
-                model: this.defaultModel,
+                model: activeModel,
                 durationMs: Date.now() - startTime,
                 groundedAt: new Date().toISOString(),
                 taskType,
@@ -198,7 +230,7 @@ export class OllamaProvider implements AiProvider {
       callbacks.onStateChange?.("COMPLETED");
       callbacks.onComplete?.({
         provider: this.id,
-        model: this.defaultModel,
+        model: activeModel,
         durationMs: Date.now() - startTime,
         groundedAt: new Date().toISOString(),
         taskType,

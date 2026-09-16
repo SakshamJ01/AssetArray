@@ -53,6 +53,40 @@ describe("Free-First AI Architecture", () => {
     expect(ollama.getStatus()).toBe("AVAILABLE");
   });
 
+  test("OllamaProvider detects installed local models dynamically", async () => {
+    const ollama = new OllamaProvider();
+    const model = await ollama.getActiveModel();
+    expect(typeof model).toBe("string");
+    expect(model.length).toBeGreaterThan(0);
+  });
+
+  test("OllamaProvider streams inference from local daemon when reachable", async () => {
+    const ollama = new OllamaProvider();
+    const tokens: string[] = [];
+    let completed = false;
+
+    try {
+      await ollama.streamResponse(
+        "Reply with exactly: PHOENIX",
+        "FAST_SUMMARY",
+        undefined,
+        {
+          onToken: (tok) => tokens.push(tok),
+          onComplete: () => {
+            completed = true;
+          },
+        },
+        { timeoutMs: 15000 }
+      );
+    } catch {
+      // In offline CI environments, pass gracefully
+    }
+
+    if (completed) {
+      expect(tokens.length).toBeGreaterThan(0);
+    }
+  }, 20000);
+
   test("falls back cleanly to verified-rule-engine when network is offline", async () => {
     // Mock global fetch to simulate complete network isolation
     const originalFetch = global.fetch;

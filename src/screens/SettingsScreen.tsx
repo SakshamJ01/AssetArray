@@ -462,10 +462,10 @@ const localStyles = StyleSheet.create({
   actionBadge: {
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: radiusTokens.sm,
-    backgroundColor: "rgba(30, 41, 59, 0.8)",
+    borderRadius: 6,
+    backgroundColor: "#111C2E",
     borderWidth: 1,
-    borderColor: surfaceTokens.borderDefault,
+    borderColor: "rgba(255, 255, 255, 0.08)",
   },
   actionBadgeText: {
     fontSize: 11,
@@ -474,7 +474,7 @@ const localStyles = StyleSheet.create({
   },
   // Data Sources Table
   tableContainer: {
-    borderRadius: radiusTokens.sm,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: surfaceTokens.borderHairline,
     overflow: "hidden",
@@ -516,7 +516,7 @@ const localStyles = StyleSheet.create({
   statusPill: {
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: radiusTokens.none,
+    borderRadius: 4,
     borderWidth: 1,
   },
   statusPillText: {
@@ -533,10 +533,10 @@ const localStyles = StyleSheet.create({
   btnSecondary: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: radiusTokens.sm,
-    backgroundColor: "rgba(30, 41, 59, 0.8)",
+    borderRadius: 6,
+    backgroundColor: "#111C2E",
     borderWidth: 1,
-    borderColor: surfaceTokens.borderDefault,
+    borderColor: "rgba(255, 255, 255, 0.08)",
   },
   btnSecondaryText: {
     fontSize: 11,
@@ -546,7 +546,7 @@ const localStyles = StyleSheet.create({
   btnOutline: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: radiusTokens.sm,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: surfaceTokens.borderDefault,
   },
@@ -558,7 +558,7 @@ const localStyles = StyleSheet.create({
   btnPaywall: {
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: radiusTokens.sm,
+    borderRadius: 6,
     backgroundColor: "rgba(224, 168, 76, 0.15)",
     borderWidth: 1,
     borderColor: surfaceTokens.brand,

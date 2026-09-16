@@ -393,6 +393,7 @@ const styles = StyleSheet.create({
   driftValue: {
     fontSize: 24,
     fontWeight: "900",
+    fontVariant: ["tabular-nums"],
     marginTop: 2,
   },
   statusPill: {
@@ -460,6 +461,7 @@ const styles = StyleSheet.create({
   valText: {
     color: "#F8FAFC",
     fontWeight: "700",
+    fontVariant: ["tabular-nums"],
   },
   arrowText: {
     color: "#64748B",
@@ -468,6 +470,7 @@ const styles = StyleSheet.create({
   driftDeltaText: {
     fontSize: 12,
     fontWeight: "700",
+    fontVariant: ["tabular-nums"],
   },
   tlhSection: {
     marginTop: 16,
@@ -512,6 +515,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "900",
     color: "#F8FAFC",
+    fontVariant: ["tabular-nums"],
     marginTop: 2,
   },
   emptyTlhText: {

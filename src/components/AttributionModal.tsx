@@ -453,6 +453,7 @@ const styles = StyleSheet.create({
   kpiValue: {
     fontSize: 18,
     fontWeight: "800",
+    fontVariant: ["tabular-nums"],
   },
   narrativeBox: {
     flexDirection: "row",
@@ -493,6 +494,7 @@ const styles = StyleSheet.create({
   effectVal: {
     fontSize: 16,
     fontWeight: "800",
+    fontVariant: ["tabular-nums"],
     marginBottom: 2,
   },
   effectSub: {
@@ -524,5 +526,6 @@ const styles = StyleSheet.create({
   },
   tdCell: {
     fontSize: 11.5,
+    fontVariant: ["tabular-nums"],
   },
 });

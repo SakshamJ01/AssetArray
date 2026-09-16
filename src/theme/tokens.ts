@@ -137,10 +137,13 @@ export const spacingTokens = {
 export const surfaceTokens = {
   background: "#030712",
   surface: "#0B1222",
-  surfaceMuted: "#101B30",
-  surfaceSubtle: "#16233B",
+  surfaceMuted: "#111C2E",
+  surfaceElevated: "#16243C",
+  surfaceSubtle: "#1C2D4A",
   borderHairline: "rgba(255, 255, 255, 0.08)",
   borderDefault: "rgba(255, 255, 255, 0.12)",
+  borderGold: "rgba(224, 168, 76, 0.28)",
   brand: "#E0A84C",
   brandMuted: "rgba(224, 168, 76, 0.14)",
+  glassOverlay: "rgba(11, 17, 30, 0.75)",
 } as const;

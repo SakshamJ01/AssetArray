@@ -145,11 +145,13 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   barContainer: {
-    height: 10,
-    borderRadius: 6,
+    height: 8,
+    borderRadius: 999,
     flexDirection: "row",
     overflow: "hidden",
     width: "100%",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
   },
   segment: {
     height: "100%",
@@ -176,5 +178,6 @@ const styles = StyleSheet.create({
   },
   legendPercent: {
     fontWeight: "700",
+    fontVariant: ["tabular-nums"],
   },
 });

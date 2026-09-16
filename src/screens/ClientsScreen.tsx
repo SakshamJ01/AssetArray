@@ -107,9 +107,9 @@ const ClientRowItem = React.memo<ClientRowItemProps>(
     }, [client.portfolio, isDue]);
 
     return (
-      <View style={[styles.clientRowShell, { marginBottom: 6 }]}>
+      <View style={[styles.clientRowShell, { marginBottom: 8 }]}>
         <Pressable
-          style={[styles.selectorPill, selected ? styles.selectorPillActive : null, { borderRadius: 4 }]}
+          style={[styles.selectorPill, selected ? styles.selectorPillActive : null, { borderRadius: 8 }]}
           onPress={() => onToggleSelected(client.id)}
         >
           <Text
@@ -126,53 +126,58 @@ const ClientRowItem = React.memo<ClientRowItemProps>(
             styles.clientRow,
             active ? styles.clientRowActive : null,
             {
-              borderRadius: 4,
+              borderRadius: 8,
               borderWidth: 1,
-              borderColor: active ? theme.colors.brand : theme.colors.border,
-              paddingVertical: 10,
-              paddingHorizontal: 12,
+              borderColor: active ? theme.colors.brand : "rgba(255, 255, 255, 0.08)",
+              backgroundColor: active ? "rgba(224, 168, 76, 0.06)" : theme.colors.surface,
+              paddingVertical: 12,
+              paddingHorizontal: 14,
+              shadowColor: "#000",
+              shadowOpacity: 0.12,
+              shadowRadius: 8,
+              shadowOffset: { width: 0, height: 2 },
             },
           ]}
           onPress={() => onSelectClient(client.id)}
         >
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 10, flex: 1 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12, flex: 1 }}>
             <Image
               source={{ uri: avatarUri }}
-              style={[styles.clientListAvatar, { borderRadius: 4, width: 34, height: 34 }]}
+              style={[styles.clientListAvatar, { borderRadius: 8, width: 36, height: 36 }]}
             />
             <View style={[styles.clientRowMain, { flex: 1 }]}>
               <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 4 }}>
-                <Text style={[styles.clientName, { fontSize: 13, fontWeight: "700", color: theme.colors.textPrimary }]}>
+                <Text style={[styles.clientName, { fontSize: 14, fontWeight: "700", color: theme.colors.textPrimary, letterSpacing: -0.2 }]}>
                   {client.name}
                 </Text>
-                <Text style={{ fontSize: 12, fontWeight: "800", color: theme.colors.brand, fontVariant: ["tabular-nums"] }}>
+                <Text style={{ fontSize: 13, fontWeight: "800", color: theme.colors.brand, fontVariant: ["tabular-nums"], letterSpacing: -0.2 }}>
                   {formattedAum}
                 </Text>
               </View>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 3, flexWrap: "wrap" }}>
-                <View style={{ paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4, backgroundColor: theme.colors.surfaceStrong, borderWidth: 1, borderColor: theme.colors.border, maxWidth: "100%", flexShrink: 1 }}>
-                  <Text style={{ fontSize: 9, fontWeight: "700", color: theme.colors.textSecondary }} numberOfLines={1}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 4, flexWrap: "wrap" }}>
+                <View style={{ paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, backgroundColor: theme.colors.surfaceStrong, borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.08)", maxWidth: "100%", flexShrink: 1 }}>
+                  <Text style={{ fontSize: 10, fontWeight: "700", color: theme.colors.textSecondary, letterSpacing: 0.2 }} numberOfLines={1}>
                     {client.category || "HNI"}
                   </Text>
                 </View>
-                <View style={{ paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4, backgroundColor: theme.colors.surfaceStrong, borderWidth: 1, borderColor: theme.colors.border, maxWidth: "100%", flexShrink: 1 }}>
-                  <Text style={{ fontSize: 9, fontWeight: "700", color: theme.colors.textMuted }} numberOfLines={1}>
+                <View style={{ paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, backgroundColor: theme.colors.surfaceStrong, borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.08)", maxWidth: "100%", flexShrink: 1 }}>
+                  <Text style={{ fontSize: 10, fontWeight: "700", color: theme.colors.textMuted }} numberOfLines={1}>
                     {client.riskProfile || "Moderate"}
                   </Text>
                 </View>
-                <View style={{ paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4, backgroundColor: healthScore >= 75 ? "rgba(16, 185, 129, 0.12)" : "rgba(245, 158, 11, 0.12)", borderWidth: 1, borderColor: healthScore >= 75 ? "#10B981" : "#F59E0B" }}>
-                  <Text style={{ fontSize: 9, fontWeight: "800", color: healthScore >= 75 ? "#10B981" : "#F59E0B", fontVariant: ["tabular-nums"] }}>
+                <View style={{ paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, backgroundColor: healthScore >= 75 ? "rgba(16, 185, 129, 0.12)" : "rgba(245, 158, 11, 0.12)", borderWidth: 1, borderColor: healthScore >= 75 ? "rgba(16, 185, 129, 0.3)" : "rgba(245, 158, 11, 0.3)" }}>
+                  <Text style={{ fontSize: 10, fontWeight: "800", color: healthScore >= 75 ? "#10B981" : "#F59E0B", fontVariant: ["tabular-nums"] }}>
                     H:{healthScore}
                   </Text>
                 </View>
-                <Text style={{ fontSize: 10, color: theme.colors.textMuted, marginLeft: "auto" }}>
+                <Text style={{ fontSize: 11, color: theme.colors.textMuted, marginLeft: "auto" }}>
                   Review: {formattedDate}
                 </Text>
               </View>
             </View>
           </View>
           {isDue ? (
-            <View style={[styles.dueBadge, { borderRadius: 4, backgroundColor: "rgba(239, 68, 68, 0.15)", borderWidth: 1, borderColor: "#EF4444" }]}>
+            <View style={[styles.dueBadge, { borderRadius: 6, backgroundColor: "rgba(239, 68, 68, 0.15)", borderWidth: 1, borderColor: "rgba(239, 68, 68, 0.35)", paddingHorizontal: 8, paddingVertical: 3 }]}>
               <Text style={[styles.dueBadgeText, { color: "#EF4444", fontWeight: "800", fontSize: 10 }]}>Due</Text>
             </View>
           ) : null}

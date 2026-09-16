@@ -115,16 +115,17 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
               and risk visibility.
             </Text>
           </View>
-          <View style={[styles.actionGroupWrap, { justifyContent: "flex-start" }]}>
+          <View style={[styles.actionGroupWrap, { justifyContent: "flex-start", gap: 8 }]}>
             <Pressable
               style={[
                 styles.secondaryButton,
                 {
                   paddingHorizontal: 12,
-                  paddingVertical: 8,
-                  backgroundColor: "rgba(224, 168, 76, 0.15)",
-                  borderColor: "rgba(224, 168, 76, 0.4)",
+                  paddingVertical: 7,
+                  backgroundColor: "#111C2E",
+                  borderColor: "rgba(224, 168, 76, 0.3)",
                   borderWidth: 1,
+                  borderRadius: 8,
                 },
               ]}
               onPress={() => setIsRebalanceOpen(true)}
@@ -138,10 +139,11 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
                 styles.secondaryButton,
                 {
                   paddingHorizontal: 12,
-                  paddingVertical: 8,
-                  backgroundColor: "rgba(239, 68, 68, 0.12)",
-                  borderColor: "rgba(239, 68, 68, 0.35)",
+                  paddingVertical: 7,
+                  backgroundColor: "#111C2E",
+                  borderColor: "rgba(239, 68, 68, 0.3)",
                   borderWidth: 1,
+                  borderRadius: 8,
                 },
               ]}
               onPress={() => setIsStressTestOpen(true)}
@@ -155,15 +157,16 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
                 styles.secondaryButton,
                 {
                   paddingHorizontal: 12,
-                  paddingVertical: 8,
-                  backgroundColor: "rgba(13, 148, 136, 0.12)",
-                  borderColor: "rgba(13, 148, 136, 0.4)",
+                  paddingVertical: 7,
+                  backgroundColor: "#111C2E",
+                  borderColor: "rgba(56, 189, 248, 0.3)",
                   borderWidth: 1,
+                  borderRadius: 8,
                 },
               ]}
               onPress={() => setIsAttributionOpen(true)}
             >
-              <Text style={[styles.secondaryButtonText, { color: "#0D9488", fontWeight: "700" }]}>
+              <Text style={[styles.secondaryButtonText, { color: "#38BDF8", fontWeight: "700" }]}>
                 📊 Attribution
               </Text>
             </Pressable>
@@ -172,10 +175,11 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
                 styles.secondaryButton,
                 {
                   paddingHorizontal: 12,
-                  paddingVertical: 8,
-                  backgroundColor: "rgba(16, 185, 129, 0.12)",
-                  borderColor: "rgba(16, 185, 129, 0.4)",
+                  paddingVertical: 7,
+                  backgroundColor: "#111C2E",
+                  borderColor: "rgba(16, 185, 129, 0.3)",
                   borderWidth: 1,
+                  borderRadius: 8,
                 },
               ]}
               onPress={() => setIsTaxStudioOpen(true)}
@@ -189,10 +193,11 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
                 styles.secondaryButton,
                 {
                   paddingHorizontal: 12,
-                  paddingVertical: 8,
-                  backgroundColor: "rgba(99, 102, 241, 0.12)",
-                  borderColor: "rgba(99, 102, 241, 0.4)",
+                  paddingVertical: 7,
+                  backgroundColor: "#111C2E",
+                  borderColor: "rgba(129, 140, 248, 0.3)",
                   borderWidth: 1,
+                  borderRadius: 8,
                 },
               ]}
               onPress={() => setIsScenarioOpen(true)}
@@ -206,10 +211,11 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
                 styles.secondaryButton,
                 {
                   paddingHorizontal: 12,
-                  paddingVertical: 8,
-                  backgroundColor: "rgba(224, 168, 76, 0.18)",
-                  borderColor: "rgba(224, 168, 76, 0.5)",
+                  paddingVertical: 7,
+                  backgroundColor: "#111C2E",
+                  borderColor: "rgba(224, 168, 76, 0.4)",
                   borderWidth: 1,
+                  borderRadius: 8,
                 },
               ]}
               onPress={() => setIsMemoOpen(true)}
@@ -219,7 +225,10 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
               </Text>
             </Pressable>
             <Pressable
-              style={[styles.primaryButton, { paddingHorizontal: 14, paddingVertical: 8 }]}
+              style={[
+                styles.primaryButton,
+                { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 8 },
+              ]}
               onPress={() => void refreshLiveMarketPrices()}
               disabled={isMarketRefreshing}
             >

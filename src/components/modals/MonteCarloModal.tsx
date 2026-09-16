@@ -802,6 +802,7 @@ const styles = StyleSheet.create({
     fontSize: 34,
     fontWeight: "900",
     letterSpacing: -0.5,
+    fontVariant: ["tabular-nums"],
     marginVertical: 2,
   },
   probSubtext: {
@@ -825,6 +826,7 @@ const styles = StyleSheet.create({
   miniVal: {
     fontSize: 15,
     fontWeight: "800",
+    fontVariant: ["tabular-nums"],
     marginTop: 2,
   },
   chartCard: {

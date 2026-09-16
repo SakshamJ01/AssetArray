@@ -547,10 +547,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   searchInput: {
-    backgroundColor: "#0F172A",
+    backgroundColor: "#111C2E",
     borderColor: "rgba(255, 255, 255, 0.08)",
     borderWidth: 1,
-    borderRadius: radiusTokens.input,
+    borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
     color: "#F8FAFC",
@@ -565,14 +565,14 @@ const styles = StyleSheet.create({
   filterChip: {
     paddingHorizontal: 10,
     paddingVertical: 5,
-    borderRadius: radiusTokens.badge,
-    backgroundColor: "#0F172A",
+    borderRadius: 6,
+    backgroundColor: "#111C2E",
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.08)",
   },
   filterChipActive: {
     backgroundColor: "rgba(224, 168, 76, 0.15)",
-    borderColor: "rgba(224, 168, 76, 0.35)",
+    borderColor: "rgba(224, 168, 76, 0.45)",
   },
   filterChipText: {
     fontSize: 11,
@@ -590,8 +590,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   tableCard: {
-    backgroundColor: "#0B1222",
-    borderRadius: radiusTokens.none,
+    backgroundColor: "#0B111E",
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.08)",
     overflow: "hidden",
@@ -599,7 +599,7 @@ const styles = StyleSheet.create({
   tableHeaderRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#101826",
+    backgroundColor: "#080E1A",
     paddingHorizontal: 12,
     paddingVertical: 9,
     borderBottomWidth: 1,
@@ -618,10 +618,10 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: "rgba(255, 255, 255, 0.05)",
-    backgroundColor: "#0B1222",
+    backgroundColor: "#0B111E",
   },
   tableRowAlt: {
-    backgroundColor: "#0D1629",
+    backgroundColor: "#0E1524",
   },
   assetName: {
     fontSize: 12,
@@ -647,7 +647,7 @@ const styles = StyleSheet.create({
   tableActionBtn: {
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: radiusTokens.button,
+    borderRadius: 6,
     backgroundColor: "rgba(224, 168, 76, 0.12)",
     borderWidth: 1,
     borderColor: "rgba(224, 168, 76, 0.3)",
@@ -670,8 +670,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   mobileCard: {
-    backgroundColor: "#0B1222",
-    borderRadius: radiusTokens.md,
+    backgroundColor: "#0B111E",
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.08)",
     overflow: "hidden",
@@ -690,7 +690,7 @@ const styles = StyleSheet.create({
   mobileDetailPanel: {
     borderTopWidth: 1,
     borderTopColor: "rgba(255, 255, 255, 0.06)",
-    backgroundColor: "#080E1B",
+    backgroundColor: "#070D18",
     padding: 12,
     gap: 10,
   },

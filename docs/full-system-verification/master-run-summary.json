@@ -1,11 +1,11 @@
 {
-  "timestamp": "2026-09-06T07:34:36.177Z",
+  "timestamp": "2026-09-16T17:58:44.252Z",
   "steps": [
     {
       "name": "TypeScript Static Type Check",
       "command": "npm run typecheck",
       "status": "PASSED",
-      "durationSec": "6.5"
+      "durationSec": "7.2"
     },
     {
       "name": "Backend Server Syntax Validation",
@@ -17,32 +17,34 @@
       "name": "Unit & Integration Test Suites",
       "command": "npm test",
       "status": "PASSED",
-      "durationSec": "6.7"
+      "durationSec": "10.1"
     },
     {
       "name": "AI Integration & Grounding Audit",
       "command": "node scripts/run-ai-integration-test.js",
       "status": "PASSED",
-      "durationSec": "2.2"
+      "durationSec": "0.2"
     },
     {
       "name": "Desktop Web E2E Validation",
       "command": "node scripts/run-e2e-browser-validation.js",
-      "status": "PASSED",
-      "durationSec": "33.5"
+      "status": "FAILED",
+      "durationSec": "2.7",
+      "error": "Command failed: node scripts/run-e2e-browser-validation.js"
     },
     {
       "name": "Mobile Device Emulation Audit",
       "command": "node scripts/run-mobile-e2e-validation.js",
-      "status": "PASSED",
-      "durationSec": "38.8"
+      "status": "FAILED",
+      "durationSec": "0.3",
+      "error": "Command failed: node scripts/run-mobile-e2e-validation.js"
     },
     {
       "name": "Production Web Export & Build",
       "command": "npm run build:web",
       "status": "PASSED",
-      "durationSec": "6.9"
+      "durationSec": "6.7"
     }
   ],
-  "overallStatus": "PASSED"
+  "overallStatus": "FAILED"
 }

@@ -462,10 +462,52 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
         {/* Left Column: Client List */}
         <View style={styles.column}>
           <View style={[styles.panel, { borderRadius: 4, borderWidth: 1 }]}>
-            <Text style={styles.panelTitle}>Client roster</Text>
-            <Text style={[styles.panelSubtitle, { marginBottom: 10 }]}>
-              {filteredClients.length} visible client{filteredClients.length === 1 ? "" : "s"} in this view.
-            </Text>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10, flexWrap: "wrap", gap: 8 }}>
+              <View>
+                <Text style={styles.panelTitle}>Client roster</Text>
+                <Text style={[styles.panelSubtitle, { marginBottom: 0 }]}>
+                  {filteredClients.length} visible client{filteredClients.length === 1 ? "" : "s"} in this view.
+                </Text>
+              </View>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                <Pressable
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 4,
+                    paddingHorizontal: 10,
+                    paddingVertical: 6,
+                    borderRadius: 4,
+                    backgroundColor: "rgba(56, 189, 248, 0.12)",
+                    borderWidth: 1,
+                    borderColor: "rgba(56, 189, 248, 0.4)",
+                  }}
+                  onPress={() => setShowImportModal(true)}
+                >
+                  <Ionicons name="document-text-outline" size={14} color="#38BDF8" />
+                  <Text style={{ fontSize: 12, fontWeight: "800", color: "#38BDF8" }}>
+                    Import Statement
+                  </Text>
+                </Pressable>
+                <Pressable
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 4,
+                    paddingHorizontal: 10,
+                    paddingVertical: 6,
+                    borderRadius: 4,
+                    backgroundColor: theme.colors.brand,
+                  }}
+                  onPress={() => void onAddClient()}
+                >
+                  <Ionicons name="person-add-outline" size={14} color="#050914" />
+                  <Text style={{ fontSize: 12, fontWeight: "800", color: "#050914" }}>
+                    + Client
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
             {filteredClients.length === 0 ? (
               <View style={styles.emptyState}>
                 <Text style={styles.emptyTitle}>No clients yet</Text>

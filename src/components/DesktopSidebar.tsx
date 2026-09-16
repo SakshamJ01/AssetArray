@@ -15,6 +15,7 @@ export interface DesktopSidebarProps {
   onChange: (tab: any) => void;
   onQuickAddClient: () => void;
   onQuickBroadcast: () => void;
+  onQuickImportStatement?: () => void;
   onLockDesk: () => void;
   dueClientsCount?: number;
   advisorName?: string;
@@ -42,6 +43,7 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
   onChange,
   onQuickAddClient,
   onQuickBroadcast,
+  onQuickImportStatement,
   onLockDesk,
   dueClientsCount = 0,
   advisorName = "Senior Wealth Advisor",
@@ -160,6 +162,21 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
           <Ionicons name="megaphone-outline" size={16} color="#E0A84C" />
           <Text style={styles.actionSecondaryText}>Broadcast Center</Text>
         </Pressable>
+
+        {onQuickImportStatement && (
+          <Pressable
+            style={({ pressed }) => [
+              styles.actionButton,
+              styles.actionSecondary,
+              { marginTop: 6, borderColor: "rgba(56, 189, 248, 0.4)", backgroundColor: "rgba(56, 189, 248, 0.08)" },
+              pressed && styles.actionButtonPressed,
+            ]}
+            onPress={onQuickImportStatement}
+          >
+            <Ionicons name="document-text-outline" size={16} color="#38BDF8" />
+            <Text style={[styles.actionSecondaryText, { color: "#38BDF8" }]}>Import Statement (CAS)</Text>
+          </Pressable>
+        )}
       </View>
 
       {/* Keyboard Shortcut Legend */}

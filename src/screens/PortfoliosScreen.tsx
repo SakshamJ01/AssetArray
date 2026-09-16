@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { AppTheme } from "../theme";
 import { PerformanceChart, Sparkline, HoldingsTreemap } from "../components/charts";
-import { RebalanceModal, StressTestModal } from "../components/modals";
+import { RebalanceModal, StressTestModal, StatementImportModal } from "../components/modals";
 import { HealthScoreCard } from "../components/HealthScoreCard";
 import { AttributionModal } from "../components/AttributionModal";
 import { TaxHarvestStudioModal } from "../components/TaxHarvestStudioModal";
@@ -11,10 +11,12 @@ import { CommitteeMemoModal } from "../components/CommitteeMemoModal";
 import { HoldingsTableWorkstation } from "../components/holdings/HoldingsTableWorkstation";
 import { calculateHealthScore } from "../services/healthScore";
 import { Client } from "../types/wealth";
+import { SimpleHolding } from "../services/rebalancer";
 
 export interface PortfoliosScreenProps {
   theme: AppTheme;
   onNavigateTab?: (tab: string, params?: any) => void;
+  onImportHoldings?: (holdings: SimpleHolding[], mode: "merge" | "replace") => void;
   unifiedPortfolioAnalytics: {
     totalCurrent: number;
     totalInvested: number;
@@ -43,6 +45,7 @@ export interface PortfoliosScreenProps {
 export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
   theme,
   onNavigateTab,
+  onImportHoldings,
   unifiedPortfolioAnalytics,
   taxReporting,
   isMarketRefreshing,
@@ -53,6 +56,7 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
   styles,
 }) => {
 
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const [isRebalanceOpen, setIsRebalanceOpen] = useState(false);
   const [isStressTestOpen, setIsStressTestOpen] = useState(false);
   const [isAttributionOpen, setIsAttributionOpen] = useState(false);
@@ -116,6 +120,24 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
             </Text>
           </View>
           <View style={[styles.actionGroupWrap, { justifyContent: "flex-start", gap: 8 }]}>
+            <Pressable
+              style={[
+                styles.secondaryButton,
+                {
+                  paddingHorizontal: 12,
+                  paddingVertical: 7,
+                  backgroundColor: "rgba(56, 189, 248, 0.12)",
+                  borderColor: "rgba(56, 189, 248, 0.4)",
+                  borderWidth: 1,
+                  borderRadius: 8,
+                },
+              ]}
+              onPress={() => setIsImportOpen(true)}
+            >
+              <Text style={[styles.secondaryButtonText, { color: "#38BDF8", fontWeight: "800" }]}>
+                📥 Import Statement
+              </Text>
+            </Pressable>
             <Pressable
               style={[
                 styles.secondaryButton,
@@ -685,6 +707,14 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
         }}
         client={unifiedClient}
         theme={theme}
+      />
+
+      <StatementImportModal
+        visible={isImportOpen}
+        onClose={() => setIsImportOpen(false)}
+        theme={theme}
+        clientName="Unified Portfolio"
+        onImportHoldings={onImportHoldings}
       />
     </>
   );

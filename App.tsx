@@ -2285,7 +2285,8 @@ function AppContent() {
     imported: SimpleHolding[],
     mode: "merge" | "replace"
   ) {
-    if (!selectedClient) {
+    const targetClient = selectedClient || clients[0];
+    if (!targetClient) {
       return;
     }
 
@@ -2317,7 +2318,7 @@ function AppContent() {
 
     setClients((current) =>
       current.map((client) => {
-        if (client.id !== selectedClient.id) {
+        if (client.id !== targetClient.id) {
           return client;
         }
         return {
@@ -2668,6 +2669,7 @@ function AppContent() {
               }
               setIsBroadcastModalOpen(true);
             }}
+            onQuickImportStatement={() => setActiveTab("Clients")}
             syncStatus={syncState}
             tabs={visibleTabs}
             theme={theme}
@@ -2859,6 +2861,7 @@ function AppContent() {
                 setActiveTab(tab as AppTab);
                 if (params?.query) setAiResearchQuery(params.query);
               }}
+              onImportHoldings={handleImportClientHoldings}
               unifiedPortfolioAnalytics={unifiedPortfolioAnalytics}
               taxReporting={taxReporting}
               isMarketRefreshing={isMarketRefreshing}

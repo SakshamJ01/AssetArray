@@ -791,8 +791,8 @@ app.get("/api/ai/status", requireAuth, (req, res) => {
     ollama: {
       id: "ollama",
       name: "Ollama Local",
-      isConfigured: false,
-      status: "NOT_CONFIGURED",
+      isConfigured: Boolean(OLLAMA_BASE_URL),
+      status: OLLAMA_BASE_URL ? "AVAILABLE" : "NOT_CONFIGURED",
       models: { fast: OLLAMA_MODEL, research: OLLAMA_MODEL },
     },
     openai: {

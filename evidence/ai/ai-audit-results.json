@@ -1,5 +1,5 @@
 {
-  "executedAt": "2026-09-06T07:34:49.576Z",
+  "executedAt": "2026-09-16T17:46:05.962Z",
   "environment": "test",
   "providerAudit": {
     "gemini": {
@@ -10,8 +10,8 @@
     },
     "ollama": {
       "name": "Ollama Local Daemon",
-      "configured": false,
-      "status": "OFFLINE / NOT_CONFIGURED",
+      "configured": true,
+      "status": "ONLINE",
       "endpoint": "http://localhost:11434"
     },
     "openai": {
@@ -136,7 +136,7 @@
     }
   ],
   "secretLeakageAudit": {
-    "checkedFiles": 3,
+    "checkedFiles": 201,
     "leakFound": false
   },
   "summary": {

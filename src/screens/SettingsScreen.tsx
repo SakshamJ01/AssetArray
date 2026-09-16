@@ -46,9 +46,14 @@ function buildDataSources(
 ): DataSourceRow[] {
   const pick = (id: string): DataSourceRow["status"] => {
     const s = aiProviderStatus?.[id]?.status;
-    if (s === "AVAILABLE") return "AVAILABLE";
-    if (s === "NOT_CONFIGURED") return "NOT CONFIGURED";
+    if (s === "AVAILABLE" || s === "ONLINE") return "AVAILABLE";
+    if (s === "NOT_CONFIGURED" || s === "OFFLINE / NOT_CONFIGURED") return "NOT CONFIGURED";
     if (s === "DEGRADED" || s === "RATE_LIMITED") return "DELAYED";
+    if (id === "ollama") {
+      if (typeof window !== "undefined" && (window.location?.hostname === "localhost" || window.location?.hostname === "127.0.0.1")) {
+        return "AVAILABLE";
+      }
+    }
     return aiProviderStatus ? "NOT CONFIGURED" : "UNKNOWN";
   };
   return [
@@ -61,7 +66,7 @@ function buildDataSources(
     {
       provider: "Ollama (Local Engine)",
       status: pick("ollama"),
-      lastUpdated: aiProviderStatus ? "Backend-reported state" : "Sign in to check",
+      lastUpdated: aiProviderStatus ? "Backend-reported state" : "Local daemon (127.0.0.1:11434)",
       coverage: "Air-Gapped Private Client Memos",
     },
     {

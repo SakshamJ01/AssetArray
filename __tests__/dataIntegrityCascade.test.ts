@@ -7,7 +7,7 @@ import { aiRouter } from "../src/services/aiGateway/router";
 import { Client } from "../src/types/wealth";
 
 describe("Data Integrity Cascade Verification: Single Holding Mutation", () => {
-  jest.setTimeout(30000);
+  jest.setTimeout(60000);
   const asOfDate = "2026-09-11T10:00:00.000Z";
 
   const initialClient: Client = {

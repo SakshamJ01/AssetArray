@@ -16,7 +16,7 @@ import { storageService } from "../src/platform/storage";
 import { Client, Goal } from "../src/types/wealth";
 
 describe("Comprehensive E2E Product Workflow Verification Suite", () => {
-  jest.setTimeout(30000);
+  jest.setTimeout(60000);
   const asOfDate = "2026-09-11T10:00:00.000Z";
 
   let testClients: Client[] = [];

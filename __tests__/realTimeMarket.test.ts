@@ -7,8 +7,12 @@ describe("Real-Time Share Market Streaming Engine", () => {
 
   it("should have initial market instruments loaded", () => {
     const instruments = realTimeMarket.getInstruments();
-    expect(Object.keys(instruments).length).toBeGreaterThanOrEqual(10);
+    expect(Object.keys(instruments).length).toBeGreaterThanOrEqual(14);
     expect(instruments["NIFTY 50"]).toBeDefined();
+    expect(instruments["BANKNIFTY"]).toBeDefined();
+    expect(instruments["SGB_GOLD"]).toBeDefined();
+    expect(instruments["BHARATBOND30"]).toBeDefined();
+    expect(instruments["IN_10Y_GSEC"]).toBeDefined();
     expect(instruments["RELIANCE"]).toBeDefined();
     expect(instruments["GOLD"]).toBeDefined();
     expect(instruments["BTC/USD"]).toBeDefined();

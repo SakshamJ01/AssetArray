@@ -109,7 +109,7 @@ export function evaluateTaxLots(
   const invVal = Number(holding.investedValue) || 0;
   const gainLoss = curVal - invVal;
 
-  let acquiredAt = holding.acquiredAt || "";
+  let acquiredAt = holding.acquiredAt || holding.acquisitionDate || "";
   const warnings: string[] = [];
 
   let months = calculateLotHoldingMonths(acquiredAt, asOfDate);

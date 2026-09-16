@@ -1,6 +1,6 @@
-import { parseStatement, SAMPLE_STATEMENTS } from "../src/services/statementParser";
+import { parseStatement, sanitizePii, SAMPLE_STATEMENTS } from "../src/services/statementParser";
 
-describe("Statement Parser Engine", () => {
+describe("Statement Parser & Zero-PII Ingestion Engine", () => {
   it("should parse Zerodha Kite CSV holdings correctly", () => {
     const result = parseStatement(SAMPLE_STATEMENTS.zerodha);
 
@@ -17,6 +17,19 @@ describe("Statement Parser Engine", () => {
 
     const gold = result.holdings.find((h) => h.symbol === "GOLDBEES");
     expect(gold?.assetClass).toBe("Commodities");
+  });
+
+  it("should parse Groww CSV statements correctly", () => {
+    const result = parseStatement(SAMPLE_STATEMENTS.groww);
+
+    expect(result.success).toBe(true);
+    expect(result.holdings.length).toBe(4);
+    expect(result.detectedBroker).toBe("Groww Statement");
+    expect(result.totalValue).toBeGreaterThan(2000000);
+
+    const sbi = result.holdings.find((h) => h.assetName.includes("State Bank of India"));
+    expect(sbi).toBeDefined();
+    expect(sbi?.currentValue).toBe(648000);
   });
 
   it("should parse CAMS / KFintech CAS statements correctly", () => {
@@ -43,6 +56,32 @@ describe("Statement Parser Engine", () => {
 
     const treasury = result.holdings.find((h) => h.symbol === "US10Y");
     expect(treasury?.assetClass).toBe("Fixed Income");
+  });
+
+  it("sanitizes PAN, Aadhaar, Email, and Phone numbers from imported statements (Zero-PII)", () => {
+    const rawPiiStatement = `Client Statement for ABCDE1234F
+Aadhaar: 1234 5678 9012, Contact: advisor@wealthcorp.in, Phone: 9876543210
+Symbol,Instrument,Quantity,Avg Price,LTP,Current Value
+RELIANCE,Reliance Industries Ltd,100,2400.00,2900.00,290000`;
+
+    const { sanitized, redactedPiiCount } = sanitizePii(rawPiiStatement);
+
+    expect(redactedPiiCount).toBe(4);
+    expect(sanitized).not.toContain("ABCDE1234F");
+    expect(sanitized).toContain("[REDACTED_PAN]");
+    expect(sanitized).not.toContain("1234 5678 9012");
+    expect(sanitized).toContain("[REDACTED_AADHAAR]");
+    expect(sanitized).not.toContain("advisor@wealthcorp.in");
+    expect(sanitized).toContain("[REDACTED_EMAIL]");
+    expect(sanitized).not.toContain("9876543210");
+    expect(sanitized).toContain("[REDACTED_PHONE]");
+
+    // Verify parsing succeeds cleanly on sanitized text
+    const result = parseStatement(rawPiiStatement);
+    expect(result.success).toBe(true);
+    expect(result.redactedPiiCount).toBe(4);
+    expect(result.holdings.length).toBe(1);
+    expect(result.holdings[0].symbol).toBe("RELIANCE");
   });
 
   it("should return failure for empty content or missing headers", () => {

@@ -15,6 +15,42 @@ export interface ParsedStatementResult {
   errors: string[];
   detectedBroker?: string;
   sourceRowsCount: number;
+  redactedPiiCount?: number;
+}
+
+/**
+ * Institutional Zero-PII Sanitizer
+ * Scrubs PAN numbers, Aadhaar, bank accounts, emails, and phone numbers before parsing or storing.
+ */
+export function sanitizePii(rawText: string): { sanitized: string; redactedPiiCount: number } {
+  let count = 0;
+  let text = rawText || "";
+
+  // 1. Redact PAN (e.g. ABCDE1234F)
+  text = text.replace(/\b([A-Z]{5}[0-9]{4}[A-Z])\b/g, () => {
+    count++;
+    return "[REDACTED_PAN]";
+  });
+
+  // 2. Redact Aadhaar (e.g. 1234 5678 9012 or 1234-5678-9012)
+  text = text.replace(/\b\d{4}[\s-]\d{4}[\s-]\d{4}\b/g, () => {
+    count++;
+    return "[REDACTED_AADHAAR]";
+  });
+
+  // 3. Redact Email addresses
+  text = text.replace(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g, () => {
+    count++;
+    return "[REDACTED_EMAIL]";
+  });
+
+  // 4. Redact Phone numbers (+91 9876543210 or 9876543210)
+  text = text.replace(/(?:\+91[\-\s]?)?[6-9]\d{9}\b/g, () => {
+    count++;
+    return "[REDACTED_PHONE]";
+  });
+
+  return { sanitized: text, redactedPiiCount: count };
 }
 
 /**
@@ -28,6 +64,12 @@ HDFCBANK,HDFC Bank Limited,400,1450.00,1620.00,648000
 INFY,Infosys Ltd,300,1380.00,1750.25,525075
 GOLDBEES,Nippon India ETF Gold BeES,800,48.50,59.20,47360
 ICICIBANK,ICICI Bank Ltd,350,850.00,1090.00,381500`,
+
+  groww: `Company Name,ISIN,Shares,Avg. Buy Price,Current Market Price,Current Value
+Tata Motors Ltd,INE155A01022,500,620.00,980.00,490000
+Larsen & Toubro Ltd,INE018A01030,150,2800.00,3550.00,532500
+State Bank of India,INE062A01020,800,540.00,810.00,648000
+HDFC AMC,INE127D01025,200,3100.00,4100.00,820000`,
 
   camsCas: `Scheme Name,Folio No,Units,Purchase NAV,Current NAV,Current Value
 Mirae Asset Large Cap Fund,10293847,12500.50,68.40,94.20,1177547
@@ -119,10 +161,14 @@ export function parseStatement(csvContent: string): ParsedStatementResult {
       unmappedCount: 0,
       errors: ["Empty statement content provided."],
       sourceRowsCount: 0,
+      redactedPiiCount: 0,
     };
   }
 
-  const lines = csvContent
+  // 1. Sanitize any PII (PAN, Aadhaar, email, phone) before parsing
+  const { sanitized, redactedPiiCount } = sanitizePii(csvContent);
+
+  const lines = sanitized
     .split(/\r?\n/)
     .map((l) => l.trim())
     .filter((l) => l.length > 0);
@@ -136,51 +182,111 @@ export function parseStatement(csvContent: string): ParsedStatementResult {
       unmappedCount: 0,
       errors: ["Statement must contain a header row and at least one holding row."],
       sourceRowsCount: lines.length,
+      redactedPiiCount,
     };
   }
 
-  // Parse header
-  const headers = parseCsvLine(lines[0]).map((h) => h.toLowerCase().replace(/[^a-z0-9]/g, ""));
+  let headerRowIdx = 0;
+  let headers: string[] = [];
+  let symbolIdx = -1;
+  let nameIdx = -1;
+  let qtyIdx = -1;
+  let buyPriceIdx = -1;
+  let currentPriceIdx = -1;
+  let currentValueIdx = -1;
+  let assetClassIdx = -1;
 
-  // Find column indices
-  let symbolIdx = headers.findIndex((h) => h === "symbol" || h === "ticker" || h === "isin" || h === "script");
-  let nameIdx = headers.findIndex(
-    (h) => h === "instrument" || h === "name" || h === "schemename" || h === "securityname" || h === "description"
-  );
-  let qtyIdx = headers.findIndex((h) => h === "quantity" || h === "qty" || h === "units" || h === "shares");
-  let buyPriceIdx = headers.findIndex(
-    (h) =>
-      h === "avgprice" ||
-      h === "buyprice" ||
-      h === "averagecost" ||
-      h === "purchasenav" ||
-      h === "costbasis" ||
-      h === "purchaseprice"
-  );
-  let currentPriceIdx = headers.findIndex(
-    (h) =>
-      h === "ltp" ||
-      h === "currentprice" ||
-      h === "lastprice" ||
-      h === "currentnav" ||
-      h === "marketprice" ||
-      h === "nav"
-  );
-  let currentValueIdx = headers.findIndex(
-    (h) => h === "currentvalue" || h === "marketvalue" || h === "totalvalue" || h === "value"
-  );
-  let assetClassIdx = headers.findIndex(
-    (h) => h === "assetclass" || h === "type" || h === "category" || h === "segment"
-  );
+  for (let row = 0; row < Math.min(lines.length, 10); row++) {
+    const candidateHeaders = parseCsvLine(lines[row]).map((h) =>
+      h.toLowerCase().replace(/[^a-z0-9]/g, "")
+    );
+    const sym = candidateHeaders.findIndex(
+      (h) =>
+        h === "symbol" ||
+        h === "ticker" ||
+        h === "isin" ||
+        h === "isinnumber" ||
+        h === "script" ||
+        h === "scrip" ||
+        h === "code"
+    );
+    const name = candidateHeaders.findIndex(
+      (h) =>
+        h === "companyname" ||
+        h === "instrument" ||
+        h === "name" ||
+        h === "schemename" ||
+        h === "securityname" ||
+        h === "stockname" ||
+        h === "scripname" ||
+        h === "description"
+    );
+    const qty = candidateHeaders.findIndex(
+      (h) =>
+        h === "quantity" ||
+        h === "qty" ||
+        h === "units" ||
+        h === "shares" ||
+        h === "unitsheld" ||
+        h === "balance"
+    );
+    const curVal = candidateHeaders.findIndex(
+      (h) =>
+        h === "currentvalue" ||
+        h === "marketvalue" ||
+        h === "totalvalue" ||
+        h === "value" ||
+        h === "holdingvalue"
+    );
+
+    if ((sym !== -1 || name !== -1) && (qty !== -1 || curVal !== -1)) {
+      headerRowIdx = row;
+      headers = candidateHeaders;
+      symbolIdx = sym;
+      nameIdx = name;
+      qtyIdx = qty;
+      buyPriceIdx = candidateHeaders.findIndex(
+        (h) =>
+          h === "avgprice" ||
+          h === "avgbuyprice" ||
+          h === "buyprice" ||
+          h === "averagecost" ||
+          h === "purchasenav" ||
+          h === "costbasis" ||
+          h === "purchaseprice"
+      );
+      currentPriceIdx = candidateHeaders.findIndex(
+        (h) =>
+          h === "ltp" ||
+          h === "currentprice" ||
+          h === "currentmarketprice" ||
+          h === "cmp" ||
+          h === "lastprice" ||
+          h === "currentnav" ||
+          h === "marketprice" ||
+          h === "closingprice" ||
+          h === "nav"
+      );
+      currentValueIdx = curVal;
+      assetClassIdx = candidateHeaders.findIndex(
+        (h) => h === "assetclass" || h === "type" || h === "category" || h === "segment"
+      );
+      break;
+    }
+  }
 
   // Auto-detect broker
   let detectedBroker = "Standard CSV";
   if (headers.includes("schemename") || headers.includes("foliono")) {
     detectedBroker = "CAMS / KFintech CAS";
+  } else if (headers.includes("companyname") && (headers.includes("isin") || headers.includes("avgbuyprice"))) {
+    detectedBroker = "Groww Statement";
   } else if (headers.includes("ltp") && headers.includes("instrument")) {
     detectedBroker = "Zerodha Kite";
   } else if (headers.includes("ticker") && headers.includes("costbasis")) {
     detectedBroker = "Institutional Custodian";
+  } else if (headers.includes("isin") && headers.includes("unitsheld")) {
+    detectedBroker = "NDSL / CDSL eCAS";
   }
 
   // Fallbacks if symbol or name missing
@@ -195,17 +301,18 @@ export function parseStatement(csvContent: string): ParsedStatementResult {
       totalGainLoss: 0,
       unmappedCount: lines.length - 1,
       errors: [
-        `Could not identify required columns. Identified headers: ${headers.join(", ")}. Please include at least 'Symbol'/'Name' and 'Quantity' or 'Current Value'.`,
+        `Could not identify required columns in statement. Please include at least 'Symbol'/'Name' and 'Quantity' or 'Current Value'.`,
       ],
       detectedBroker,
       sourceRowsCount: lines.length - 1,
+      redactedPiiCount,
     };
   }
 
   const holdings: SimpleHolding[] = [];
   let unmappedCount = 0;
 
-  for (let i = 1; i < lines.length; i++) {
+  for (let i = headerRowIdx + 1; i < lines.length; i++) {
     const row = parseCsvLine(lines[i]);
     if (row.length === 0 || (row.length === 1 && row[0] === "")) continue;
 
@@ -264,5 +371,6 @@ export function parseStatement(csvContent: string): ParsedStatementResult {
     errors,
     detectedBroker,
     sourceRowsCount: lines.length - 1,
+    redactedPiiCount,
   };
 }

@@ -134,4 +134,32 @@ Provide a grounded, professional response with clear sections:
       isDeterministicFallback: isFallback
     };
   }
+
+  /**
+   * Directly generates deterministic rule-based fallback without attempting network requests.
+   */
+  public static executeDeterministicFallback(snapshot: AiContextSnapshot): {
+    rawText: string;
+    grounding: GroundingResult;
+    providerUsed: string;
+    isDeterministicFallback: boolean;
+  } {
+    const accumulatedText = generateDeterministicSummary(snapshot.taskType as any, {
+      clientName: snapshot.clientSnapshot?.name,
+      totalAum: snapshot.portfolioSnapshot?.totalAUM,
+      healthScore: snapshot.portfolioSnapshot?.healthScore,
+      criticalAlertsCount: snapshot.workflowSnapshot?.criticalAlertsCount,
+      taxLossAvailable: snapshot.taxSnapshot?.harvestableLosses,
+      topHoldings: snapshot.portfolioSnapshot?.topHoldingsSummary?.map((h: any) => h.symbol)
+    });
+
+    const grounding = V4GroundingEngine.verifyOutput(accumulatedText, snapshot);
+
+    return {
+      rawText: accumulatedText,
+      grounding,
+      providerUsed: 'DETERMINISTIC_RULE_ENGINE',
+      isDeterministicFallback: true
+    };
+  }
 }

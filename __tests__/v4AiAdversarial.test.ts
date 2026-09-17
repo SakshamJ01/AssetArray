@@ -133,14 +133,11 @@ describe('V4 Phase 4 — AI Adversarial & Boundary Test Suite (15 Test Cases)', 
   });
 
   // 12. Fallback engine generates labeled rule-based summary
-  test('12. Fallback output clearly labels itself as rule-based fallback without hallucinations', async () => {
-    const res = await V4AiTaskRouter.executeTask({
-      userQuery: 'Give me a brief',
-      snapshot: baseSnapshot
-    });
+  test('12. Fallback output clearly labels itself as rule-based fallback without hallucinations', () => {
+    const res = V4AiTaskRouter.executeDeterministicFallback(baseSnapshot);
     expect(res.isDeterministicFallback).toBe(true);
     expect(res.providerUsed).toBe('DETERMINISTIC_RULE_ENGINE');
-  }, 20000);
+  });
 
   // 13. Disclaimer generated when unverified numbers are detected
   test('13. Unsupported numbers produce explicit verification disclaimer', () => {

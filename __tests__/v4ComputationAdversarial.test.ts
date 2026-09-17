@@ -44,7 +44,7 @@ describe("V4 PHASE 2 — ADVERSARIAL COMPUTATION SUITE", () => {
       unmappedFields: [],
     };
     const report = validateCanonicalRecord(rec);
-    expect(report.issues.some((i) => i.code === "MALFORMED_ACQUISITION_DATE")).toBe(true);
+    expect(report.issues.some((i: any) => i.code === "MALFORMED_ACQUISITION_DATE")).toBe(true);
   });
 
   // 3. Missing acquisition date
@@ -87,7 +87,7 @@ describe("V4 PHASE 2 — ADVERSARIAL COMPUTATION SUITE", () => {
     };
     const report = validateCanonicalRecord(rec);
     expect(report.isValid).toBe(false);
-    expect(report.issues.some((i) => i.code === "MISSING_SECURITY_IDENTITY")).toBe(true);
+    expect(report.issues.some((i: any) => i.code === "MISSING_SECURITY_IDENTITY")).toBe(true);
   });
 
   // 5. Negative quantity
@@ -109,7 +109,7 @@ describe("V4 PHASE 2 — ADVERSARIAL COMPUTATION SUITE", () => {
     };
     const report = validateCanonicalRecord(rec);
     expect(report.isValid).toBe(false);
-    expect(report.issues.some((i) => i.code === "NEGATIVE_QUANTITY")).toBe(true);
+    expect(report.issues.some((i: any) => i.code === "NEGATIVE_QUANTITY")).toBe(true);
   });
 
   // 6. Currency mismatch
@@ -131,7 +131,7 @@ describe("V4 PHASE 2 — ADVERSARIAL COMPUTATION SUITE", () => {
     };
     const report = validateCanonicalRecord(rec);
     expect(report.isValid).toBe(false);
-    expect(report.issues.some((i) => i.code === "MISSING_CURRENCY")).toBe(true);
+    expect(report.issues.some((i: any) => i.code === "MISSING_CURRENCY")).toBe(true);
   });
 
   // 7. Duplicate transaction

@@ -151,8 +151,8 @@ export function runIngestionPipeline(options: IngestionPipelineOptions): Ingesti
   // 5. Validation Engine
   const { accepted, rejected, allIssues } = validateBatch(canonicalRecords);
 
-  const errors = allIssues.filter((i) => i.severity === "ERROR");
-  const warnings = allIssues.filter((i) => i.severity === "WARNING");
+  const errors = allIssues.filter((i: ValidationIssue) => i.severity === "ERROR");
+  const warnings = allIssues.filter((i: ValidationIssue) => i.severity === "WARNING");
 
   let status: IngestionJob["status"] = "COMPLETED";
   if (accepted.length === 0 && rejected.length > 0) {

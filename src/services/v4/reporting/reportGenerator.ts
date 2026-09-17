@@ -118,7 +118,7 @@ export class ReportGenerator {
     } else if (input.reportType === 'INVESTMENT_COMMITTEE_REPORT') {
       sections.push({
         id: 'sec_proposal_rationale',
-        title: 'Fiduciary Proposal & Portfolio Impact Analysis',
+        title: 'Investment Committee Proposal & Portfolio Impact Analysis',
         summaryText: `Investment Committee Proposal for ${clientName}. Drift score: ${input.portfolioData?.driftScore || 0}%.`,
         metrics: [
           { label: 'Portfolio AUM', value: input.portfolioData?.totalAUM || 0, unit: currency },

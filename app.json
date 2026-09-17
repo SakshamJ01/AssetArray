@@ -32,7 +32,7 @@
       "shortName": "Asset Array",
       "backgroundColor": "#030712",
       "themeColor": "#E0A84C",
-      "description": "Enterprise multi-asset advisory platform with client-side zero-knowledge encryption, AI co-pilot, and fiduciary reporting."
+      "description": "Enterprise multi-asset advisory platform with client-side zero-knowledge encryption, AI co-pilot, and advisor-grade reporting."
     },
     "plugins": [
       "expo-secure-store",

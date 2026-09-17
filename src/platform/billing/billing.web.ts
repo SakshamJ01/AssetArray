@@ -9,7 +9,7 @@ export const WEB_MOCK_PACKAGES: BillingPackage[] = [
     packageType: "MONTHLY",
     product: {
       currencyCode: "USD",
-      description: "Full access to AI Portfolio Co-Pilot & Unlimited Fiduciary PDF Reports",
+      description: "Full access to AI Portfolio Co-Pilot & Unlimited Advisor-Grade PDF Reports",
       identifier: "asset_array_pro_monthly",
       price: 9.99,
       priceString: "$9.99 / month",

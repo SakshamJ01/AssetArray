@@ -111,13 +111,13 @@ Provide a grounded, professional response with clear sections:
     if (!accumulatedText || accumulatedText.trim().length === 0 || isFallback) {
       isFallback = true;
       providerUsed = 'DETERMINISTIC_RULE_ENGINE';
-      accumulatedText = generateDeterministicSummary(snapshot.taskType as any, {
+      accumulatedText = generateDeterministicSummary('ADVISOR_BRIEF', {
         clientName: snapshot.clientSnapshot?.name,
         totalAum: snapshot.portfolioSnapshot?.totalAUM,
         healthScore: snapshot.portfolioSnapshot?.healthScore,
         criticalAlertsCount: snapshot.workflowSnapshot?.criticalAlertsCount,
         taxLossAvailable: snapshot.taxSnapshot?.harvestableLosses,
-        topHoldings: snapshot.portfolioSnapshot?.topHoldingsSummary?.map((h) => h.symbol)
+        topHoldings: snapshot.portfolioSnapshot?.topHoldingsSummary?.map((h: any) => h.symbol)
       });
       if (onToken) onToken(accumulatedText);
     }
@@ -144,7 +144,7 @@ Provide a grounded, professional response with clear sections:
     providerUsed: string;
     isDeterministicFallback: boolean;
   } {
-    const accumulatedText = generateDeterministicSummary(snapshot.taskType as any, {
+    const accumulatedText = generateDeterministicSummary('ADVISOR_BRIEF', {
       clientName: snapshot.clientSnapshot?.name,
       totalAum: snapshot.portfolioSnapshot?.totalAUM,
       healthScore: snapshot.portfolioSnapshot?.healthScore,

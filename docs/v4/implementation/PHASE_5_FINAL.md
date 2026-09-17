@@ -1,7 +1,7 @@
 # AssetArray V4.0 — Phase 5: Reporting + Investor Portal (Final Architecture Phase)
 
 ## 1. Executive Summary
-Phase 5 completes the V4.0 Enterprise Architecture for AssetArray. Phase 5 establishes the **Fiduciary Reporting Tier** and the **Authenticated Investor Portal**, completing the full operational pipeline from raw data ingestion to client-facing wealth communication.
+Phase 5 completes the V4.0 Enterprise Architecture for AssetArray. Phase 5 establishes the **Advisor Reporting Tier** and the **Authenticated Investor Portal**, completing the full operational pipeline from raw data ingestion to client-facing wealth communication.
 
 ```text
 ==========================================================================
@@ -98,7 +98,7 @@ The Investor Portal (`/api/v4/portal`) delivers a calm, private-banking experien
 ## 8. Multi-Currency & Presentation Engine
 - Supports **INR** (with Indian numbering `₹ Cr / L`), **USD** (`$`), **EUR** (`€`), and **GBP** (`£`).
 - Clean, responsive HTML/CSS styling suitable for printing, on-device PDF conversion, web preview, and mobile viewing (360×800 to 1440×900).
-- Standardized fiduciary footnotes and disclaimers.
+- Standardized methodology footnotes and disclaimers.
 
 ---
 
@@ -114,7 +114,8 @@ The Investor Portal (`/api/v4/portal`) delivers a calm, private-banking experien
 | **Portal Session & Role Security** | `__tests__/v4PortalSecurity.test.ts` | 2 | ✅ PASS |
 | **Publishing & Ephemeral Sharing** | `__tests__/v4Publishing.test.ts` | 2 | ✅ PASS |
 | **Adversarial & Red Team Suite** | `__tests__/v4ReportingAdversarial.test.ts` | 11 | ✅ PASS |
-| **Total Phase 5 Coverage** | **9 Suites** | **32 Tests** | **100% PASS** |
+| **Phase 5 Total Coverage** | **9 Suites** | **32 Tests** | **100% PASS** |
+| **V4 Cumulative Coverage** | **30 Suites** | **148 Tests** | **100% PASS** |
 
 ---
 

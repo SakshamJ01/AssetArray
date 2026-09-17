@@ -34,9 +34,9 @@ export class DecisionStateMachine {
       throw new Error(`Cannot approve decision in ${decision.decisionStatus} status`);
     }
 
-    // RBAC: Only ADVISOR, ADMIN, or COMPLIANCE can approve fiduciary decisions
+    // RBAC: Only ADVISOR, ADMIN, or COMPLIANCE can approve advisor decisions
     if (!['ADVISOR', 'ADMIN', 'COMPLIANCE'].includes(actorRole)) {
-      throw new Error(`Role ${actorRole} is not authorized to approve fiduciary decisions`);
+      throw new Error(`Role ${actorRole} is not authorized to approve advisor decisions`);
     }
 
     const now = new Date().toISOString();
@@ -46,31 +46,30 @@ export class DecisionStateMachine {
       decisionStatus: 'APPROVED',
       decidedBy: actorId,
       decidedAt: now,
-      notes: notes || decision.notes,
+      notes: notes ? notes.trim() : undefined,
       updatedAt: now
     };
   }
 
+  /**
+   * Transitions a decision to REJECTED. Requires a non-empty reason.
+   */
   public static rejectDecision(
     decision: AdvisorDecision,
     actorId: string,
     actorRole: string,
     reason: string
   ): AdvisorDecision {
-    if (decision.decisionStatus === 'REJECTED') {
-      throw new Error(`Decision ${decision.decisionId} is already rejected`);
+    if (!this.canTransition(decision.decisionStatus, 'REJECTED')) {
+      throw new Error(`Illegal decision state transition from ${decision.decisionStatus} to REJECTED`);
     }
 
-    if (decision.decisionStatus !== 'PENDING_APPROVAL' && decision.decisionStatus !== 'DRAFT') {
-      throw new Error(`Cannot reject decision in ${decision.decisionStatus} status`);
+    if (!['ADVISOR', 'ADMIN', 'COMPLIANCE'].includes(actorRole)) {
+      throw new Error(`Role ${actorRole} is not authorized to reject advisor decisions`);
     }
 
-    if (!['ADVISOR', 'ADMIN', 'COMPLIANCE', 'OPERATIONS'].includes(actorRole)) {
-      throw new Error(`Role ${actorRole} is not authorized to reject fiduciary decisions`);
-    }
-
-    if (!reason || reason.trim().length === 0) {
-      throw new Error('Rejection reason is required');
+    if (!reason || typeof reason !== 'string' || reason.trim().length === 0) {
+      throw new Error('Mandatory rejection reason must be provided when rejecting a decision');
     }
 
     const now = new Date().toISOString();
@@ -85,25 +84,32 @@ export class DecisionStateMachine {
     };
   }
 
+  /**
+   * Enforces immutability on finalized decisions (APPROVED, REJECTED, EXECUTED).
+   */
   public static validateImmutability(decision: AdvisorDecision, modifications: Partial<AdvisorDecision>): void {
-    if (decision.decisionStatus === 'APPROVED' || decision.decisionStatus === 'REJECTED') {
-      // Check if critical fields are being changed
-      const forbiddenKeys: (keyof AdvisorDecision)[] = [
+    if (['APPROVED', 'REJECTED', 'EXECUTED'].includes(decision.decisionStatus)) {
+      const protectedKeys: (keyof AdvisorDecision)[] = [
         'subject',
         'context',
         'beforeState',
         'proposedAction',
         'evidence',
         'decision',
+        'decisionStatus',
+        'decisionType',
+        'tenantId',
+        'clientId',
+        'portfolioId',
         'decidedBy',
         'decidedAt',
         'reason'
       ];
 
-      for (const key of forbiddenKeys) {
+      for (const key of protectedKeys) {
         if (modifications[key] !== undefined && modifications[key] !== decision[key]) {
           throw new Error(
-            `Fiduciary Decision ${decision.decisionId} is finalized (${decision.decisionStatus}) and immutable. Cannot modify ${String(key)}. Create a superseding decision instead.`
+            `Advisor Decision ${decision.decisionId} is finalized (${decision.decisionStatus}) and immutable. Cannot modify ${String(key)}. Create a superseding decision instead.`
           );
         }
       }

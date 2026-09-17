@@ -28,7 +28,7 @@ const manifestContent = {
   display: "standalone",
   orientation: "any",
   description:
-    "Enterprise multi-asset advisory platform with client-side zero-knowledge encryption, AI co-pilot, and fiduciary reporting.",
+    "Enterprise multi-asset advisory platform with client-side zero-knowledge encryption, AI co-pilot, and advisor-grade reporting.",
 };
 fs.writeFileSync(manifestPath, JSON.stringify(manifestContent, null, 2), 'utf8');
 

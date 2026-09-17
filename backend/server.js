@@ -1931,6 +1931,10 @@ app.post("/api/advisor/brief", requireAuth, async (req, res) => {
 const { createIngestionRouter } = require("./v4/ingestion/ingestionRoutes");
 const { createReconciliationRouter } = require("./v4/reconciliation/reconciliationRoutes");
 const { createRebalancingRouter } = require("./v4/rebalancing/rebalancingRoutes");
+const { createTaskRouter } = require("./v4/tasks/taskRoutes");
+const { createDecisionRouter } = require("./v4/decisions/decisionRoutes");
+const { createMeetingRouter } = require("./v4/meetings/meetingRoutes");
+const { createActivityRouter } = require("./v4/activity/activityRoutes");
 
 app.use("/api/v4/firms", requireAuth, resolveTenant, createFirmRouter(dbManager));
 app.use("/api/v4/users", requireAuth, resolveTenant, createUserRouter(dbManager, TOKEN_SECRET));
@@ -1941,6 +1945,10 @@ app.use("/api/v4/audit", requireAuth, resolveTenant, createAuditRouter());
 app.use("/api/v4/ingestion", requireAuth, resolveTenant, createIngestionRouter());
 app.use("/api/v4/reconciliation", requireAuth, resolveTenant, createReconciliationRouter());
 app.use("/api/v4/rebalance", requireAuth, resolveTenant, createRebalancingRouter());
+app.use("/api/v4/tasks", requireAuth, resolveTenant, createTaskRouter());
+app.use("/api/v4/decisions", requireAuth, resolveTenant, createDecisionRouter());
+app.use("/api/v4/meetings", requireAuth, resolveTenant, createMeetingRouter());
+app.use("/api/v4/activity", requireAuth, resolveTenant, createActivityRouter());
 
 
 app.use((_req, res) => {

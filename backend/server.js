@@ -1935,6 +1935,7 @@ const { createTaskRouter } = require("./v4/tasks/taskRoutes");
 const { createDecisionRouter } = require("./v4/decisions/decisionRoutes");
 const { createMeetingRouter } = require("./v4/meetings/meetingRoutes");
 const { createActivityRouter } = require("./v4/activity/activityRoutes");
+const { createAiRouter } = require("./v4/ai/aiRoutes");
 
 app.use("/api/v4/firms", requireAuth, resolveTenant, createFirmRouter(dbManager));
 app.use("/api/v4/users", requireAuth, resolveTenant, createUserRouter(dbManager, TOKEN_SECRET));
@@ -1949,6 +1950,7 @@ app.use("/api/v4/tasks", requireAuth, resolveTenant, createTaskRouter());
 app.use("/api/v4/decisions", requireAuth, resolveTenant, createDecisionRouter());
 app.use("/api/v4/meetings", requireAuth, resolveTenant, createMeetingRouter());
 app.use("/api/v4/activity", requireAuth, resolveTenant, createActivityRouter());
+app.use("/api/v4/ai", requireAuth, resolveTenant, createAiRouter());
 
 
 app.use((_req, res) => {

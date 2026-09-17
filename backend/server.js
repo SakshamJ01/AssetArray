@@ -1928,12 +1928,20 @@ app.post("/api/advisor/brief", requireAuth, async (req, res) => {
 // ASSETARRAY V4.0 — DOMAIN MODULAR MONOLITH
 // ==========================================
 
+const { createIngestionRouter } = require("./v4/ingestion/ingestionRoutes");
+const { createReconciliationRouter } = require("./v4/reconciliation/reconciliationRoutes");
+const { createRebalancingRouter } = require("./v4/rebalancing/rebalancingRoutes");
+
 app.use("/api/v4/firms", requireAuth, resolveTenant, createFirmRouter(dbManager));
 app.use("/api/v4/users", requireAuth, resolveTenant, createUserRouter(dbManager, TOKEN_SECRET));
 app.use("/api/v4/clients", requireAuth, resolveTenant, createClientRouter(dbManager));
 app.use("/api/v4/households", requireAuth, resolveTenant, createHouseholdRouter(dbManager));
 app.use("/api/v4/portfolios", requireAuth, resolveTenant, createPortfolioRouter(dbManager));
 app.use("/api/v4/audit", requireAuth, resolveTenant, createAuditRouter());
+app.use("/api/v4/ingestion", requireAuth, resolveTenant, createIngestionRouter());
+app.use("/api/v4/reconciliation", requireAuth, resolveTenant, createReconciliationRouter());
+app.use("/api/v4/rebalance", requireAuth, resolveTenant, createRebalancingRouter());
+
 
 app.use((_req, res) => {
   res.status(404).json({ error: "Not found." });

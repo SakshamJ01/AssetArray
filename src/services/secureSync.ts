@@ -199,6 +199,15 @@ export async function pullPayload({
     throw new Error("Session expired. Please login again.");
   }
 
+  if (response.status === 409) {
+    // Cloud-restore protection: the server refused to serve a development/test
+    // backup on the production service. Surface a clear, non-cryptic reason and
+    // never resurrect stale test/demo state into the local roster.
+    throw new Error(
+      "This encrypted backup was created in a development or test environment and cannot be restored here."
+    );
+  }
+
   if (!response.ok) {
     throw new Error("Cloud restore request failed.");
   }

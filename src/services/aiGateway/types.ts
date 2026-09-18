@@ -58,6 +58,13 @@ export interface AiStreamCallbacks {
     durationMs: number;
     groundedAt: string;
     taskType: AiTaskType;
+    /**
+     * Present and true when the gateway completed via its deterministic-local
+     * rule engine because no cloud provider could satisfy the request.
+     */
+    isFallback?: boolean;
+    fallbackLabel?: string;
+    groundingReport?: any;
   }) => void;
   onError?: (error: Error) => void;
 }

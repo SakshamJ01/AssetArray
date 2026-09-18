@@ -97,6 +97,13 @@ Provide a grounded, professional response with clear sections:
           },
           onComplete: (meta) => {
             providerUsed = meta.provider;
+            // The gateway reports its deterministic-local path as a fallback
+            // (isFallback: true). Honor that signal so the task router labels
+            // the result consistently regardless of whether providers were
+            // unreachable, unconfigured, or failing.
+            if (meta.isFallback) {
+              isFallback = true;
+            }
           },
           onError: () => {
             isFallback = true;

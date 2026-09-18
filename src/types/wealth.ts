@@ -129,6 +129,12 @@ export interface Client {
   updateHistory: string[];
   portfolio: PortfolioHolding[];
   avatarUrl?: string;
+  /**
+   * Provenance flag. When true this entity is a synthetic aggregate
+   * (e.g. the unified discretionary view), not a real person. It must never
+   * appear in the client roster. See src/services/syntheticClients.ts.
+   */
+  isSynthetic?: boolean;
 }
 
 export type ClientDraft = {

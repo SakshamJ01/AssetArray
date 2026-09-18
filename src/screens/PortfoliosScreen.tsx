@@ -82,6 +82,10 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
     );
   }, [unifiedPortfolioAnalytics.holdings]);
 
+  // Synthetic aggregate context for cross-client analytics ONLY.
+  // This is NOT a real client: it is flagged `isSynthetic` and is filtered out
+  // of every client-roster surface by src/services/syntheticClients.ts.
+  // It exists solely to give aggregate modals (e.g. the IC memo) a typed shape.
   const unifiedClient: Client = React.useMemo(() => ({
     id: "unified-discretionary",
     name: "Unified Discretionary Wealth",
@@ -99,6 +103,7 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
     lastContact: new Date().toISOString(),
     updateHistory: [],
     portfolio: unifiedPortfolioAnalytics.holdings || [],
+    isSynthetic: true,
   }), [unifiedPortfolioAnalytics.holdings]);
 
   const treemapHoldings = React.useMemo(() => {

@@ -48,6 +48,58 @@ async function ensureUnlocked(page) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Phase-5 storage isolation contract.
+//
+// Every run uses a FRESH, ephemeral browser context. No persistent user
+// profile is loaded, stored, or reused, so automated tests can NEVER write
+// into a developer's normal browser profile. Teardown clears cookies, session
+// state, and local test storage, then closes the context and browser. These
+// module-scoped references let the failure path teardown as well.
+// ---------------------------------------------------------------------------
+let activeBrowser = null;
+let activeContext = null;
+let activePage = null;
+
+async function teardownIsolatedContext() {
+  try {
+    if (activePage) {
+      // Clear local test storage created by the run (localStorage maps to
+      // AsyncStorage on web, including the `asset_array_clients` roster key).
+      await activePage
+        .evaluate(() => {
+          try {
+            localStorage.clear();
+            sessionStorage.clear();
+          } catch {
+            /* storage may be unavailable after navigation */
+          }
+        })
+        .catch(() => undefined);
+    }
+  } catch {
+    /* best-effort cleanup */
+  }
+  try {
+    if (activeContext) await activeContext.clearCookies();
+  } catch {
+    /* best-effort cleanup */
+  }
+  try {
+    if (activeContext) await activeContext.close();
+  } catch {
+    /* best-effort cleanup */
+  }
+  try {
+    if (activeBrowser) await activeBrowser.close();
+  } catch {
+    /* best-effort cleanup */
+  }
+  activeBrowser = null;
+  activeContext = null;
+  activePage = null;
+}
+
 async function runFullE2EValidation() {
   console.log("================================================================================");
   console.log("🚀 STARTING TRUE BROWSER E2E WORKFLOW VALIDATION ON PRODUCTION");
@@ -86,11 +138,18 @@ async function runFullE2EValidation() {
   e2eReport.browserVersion = await browser.version();
   console.log("Browser Launched:", e2eReport.browserVersion);
 
+  // Fresh, ephemeral, isolated context for this run. `storageState: undefined`
+  // guarantees we start with NO cookies, NO localStorage and NO session reuse.
   const context = await browser.newContext({
     viewport: { width: 1440, height: 900 },
+    storageState: undefined,
+    acceptDownloads: false,
   });
+  activeBrowser = browser;
+  activeContext = context;
 
   const page = await context.newPage();
+  activePage = page;
 
   page.on("request", (req) => {
     e2eReport.networkTrace.push({
@@ -500,7 +559,10 @@ async function runFullE2EValidation() {
   console.log("\n✓ Evidence JSON saved to:", EVIDENCE_FILE);
   console.log("✓ Workflow Results saved to:", WORKFLOW_FILE);
 
-  await browser.close();
+  // Isolation teardown: discard the ephemeral context and all test storage so
+  // no test state (e.g. the E2E client created in GW-03) can leak anywhere.
+  await teardownIsolatedContext();
+  console.log("✓ Isolated browser context torn down (cookies + storage cleared).");
   console.log("\n================================================================================");
   console.log(`🏁 TRUE E2E WORKFLOW VALIDATION COMPLETED: ${e2eReport.summary.verified}/${e2eReport.summary.total} VERIFIED`);
   console.log("================================================================================");
@@ -508,5 +570,6 @@ async function runFullE2EValidation() {
 
 runFullE2EValidation().catch((err) => {
   console.error("FATAL ERROR IN E2E VALIDATION:", err);
-  process.exit(1);
+  // Guarantee isolation teardown even on failure, then exit non-zero.
+  teardownIsolatedContext().finally(() => process.exit(1));
 });

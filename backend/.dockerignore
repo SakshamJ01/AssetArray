@@ -8,6 +8,7 @@ node_modules
 
 # Local data & dev artifacts
 data/
+data/quarantine/
 scripts/
 tmp-*.log
 tmp-*.err.log

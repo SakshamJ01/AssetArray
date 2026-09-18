@@ -1090,6 +1090,9 @@ app.post("/api/sync", requireAuth, requireDb, async (req, res) => {
     return;
   }
   const nextUpdatedAt = updatedAt || new Date().toISOString();
+  // Data provenance: record the environment that produced this backup so a
+  // development/test backup can never be restored into a production tenant.
+  const sourceEnvironment = (process.env.NODE_ENV || "development").toLowerCase();
   await syncCol.updateOne(
     { ownerId, firmId: req.tenant.firmId },
     {
@@ -1100,6 +1103,8 @@ app.post("/api/sync", requireAuth, requireDb, async (req, res) => {
         updatedAt: nextUpdatedAt,
         updatedBy: req.user.username,
         updatedById: req.user.id,
+        environment: sourceEnvironment,
+        provenance: "client-encrypted-sync",
       },
     },
     { upsert: true }
@@ -1120,6 +1125,33 @@ app.get("/api/sync/:ownerId", requireAuth, requireDb, async (req, res) => {
     res.status(404).json({ error: "Encrypted backup not found." });
     return;
   }
+
+  // Cloud-restore protection: a development/test backup must never be served to
+  // a production user. Legacy blobs written before this guard carry no
+  // `environment` marker and are treated as untrusted when this server runs in
+  // production, so stale test state cannot be resurrected.
+  const serverEnvironment = (process.env.NODE_ENV || "development").toLowerCase();
+  const blobEnvironment = (record.environment || "").toLowerCase();
+  const isUntrustedProvenance =
+    blobEnvironment === "development" ||
+    blobEnvironment === "test" ||
+    blobEnvironment === "";
+  if (serverEnvironment === "production" && isUntrustedProvenance) {
+    await audit("sync.restore_blocked", {
+      ownerId: req.params.ownerId,
+      firmId: req.tenant.firmId,
+      userId: req.user.id,
+      by: req.user.username,
+      reason: "development/test backup provenance in production",
+    });
+    res.status(409).json({
+      error:
+        "This encrypted backup was created in a development or test environment and cannot be restored on the production service.",
+      code: "UNTRUSTED_BACKUP_PROVENANCE",
+    });
+    return;
+  }
+
   await audit("sync.read", { ownerId: req.params.ownerId, firmId: req.tenant.firmId, userId: req.user.id, by: req.user.username });
   res.json({ ciphertext: record.ciphertext, updatedAt: record.updatedAt });
 });

@@ -11,6 +11,10 @@ import { OpenAIProvider } from "./providers/openai";
 import { AnthropicProvider } from "./providers/anthropic";
 import { generateDeterministicSummary } from "./fallback";
 import { aiTelemetry } from "./telemetry";
+import {
+  isAutomatedTestEnvironment,
+  TEST_ENVIRONMENT_PROVIDER_TIMEOUT_MS,
+} from "./runtime";
 import { extractNumericClaims, validateClaimsAgainstContext, sanitizeUntrustedInput, GroundingValidationReport } from "./grounding";
 
 export interface RoutingDecision {
@@ -136,7 +140,13 @@ export class AiRouter {
     const chain = this.resolveProviderChain(taskType);
     const requestId = `req_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     const startTime = Date.now();
-    const timeoutMs = TASK_TIMEOUT_POLICY[taskType] || 15000;
+    // In the automated test environment, collapse the timeout budget so a
+    // mocked fetch resolves instantly and any accidental live network call
+    // fails fast instead of stalling the suite. Production keeps the full
+    // institutional timeout policy.
+    const timeoutMs = isAutomatedTestEnvironment()
+      ? TEST_ENVIRONMENT_PROVIDER_TIMEOUT_MS
+      : TASK_TIMEOUT_POLICY[taskType] || 15000;
 
     // Prompt injection defense: sanitize untrusted input
     const { sanitizedText, injectionDetected } = sanitizeUntrustedInput(query);

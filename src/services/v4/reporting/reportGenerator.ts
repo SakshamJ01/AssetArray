@@ -164,7 +164,9 @@ export class ReportGenerator {
       title: input.meetingData?.meetingTitle || `${input.reportType.replace(/_/g, ' ')} — ${clientName}`,
       status: 'GENERATED',
       currency,
-      dataSnapshotVersion: `snap_${Date.now()}`,
+      // Include random entropy: two snapshots generated within the same
+      // millisecond must never share a data-version identifier.
+      dataSnapshotVersion: `snap_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`,
       methodologyVersion: this.METHODOLOGY_VERSION,
       templateVersion: this.TEMPLATE_VERSION,
       asOf: now,

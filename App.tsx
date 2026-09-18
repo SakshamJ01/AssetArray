@@ -160,6 +160,12 @@ import {
   defaultMessage,
 } from "./src/types/wealth";
 import { SimpleHolding } from "./src/services/rebalancer";
+import {
+  loadAndMigrateClients,
+  persistMigratedClients,
+  resetClientStorage,
+} from "./src/services/clientStorageMigration";
+import { filterSyntheticClients } from "./src/services/syntheticClients";
 
 const PIN_KEY = "asset_array_pin";
 const CLIENTS_KEY = "asset_array_clients";
@@ -427,7 +433,8 @@ function buildHoldingDraftFromHolding(holding: PortfolioHolding): HoldingDraft {
 }
 
 async function persistClients(clients: Client[]) {
-  await AsyncStorage.setItem(CLIENTS_KEY, JSON.stringify(clients));
+  // Synthetic aggregates must never be written into the roster store.
+  await persistMigratedClients(clients);
 }
 
 async function persistBiometric(value: boolean) {
@@ -698,7 +705,6 @@ function AppContent() {
       try {
         const [
           pin,
-          rawClients,
           rawBiometric,
           rawCloudSettings,
           storedMessage,
@@ -710,7 +716,6 @@ function AppContent() {
           rawHaptics,
         ] = await Promise.all([
           storageService.getSecureItem(PIN_KEY),
-          AsyncStorage.getItem(CLIENTS_KEY),
           storageService.getSecureItem(BIOMETRIC_KEY),
           storageService.getSecureItem(CLOUD_SETTINGS_KEY),
           storageService.getSecureItem(MARKET_MESSAGE_KEY),
@@ -724,8 +729,11 @@ function AppContent() {
 
         setStoredPin(pin);
         setBiometricEnabled(parseStoredJson(rawBiometric, false));
-        const loadedClients = parseStoredJson(rawClients, [] as Client[]);
-        const enrichedClients = loadedClients.map((c) => ({
+        // Versioned, test-data-aware migration of the local client roster.
+        // Legacy pre-V4 / synthetic / known-test records are quarantined here so
+        // a browser can never serve old test state into the client roster.
+        const migration = await loadAndMigrateClients();
+        const enrichedClients = migration.clients.map((c) => ({
           ...c,
           avatarUrl: getClientAvatar(c),
         }));
@@ -2157,16 +2165,18 @@ function AppContent() {
         marketMessage?: string;
       }>(payload.ciphertext, storedPin);
 
-      const safeClients = Array.isArray(decoded?.clients)
-        ? decoded.clients.map((client) => ({
-            ...client,
-            portfolio: Array.isArray(client.portfolio) ? client.portfolio : [],
-            watchlist: Array.isArray(client.watchlist) ? client.watchlist : [],
-            updateHistory: Array.isArray(client.updateHistory)
-              ? client.updateHistory
-              : [],
-          }))
-        : [];
+      const safeClients = filterSyntheticClients(
+        Array.isArray(decoded?.clients)
+          ? decoded.clients.map((client) => ({
+              ...client,
+              portfolio: Array.isArray(client.portfolio) ? client.portfolio : [],
+              watchlist: Array.isArray(client.watchlist) ? client.watchlist : [],
+              updateHistory: Array.isArray(client.updateHistory)
+                ? client.updateHistory
+                : [],
+            }))
+          : []
+      );
 
       setClients(safeClients);
       setMarketMessage(decoded?.marketMessage ?? defaultMessage);
@@ -2481,11 +2491,19 @@ function AppContent() {
   async function resetLock() {
     await storageService.removeSecureItem(PIN_KEY);
     await storageService.removeSecureItem(BIOMETRIC_KEY);
+    // Narrowly scoped reset of the local client roster store. This clears any
+    // stale/local client state (including inherited test records) so the vault
+    // starts clean; legitimate cloud backups remain available for restore.
+    await resetClientStorage();
+    await persistClients([]);
     setStoredPin(null);
     setPinInput("");
     setPinSetup("");
     setBiometricEnabled(false);
     setIsUnlocked(false);
+    setClients([]);
+    setSelectedClientId(null);
+    setSelectedClientIds([]);
   }
 
   if (!isReady) {

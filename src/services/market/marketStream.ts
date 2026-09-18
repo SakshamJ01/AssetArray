@@ -5,7 +5,6 @@
  */
 
 import { LiveInstrument, realTimeMarket } from "../realTimeMarket";
-import { marketHealthMonitor } from "./marketHealth";
 
 export type MarketStreamListener = (instruments: Map<string, LiveInstrument>) => void;
 
@@ -42,8 +41,6 @@ export class CentralizedMarketStream {
     const map = new Map<string, LiveInstrument>();
     for (const inst of all) {
       map.set(inst.symbol, inst);
-      // Verify health on update
-      marketHealthMonitor.recordSuccess("finnhub", 120);
     }
 
     for (const listener of this.listeners) {

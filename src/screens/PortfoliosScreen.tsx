@@ -36,6 +36,7 @@ export interface PortfoliosScreenProps {
   };
   isMarketRefreshing: boolean;
   refreshLiveMarketPrices: () => Promise<void> | void;
+  marketStatus?: "LIVE" | "SIMULATED" | "OFFLINE";
   currencyDisplay: (value: string) => string;
   activeModal?: string | null;
   onCloseActiveModal?: () => void;
@@ -50,6 +51,7 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
   taxReporting,
   isMarketRefreshing,
   refreshLiveMarketPrices,
+  marketStatus = "OFFLINE",
   currencyDisplay,
   activeModal,
   onCloseActiveModal,
@@ -273,10 +275,16 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
             columnGap: 12,
             alignItems: "center",
             justifyContent: "space-between",
-            backgroundColor: "rgba(34, 197, 94, 0.08)",
+            backgroundColor:
+              marketStatus === "LIVE"
+                ? "rgba(34, 197, 94, 0.08)"
+                : "rgba(148, 163, 184, 0.08)",
             borderRadius: 12,
             borderWidth: 1,
-            borderColor: "rgba(34, 197, 94, 0.28)",
+            borderColor:
+              marketStatus === "LIVE"
+                ? "rgba(34, 197, 94, 0.28)"
+                : "rgba(148, 163, 184, 0.28)",
             paddingVertical: 9,
             paddingHorizontal: 14,
             marginTop: 14,
@@ -289,8 +297,8 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
                 width: 8,
                 height: 8,
                 borderRadius: 4,
-                backgroundColor: "#22c55e",
-                shadowColor: "#22c55e",
+                backgroundColor: marketStatus === "LIVE" ? "#22c55e" : "#94a3b8",
+                shadowColor: marketStatus === "LIVE" ? "#22c55e" : "#94a3b8",
                 shadowRadius: 6,
                 shadowOpacity: 0.8,
               }}
@@ -299,11 +307,13 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
               style={{
                 fontSize: 11,
                 fontWeight: "800",
-                color: "#22c55e",
+                color: marketStatus === "LIVE" ? "#22c55e" : "#94a3b8",
                 letterSpacing: 0.5,
               }}
             >
-              MARKET DATA FEED • SIMULATED TICKS
+              {marketStatus === "LIVE"
+                ? "MARKET DATA FEED • LIVE QUOTES"
+                : "MARKET DATA FEED • ON-DEMAND"}
             </Text>
           </View>
           <Text
@@ -316,7 +326,9 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
               minWidth: 0,
             }}
           >
-            Simulated Market Model • Portfolio Values Auto-Updated
+            {marketStatus === "LIVE"
+              ? "Provider-connected live prices refresh portfolio valuations."
+              : "Prices pull from configured providers when you refresh. Connect a live provider to enable streaming updates."}
           </Text>
         </View>
 

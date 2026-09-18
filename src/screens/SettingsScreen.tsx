@@ -20,6 +20,7 @@ export interface SettingsScreenProps {
   setIsSyncModalOpen: (val: boolean) => void;
   syncToCloud: () => Promise<void>;
   restoreFromCloud: () => Promise<void>;
+  clearAllLocalData: () => Promise<void>;
   setIsBroadcastModalOpen: (val: boolean) => void;
   broadcastState: string;
   appVersion: string;
@@ -107,6 +108,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   setIsSyncModalOpen,
   syncToCloud,
   restoreFromCloud,
+  clearAllLocalData,
   setIsBroadcastModalOpen,
   broadcastState,
   appVersion,
@@ -157,9 +159,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
       <View style={localStyles.sectionPanel}>
         <View style={localStyles.headerRow}>
           <Text style={localStyles.sectionTitle}>Advisor Account & Environment</Text>
-          <View style={localStyles.demoTag}>
-            <Text style={localStyles.demoTagText}>SIMULATED / SANDBOX READY</Text>
-          </View>
         </View>
         <Text style={localStyles.sectionSubtitle}>
           Advisor workstation configuration, multi-tenant state, and security profile.
@@ -223,6 +222,32 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           </View>
           <View style={localStyles.actionBadge}>
             <Text style={localStyles.actionBadgeText}>Reset PIN</Text>
+          </View>
+        </Pressable>
+
+        <Pressable
+          style={localStyles.actionRowItem}
+          onPress={() =>
+            Alert.alert(
+              "Clear All Local Data",
+              "This permanently deletes all clients, portfolios, goals, advisor messages, and vault documents stored on this device. Your encrypted cloud backup is not affected. This cannot be undone.",
+              [
+                { text: "Cancel", style: "cancel" },
+                {
+                  text: "Clear All Data",
+                  style: "destructive",
+                  onPress: () => void clearAllLocalData(),
+                },
+              ]
+            )
+          }
+        >
+          <View style={{ flex: 1 }}>
+            <Text style={localStyles.rowTitle}>Clear All Local Data</Text>
+            <Text style={localStyles.rowSubtitle}>Wipe the local vault to start with a clean slate. Cloud backup stays safe.</Text>
+          </View>
+          <View style={localStyles.actionBadgeDanger}>
+            <Text style={localStyles.actionBadgeDangerText}>Erase</Text>
           </View>
         </Pressable>
       </View>
@@ -395,18 +420,18 @@ const localStyles = StyleSheet.create({
     color: "#64748B",
     fontVariant: ["tabular-nums"],
   },
-  demoTag: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: radiusTokens.none,
-    backgroundColor: "rgba(245, 158, 11, 0.12)",
+  actionBadgeDanger: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+    backgroundColor: "rgba(239, 68, 68, 0.12)",
     borderWidth: 1,
-    borderColor: "rgba(245, 158, 11, 0.3)",
+    borderColor: "rgba(239, 68, 68, 0.35)",
   },
-  demoTagText: {
-    fontSize: 9,
+  actionBadgeDangerText: {
+    fontSize: 11,
     fontWeight: "700",
-    color: semanticStatusColors.warning,
+    color: semanticStatusColors.negative,
   },
   kpiGrid: {
     flexDirection: "row",

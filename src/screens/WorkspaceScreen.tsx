@@ -253,33 +253,45 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
             <Text style={styles.panelSubtitle}>
               Linked account snapshot for banks, brokerages, cards, and retirement accounts.
             </Text>
-            <View style={styles.analyticsSummaryRow}>
-              <View style={[styles.analyticsMetricCard, styles.analyticsBlue]}>
-                <Text style={styles.analyticsMetricLabel}>Connected accounts</Text>
-                <Text style={styles.analyticsMetricValue}>{aggregationSnapshot.connectedCount}</Text>
-              </View>
-              <View style={[styles.analyticsMetricCard, styles.analyticsGold]}>
-                <Text style={styles.analyticsMetricLabel}>Needs review</Text>
-                <Text style={styles.analyticsMetricValue}>{aggregationSnapshot.reviewCount}</Text>
-              </View>
-              <View style={[styles.analyticsMetricCard, styles.analyticsSlate]}>
-                <Text style={styles.analyticsMetricLabel}>Total external value</Text>
-                <Text style={styles.analyticsMetricValue}>
-                  {currencyDisplay(`${aggregationSnapshot.totalExternalValue}`)}
+            {connectedAccounts.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyTitle}>No linked accounts</Text>
+                <Text style={styles.emptyText}>
+                  Connect a bank, brokerage, card, or retirement account to surface an automated
+                  aggregation snapshot here.
                 </Text>
               </View>
-            </View>
-            {connectedAccounts.slice(0, 2).map((account) => (
-              <View key={account.id} style={styles.analyticsListCard}>
-                <Text style={styles.clientName}>{account.institution}</Text>
-                <Text style={styles.clientMeta}>
-                  {account.accountType} | {account.status}
-                </Text>
-                <Text style={styles.clientSubMeta}>
-                  {currencyDisplay(account.currentValue)}
-                </Text>
-              </View>
-            ))}
+            ) : (
+              <>
+                <View style={styles.analyticsSummaryRow}>
+                  <View style={[styles.analyticsMetricCard, styles.analyticsBlue]}>
+                    <Text style={styles.analyticsMetricLabel}>Connected accounts</Text>
+                    <Text style={styles.analyticsMetricValue}>{aggregationSnapshot.connectedCount}</Text>
+                  </View>
+                  <View style={[styles.analyticsMetricCard, styles.analyticsGold]}>
+                    <Text style={styles.analyticsMetricLabel}>Needs review</Text>
+                    <Text style={styles.analyticsMetricValue}>{aggregationSnapshot.reviewCount}</Text>
+                  </View>
+                  <View style={[styles.analyticsMetricCard, styles.analyticsSlate]}>
+                    <Text style={styles.analyticsMetricLabel}>Total external value</Text>
+                    <Text style={styles.analyticsMetricValue}>
+                      {currencyDisplay(`${aggregationSnapshot.totalExternalValue}`)}
+                    </Text>
+                  </View>
+                </View>
+                {connectedAccounts.slice(0, 2).map((account) => (
+                  <View key={account.id} style={styles.analyticsListCard}>
+                    <Text style={styles.clientName}>{account.institution}</Text>
+                    <Text style={styles.clientMeta}>
+                      {account.accountType} | {account.status}
+                    </Text>
+                    <Text style={styles.clientSubMeta}>
+                      {currencyDisplay(account.currentValue)}
+                    </Text>
+                  </View>
+                ))}
+              </>
+            )}
           </View>
         </View>
       </View>

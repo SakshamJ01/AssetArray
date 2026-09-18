@@ -161,6 +161,7 @@ import {
 } from "./src/types/wealth";
 import { SimpleHolding } from "./src/services/rebalancer";
 import {
+  CLIENTS_QUARANTINE_KEY,
   loadAndMigrateClients,
   persistMigratedClients,
   resetClientStorage,
@@ -213,29 +214,7 @@ const emptyVaultDocumentDraft: VaultDocumentDraft = {
   category: "Report",
 };
 
-const defaultConnectedAccounts: ConnectedAccount[] = [
-  {
-    id: "acc-bank-1",
-    institution: "Primary Bank",
-    accountType: "Bank",
-    currentValue: "850000",
-    status: "Connected",
-  },
-  {
-    id: "acc-broker-1",
-    institution: "Brokerage Account",
-    accountType: "Broker",
-    currentValue: "2450000",
-    status: "Connected",
-  },
-  {
-    id: "acc-card-1",
-    institution: "Business Credit Card",
-    accountType: "Card",
-    currentValue: "95000",
-    status: "Review",
-  },
-];
+const emptyConnectedAccounts: ConnectedAccount[] = [];
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
@@ -538,8 +517,11 @@ function AppContent() {
   }, []);
 
   // Continuous real-time portfolio valuation sync: throttled + incremental.
-  // Only affected instruments trigger position updates; hidden tabs pause work.
+  // Only runs when a live market provider is configured; otherwise simulated
+  // ticks can never mutate stored portfolio values.
   useEffect(() => {
+    if (marketHealthMonitor.getOverallHealth().activeProviders === 0) return;
+
     let lastSyncTime = 0;
     const THROTTLE_MS = 5000;
 
@@ -642,7 +624,7 @@ function AppContent() {
   const [vaultDocuments, setVaultDocuments] = useState<VaultDocument[]>([]);
   const [vaultDocumentDraft, setVaultDocumentDraft] =
     useState<VaultDocumentDraft>(emptyVaultDocumentDraft);
-  const [connectedAccounts] = useState<ConnectedAccount[]>(defaultConnectedAccounts);
+  const [connectedAccounts] = useState<ConnectedAccount[]>(emptyConnectedAccounts);
   const [dataQualityReport, setDataQualityReport] = useState<DataQualitySummary | null>(null);
 
   useEffect(() => {
@@ -1896,6 +1878,13 @@ function AppContent() {
   }
 
   async function refreshLiveMarketPrices() {
+    if (marketHealthMonitor.getOverallHealth().activeProviders === 0) {
+      Alert.alert(
+        "Live market data not configured",
+        "Add a FINNHUB_API_KEY to pull real-time quotes. Without it, prices are not fetched and stored portfolio values stay unchanged."
+      );
+      return;
+    }
     try {
       setIsMarketRefreshing(true);
       const quotes = await fetchLiveMarketQuotes();
@@ -2506,6 +2495,32 @@ function AppContent() {
     setSelectedClientIds([]);
   }
 
+  // Full wipe of locally stored advisory state (client roster, goals,
+  // advisor messages, vault documents, market broadcasts). Cloud backups are
+  // not touched; users can restore from the cloud if they need a recovery path.
+  async function clearAllLocalData() {
+    await storageService.removeSecureItem(MARKET_MESSAGE_KEY).catch(() => undefined);
+    await AsyncStorage.multiRemove([
+      GOALS_KEY,
+      ADVISOR_MESSAGES_KEY,
+      VAULT_DOCUMENTS_KEY,
+      CLIENTS_QUARANTINE_KEY,
+    ]).catch(() => undefined);
+    await resetClientStorage();
+    await persistClients([]);
+    await persistGoals([]);
+    await persistAdvisorMessages([]);
+    await persistVaultDocuments([]);
+    setClients([]);
+    setSelectedClientId(null);
+    setSelectedClientIds([]);
+    setGoals([]);
+    setAdvisorMessages([]);
+    setVaultDocuments([]);
+    setMarketMessage("");
+    setBroadcastMessage("");
+  }
+
   if (!isReady) {
     return (
       <SafeAreaView style={styles.loadingScreen}>
@@ -2884,6 +2899,11 @@ function AppContent() {
               taxReporting={taxReporting}
               isMarketRefreshing={isMarketRefreshing}
               refreshLiveMarketPrices={refreshLiveMarketPrices}
+              marketStatus={
+                marketHealthMonitor.getOverallHealth().activeProviders > 0
+                  ? "LIVE"
+                  : "SIMULATED"
+              }
               currencyDisplay={currencyDisplay}
               activeModal={portfolioActiveModal}
               onCloseActiveModal={() => setPortfolioActiveModal(null)}
@@ -3076,6 +3096,7 @@ function AppContent() {
             setIsSyncModalOpen={setIsSyncModalOpen}
             syncToCloud={syncToCloud}
             restoreFromCloud={restoreFromCloud}
+            clearAllLocalData={clearAllLocalData}
             setIsBroadcastModalOpen={setIsBroadcastModalOpen}
             broadcastState={broadcastState}
             appVersion={APP_VERSION}

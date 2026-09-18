@@ -6,6 +6,7 @@ import {
   LiveInstrument,
   realTimeMarket,
 } from "../services/realTimeMarket";
+import { marketHealthMonitor } from "../services/market/marketHealth";
 import { LiveMarketDepthModal } from "./modals/LiveMarketDepthModal";
 
 export interface LiveMarketTickerProps {
@@ -35,6 +36,8 @@ export const LiveMarketTicker: React.FC<LiveMarketTickerProps> = ({
   const [flashMap, setFlashMap] = useState<Record<string, "up" | "down">>({});
   const prevPricesRef = useRef<Record<string, number>>({});
   const flashTimersRef = useRef<Record<string, any>>({});
+
+  const hasLiveFeed = marketHealthMonitor.getOverallHealth().activeProviders > 0;
 
   useEffect(() => {
     // Initial prices record
@@ -104,11 +107,13 @@ export const LiveMarketTicker: React.FC<LiveMarketTickerProps> = ({
             realTimeMarket.triggerManualSync();
           }}
         >
-          <View style={styles.liveDotWrapper}>
-            <View style={styles.liveDotPulse} />
-            <View style={styles.liveDot} />
+          <View style={hasLiveFeed ? styles.liveDotWrapper : styles.offlineDotWrapper}>
+            <View style={hasLiveFeed ? styles.liveDotPulse : styles.offlineDotPulse} />
+            <View style={hasLiveFeed ? styles.liveDot : styles.offlineDot} />
           </View>
-          <Text style={styles.liveLabel}>LIVE TICK</Text>
+          <Text style={hasLiveFeed ? styles.liveLabel : styles.offlineLabel}>
+            {hasLiveFeed ? "LIVE TICK" : "FEED"}
+          </Text>
         </Pressable>
 
         <ScrollView
@@ -249,10 +254,37 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     backgroundColor: "rgba(34, 197, 94, 0.4)",
   },
+  offlineDotWrapper: {
+    position: "relative",
+    width: 10,
+    height: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 6,
+  },
+  offlineDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#94a3b8",
+  },
+  offlineDotPulse: {
+    position: "absolute",
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "rgba(148, 163, 184, 0.4)",
+  },
   liveLabel: {
     fontSize: 10,
     fontWeight: "800",
     color: "#22c55e",
+    letterSpacing: 0.8,
+  },
+  offlineLabel: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: "#94a3b8",
     letterSpacing: 0.8,
   },
   scrollContent: {

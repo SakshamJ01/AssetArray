@@ -13,7 +13,6 @@ import {
 import { AppTheme } from "../../theme";
 import {
   parseStatement,
-  SAMPLE_STATEMENTS,
 } from "../../services/statementParser";
 import { SimpleHolding } from "../../services/rebalancer";
 
@@ -39,7 +38,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
 
   const brandColor = theme.colors.brand || "#E0A84C";
 
-  const [csvText, setCsvText] = useState<string>(SAMPLE_STATEMENTS.zerodha);
+  const [csvText, setCsvText] = useState<string>("");
   const [importMode, setImportMode] = useState<"merge" | "replace">("merge");
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -202,76 +201,6 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
             contentContainerStyle={{ padding: 20 }}
             showsVerticalScrollIndicator={false}
           >
-            {/* Quick Demo Templates */}
-            <View style={styles.presetsBar}>
-              <Text
-                style={[
-                  styles.presetsLabel,
-                  { color: isDark ? "#94A3B8" : theme.colors.textSecondary },
-                ]}
-              >
-                Load Sample Broker Statement:
-              </Text>
-              <View style={styles.presetsList}>
-                <Pressable
-                  style={[
-                    styles.presetChip,
-                    {
-                      borderColor: brandColor,
-                      backgroundColor: isDark
-                        ? "rgba(224, 168, 76, 0.12)"
-                        : "rgba(179, 126, 40, 0.12)",
-                    },
-                  ]}
-                  onPress={() => setCsvText(SAMPLE_STATEMENTS.zerodha)}
-                >
-                  <Text style={[styles.presetText, { color: brandColor }]}>
-                    Zerodha Kite CSV
-                  </Text>
-                </Pressable>
-                <Pressable
-                  style={[
-                    styles.presetChip,
-                    {
-                      borderColor: isDark
-                        ? "rgba(255, 255, 255, 0.15)"
-                        : "rgba(15, 23, 42, 0.15)",
-                    },
-                  ]}
-                  onPress={() => setCsvText(SAMPLE_STATEMENTS.camsCas)}
-                >
-                  <Text
-                    style={[
-                      styles.presetText,
-                      { color: isDark ? "#F8FAFC" : theme.colors.textPrimary },
-                    ]}
-                  >
-                    CAMS / KFintech CAS
-                  </Text>
-                </Pressable>
-                <Pressable
-                  style={[
-                    styles.presetChip,
-                    {
-                      borderColor: isDark
-                        ? "rgba(255, 255, 255, 0.15)"
-                        : "rgba(15, 23, 42, 0.15)",
-                    },
-                  ]}
-                  onPress={() => setCsvText(SAMPLE_STATEMENTS.familyOffice)}
-                >
-                  <Text
-                    style={[
-                      styles.presetText,
-                      { color: isDark ? "#F8FAFC" : theme.colors.textPrimary },
-                    ]}
-                  >
-                    Family Office Multi-Asset
-                  </Text>
-                </Pressable>
-              </View>
-            </View>
-
             {/* CSV Input Area */}
             <View
               style={[

@@ -1,0 +1,38 @@
+{
+  "executedAt": "2026-09-18T19:49:06.863Z",
+  "targetUrl": "https://asset-array.web.app",
+  "isolation": "fresh ephemeral context, storageState undefined",
+  "browserVersion": "153.0.8010.48",
+  "steps": [
+    {
+      "step": "1. Fresh session clients EMPTY",
+      "status": "PASS",
+      "detail": "emptyState=true, rows=0"
+    },
+    {
+      "step": "2. After creating one client",
+      "status": "PASS",
+      "detail": "rows=1 (expected 1)"
+    },
+    {
+      "step": "3. After reload persistence",
+      "status": "PASS",
+      "detail": "rows=1 (expected 1)"
+    },
+    {
+      "step": "4. After logout/login",
+      "status": "PASS",
+      "detail": "rows=1 (expected 1)"
+    },
+    {
+      "step": "5. No test/synthetic names present",
+      "status": "PASS",
+      "detail": "none found"
+    }
+  ],
+  "summary": {
+    "total": 5,
+    "passed": 5,
+    "failed": 0
+  }
+}

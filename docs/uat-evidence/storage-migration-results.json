@@ -1,0 +1,42 @@
+{
+  "executedAt": "2026-09-18T19:54:26.873Z",
+  "targetUrl": "https://asset-array.web.app",
+  "isolation": "fresh ephemeral context, storageState undefined",
+  "steps": [
+    {
+      "step": "1. Store rewritten to versioned envelope",
+      "status": "PASS",
+      "detail": "schemaVersion=2"
+    },
+    {
+      "step": "2. Legitimate clients migrated forward",
+      "status": "PASS",
+      "detail": "present=cli_legit_a,cli_legit_b"
+    },
+    {
+      "step": "3. Synthetic aggregate quarantined (not in roster)",
+      "status": "PASS",
+      "detail": "absent from roster"
+    },
+    {
+      "step": "4. Legacy test records quarantined (not in roster)",
+      "status": "PASS",
+      "detail": "none present"
+    },
+    {
+      "step": "5. Quarantine preserved removed records (no data loss)",
+      "status": "PASS",
+      "detail": "4 quarantined"
+    },
+    {
+      "step": "6. No record silently lost",
+      "status": "PASS",
+      "detail": "migrated=2 quarantined=4 injected=6"
+    }
+  ],
+  "summary": {
+    "total": 6,
+    "passed": 6,
+    "failed": 0
+  }
+}

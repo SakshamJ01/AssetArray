@@ -46,7 +46,11 @@ async function main() {
   console.log("================================================================");
   console.log("AssetArray — Production Test-Data DRY-RUN (READ-ONLY)");
   console.log("================================================================");
-  console.log("Mongo host :", new URL(MONGO_URI).host);
+  // Never echo credentials. Strip any userinfo@ from the connection string.
+  const redactedHost = MONGO_URI.replace(/^mongodb(\+srv)?:\/\//, "")
+    .split("/")[0]
+    .replace(/^[^@]*@/, "***@");
+  console.log("Mongo host :", redactedHost);
   console.log("Database   :", MONGO_DB_NAME);
   console.log("Mode       : DRY-RUN (no writes, no deletes)");
   console.log("");

@@ -6,6 +6,7 @@
 
 import { AiProvider, AiStreamCallbacks, AiTaskType, ProviderStatus, StreamContextPayload } from "../types";
 import { buildTaskPrompt } from "../schemas";
+import { fetchBackendStream } from "./backendStream";
 
 export class OllamaProvider implements AiProvider {
   readonly id = "ollama";
@@ -73,7 +74,7 @@ export class OllamaProvider implements AiProvider {
     taskType: AiTaskType,
     context: StreamContextPayload | undefined,
     callbacks: AiStreamCallbacks,
-    options?: { timeoutMs?: number; signal?: AbortSignal }
+    options?: { timeoutMs?: number; signal?: AbortSignal; accessToken?: string | null; endpoint?: string; onUnauthorized?: () => Promise<string | null> }
   ): Promise<void> {
     const activeModel = await this.getActiveModel();
     const timeout = options?.timeoutMs || 20000;
@@ -88,10 +89,13 @@ export class OllamaProvider implements AiProvider {
     // 1. First attempt through backend proxy
     try {
       callbacks.onStateChange?.("STREAMING", `Streaming from Ollama (${activeModel})...`);
-      const response = await fetch(`${this.backendUrl}/api/ai/stream`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const response = await fetchBackendStream({
+        backendUrl: this.backendUrl,
+        accessToken: options?.accessToken,
+        endpoint: options?.endpoint,
+        onUnauthorized: options?.onUnauthorized,
+        signal: options?.signal || controller.signal,
+        body: {
           provider: "ollama",
           model: activeModel,
           query: prompt,
@@ -108,8 +112,7 @@ export class OllamaProvider implements AiProvider {
             riskProfile: context?.riskProfile,
           },
           macroContext: context?.macroContext,
-        }),
-        signal: options?.signal || controller.signal,
+        },
       });
 
       if (response.ok && response.body) {

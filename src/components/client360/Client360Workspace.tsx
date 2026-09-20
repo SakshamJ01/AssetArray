@@ -26,6 +26,8 @@ import {
   formatWealthAmount,
   loadCurrencyPreference,
 } from "../../services/currency";
+import { calculateHealthScore } from "../../services/healthScore";
+import { InstitutionalHealthScoreResult } from "../../services/health/types";
 
 export interface Client360WorkspaceProps {
   client: Client;
@@ -105,6 +107,39 @@ export const Client360Workspace: React.FC<Client360WorkspaceProps> = ({
   const totalGainLoss = totalCurrent - totalInvested;
   const gainLossPct =
     totalInvested > 0 ? (totalGainLoss / totalInvested) * 100 : 0;
+
+  // Real portfolio health from the institutional factor engine (no hardcoded values)
+  const healthResult: InstitutionalHealthScoreResult = React.useMemo(
+    () => calculateHealthScore(holdings),
+    [holdings]
+  );
+  const healthFactorById = (id: string) =>
+    healthResult.detailedFactors.find((f) => f.factorId === id);
+  const concentrationFactor = healthFactorById("concentration");
+  const diversificationFactor = healthFactorById("assetDiversification");
+  const liquidityFactor = healthFactorById("liquidity");
+  const dataQualityFactor = healthFactorById("dataQuality");
+
+  // Real drawdown from recorded valuation history (drawdown_pct snapshots)
+  const [drawdownPct, setDrawdownPct] = useState<number | null>(null);
+  useEffect(() => {
+    let isMounted = true;
+    const load = async () => {
+      try {
+        const snaps = await snapshotStore.getSnapshots(client.id, "drawdown_pct");
+        const real = snaps.filter((s) => !s.isDemo);
+        if (isMounted) {
+          setDrawdownPct(real.length > 0 ? real[0].value : null);
+        }
+      } catch {
+        if (isMounted) setDrawdownPct(null);
+      }
+    };
+    load();
+    return () => {
+      isMounted = false;
+    };
+  }, [client.id]);
 
   const [activeCurrency, setActiveCurrency] = useState<CurrencyCode>("INR");
 
@@ -347,24 +382,37 @@ export const Client360Workspace: React.FC<Client360WorkspaceProps> = ({
               <Text style={workspaceStyles.sectionTitle}>Portfolio Health Diagnostic</Text>
               <View style={workspaceStyles.scoreBox}>
                 <View>
-                  <Text style={workspaceStyles.scoreBig}>78<Text style={workspaceStyles.scoreMax}>/100</Text></Text>
-                  <Text style={workspaceStyles.scoreStatus}>MODERATE HEALTH</Text>
+                  <Text style={workspaceStyles.scoreBig}>{healthResult.healthScore}<Text style={workspaceStyles.scoreMax}>/100</Text></Text>
+                  <Text style={workspaceStyles.scoreStatus}>
+                    {healthResult.confidence === "INSUFFICIENT_DATA"
+                      ? "INSUFFICIENT DATA"
+                      : healthResult.grade.toUpperCase()}
+                  </Text>
                 </View>
                 <View style={{ flex: 1, marginLeft: 16 }}>
                   <View style={workspaceStyles.metricRow}>
-                    <Text style={workspaceStyles.metricRowLabel}>Allocation Drift Score</Text>
-                    <Text style={workspaceStyles.metricRowValue}>82/100</Text>
+                    <Text style={workspaceStyles.metricRowLabel}>Concentration Risk</Text>
+                    <Text style={workspaceStyles.metricRowValue}>
+                      {concentrationFactor ? `${concentrationFactor.score}/100` : "—"}
+                    </Text>
                   </View>
                   <View style={workspaceStyles.metricRow}>
                     <Text style={workspaceStyles.metricRowLabel}>Asset Diversification</Text>
-                    <Text style={workspaceStyles.metricRowValue}>74/100</Text>
+                    <Text style={workspaceStyles.metricRowValue}>
+                      {diversificationFactor ? `${diversificationFactor.score}/100` : "—"}
+                    </Text>
                   </View>
                   <View style={workspaceStyles.metricRow}>
-                    <Text style={workspaceStyles.metricRowLabel}>Cash Drag Efficiency</Text>
-                    <Text style={workspaceStyles.metricRowValue}>78/100</Text>
+                    <Text style={workspaceStyles.metricRowLabel}>Liquidity / Cash Drag Efficiency</Text>
+                    <Text style={workspaceStyles.metricRowValue}>
+                      {liquidityFactor ? `${liquidityFactor.score}/100` : "—"}
+                    </Text>
                   </View>
                 </View>
               </View>
+              <Text style={[workspaceStyles.healthNote, { color: theme.colors.textMuted }]}>
+                {healthResult.explanation}
+              </Text>
             </View>
 
             {/* RISK */}
@@ -380,18 +428,27 @@ export const Client360Workspace: React.FC<Client360WorkspaceProps> = ({
                   </View>
                   <View style={workspaceStyles.metricRow}>
                     <Text style={workspaceStyles.metricRowLabel}>Peak-to-Trough Drawdown</Text>
-                    <Text style={[workspaceStyles.metricRowValue, { color: "#EF4444" }]}>-9.3%</Text>
+                    <Text style={[workspaceStyles.metricRowValue, drawdownPct ? { color: "#EF4444" } : null]}>
+                      {drawdownPct != null ? `-${drawdownPct}%` : "—"}{" "}
+                      <Text style={{ fontSize: 10, color: theme.colors.textMuted }}>
+                        {drawdownPct != null ? "(recorded history)" : "(awaiting valuation history)"}
+                      </Text>
+                    </Text>
                   </View>
                   <View style={workspaceStyles.metricRow}>
                     <Text style={workspaceStyles.metricRowLabel}>Value at Risk (95% 1-Day)</Text>
-                    <Text style={workspaceStyles.metricRowValue}>1.42%</Text>
+                    <Text style={workspaceStyles.metricRowValue}>Not derived</Text>
                   </View>
                   <View style={workspaceStyles.metricRow}>
-                    <Text style={workspaceStyles.metricRowLabel}>Nifty Benchmark Beta</Text>
-                    <Text style={workspaceStyles.metricRowValue}>0.88</Text>
+                    <Text style={workspaceStyles.metricRowLabel}>Market Beta</Text>
+                    <Text style={workspaceStyles.metricRowValue}>Not derived</Text>
                   </View>
                 </View>
               </View>
+              <Text style={[workspaceStyles.healthNote, { color: theme.colors.textMuted }]}>
+                VaR and Beta require a historical market time series per holding; they are not
+                estimated. Drawdown reflects genuine recorded portfolio valuation history.
+              </Text>
             </View>
           </View>
 
@@ -987,6 +1044,12 @@ const workspaceStyles = StyleSheet.create({
     color: "#10B981",
     letterSpacing: 0.5,
     marginTop: 2,
+  },
+  healthNote: {
+    fontSize: 10,
+    lineHeight: 15,
+    marginTop: 8,
+    paddingHorizontal: 2,
   },
   metricRow: {
     flexDirection: "row",

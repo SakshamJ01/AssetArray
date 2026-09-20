@@ -79,7 +79,13 @@ export interface AiProvider {
     taskType: AiTaskType,
     context: StreamContextPayload | undefined,
     callbacks: AiStreamCallbacks,
-    options?: { timeoutMs?: number; signal?: AbortSignal }
+    options?: {
+      timeoutMs?: number;
+      signal?: AbortSignal;
+      accessToken?: string | null;
+      endpoint?: string;
+      onUnauthorized?: () => Promise<string | null>;
+    }
   ): Promise<void>;
 }
 

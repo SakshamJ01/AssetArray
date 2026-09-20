@@ -6,6 +6,7 @@
 
 import { AiProvider, AiStreamCallbacks, AiTaskType, ProviderStatus, StreamContextPayload } from "../types";
 import { buildTaskPrompt } from "../schemas";
+import { fetchBackendStream } from "./backendStream";
 
 export class GeminiProvider implements AiProvider {
   readonly id = "gemini";
@@ -32,7 +33,7 @@ export class GeminiProvider implements AiProvider {
     taskType: AiTaskType,
     context: StreamContextPayload | undefined,
     callbacks: AiStreamCallbacks,
-    options?: { timeoutMs?: number; signal?: AbortSignal }
+    options?: { timeoutMs?: number; signal?: AbortSignal; accessToken?: string | null; endpoint?: string; onUnauthorized?: () => Promise<string | null> }
   ): Promise<void> {
     const timeout = options?.timeoutMs || 15000;
     const controller = new AbortController();
@@ -46,10 +47,13 @@ export class GeminiProvider implements AiProvider {
 
       callbacks.onStateChange?.("STREAMING", `Streaming from ${modelName}...`);
 
-      const response = await fetch(`${this.backendUrl}/api/ai/stream`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const response = await fetchBackendStream({
+        backendUrl: this.backendUrl,
+        accessToken: options?.accessToken,
+        endpoint: options?.endpoint,
+        onUnauthorized: options?.onUnauthorized,
+        signal: options?.signal || controller.signal,
+        body: {
           provider: "gemini",
           query: prompt,
           taskType,
@@ -65,8 +69,7 @@ export class GeminiProvider implements AiProvider {
             riskProfile: context?.riskProfile,
           },
           macroContext: context?.macroContext,
-        }),
-        signal: options?.signal || controller.signal,
+        },
       });
 
       if (!response.ok || !response.body) {

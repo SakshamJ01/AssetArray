@@ -30,6 +30,8 @@ export interface StreamOptions {
   taskType?: "briefing" | "tax_analytics" | "portfolio_attribution" | "scenario_stress" | AiTaskType;
   context?: StreamContext;
   accessToken?: string | null;
+  endpoint?: string;
+  onUnauthorized?: () => Promise<string | null>;
   onStateChange?: (state: AiStreamState, message?: string) => void;
   onToken: (token: string) => void;
   onComplete?: (metadata: { model: string; groundedAt: string; provider?: string }) => void;
@@ -37,7 +39,7 @@ export interface StreamOptions {
 }
 
 export async function streamAiResponse(options: StreamOptions): Promise<void> {
-  const { query, taskType = "briefing", context, onStateChange, onToken, onComplete, onError } = options;
+  const { query, taskType = "briefing", context, accessToken, endpoint, onUnauthorized, onStateChange, onToken, onComplete, onError } = options;
 
   let mappedTask: AiTaskType = "ADVISOR_BRIEF";
   if (taskType === "tax_analytics" || taskType === "TAX_EXPLANATION") {
@@ -80,6 +82,10 @@ export async function streamAiResponse(options: StreamOptions): Promise<void> {
         });
       },
       onError,
+    }, {
+      accessToken,
+      endpoint,
+      onUnauthorized,
     });
   } catch (err: any) {
     onError?.(err);

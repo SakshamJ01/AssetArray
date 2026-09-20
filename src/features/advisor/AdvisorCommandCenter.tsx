@@ -28,7 +28,8 @@ import { Client360Modal } from "./Client360Modal";
 import { DecisionJournalModal } from "./DecisionJournalModal";
 import { AdvisorBriefModal } from "./AdvisorBriefModal";
 import { CommandPalette } from "./CommandPalette";
-import { PortfolioTrajectoryChart } from "./PortfolioTrajectoryChart";
+import { PortfolioTrajectoryChart, TrajectoryPeriod } from "./PortfolioTrajectoryChart";
+import { DataPoint } from "../../components/charts/PerformanceChart";
 import { custodianSyncService } from "../../services/custodian/custodianSync";
 import {
   loadPersistedActions,
@@ -41,6 +42,7 @@ import {
 import { generateDailyAdvisorBrief } from "../../services/advisor/dailyBrief";
 import { evaluateDataQuality } from "../../services/advisor/dataQuality";
 import { evaluateSmartAlerts } from "../../services/smartAlerts";
+import { buildConsolidatedTrajectory } from "../../services/portfolioTrajectory";
 
 export type HorizonPerspective = "TODAY" | "THIS_WEEK" | "THIS_MONTH";
 export type CommandCenterTab = "ACTIONS" | "OPPORTUNITIES" | "ANALYTICS" | "DATA_QUALITY" | "KPIS";
@@ -266,6 +268,28 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
     }
     return "₹0";
   }, [totalAum]);
+
+  // Desk trajectory from genuine recorded AUM snapshots (no fabricated curve)
+  const [trajectoryByPeriod, setTrajectoryByPeriod] = useState<Partial<Record<TrajectoryPeriod, DataPoint[]>>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    const clientIds = clients.map((c) => c.id).filter(Boolean);
+    if (clientIds.length === 0) {
+      setTrajectoryByPeriod({});
+      return;
+    }
+    buildConsolidatedTrajectory(clientIds)
+      .then((trajectory) => {
+        if (!cancelled) setTrajectoryByPeriod(trajectory);
+      })
+      .catch(() => {
+        if (!cancelled) setTrajectoryByPeriod({});
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [clients]);
 
   const [isSyncingAccounts, setIsSyncingAccounts] = useState(false);
   const [syncToastMessage, setSyncToastMessage] = useState<string | null>(null);
@@ -705,6 +729,7 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
         <PortfolioTrajectoryChart
           theme={theme}
           totalAum={totalAum}
+          dataByPeriod={trajectoryByPeriod}
           onViewAttribution={() => onNavigateTab("Portfolios", { view: "attribution" })}
         />
       )}

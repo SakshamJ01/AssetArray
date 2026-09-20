@@ -1,69 +1,73 @@
 /**
- * Portfolio Trajectory & Benchmark Alpha Chart
- * Provides the executive context chart placed directly below summary KPIs
- * Visualizes 6-month portfolio trajectory vs 65/35 blended benchmark with active alpha metrics.
+ * Portfolio Trajectory Chart
+ * Renders the desk-level AUM trajectory strictly from genuine recorded
+ * valuation history (real point-in-time AUM snapshots aggregated across
+ * clients). No fabricated benchmark, no invented alpha/sharpe: the delta is
+ * computed from the actual first/last point of the selected period, and an
+ * honest empty state is shown until real history accumulates.
  */
 
-import React, { useState } from "react";
-import { View, Text, StyleSheet, Pressable, Platform } from "react-native";
+import React, { useMemo, useState } from "react";
+import { View, Text, StyleSheet, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { AppTheme } from "../../theme";
+import { DataPoint } from "../../components/charts/PerformanceChart";
 
 export interface PortfolioTrajectoryChartProps {
   theme: AppTheme;
   totalAum: number;
+  dataByPeriod?: Partial<Record<TrajectoryPeriod, DataPoint[]>>;
   onViewAttribution?: () => void;
+  formatCurrency?: (value: number) => string;
 }
 
-type Period = "3M" | "6M" | "1Y" | "YTD";
+export type TrajectoryPeriod = "3M" | "6M" | "1Y" | "YTD";
 
-const TRAJECTORY_DATA: Record<Period, { labels: string[]; portfolio: number[]; benchmark: number[]; alpha: string; sharpe: string }> = {
-  "3M": {
-    labels: ["Jun", "Jul", "Aug", "Sep"],
-    portfolio: [100, 102.4, 104.1, 106.8],
-    benchmark: [100, 101.2, 102.0, 103.4],
-    alpha: "+3.4%",
-    sharpe: "1.92",
-  },
-  "6M": {
-    labels: ["Apr", "May", "Jun", "Jul", "Aug", "Sep"],
-    portfolio: [100, 103.1, 102.4, 107.5, 109.8, 114.2],
-    benchmark: [100, 101.5, 101.0, 104.2, 106.1, 109.6],
-    alpha: "+4.6%",
-    sharpe: "1.84",
-  },
-  "1Y": {
-    labels: ["Oct", "Dec", "Feb", "Apr", "Jun", "Aug", "Sep"],
-    portfolio: [100, 105.2, 108.4, 112.0, 116.8, 121.4, 126.5],
-    benchmark: [100, 103.0, 105.1, 107.8, 111.2, 114.6, 118.2],
-    alpha: "+8.3%",
-    sharpe: "1.79",
-  },
-  YTD: {
-    labels: ["Jan", "Mar", "May", "Jul", "Sep"],
-    portfolio: [100, 104.5, 107.8, 112.2, 115.8],
-    benchmark: [100, 102.1, 104.8, 108.0, 110.6],
-    alpha: "+5.2%",
-    sharpe: "1.88",
-  },
-};
+const PERIODS: TrajectoryPeriod[] = ["3M", "6M", "1Y", "YTD"];
 
 export const PortfolioTrajectoryChart: React.FC<PortfolioTrajectoryChartProps> = ({
   theme,
   totalAum,
+  dataByPeriod,
   onViewAttribution,
+  formatCurrency,
 }) => {
-  const [period, setPeriod] = useState<Period>("6M");
-  const data = TRAJECTORY_DATA[period];
+  const [period, setPeriod] = useState<TrajectoryPeriod>("6M");
 
-  const minVal = Math.min(...data.portfolio, ...data.benchmark) - 1;
-  const maxVal = Math.max(...data.portfolio, ...data.benchmark) + 1;
-  const range = maxVal - minVal || 1;
+  const series = dataByPeriod?.[period] || [];
+  const hasTrajectory = series.length >= 2;
+
+  const { deltaPct, bars } = useMemo(() => {
+    if (series.length < 2) {
+      return { deltaPct: 0, bars: [] as { label: string; height: number }[] };
+    }
+    const first = series[0].value;
+    const last = series[series.length - 1].value;
+    const pct = first > 0 ? ((last - first) / first) * 100 : 0;
+
+    const minVal = Math.min(...series.map((p) => p.value));
+    const maxVal = Math.max(...series.map((p) => p.value));
+    const range = maxVal - minVal || 1;
+
+    const mapped = series.map((p) => ({
+      label: p.date,
+      height: Math.round(((p.value - minVal) / range) * 90) + 10,
+    }));
+    return { deltaPct: pct, bars: mapped };
+  }, [series]);
 
   const isDark =
     theme.colors.background === "#030712" ||
     theme.colors.textPrimary === "#ffffff" ||
     theme.colors.textPrimary === "#FFFFFF";
+
+  const aumLabel =
+    formatCurrency?.(totalAum) ??
+    (totalAum >= 10000000
+      ? `₹${(totalAum / 10000000).toFixed(2)} Cr`
+      : `₹${(totalAum / 100000).toFixed(2)} L`);
+
+  const isPositive = deltaPct >= 0;
 
   return (
     <View
@@ -83,21 +87,31 @@ export const PortfolioTrajectoryChart: React.FC<PortfolioTrajectoryChartProps> =
           <View style={styles.titleWithBadge}>
             <Ionicons name="trending-up" size={16} color={theme.colors.brand} />
             <Text style={[styles.title, { color: theme.colors.textPrimary }]}>
-              Portfolio Trajectory & Benchmark Alpha
+              Portfolio Trajectory
             </Text>
-            <View
-              style={[
-                styles.alphaBadge,
-                { backgroundColor: theme.colors.successSoft, borderColor: theme.colors.success },
-              ]}
-            >
-              <Text style={[styles.alphaText, { color: theme.colors.success }]}>
-                Alpha {data.alpha}
-              </Text>
-            </View>
+            {hasTrajectory && (
+              <View
+                style={[
+                  styles.alphaBadge,
+                  {
+                    backgroundColor: isPositive ? theme.colors.successSoft : theme.colors.dangerSoft,
+                    borderColor: isPositive ? theme.colors.success : theme.colors.danger,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.alphaText,
+                    { color: isPositive ? theme.colors.success : theme.colors.danger },
+                  ]}
+                >
+                  {isPositive ? "▲" : "▼"} {Math.abs(deltaPct).toFixed(1)}% {period}
+                </Text>
+              </View>
+            )}
           </View>
           <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>
-            Aggregate client AUM vs Blended Balanced 65/35 Benchmark
+            Tracked AUM {aumLabel} · genuine recorded valuation history
           </Text>
         </View>
 
@@ -107,7 +121,7 @@ export const PortfolioTrajectoryChart: React.FC<PortfolioTrajectoryChartProps> =
             { backgroundColor: theme.colors.surfaceMuted, borderColor: theme.colors.border },
           ]}
         >
-          {(["3M", "6M", "1Y", "YTD"] as Period[]).map((p) => (
+          {PERIODS.map((p) => (
             <Pressable
               key={p}
               onPress={() => setPeriod(p)}
@@ -132,46 +146,38 @@ export const PortfolioTrajectoryChart: React.FC<PortfolioTrajectoryChartProps> =
         </View>
       </View>
 
-      {/* Trajectory Visual Bars / Sparkline Grid */}
+      {/* Trajectory Visual Bars / Empty State */}
       <View style={styles.chartArea}>
-        <View style={styles.barsContainer}>
-          {data.labels.map((lbl, idx) => {
-            const pVal = data.portfolio[idx];
-            const bVal = data.benchmark[idx];
-            const pHeight = Math.round(((pVal - minVal) / range) * 90) + 10;
-            const bHeight = Math.round(((bVal - minVal) / range) * 90) + 10;
-
-            return (
-              <View key={lbl} style={styles.barColumn}>
+        {hasTrajectory ? (
+          <View style={styles.barsContainer}>
+            {bars.map((bar, idx) => (
+              <View key={`${bar.label}-${idx}`} style={styles.barColumn}>
                 <View style={styles.barsPair}>
-                  {/* Portfolio Bar */}
                   <View
                     style={[
                       styles.bar,
                       {
-                        height: pHeight,
+                        height: bar.height,
                         backgroundColor: theme.colors.brand,
-                      },
-                    ]}
-                  />
-                  {/* Benchmark Bar */}
-                  <View
-                    style={[
-                      styles.bar,
-                      {
-                        height: bHeight,
-                        backgroundColor: isDark ? "rgba(148, 163, 184, 0.35)" : "rgba(100, 116, 139, 0.3)",
                       },
                     ]}
                   />
                 </View>
                 <Text style={[styles.barLabel, { color: theme.colors.textMuted }]}>
-                  {lbl}
+                  {bar.label}
                 </Text>
               </View>
-            );
-          })}
-        </View>
+            ))}
+          </View>
+        ) : (
+          <View style={styles.emptyState}>
+            <Ionicons name="analytics-outline" size={26} color={theme.colors.textMuted} />
+            <Text style={[styles.emptyStateText, { color: theme.colors.textSecondary }]}>
+              No trajectory history recorded yet. As valuation events and Client 360 diagnostics are
+              captured, the real desk AUM curve will appear here.
+            </Text>
+          </View>
+        )}
       </View>
 
       {/* Footer Metrics & Deep-Link */}
@@ -180,25 +186,17 @@ export const PortfolioTrajectoryChart: React.FC<PortfolioTrajectoryChartProps> =
           <View style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: theme.colors.brand }]} />
             <Text style={[styles.legendText, { color: theme.colors.textPrimary }]}>
-              Desk Aggregate (+{((data.portfolio[data.portfolio.length - 1] - 100)).toFixed(1)}%)
+              Desk Aggregate
+              {hasTrajectory ? ` (${isPositive ? "+" : ""}${deltaPct.toFixed(1)}% ${period})` : " · awaiting history"}
             </Text>
           </View>
-          <View style={styles.legendItem}>
-            <View
-              style={[
-                styles.legendDot,
-                { backgroundColor: isDark ? "rgba(148, 163, 184, 0.45)" : "rgba(100, 116, 139, 0.4)" },
-              ]}
-            />
-            <Text style={[styles.legendText, { color: theme.colors.textSecondary }]}>
-              Blended Benchmark (+{((data.benchmark[data.benchmark.length - 1] - 100)).toFixed(1)}%)
-            </Text>
-          </View>
-          <View style={styles.legendItem}>
-            <Text style={[styles.sharpeText, { color: theme.colors.textMuted }]}>
-              Sharpe Ratio: <Text style={{ color: theme.colors.textPrimary, fontWeight: "700" }}>{data.sharpe}</Text>
-            </Text>
-          </View>
+          {hasTrajectory && (
+            <View style={styles.legendItem}>
+              <Text style={[styles.sharpeText, { color: theme.colors.textMuted }]}>
+                Data points: <Text style={{ color: theme.colors.textPrimary, fontWeight: "700" }}>{series.length}</Text>
+              </Text>
+            </View>
+          )}
         </View>
 
         {onViewAttribution && (
@@ -334,6 +332,22 @@ const styles = StyleSheet.create({
   },
   sharpeText: {
     fontSize: 11,
+  },
+  emptyState: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  emptyStateText: {
+    fontSize: 11,
+    fontWeight: "600",
+    textAlign: "center",
+    lineHeight: 17,
+    flex: 1,
   },
   attributionLink: {
     paddingVertical: 2,

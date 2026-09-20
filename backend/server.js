@@ -50,7 +50,7 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "";
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || "";
 
 const AI_GEMINI_FAST_MODEL = process.env.AI_GEMINI_FAST_MODEL || GEMINI_MODEL;
-const AI_GEMINI_RESEARCH_MODEL = process.env.AI_GEMINI_RESEARCH_MODEL || "gemini-2.5-pro";
+const AI_GEMINI_RESEARCH_MODEL = process.env.AI_GEMINI_RESEARCH_MODEL || "gemini-2.5-flash";
 const AI_OPENAI_FAST_MODEL = process.env.AI_OPENAI_FAST_MODEL || "gpt-4o-mini";
 const AI_OPENAI_RESEARCH_MODEL = process.env.AI_OPENAI_RESEARCH_MODEL || "gpt-4o";
 const AI_ANTHROPIC_FAST_MODEL = process.env.AI_ANTHROPIC_FAST_MODEL || "claude-3-5-haiku-20241022";

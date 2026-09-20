@@ -21,6 +21,12 @@ export interface SettingsScreenProps {
   syncToCloud: () => Promise<void>;
   restoreFromCloud: () => Promise<void>;
   clearAllLocalData: () => Promise<void>;
+  requestConfirm: (confirm: {
+    title: string;
+    message: string;
+    confirmLabel: string;
+    action: () => void;
+  }) => void;
   setIsBroadcastModalOpen: (val: boolean) => void;
   broadcastState: string;
   appVersion: string;
@@ -109,6 +115,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   syncToCloud,
   restoreFromCloud,
   clearAllLocalData,
+  requestConfirm,
   setIsBroadcastModalOpen,
   broadcastState,
   appVersion,
@@ -151,6 +158,30 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           text: semanticStatusColors.neutral,
         };
     }
+  };
+
+  const confirmClearAllLocalData = () => {
+    const message =
+      "This permanently deletes ALL Asset Array local state on this device: clients, portfolios, goals, advisor activity/decisions, vault documents, market broadcasts and research notes, historical snapshots & AI telemetry caches, PIN/biometric lock, sign-in session, cloud settings, and appearance/haptic preferences. Your encrypted cloud backup is not affected. This cannot be undone.";
+    // Alert.alert buttons are a no-op on react-native-web, so web deletes must
+    // go through the app-wide in-app ConfirmModal (same pattern as deleteClient).
+    if (Platform.OS === "web") {
+      requestConfirm({
+        title: "Clear All Local Data",
+        message,
+        confirmLabel: "Clear All Data",
+        action: () => void clearAllLocalData(),
+      });
+      return;
+    }
+    Alert.alert("Clear All Local Data", message, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Clear All Data",
+        style: "destructive",
+        onPress: () => void clearAllLocalData(),
+      },
+    ]);
   };
 
   return (
@@ -227,20 +258,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
         <Pressable
           style={localStyles.actionRowItem}
-          onPress={() =>
-            Alert.alert(
-              "Clear All Local Data",
-              "This permanently deletes all clients, portfolios, goals, advisor messages, and vault documents stored on this device. Your encrypted cloud backup is not affected. This cannot be undone.",
-              [
-                { text: "Cancel", style: "cancel" },
-                {
-                  text: "Clear All Data",
-                  style: "destructive",
-                  onPress: () => void clearAllLocalData(),
-                },
-              ]
-            )
-          }
+          onPress={() => confirmClearAllLocalData()}
         >
           <View style={{ flex: 1 }}>
             <Text style={localStyles.rowTitle}>Clear All Local Data</Text>

@@ -31,6 +31,9 @@ export interface AiWealthCopilotProps {
     totalAum?: number;
     riskProfile?: string;
   };
+  accessToken?: string | null;
+  endpoint?: string;
+  onUnauthorized?: () => Promise<string | null>;
   bottomOffset?: number;
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -73,6 +76,9 @@ const QUICK_PROMPTS = [
 export const AiWealthCopilot: React.FC<AiWealthCopilotProps> = ({
   theme,
   clientContext,
+  accessToken,
+  endpoint,
+  onUnauthorized,
   bottomOffset,
   isOpen: controlledIsOpen,
   onOpenChange,
@@ -161,6 +167,9 @@ export const AiWealthCopilot: React.FC<AiWealthCopilotProps> = ({
         totalAum: clientContext?.totalAum,
         riskProfile: clientContext?.riskProfile,
       },
+      accessToken,
+      endpoint,
+      onUnauthorized,
       onStateChange: (state, msg) => {
         setStreamState(state);
         if (state === "CONNECTING") {

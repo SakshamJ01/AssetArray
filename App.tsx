@@ -104,6 +104,10 @@ import { PortfolioManagerSection } from "./src/components/PortfolioManagerSectio
 import { getClientAvatar } from "./src/services/avatars";
 import { AssetAllocationBar } from "./src/components/AssetAllocationBar";
 import { storageService } from "./src/platform/storage";
+import { snapshotStore } from "./src/services/clientInsights";
+import { aiTelemetry } from "./src/services/aiGateway/telemetry";
+import { clearIngestionMemory } from "./src/services/v4/ingestion/ingestionPipeline";
+import { clearReconciliationMemory } from "./src/services/v4/reconciliation/reconciliationEngine";
 import { localAuth } from "./src/platform/auth";
 import { BillingPackage } from "./src/platform/billing";
 import { GlobalStyleInjector } from "./src/components/GlobalStyleInjector";
@@ -1819,6 +1823,7 @@ function AppContent() {
     setAuthPassword("");
     setSelectedClientIds([]);
     await persistAuthSession(null);
+    setIsSyncModalOpen(false);
     setAuthState("Not connected");
     setSyncState(cloudSettings.endpoint.trim() ? "Cloud sync configured" : "Offline only");
   }
@@ -2495,22 +2500,69 @@ function AppContent() {
     setSelectedClientIds([]);
   }
 
-  // Full wipe of locally stored advisory state (client roster, goals,
-  // advisor messages, vault documents, market broadcasts). Cloud backups are
-  // not touched; users can restore from the cloud if they need a recovery path.
+  // Full wipe of ALL locally stored Asset Array state: client roster, goals,
+  // advisor activity/decisions, vault documents, market broadcasts & research
+  // notes, historical snapshots/telemetry caches, PIN/biometric lock, auth
+  // session, cloud settings, dark mode and haptics preferences. Cloud backup
+  // data on the server is NOT deleted; users can restore from the cloud.
   async function clearAllLocalData() {
-    await storageService.removeSecureItem(MARKET_MESSAGE_KEY).catch(() => undefined);
+    // 1) Wipe every secure/platform item owned by Asset Array
+    await Promise.all(
+      [
+        PIN_KEY,
+        BIOMETRIC_KEY,
+        CLOUD_SETTINGS_KEY,
+        AUTH_SESSION_KEY,
+        MARKET_MESSAGE_KEY,
+        DARK_MODE_KEY,
+        HAPTICS_KEY,
+      ].map((key) => storageService.removeSecureItem(key).catch(() => undefined))
+    );
+
+    // 2) Wipe all asset-array-prefixed AsyncStorage keys (catch-all sweep,
+    //    including any keys not registered as constants above) plus every
+    //    generic `__sec_` key this app owns on web (legacy secure orphans
+    //    such as `__sec_pin`/`__sec_auth_session` from earlier builds).
+    //    On native, mobile secure items live in Keychain/Keystore, not
+    //    AsyncStorage, so this sweep is inherently web-only.
+    try {
+      const allKeys = await AsyncStorage.getAllKeys();
+      const appKeys = allKeys.filter((key) => /^@?asset_?array/i.test(key));
+      const secureKeys = allKeys.filter((key) => key.startsWith("__sec_"));
+      const toRemove = [...appKeys, ...secureKeys];
+      if (toRemove.length > 0) {
+        await AsyncStorage.multiRemove(toRemove);
+      }
+    } catch (err: any) {
+      console.warn("Error sweeping localStorage keys:", err.message);
+    }
+
+    // 3) Safety net for the explicitly registered module-level keys
     await AsyncStorage.multiRemove([
+      CLIENTS_KEY,
       GOALS_KEY,
       ADVISOR_MESSAGES_KEY,
       VAULT_DOCUMENTS_KEY,
       CLIENTS_QUARANTINE_KEY,
     ]).catch(() => undefined);
-    await resetClientStorage();
+
+    // 4) Clear in-memory caches so nothing resurfaces within the session
+    await snapshotStore.clear().catch(() => undefined);
+    aiTelemetry.clear();
+    try {
+      clearIngestionMemory();
+      clearReconciliationMemory();
+    } catch (err: any) {
+      console.warn("Error clearing memory stores:", err.message);
+    }
+
+    // 5) Persist empty defaults for the core client/module stores
     await persistClients([]);
     await persistGoals([]);
     await persistAdvisorMessages([]);
     await persistVaultDocuments([]);
+
+    // 6) Reset every affected React state slice
     setClients([]);
     setSelectedClientId(null);
     setSelectedClientIds([]);
@@ -2519,6 +2571,20 @@ function AppContent() {
     setVaultDocuments([]);
     setMarketMessage("");
     setBroadcastMessage("");
+    setMarketResearchNotes("");
+    setCloudSettings(emptyCloudSettings);
+    setAuthSession(null);
+    setAuthPassword("");
+    setAuthState("Not connected");
+    setSyncState("Offline only");
+    setStoredPin(null);
+    setPinInput("");
+    setPinSetup("");
+    setBiometricEnabled(false);
+    setIsUnlocked(false);
+    setDarkModeEnabled(systemColorScheme === "dark");
+    setHapticsEnabledState(true);
+    setHapticsEnabled(true);
   }
 
   if (!isReady) {
@@ -3097,6 +3163,7 @@ function AppContent() {
             syncToCloud={syncToCloud}
             restoreFromCloud={restoreFromCloud}
             clearAllLocalData={clearAllLocalData}
+            requestConfirm={requestConfirm}
             setIsBroadcastModalOpen={setIsBroadcastModalOpen}
             broadcastState={broadcastState}
             appVersion={APP_VERSION}
@@ -3169,6 +3236,9 @@ function AppContent() {
         isOpen={isAiCopilotOpen}
         onOpenChange={setIsAiCopilotOpen}
         bottomOffset={!isDesktop ? insets.bottom + 68 : 24}
+        accessToken={authSession?.accessToken ?? null}
+        endpoint={cloudSettings.endpoint}
+        onUnauthorized={refreshAccessTokenIfNeeded}
         clientContext={
           selectedClientId
             ? (() => {

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { AppTheme } from "../theme";
-import { PerformanceChart, Sparkline, HoldingsTreemap } from "../components/charts";
+import { PerformanceChart, Sparkline, HoldingsTreemap, NO_TRAJECTORY } from "../components/charts";
 import { RebalanceModal, StressTestModal, StatementImportModal } from "../components/modals";
 import { HealthScoreCard } from "../components/HealthScoreCard";
 import { AttributionModal } from "../components/AttributionModal";
@@ -10,6 +10,7 @@ import { ScenarioSandboxModal } from "../components/ScenarioSandboxModal";
 import { CommitteeMemoModal } from "../components/CommitteeMemoModal";
 import { HoldingsTableWorkstation } from "../components/holdings/HoldingsTableWorkstation";
 import { calculateHealthScore } from "../services/healthScore";
+import { buildConsolidatedTrajectory, TrajectoryByPeriod } from "../services/portfolioTrajectory";
 import { Client } from "../types/wealth";
 import { SimpleHolding } from "../services/rebalancer";
 
@@ -113,6 +114,31 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
       return unifiedPortfolioAnalytics.holdings;
     }
     return [];
+  }, [unifiedPortfolioAnalytics.holdings]);
+
+  // Consolidated trajectory is derived strictly from genuine recorded AUM
+  // snapshots (valuation events + Client 360 diagnostics). No fabricated curve.
+  const [trajectoryByPeriod, setTrajectoryByPeriod] = useState<TrajectoryByPeriod>(NO_TRAJECTORY);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    const clientIds = (unifiedPortfolioAnalytics.holdings || [])
+      .map((h: any) => h?.clientId)
+      .filter(Boolean) as string[];
+    if (clientIds.length === 0) {
+      setTrajectoryByPeriod(NO_TRAJECTORY);
+      return;
+    }
+    buildConsolidatedTrajectory(clientIds)
+      .then((trajectory) => {
+        if (!cancelled) setTrajectoryByPeriod(trajectory);
+      })
+      .catch(() => {
+        if (!cancelled) setTrajectoryByPeriod(NO_TRAJECTORY);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [unifiedPortfolioAnalytics.holdings]);
 
   return (
@@ -434,6 +460,8 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
             theme={theme}
             title="Consolidated Portfolio Trajectory"
             subtitle="Multi-asset aggregate return curve"
+            dataByPeriod={trajectoryByPeriod}
+            emptyMessage="No trajectory history recorded yet. Open client portfolios (Client 360), record valuations, or import statements to build the consolidated portfolio curve from real valuation history."
           />
         )}
 

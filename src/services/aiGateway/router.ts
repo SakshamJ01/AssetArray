@@ -135,7 +135,12 @@ export class AiRouter {
     query: string,
     taskType: AiTaskType,
     context: StreamContextPayload | undefined,
-    callbacks: AiStreamCallbacks
+    callbacks: AiStreamCallbacks,
+    options?: {
+      accessToken?: string | null;
+      endpoint?: string;
+      onUnauthorized?: () => Promise<string | null>;
+    }
   ): Promise<void> {
     const chain = this.resolveProviderChain(taskType);
     const requestId = `req_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
@@ -207,7 +212,12 @@ export class AiRouter {
             } as any);
           },
           onError: callbacks.onError,
-        }, { timeoutMs });
+        }, {
+          timeoutMs,
+          accessToken: options?.accessToken,
+          endpoint: options?.endpoint,
+          onUnauthorized: options?.onUnauthorized,
+        });
 
         success = true;
         break;

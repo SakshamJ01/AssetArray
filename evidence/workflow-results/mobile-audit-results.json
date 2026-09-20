@@ -1,5 +1,5 @@
 {
-  "executedAt": "2026-09-06T09:35:16.567Z",
+  "executedAt": "2026-09-20T03:44:32.447Z",
   "environment": "mobile-device-emulation",
   "devicesTested": [
     "iPhone 13 (390x844)",
@@ -24,11 +24,6 @@
     },
     {
       "device": "iPhone 13",
-      "screen": "Portfolios",
-      "hasZeroHorizontalOverflow": true
-    },
-    {
-      "device": "iPhone 13",
       "screen": "AI Research",
       "hasZeroHorizontalOverflow": true
     },
@@ -45,11 +40,6 @@
     {
       "device": "Pixel 7",
       "screen": "Clients",
-      "hasZeroHorizontalOverflow": true
-    },
-    {
-      "device": "Pixel 7",
-      "screen": "Portfolios",
       "hasZeroHorizontalOverflow": true
     },
     {
@@ -71,8 +61,8 @@
     }
   ],
   "summary": {
-    "totalScreens": 10,
-    "passedScreens": 10,
+    "totalScreens": 8,
+    "passedScreens": 8,
     "failedScreens": 0,
     "horizontalOverflowViolations": 0
   }

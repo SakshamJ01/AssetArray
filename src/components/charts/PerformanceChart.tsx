@@ -24,72 +24,37 @@ export interface PerformanceChartProps {
   initialPeriod?: ChartPeriod;
   currencyPrefix?: string;
   onPeriodChange?: (period: ChartPeriod) => void;
+  emptyMessage?: string;
 }
 
-const DEFAULT_SERIES: Record<ChartPeriod, DataPoint[]> = {
-  "1M": [
-    { date: "Aug 05", value: 168.4 },
-    { date: "Aug 10", value: 170.2 },
-    { date: "Aug 15", value: 169.8 },
-    { date: "Aug 20", value: 173.5 },
-    { date: "Aug 25", value: 177.1 },
-    { date: "Aug 30", value: 179.8 },
-    { date: "Sep 04", value: 184.2 },
-  ],
-  "3M": [
-    { date: "Jun 01", value: 154.2 },
-    { date: "Jun 15", value: 158.9 },
-    { date: "Jul 01", value: 162.4 },
-    { date: "Jul 15", value: 167.1 },
-    { date: "Aug 01", value: 171.3 },
-    { date: "Aug 15", value: 176.8 },
-    { date: "Sep 04", value: 184.2 },
-  ],
-  YTD: [
-    { date: "Jan 01", value: 142.0 },
-    { date: "Feb 15", value: 148.5 },
-    { date: "Apr 01", value: 155.1 },
-    { date: "May 15", value: 161.4 },
-    { date: "Jul 01", value: 168.2 },
-    { date: "Aug 15", value: 177.0 },
-    { date: "Sep 04", value: 184.2 },
-  ],
-  "1Y": [
-    { date: "Sep '23", value: 132.5 },
-    { date: "Nov '23", value: 139.1 },
-    { date: "Jan '24", value: 146.4 },
-    { date: "Mar '24", value: 153.2 },
-    { date: "May '24", value: 162.7 },
-    { date: "Jul '24", value: 172.9 },
-    { date: "Sep '24", value: 184.2 },
-  ],
-  ALL: [
-    { date: "2021", value: 85.0 },
-    { date: "2022", value: 104.2 },
-    { date: "2023", value: 132.5 },
-    { date: "2024", value: 184.2 },
-  ],
+export const NO_TRAJECTORY: Record<ChartPeriod, DataPoint[]> = {
+  "1M": [],
+  "3M": [],
+  YTD: [],
+  "1Y": [],
+  ALL: [],
 };
 
 export const PerformanceChart: React.FC<PerformanceChartProps> = ({
   theme,
   title = "AUM Performance Velocity",
   subtitle = "Consolidated discretionary & non-discretionary assets",
-  dataByPeriod = DEFAULT_SERIES,
+  dataByPeriod = NO_TRAJECTORY,
   initialPeriod = "YTD",
   currencyPrefix = "₹",
   onPeriodChange,
+  emptyMessage = "No trajectory history recorded yet. Portfolio data points will appear here as valuation history accumulates.",
 }) => {
   const [period, setPeriod] = useState<ChartPeriod>(initialPeriod);
   const [chartWidth, setChartWidth] = useState<number>(600);
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
 
-  const isUsingDefaults = dataByPeriod === DEFAULT_SERIES;
-
-  const series = useMemo(() => dataByPeriod[period] || DEFAULT_SERIES[period], [
+  const series = useMemo(() => dataByPeriod[period] || [], [
     dataByPeriod,
     period,
   ]);
+
+  const hasTrajectory = series.length >= 2;
 
   const height = 180;
   const paddingX = 16;
@@ -97,8 +62,14 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({
   const paddingBottom = 26;
   const usableHeight = height - paddingTop - paddingBottom;
 
-  const minVal = useMemo(() => Math.min(...series.map((p) => p.value)), [series]);
-  const maxVal = useMemo(() => Math.max(...series.map((p) => p.value)), [series]);
+  const minVal = useMemo(
+    () => (series.length > 0 ? Math.min(...series.map((p) => p.value)) : 0),
+    [series]
+  );
+  const maxVal = useMemo(
+    () => (series.length > 0 ? Math.max(...series.map((p) => p.value)) : 0),
+    [series]
+  );
   const valRange = maxVal - minVal || 1;
 
   const startVal = series[0]?.value || 0;
@@ -178,11 +149,6 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({
           <Text style={[styles.title, { color: isDark ? "#F8FAFC" : theme.colors.textPrimary }]}>{title}</Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
             <Text style={[styles.subtitle, { color: isDark ? "#94A3B8" : theme.colors.textSecondary }]}>{subtitle}</Text>
-            {isUsingDefaults && (
-              <View style={{ backgroundColor: "rgba(251, 146, 60, 0.18)", borderWidth: 1, borderColor: "rgba(251, 146, 60, 0.4)", borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2 }}>
-                <Text style={{ fontSize: 9, fontWeight: "800", color: "#FB923C", letterSpacing: 0.8 }}>SAMPLE DATA</Text>
-              </View>
-            )}
           </View>
         </View>
 
@@ -232,6 +198,7 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({
       </View>
 
       {/* Metric Value & Performance Badge */}
+      {hasTrajectory ? (
       <View style={styles.metricRow}>
         <View style={styles.valuationRow}>
           <Text style={[styles.currencyPrefix, { color: brandColor }]}>{currencyPrefix}</Text>
@@ -266,10 +233,12 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({
           {displayDate}
         </Text>
       </View>
+      ) : null}
 
       {/* SVG Interactive Canvas */}
       <View style={styles.chartContainer} onLayout={handleLayout}>
-        {Platform.OS === "web" ? (
+        {hasTrajectory ? (
+        Platform.OS === "web" ? (
           // @ts-ignore
           <svg
             width="100%"
@@ -398,7 +367,15 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({
               </View>
             ))}
           </View>
-        )}
+        )
+      ) : (
+        <View style={styles.emptyState}>
+          <Text style={[styles.emptyStateEmblem, { color: brandColor }]}>◎</Text>
+          <Text style={[styles.emptyStateText, { color: isDark ? "#94A3B8" : theme.colors.textSecondary }]}>
+            {emptyMessage}
+          </Text>
+        </View>
+      )}
       </View>
     </View>
   );
@@ -549,5 +526,24 @@ const styles = StyleSheet.create({
   mobileDate: {
     fontSize: 9,
     color: "#64748B",
+  },
+  emptyState: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    gap: 8,
+  },
+  emptyStateEmblem: {
+    fontSize: 28,
+    fontWeight: "800",
+    opacity: 0.7,
+  },
+  emptyStateText: {
+    fontSize: 12,
+    fontWeight: "600",
+    textAlign: "center",
+    lineHeight: 18,
   },
 });

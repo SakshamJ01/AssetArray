@@ -32,10 +32,11 @@ export class MarketHealthMonitor {
   }
 
   private initializeRegistries() {
+    // Direct member access (not optional chaining) so Metro inlines the
+    // EXPO_PUBLIC_ value at build time into the web bundle.
+    const env = typeof process !== "undefined" ? process.env : undefined;
     const finnhubKey =
-      typeof process !== "undefined"
-        ? (process.env?.EXPO_PUBLIC_FINNHUB_API_KEY || process.env?.FINNHUB_API_KEY || null)
-        : null;
+      (env && (env.EXPO_PUBLIC_FINNHUB_API_KEY || env.FINNHUB_API_KEY)) || null;
 
     this.healthMap.set("finnhub", {
       providerId: "finnhub",

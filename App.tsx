@@ -3174,7 +3174,7 @@ function AppContent() {
             aiProviderStatus={aiProviderStatus}
             finnhubConfigured={
               typeof process !== "undefined" &&
-              Boolean(process.env?.EXPO_PUBLIC_FINNHUB_API_KEY)
+              Boolean(process.env && process.env.EXPO_PUBLIC_FINNHUB_API_KEY)
             }
             styles={styles}
           />

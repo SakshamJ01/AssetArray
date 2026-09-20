@@ -23,14 +23,16 @@ export class FinnhubProvider implements MarketDataProvider {
   private apiKey: string | null;
 
   constructor(apiKey?: string) {
-    // Expo/browser-safe: only EXPO_PUBLIC_* is readable at runtime. process.env
-    // access is guarded and never throws when process is undefined (web).
+    // Expo/browser-safe: EXPO_PUBLIC_* is inlined at BUILD time by Metro, but
+    // ONLY for direct member access. Optional chaining (process.env?.X) is not
+    // statically replaced and resolves to undefined in the browser, so the
+    // deployed web bundle would never see the key. Use direct access guarded by
+    // a typeof check; the reference is dead-code-eliminated on web.
+    const env = typeof process !== "undefined" ? process.env : undefined;
     const envKey =
-      typeof process !== "undefined"
-        ? (process.env?.EXPO_PUBLIC_FINNHUB_API_KEY as string | undefined) ||
-          (process.env?.FINNHUB_API_KEY as string | undefined) ||
-          null
-        : null;
+      (env && (env.EXPO_PUBLIC_FINNHUB_API_KEY as string | undefined)) ||
+      (env && (env.FINNHUB_API_KEY as string | undefined)) ||
+      null;
     this.apiKey = apiKey || envKey;
   }
 
@@ -169,7 +171,6 @@ export class UnifiedMarketProvider {
         (process.env as Record<string, string | undefined>).FINNHUB_API_KEY
     );
   }
-
   public async getSectorPerformance(forceDemo?: boolean): Promise<SectorPerformance[]> {
     if (forceDemo === true) {
       return simulationProvider.getSectorPerformance();

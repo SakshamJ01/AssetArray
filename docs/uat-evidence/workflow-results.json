@@ -1,5 +1,5 @@
 {
-  "auditedAt": "2026-09-20T05:20:27.864Z",
+  "auditedAt": "2026-09-20T07:34:52.066Z",
   "totalWorkflows": 15,
   "verifiedCount": 15,
   "partialCount": 0,
@@ -11,9 +11,9 @@
       "status": "VERIFIED",
       "action": "Navigate to https://asset-array.web.app",
       "expected": "HTTP 200, valid title, clean mount without fatal errors",
-      "observed": "Status 200, Title: \"Asset Array | Private Wealth Management\", Load Time: 1224ms",
+      "observed": "Status 200, Title: \"Asset Array | Private Wealth Management\", Load Time: 1535ms",
       "screenshot": "docs/uat-evidence/screenshots/00-home.png",
-      "durationMs": 1224
+      "durationMs": 1535
     },
     {
       "id": "GW-02",
@@ -41,9 +41,9 @@
       "status": "VERIFIED",
       "action": "Select client from list -> Load Client 360 workspace",
       "expected": "Core metrics (Value, Health, Goals, Tax, Next Action) visible in <10s",
-      "observed": "Client 360 rendered in 1063ms",
+      "observed": "Client 360 rendered in 1078ms",
       "screenshot": "docs/uat-evidence/screenshots/05-client-360.png",
-      "durationMs": 1063
+      "durationMs": 1078
     },
     {
       "id": "GW-05",
@@ -110,8 +110,8 @@
       "status": "VERIFIED",
       "action": "GET https://assetarray.onrender.com/api/health",
       "expected": "HTTP 200 with status: ok",
-      "observed": "Status: 200 in 370ms, payload: {\"status\":\"ok\",\"app\":\"Asset Array backend\",\"version\":\"3.3.1\",\"authRequired\":true,\"db\":\"connected\",\"date\":\"2026-09-20T05:19:16.767Z\"}",
-      "durationMs": 370
+      "observed": "Status: 200 in 458ms, payload: {\"status\":\"ok\",\"app\":\"Asset Array backend\",\"version\":\"3.3.1\",\"authRequired\":true,\"db\":\"connected\",\"date\":\"2026-09-20T07:33:40.925Z\"}",
+      "durationMs": 458
     },
     {
       "id": "GW-12",

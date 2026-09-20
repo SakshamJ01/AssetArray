@@ -382,10 +382,15 @@ export const Client360Workspace: React.FC<Client360WorkspaceProps> = ({
               <Text style={workspaceStyles.sectionTitle}>Portfolio Health Diagnostic</Text>
               <View style={workspaceStyles.scoreBox}>
                 <View>
-                  <Text style={workspaceStyles.scoreBig}>{healthResult.healthScore}<Text style={workspaceStyles.scoreMax}>/100</Text></Text>
+                  <Text style={workspaceStyles.scoreBig}>
+                    {healthResult.confidence === "INSUFFICIENT_DATA"
+                      ? "—"
+                      : healthResult.healthScore}
+                    <Text style={workspaceStyles.scoreMax}>/100</Text>
+                  </Text>
                   <Text style={workspaceStyles.scoreStatus}>
                     {healthResult.confidence === "INSUFFICIENT_DATA"
-                      ? "INSUFFICIENT DATA"
+                      ? "NO HOLDINGS"
                       : healthResult.grade.toUpperCase()}
                   </Text>
                 </View>

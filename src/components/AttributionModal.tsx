@@ -41,6 +41,14 @@ export const AttributionModal: React.FC<AttributionModalProps> = ({
 
   const result = calculateAttribution(holdings, benchmark, portfolioName);
 
+  // Honest empty gate — mirrors the engine's own zero-valuation branch so an
+  // asset-free portfolio never renders a fabricated attribution table.
+  const totalVal = holdings.reduce(
+    (sum, h) => sum + (Number(h.currentValue) || 0),
+    0
+  );
+  const hasHoldings = holdings.length > 0 && totalVal > 0;
+
   const isAlphaPositive = result.totalActiveReturn >= 0;
   const alphaColor = isAlphaPositive ? colors.accent : colors.danger;
 
@@ -112,6 +120,8 @@ export const AttributionModal: React.FC<AttributionModalProps> = ({
             </ScrollView>
 
             {/* Performance Summary KPI Banner */}
+            {hasHoldings ? (
+              <>
             <View
               style={[
                 styles.kpiContainer,
@@ -358,6 +368,20 @@ export const AttributionModal: React.FC<AttributionModalProps> = ({
                 );
               })}
             </View>
+              </>
+            ) : (
+              <View style={styles.emptyState}>
+                <Text style={[styles.emptyStateEmblem, { color: colors.brand }]}>
+                  ◎
+                </Text>
+                <Text
+                  style={[styles.emptyStateText, { color: colors.textSecondary }]}
+                >
+                  This portfolio holds no assets yet. Add positions to generate a
+                  Brinson-Fachler attribution against {benchmark.name}.
+                </Text>
+              </View>
+            )}
           </ScrollView>
         </View>
       </View>
@@ -527,5 +551,26 @@ const styles = StyleSheet.create({
   tdCell: {
     fontSize: 11.5,
     fontVariant: ["tabular-nums"],
+  },
+  emptyState: {
+    alignItems: "center",
+    paddingVertical: 34,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderColor: "rgba(150, 150, 150, 0.3)",
+    backgroundColor: "rgba(150, 150, 150, 0.05)",
+    marginBottom: 16,
+  },
+  emptyStateEmblem: {
+    fontSize: 34,
+    marginBottom: 10,
+  },
+  emptyStateText: {
+    fontSize: 13,
+    lineHeight: 19,
+    textAlign: "center",
+    fontWeight: "500",
   },
 });

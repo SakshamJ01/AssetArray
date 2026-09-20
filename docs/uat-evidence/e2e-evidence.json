@@ -1,5 +1,5 @@
 {
-  "executedAt": "2026-09-20T03:42:45.517Z",
+  "executedAt": "2026-09-20T05:18:45.980Z",
   "environment": "production-web",
   "targetUrl": "https://asset-array.web.app",
   "backendUrl": "https://assetarray.onrender.com/api/health",
@@ -11,9 +11,9 @@
       "status": "VERIFIED",
       "action": "Navigate to https://asset-array.web.app",
       "expected": "HTTP 200, valid title, clean mount without fatal errors",
-      "observed": "Status 200, Title: \"Asset Array | Private Wealth Management\", Load Time: 2647ms",
+      "observed": "Status 200, Title: \"Asset Array | Private Wealth Management\", Load Time: 1224ms",
       "screenshot": "docs/uat-evidence/screenshots/00-home.png",
-      "durationMs": 2647
+      "durationMs": 1224
     },
     {
       "id": "GW-02",
@@ -41,9 +41,9 @@
       "status": "VERIFIED",
       "action": "Select client from list -> Load Client 360 workspace",
       "expected": "Core metrics (Value, Health, Goals, Tax, Next Action) visible in <10s",
-      "observed": "Client 360 rendered in 1081ms",
+      "observed": "Client 360 rendered in 1063ms",
       "screenshot": "docs/uat-evidence/screenshots/05-client-360.png",
-      "durationMs": 1081
+      "durationMs": 1063
     },
     {
       "id": "GW-05",
@@ -110,8 +110,8 @@
       "status": "VERIFIED",
       "action": "GET https://assetarray.onrender.com/api/health",
       "expected": "HTTP 200 with status: ok",
-      "observed": "Status: 200 in 890ms, payload: {\"status\":\"ok\",\"app\":\"Asset Array backend\",\"version\":\"3.3.1\",\"authRequired\":true,\"db\":\"connected\",\"date\":\"2026-09-20T03:43:19.041Z\"}",
-      "durationMs": 890
+      "observed": "Status: 200 in 370ms, payload: {\"status\":\"ok\",\"app\":\"Asset Array backend\",\"version\":\"3.3.1\",\"authRequired\":true,\"db\":\"connected\",\"date\":\"2026-09-20T05:19:16.767Z\"}",
+      "durationMs": 370
     },
     {
       "id": "GW-12",
@@ -158,259 +158,259 @@
     {
       "url": "https://asset-array.web.app/",
       "method": "GET",
-      "timestamp": "2026-09-20T03:42:45.899Z"
+      "timestamp": "2026-09-20T05:18:46.176Z"
     },
     {
       "url": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap",
       "method": "GET",
-      "timestamp": "2026-09-20T03:42:46.593Z"
+      "timestamp": "2026-09-20T05:18:46.509Z"
     },
     {
       "url": "https://asset-array.web.app/_expo/static/js/web/AppEntry-f681958ff5e58f8cd1b0dc45e74f4b3d.js",
       "method": "GET",
-      "timestamp": "2026-09-20T03:42:46.593Z"
+      "timestamp": "2026-09-20T05:18:46.509Z"
     },
     {
       "url": "https://cdn.jsdelivr.net/npm/@expo/vector-icons@15.0.3/build/vendor/react-native-vector-icons/Fonts/Ionicons.ttf",
       "method": "GET",
-      "timestamp": "2026-09-20T03:42:46.851Z"
+      "timestamp": "2026-09-20T05:18:46.767Z"
     },
     {
       "url": "https://asset-array.web.app/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.b4eb097d35f44ed943676fd56f6bdc51.ttf",
       "method": "GET",
-      "timestamp": "2026-09-20T03:42:46.851Z"
+      "timestamp": "2026-09-20T05:18:46.767Z"
     },
     {
       "url": "https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2",
       "method": "GET",
-      "timestamp": "2026-09-20T03:42:48.713Z"
+      "timestamp": "2026-09-20T05:18:47.546Z"
     },
     {
       "url": "https://assetarray.onrender.com/api/auth/login",
       "method": "POST",
-      "timestamp": "2026-09-20T03:42:50.305Z"
+      "timestamp": "2026-09-20T05:18:49.105Z"
     },
     {
       "url": "https://assetarray.onrender.com/api/auth/me",
       "method": "GET",
-      "timestamp": "2026-09-20T03:42:52.638Z"
+      "timestamp": "2026-09-20T05:18:51.346Z"
     },
     {
       "url": "https://assetarray.onrender.com/api/ai/status",
       "method": "GET",
-      "timestamp": "2026-09-20T03:42:53.418Z"
+      "timestamp": "2026-09-20T05:18:52.625Z"
     },
     {
       "url": "https://asset-array.web.app/",
       "method": "GET",
-      "timestamp": "2026-09-20T03:42:54.186Z"
+      "timestamp": "2026-09-20T05:18:52.892Z"
     },
     {
       "url": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap",
       "method": "GET",
-      "timestamp": "2026-09-20T03:42:54.415Z"
+      "timestamp": "2026-09-20T05:18:53.070Z"
     },
     {
       "url": "https://asset-array.web.app/_expo/static/js/web/AppEntry-f681958ff5e58f8cd1b0dc45e74f4b3d.js",
       "method": "GET",
-      "timestamp": "2026-09-20T03:42:54.415Z"
+      "timestamp": "2026-09-20T05:18:53.071Z"
     },
     {
       "url": "https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2",
       "method": "GET",
-      "timestamp": "2026-09-20T03:42:54.453Z"
+      "timestamp": "2026-09-20T05:18:53.121Z"
     },
     {
       "url": "https://cdn.jsdelivr.net/npm/@expo/vector-icons@15.0.3/build/vendor/react-native-vector-icons/Fonts/Ionicons.ttf",
       "method": "GET",
-      "timestamp": "2026-09-20T03:42:54.454Z"
+      "timestamp": "2026-09-20T05:18:53.121Z"
     },
     {
       "url": "https://asset-array.web.app/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.b4eb097d35f44ed943676fd56f6bdc51.ttf",
       "method": "GET",
-      "timestamp": "2026-09-20T03:42:54.457Z"
+      "timestamp": "2026-09-20T05:18:53.125Z"
     },
     {
       "url": "https://assetarray.onrender.com/api/auth/me",
       "method": "GET",
-      "timestamp": "2026-09-20T03:42:56.073Z"
+      "timestamp": "2026-09-20T05:18:54.716Z"
     },
     {
       "url": "https://assetarray.onrender.com/api/ai/status",
       "method": "GET",
-      "timestamp": "2026-09-20T03:42:56.577Z"
+      "timestamp": "2026-09-20T05:18:55.228Z"
     },
     {
       "url": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80",
       "method": "GET",
-      "timestamp": "2026-09-20T03:43:02.190Z"
+      "timestamp": "2026-09-20T05:19:00.756Z"
     },
     {
       "url": "https://ui-avatars.com/api/?name=E2E_TEST%20Priya%20Sharma&background=1E293B&color=F8FAFC&bold=true",
       "method": "GET",
-      "timestamp": "2026-09-20T03:43:02.190Z"
+      "timestamp": "2026-09-20T05:19:00.756Z"
     },
     {
       "url": "https://asset-array.web.app/",
       "method": "GET",
-      "timestamp": "2026-09-20T03:43:03.754Z"
+      "timestamp": "2026-09-20T05:19:02.313Z"
     },
     {
       "url": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap",
       "method": "GET",
-      "timestamp": "2026-09-20T03:43:04.176Z"
+      "timestamp": "2026-09-20T05:19:02.493Z"
     },
     {
       "url": "https://asset-array.web.app/_expo/static/js/web/AppEntry-f681958ff5e58f8cd1b0dc45e74f4b3d.js",
       "method": "GET",
-      "timestamp": "2026-09-20T03:43:04.177Z"
+      "timestamp": "2026-09-20T05:19:02.493Z"
     },
     {
       "url": "https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2",
       "method": "GET",
-      "timestamp": "2026-09-20T03:43:04.177Z"
+      "timestamp": "2026-09-20T05:19:02.515Z"
     },
     {
       "url": "https://cdn.jsdelivr.net/npm/@expo/vector-icons@15.0.3/build/vendor/react-native-vector-icons/Fonts/Ionicons.ttf",
       "method": "GET",
-      "timestamp": "2026-09-20T03:43:04.198Z"
+      "timestamp": "2026-09-20T05:19:02.515Z"
     },
     {
       "url": "https://asset-array.web.app/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.b4eb097d35f44ed943676fd56f6bdc51.ttf",
       "method": "GET",
-      "timestamp": "2026-09-20T03:43:04.201Z"
+      "timestamp": "2026-09-20T05:19:02.518Z"
     },
     {
       "url": "https://assetarray.onrender.com/api/auth/me",
       "method": "GET",
-      "timestamp": "2026-09-20T03:43:05.823Z"
+      "timestamp": "2026-09-20T05:19:04.100Z"
     },
     {
       "url": "https://assetarray.onrender.com/api/ai/status",
       "method": "GET",
-      "timestamp": "2026-09-20T03:43:07.051Z"
+      "timestamp": "2026-09-20T05:19:04.882Z"
     },
     {
       "url": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80",
       "method": "GET",
-      "timestamp": "2026-09-20T03:43:09.395Z"
+      "timestamp": "2026-09-20T05:19:07.646Z"
     },
     {
       "url": "https://assetarray.onrender.com/api/ai/stream",
       "method": "POST",
-      "timestamp": "2026-09-20T03:43:22.821Z"
+      "timestamp": "2026-09-20T05:19:20.391Z"
     },
     {
       "url": "https://assetarray.onrender.com/api/auth/logout",
       "method": "POST",
-      "timestamp": "2026-09-20T03:43:37.885Z"
+      "timestamp": "2026-09-20T05:19:35.350Z"
     },
     {
       "url": "https://assetarray.onrender.com/api/auth/login",
       "method": "POST",
-      "timestamp": "2026-09-20T03:44:12.686Z"
+      "timestamp": "2026-09-20T05:20:10.134Z"
     },
     {
       "url": "https://assetarray.onrender.com/api/auth/me",
       "method": "GET",
-      "timestamp": "2026-09-20T03:44:14.735Z"
+      "timestamp": "2026-09-20T05:20:12.151Z"
     },
     {
       "url": "https://assetarray.onrender.com/api/ai/status",
       "method": "GET",
-      "timestamp": "2026-09-20T03:44:15.523Z"
+      "timestamp": "2026-09-20T05:20:12.944Z"
     }
   ],
   "consoleLogs": [
     {
       "type": "warning",
       "text": "Failed to decode downloaded font: https://asset-array.web.app/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.b4eb097d35f44ed943676fd56f6bdc51.ttf",
-      "timestamp": "2026-09-20T03:42:46.887Z"
+      "timestamp": "2026-09-20T05:18:46.804Z"
     },
     {
       "type": "warning",
       "text": "OTS parsing error: invalid sfntVersion: 1008813135",
-      "timestamp": "2026-09-20T03:42:46.887Z"
+      "timestamp": "2026-09-20T05:18:46.804Z"
     },
     {
       "type": "warning",
       "text": "Ionicons font load notice: NetworkError: A network error occurred.",
-      "timestamp": "2026-09-20T03:42:46.887Z"
+      "timestamp": "2026-09-20T05:18:46.804Z"
     },
     {
       "type": "log",
       "text": "[RevenueCat Web] Web Billing initialized in Sandbox/Stripe mode.",
-      "timestamp": "2026-09-20T03:42:46.887Z"
+      "timestamp": "2026-09-20T05:18:46.805Z"
     },
     {
       "type": "warning",
       "text": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
-      "timestamp": "2026-09-20T03:42:52.636Z"
+      "timestamp": "2026-09-20T05:18:51.345Z"
     },
     {
       "type": "warning",
       "text": "Failed to decode downloaded font: https://asset-array.web.app/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.b4eb097d35f44ed943676fd56f6bdc51.ttf",
-      "timestamp": "2026-09-20T03:42:54.459Z"
+      "timestamp": "2026-09-20T05:18:53.125Z"
     },
     {
       "type": "warning",
       "text": "OTS parsing error: invalid sfntVersion: 1008813135",
-      "timestamp": "2026-09-20T03:42:54.459Z"
+      "timestamp": "2026-09-20T05:18:53.126Z"
     },
     {
       "type": "warning",
       "text": "Ionicons font load notice: NetworkError: A network error occurred.",
-      "timestamp": "2026-09-20T03:42:54.459Z"
+      "timestamp": "2026-09-20T05:18:53.126Z"
     },
     {
       "type": "log",
       "text": "[RevenueCat Web] Web Billing initialized in Sandbox/Stripe mode.",
-      "timestamp": "2026-09-20T03:42:54.460Z"
+      "timestamp": "2026-09-20T05:18:53.126Z"
     },
     {
       "type": "warning",
       "text": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
-      "timestamp": "2026-09-20T03:42:56.071Z"
+      "timestamp": "2026-09-20T05:18:54.714Z"
     },
     {
       "type": "warning",
       "text": "Failed to decode downloaded font: https://asset-array.web.app/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.b4eb097d35f44ed943676fd56f6bdc51.ttf",
-      "timestamp": "2026-09-20T03:43:04.204Z"
+      "timestamp": "2026-09-20T05:19:02.519Z"
     },
     {
       "type": "warning",
       "text": "OTS parsing error: invalid sfntVersion: 1008813135",
-      "timestamp": "2026-09-20T03:43:04.204Z"
+      "timestamp": "2026-09-20T05:19:02.519Z"
     },
     {
       "type": "warning",
       "text": "Ionicons font load notice: NetworkError: A network error occurred.",
-      "timestamp": "2026-09-20T03:43:04.204Z"
+      "timestamp": "2026-09-20T05:19:02.519Z"
     },
     {
       "type": "log",
       "text": "[RevenueCat Web] Web Billing initialized in Sandbox/Stripe mode.",
-      "timestamp": "2026-09-20T03:43:04.206Z"
+      "timestamp": "2026-09-20T05:19:02.519Z"
     },
     {
       "type": "warning",
       "text": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
-      "timestamp": "2026-09-20T03:43:05.816Z"
+      "timestamp": "2026-09-20T05:19:04.098Z"
     },
     {
       "type": "warning",
       "text": "Failed to decode downloaded font: https://asset-array.web.app/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.b4eb097d35f44ed943676fd56f6bdc51.ttf",
-      "timestamp": "2026-09-20T03:43:17.169Z"
+      "timestamp": "2026-09-20T05:19:15.371Z"
     },
     {
       "type": "warning",
       "text": "OTS parsing error: invalid sfntVersion: 1008813135",
-      "timestamp": "2026-09-20T03:43:17.169Z"
+      "timestamp": "2026-09-20T05:19:15.371Z"
     }
   ],
   "performance": {
-    "initialPageLoadMs": 2647,
-    "client360RenderMs": 1081
+    "initialPageLoadMs": 1224,
+    "client360RenderMs": 1063
   },
   "summary": {
     "total": 15,

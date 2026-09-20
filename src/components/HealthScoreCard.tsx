@@ -2,11 +2,12 @@ import React from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { HealthScoreResult } from "../types/wealth";
+import { InstitutionalHealthScoreResult } from "../services/health";
 import { AppTheme } from "../theme";
 
 interface HealthScoreCardProps {
   theme: AppTheme;
-  healthResult: HealthScoreResult;
+  healthResult: InstitutionalHealthScoreResult;
   onPressDetails?: () => void;
 }
 
@@ -16,7 +17,12 @@ export const HealthScoreCard: React.FC<HealthScoreCardProps> = ({
   onPressDetails,
 }) => {
   const { colors } = theme;
-  const { healthScore, grade, factors, recommendations } = healthResult;
+  const { healthScore, grade, factors, recommendations, confidence } = healthResult;
+
+  // The engine flags a zero-holding portfolio as INSUFFICIENT_DATA with a
+  // hardcoded fallback score; show an honest empty state instead of a
+  // fabricated gauge and factor bars.
+  const isEmpty = confidence === "INSUFFICIENT_DATA";
 
   const getGradeColor = () => {
     switch (grade) {
@@ -53,11 +59,23 @@ export const HealthScoreCard: React.FC<HealthScoreCardProps> = ({
           </Text>
         </View>
         <View style={[styles.badge, { backgroundColor: gradeColor + "22", borderColor: gradeColor }]}>
-          <Text style={[styles.badgeText, { color: gradeColor }]}>{grade}</Text>
+          <Text style={[styles.badgeText, { color: gradeColor }]}>
+            {isEmpty ? "NO DATA" : grade}
+          </Text>
         </View>
       </View>
 
       <View style={styles.scoreRow}>
+        {isEmpty ? (
+          <View style={styles.emptyState}>
+            <Ionicons name="bar-chart-outline" size={26} color={colors.brand} />
+            <Text style={[styles.emptyStateText, { color: colors.textSecondary }]}>
+              Portfolio has no active holdings recorded. Add positions to generate
+              health diagnostics.
+            </Text>
+          </View>
+        ) : (
+          <>
         <View style={[styles.circleGauge, { borderColor: gradeColor }]}>
           <Text style={[styles.scoreValue, { color: colors.textPrimary }]}>{healthScore}</Text>
           <Text style={[styles.scoreLabel, { color: colors.textMuted }]}>/ 100</Text>
@@ -91,6 +109,8 @@ export const HealthScoreCard: React.FC<HealthScoreCardProps> = ({
             </View>
           ))}
         </View>
+          </>
+        )}
       </View>
 
       {recommendations.length > 0 && (
@@ -182,6 +202,19 @@ const styles = StyleSheet.create({
   factorsList: {
     flex: 1,
     gap: 4,
+  },
+  emptyState: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 10,
+  },
+  emptyStateText: {
+    flex: 1,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "500",
   },
   factorRow: {
     flexDirection: "row",

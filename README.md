@@ -9,7 +9,7 @@
 [![RevenueCat](https://img.shields.io/badge/Monetization-RevenueCat-orange.svg)](https://www.revenuecat.com/)
 [![Built with Expo](https://img.shields.io/badge/Built%20with-Expo%20%2F%20React%20Native-blue.svg)](https://expo.dev/)
 [![Gemini & Ollama AI](https://img.shields.io/badge/AI-Google%20Gemini%20%2B%20Ollama-8E75B2.svg)](https://ai.google.dev/)
-[![Tests Passing](https://img.shields.io/badge/Tests-54%20Suites%20Passed-22c55e.svg)](https://github.com/SakshamJ01/AssetArray)
+[![Tests Passing](https://img.shields.io/badge/Tests-466%20Passed%20(85%20Suites)-22c55e.svg)](https://github.com/SakshamJ01/AssetArray)
 
 ![Asset Array Hero Banner](assets/hero-thumbnail.jpg)
 
@@ -94,7 +94,8 @@ Below is the deep, exhaustive breakdown of **every single feature, tool, workflo
 * **Stochastic Brownian Ticking Engine**: Simulated realistic exchange micro-movement with green/red micro-glow animations matching exchange tick sizes.
 * **Level-2 Depth Terminal (`LiveMarketDepthModal`)**: Top 5 Bid & Ask order book depth with live quantities, buy/sell volume pressure gauge, intraday 30-tick SVG sparklines, day high/low range slider, and simulated trade execution.
 * **Official AMFI NAV Integration (`AmfiNavProvider`)**: Ingests official Indian Mutual Fund Net Asset Values from AMFI India endpoints.
-* **Multi-Provider Market Aggregator (`unifiedMarketProvider`)**: Automatic failover across Finnhub, Alpha Vantage, AMFI, and local stochastic ticker.
+* **Live Finnhub Market Data (`FinnhubProvider`)**: Real US/global equity quotes and FX via the Finnhub API. Gated on `EXPO_PUBLIC_FINNHUB_API_KEY`; unconfigured or free-tier-unreachable symbols degrade honestly to `UNAVAILABLE` with **zero fabricated prices**.
+* **Multi-Provider Market Aggregator (`unifiedMarketProvider`)**: Automatic failover across Finnhub, Alpha Vantage, AMFI, and local stochastic ticker with 15s quote caching and freshness labels (`LIVE` / `DELAYED` / `STALE` / `UNAVAILABLE`).
 
 ---
 
@@ -105,6 +106,7 @@ Below is the deep, exhaustive breakdown of **every single feature, tool, workflo
   3. *Single-Asset Concentration Defense*
   4. *Geographic & Currency Spread*
   5. *Liquidity & Debt Management*
+  * A holding-free portfolio is flagged `INSUFFICIENT_DATA` and renders an honest **NO DATA** empty state instead of a fabricated score.
 * **Modern Portfolio Theory (MPT) Risk Metrics**: Computes Portfolio Volatility (Standard Deviation), Sharpe Ratio, Beta against Benchmark, Max Drawdown, and High Watermark.
 * **Multi-Benchmark Comparison**: Benchmarks client performance against NIFTY 50, CRISIL Hybrid 65:35, and S&P 500.
 
@@ -113,6 +115,7 @@ Below is the deep, exhaustive breakdown of **every single feature, tool, workflo
 ### 7. 🏛️ Brinson-Fachler Performance Attribution Engine
 * **Alpha Decomposition**: Mathematically breaks active portfolio outperformance/underperformance into **Allocation Effect**, **Selection Effect**, and **Interaction Effect**.
 * **Plain-Language Explainability**: Auto-generates narrative summaries detailing top alpha drivers and drag positions.
+* **Honest Empty State**: An asset-free portfolio renders a dedicated empty panel instead of a fabricated factor/bps table — the model never implies a measured alpha it did not compute.
 
 ---
 
@@ -206,7 +209,7 @@ AssetArray/
 │       ├── statementParser.ts           # Zero-PII CAMS/Zerodha/Groww/NDSL statement parser
 │       ├── realTimeMarket.ts            # Ticker engine (BANKNIFTY, SGB_GOLD, BHARATBOND30)
 │       └── aiGateway/providers/ollama.ts# Local Ollama AI streaming provider
-└── __tests__/                           # 54 passing Jest test suites (305 total unit/E2E tests)
+└── __tests__/                           # 85 passing Jest test suites (466 total unit/E2E tests)
 ```
 
 ---
@@ -221,6 +224,26 @@ npm install
 npm run web
 ```
 
+### 1b. Optional market data keys (root `.env`)
+Live market quotes are **key-gated and fully optional** — the app runs without them. To enable live Finnhub US/global equity quotes, create a **root-level** `.env` (gitignored) and add:
+```env
+EXPO_PUBLIC_FINNHUB_API_KEY=your_finnhub_token
+```
+Then rebuild (`npm run web` / `npm run deploy:web`).
+
+> **Build-time inlining note**: Expo's Metro bundler only inlines `EXPO_PUBLIC_*`
+> values for **direct** member access (`process.env.EXPO_PUBLIC_X`). Optional
+> chaining (`process.env?.EXPO_PUBLIC_X`) is not statically replaced and
+> resolves to `undefined` in the browser, so the Finnhub-gating paths use
+> guarded direct access to keep the key live in the web bundle.
+>
+> Free-tier Finnhub covers US/global equities and FX but **not** Indian equities
+> or daily candles. Indian holdings price via the always-active AMFI NAV feed;
+> unsupported symbols return `UNAVAILABLE` with no fabricated price.
+
+**Secrets safety**: the root `.env` is gitignored and must never be committed.
+`backend/.env` (backend-only keys like `GEMINI_API_KEY`) is likewise ignored.
+
 ### 2. Generate Full Project PDF Documentation
 ```bash
 node scripts/generate-pdf-docs.js
@@ -234,10 +257,14 @@ npm run deploy:web
 
 ### 4. Run Automated Test Verification
 ```bash
-# Run full 54-suite Jest test regression (305 tests passing)
+# Run full 85-suite Jest test regression (466 tests passing)
 npm test
 
-# Run TypeScript typecheck
+# Run the canonical 7-gate verification (tsc, backend syntax, tests,
+# AI audit, desktop E2E, mobile audit, production build)
+npm run verify:all
+
+# TypeScript typecheck
 npm run typecheck
 ```
 

@@ -20,7 +20,7 @@ import {
 import { AssetAllocationBar } from "../components/AssetAllocationBar";
 import { StatementImportModal, ClientPortalModal } from "../components/modals";
 import { SimpleHolding } from "../services/rebalancer";
-import { Client360Workspace } from "../components/client360";
+import { Client360Workspace, MobileExecutiveBriefCard } from "../components/client360";
 
 export interface ClientsScreenProps {
   theme: AppTheme;
@@ -622,29 +622,43 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
         {/* Right Column: Client 360 Workspace */}
         <View style={[styles.column, { flex: isDesktop ? 2 : 1 }]}>
           {selectedClient ? (
-            <Client360Workspace
-              client={selectedClient}
-              goals={goals}
-              theme={theme}
-              advisorName={advisorName}
-              isPro={isPro}
-              onNavigateTab={onNavigateTab}
-              onExportReport={(cl) => {
-                if (!isPro) {
-                  setIsPaywallVisible(true);
-                  return;
-                }
-                void exportClientPdfReport({
-                  client: cl,
-                  advisorName,
-                });
-              }}
-              onOpenImport={() => setShowImportModal(true)}
-              onOpenPortal={() => setShowPortalModal(true)}
-              onEditClient={openEditModal}
-              onDeleteClient={deleteClient}
-              onContactClient={contactClient}
-            />
+            <>
+              {!isDesktop && (
+                <MobileExecutiveBriefCard
+                  client={selectedClient}
+                  theme={theme}
+                  onOpenFullClient={(id) => setSelectedClientId(id)}
+                  onLaunchAlgoRebalance={() => {
+                    if (onNavigateTab) {
+                      onNavigateTab("Portfolios", { view: "rebalance" });
+                    }
+                  }}
+                />
+              )}
+              <Client360Workspace
+                client={selectedClient}
+                goals={goals}
+                theme={theme}
+                advisorName={advisorName}
+                isPro={isPro}
+                onNavigateTab={onNavigateTab}
+                onExportReport={(cl) => {
+                  if (!isPro) {
+                    setIsPaywallVisible(true);
+                    return;
+                  }
+                  void exportClientPdfReport({
+                    client: cl,
+                    advisorName,
+                  });
+                }}
+                onOpenImport={() => setShowImportModal(true)}
+                onOpenPortal={() => setShowPortalModal(true)}
+                onEditClient={openEditModal}
+                onDeleteClient={deleteClient}
+                onContactClient={contactClient}
+              />
+            </>
           ) : (
             <View style={styles.panel}>
               <Text style={styles.panelTitle}>Client 360 Workspace</Text>

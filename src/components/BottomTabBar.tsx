@@ -83,10 +83,11 @@ export function BottomTabBar<T extends string>({
               }}
               style={[styles.item, active ? styles.itemActive : null]}
             >
+              {active && <View style={styles.activeIndicator} />}
               <Ionicons
-                color={active ? theme.colors.textOnBrand : theme.colors.textMuted}
+                color={active ? theme.colors.brand : theme.colors.textMuted}
                 name={iconName}
-                size={20}
+                size={19}
               />
               <Text
                 numberOfLines={1}
@@ -105,49 +106,59 @@ export function BottomTabBar<T extends string>({
 const createStyles = (theme: AppTheme, bottomInset: number) =>
   StyleSheet.create({
     wrapper: {
-      backgroundColor: theme.colors.background,
+      backgroundColor: "rgba(3, 7, 18, 0.96)",
+      borderTopColor: "rgba(255, 255, 255, 0.08)",
+      borderTopWidth: 1,
       bottom: 0,
       left: 0,
-      paddingBottom: Math.max(bottomInset, theme.spacing[2]),
-      paddingHorizontal: theme.spacing[2],
-      paddingTop: theme.spacing[2],
+      paddingBottom: Math.max(bottomInset, 6),
+      paddingHorizontal: 8,
+      paddingTop: 4,
       position: "absolute",
       right: 0,
+      zIndex: 40,
     },
     innerShell: {
-      backgroundColor: theme.colors.surface,
-      borderColor: theme.colors.border,
-      borderRadius: 8,
-      borderWidth: 1,
+      backgroundColor: "transparent",
       flexDirection: "row",
-      gap: theme.spacing[1],
-      padding: 4,
+      gap: 4,
+      paddingVertical: 2,
     },
     item: {
       alignItems: "center",
       backgroundColor: "transparent",
-      borderRadius: 4,
+      borderRadius: 8,
       flex: 1,
-      gap: 3,
+      gap: 2,
       justifyContent: "center",
-      minHeight: 52,
+      minHeight: 46,
       minWidth: 0,
-      opacity: 0.92,
+      opacity: 0.88,
       paddingHorizontal: 2,
-      paddingVertical: 6,
+      paddingVertical: 4,
+      position: "relative",
     },
     itemActive: {
-      backgroundColor: theme.colors.brand,
+      backgroundColor: "rgba(224, 168, 76, 0.12)",
       opacity: 1,
+    },
+    activeIndicator: {
+      backgroundColor: theme.colors.brand,
+      borderRadius: 2,
+      height: 2,
+      position: "absolute",
+      top: 2,
+      width: 16,
     },
     label: {
       color: theme.colors.textMuted,
-      fontSize: theme.typography.label.fontSize,
-      fontWeight: theme.typography.label.fontWeight,
-      lineHeight: theme.typography.label.lineHeight,
+      fontSize: 10,
+      fontWeight: "500",
+      lineHeight: 12,
       textAlign: "center",
     },
     labelActive: {
-      color: theme.colors.textOnBrand,
+      color: theme.colors.brand,
+      fontWeight: "700",
     },
   });

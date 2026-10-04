@@ -96,7 +96,7 @@ async function runMobileAudit() {
     console.log(`  ✓ Dashboard rendered (${dev.name}) - Zero Overflow: ${dashOverflow}`);
 
     // 3. Clients Screen
-    const clientsTab = page.getByText("Clients").first();
+    const clientsTab = page.locator('text="Clients"').last();
     if (await clientsTab.isVisible()) {
       await clientsTab.click();
       await page.waitForTimeout(1500);
@@ -120,7 +120,7 @@ async function runMobileAudit() {
     }
 
     // 5. Portfolios Screen
-    const portfoliosTab = page.getByText("Portfolios").first();
+    const portfoliosTab = page.locator('text="Portfolio"').last();
     if (await portfoliosTab.isVisible()) {
       await portfoliosTab.click();
       await page.waitForTimeout(1500);
@@ -131,20 +131,20 @@ async function runMobileAudit() {
       console.log(`  ✓ Portfolios rendered (${dev.name}) - Zero Overflow: ${portOverflow}`);
     }
 
-    // 6. Tools Screen (Calculators & Vault)
-    const toolsTab = page.getByText("Tools").first();
-    if (await toolsTab.isVisible()) {
-      await toolsTab.click();
+    // 6. Tools Screen (via More Hub)
+    const moreTab = page.locator('text="More"').last();
+    if (await moreTab.isVisible()) {
+      await moreTab.click();
       await page.waitForTimeout(1500);
       const toolsScreenshot = path.join(MOBILE_SCREENSHOT_DIR, `${dev.name.toLowerCase().replace(/\s+/g, "_")}_06_tools.png`);
       await page.screenshot({ path: toolsScreenshot });
       const toolsOverflow = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 5);
       auditReport.overflowTests.push({ device: dev.name, screen: "Tools", hasZeroHorizontalOverflow: toolsOverflow });
-      console.log(`  ✓ Tools Suite rendered (${dev.name}) - Zero Overflow: ${toolsOverflow}`);
+      console.log(`  ✓ Tools Suite / More rendered (${dev.name}) - Zero Overflow: ${toolsOverflow}`);
     }
 
     // 7. AI Research Screen
-    const aiTab = page.getByText("AI Research").first();
+    const aiTab = page.locator('text="Research"').last();
     if (await aiTab.isVisible()) {
       await aiTab.click();
       await page.waitForTimeout(1500);
@@ -155,16 +155,16 @@ async function runMobileAudit() {
       console.log(`  ✓ AI Research rendered (${dev.name}) - Zero Overflow: ${aiOverflow}`);
     }
 
-    // 8. Workspace / Advisor Command Center Screen
-    const wsTab = page.getByText("Workspace").first();
-    if (await wsTab.isVisible()) {
-      await wsTab.click();
-      await page.waitForTimeout(1500);
-      const wsScreenshot = path.join(MOBILE_SCREENSHOT_DIR, `${dev.name.toLowerCase().replace(/\s+/g, "_")}_08_workspace.png`);
+    // 8. Return Home
+    const homeTab = page.locator('text="Home"').last();
+    if (await homeTab.isVisible()) {
+      await homeTab.click();
+      await page.waitForTimeout(1000);
+      const wsScreenshot = path.join(MOBILE_SCREENSHOT_DIR, `${dev.name.toLowerCase().replace(/\s+/g, "_")}_08_home.png`);
       await page.screenshot({ path: wsScreenshot });
       const wsOverflow = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 5);
-      auditReport.overflowTests.push({ device: dev.name, screen: "Workspace", hasZeroHorizontalOverflow: wsOverflow });
-      console.log(`  ✓ Workspace Command Center rendered (${dev.name}) - Zero Overflow: ${wsOverflow}`);
+      auditReport.overflowTests.push({ device: dev.name, screen: "Home", hasZeroHorizontalOverflow: wsOverflow });
+      console.log(`  ✓ Home rendered (${dev.name}) - Zero Overflow: ${wsOverflow}`);
     }
 
     // 9. Settings Screen

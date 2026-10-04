@@ -9,7 +9,9 @@ import {
   Text,
   TextInput,
   View,
+  useWindowDimensions,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { AppTheme } from "../theme";
 import { streamAiResponse } from "../services/aiStream";
 
@@ -84,6 +86,9 @@ export const AiWealthCopilot: React.FC<AiWealthCopilotProps> = ({
   onOpenChange,
   hideFloatingFab = false,
 }) => {
+  const { width: windowWidth } = useWindowDimensions();
+  const isMobile = windowWidth < 600;
+
   const isDark =
     theme.colors.background === "#030712" ||
     theme.colors.textPrimary === "#ffffff" ||
@@ -236,6 +241,7 @@ export const AiWealthCopilot: React.FC<AiWealthCopilotProps> = ({
           onPress={() => setIsOpen(true)}
           style={[
             styles.fab,
+            isMobile && styles.fabMobile,
             {
               backgroundColor: isDark ? "#0E182F" : "#FFFFFF",
               borderColor: brandColor,
@@ -244,12 +250,18 @@ export const AiWealthCopilot: React.FC<AiWealthCopilotProps> = ({
             },
           ]}
         >
-          <View style={styles.fabInner}>
-            <View style={[styles.aiDot, { backgroundColor: brandColor }]} />
-            <Text style={[styles.fabText, { color: brandColor }]}>
-              Ask Wealth AI
-            </Text>
-          </View>
+          {isMobile ? (
+            <View style={styles.fabInnerMobile}>
+              <Ionicons name="sparkles" size={20} color={brandColor} />
+            </View>
+          ) : (
+            <View style={styles.fabInner}>
+              <View style={[styles.aiDot, { backgroundColor: brandColor }]} />
+              <Text style={[styles.fabText, { color: brandColor }]}>
+                Ask Wealth AI
+              </Text>
+            </View>
+          )}
         </Pressable>
       )}
 
@@ -630,6 +642,20 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+  },
+  fabMobile: {
+    paddingHorizontal: 0,
+    paddingVertical: 0,
+    width: 44,
+    height: 44,
+    borderRadius: 999,
+    justifyContent: "center",
+    alignItems: "center",
+    right: 14,
+  },
+  fabInnerMobile: {
+    justifyContent: "center",
+    alignItems: "center",
   },
   aiDot: {
     width: 8,

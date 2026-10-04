@@ -358,6 +358,7 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
       <View
         style={[
           styles.executiveHeader,
+          compactActions && { padding: 14, marginBottom: 12 },
           { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
         ]}
       >
@@ -366,12 +367,14 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
             <Text style={[styles.greetingLabel, { color: theme.colors.brand }]}>
               ADVISOR COMMAND CENTER
             </Text>
-            <Text style={[styles.greetingTitle, { color: theme.colors.textPrimary }]}>
+            <Text style={[styles.greetingTitle, compactActions && { fontSize: 18 }, { color: theme.colors.textPrimary }]}>
               Good Morning, Advisor
             </Text>
-            <Text style={[styles.dateText, { color: theme.colors.textMuted }]}>
-              Daily workflow, governance, analytics and decision support
-            </Text>
+            {!compactActions && (
+              <Text style={[styles.dateText, { color: theme.colors.textMuted }]}>
+                Daily workflow, governance, analytics and decision support
+              </Text>
+            )}
             <Text style={[styles.dateText, { color: theme.colors.textSecondary, marginTop: 2 }]}>
               {todayFormatted} • {attentionClientsCount} Clients Need Attention
             </Text>
@@ -385,7 +388,7 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
               alignItems: "center",
               gap: 8,
               minWidth: 0,
-              ...(compactActions ? { flexBasis: "100%" } : null),
+              ...(compactActions ? { flexBasis: "100%", marginTop: 4 } : null),
             }}
           >
             <Pressable
@@ -393,6 +396,7 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
               disabled={isSyncingAccounts}
               style={[
                 styles.paletteBtn,
+                compactActions && { paddingHorizontal: 10, paddingVertical: 6 },
                 {
                   backgroundColor: isSyncingAccounts ? theme.colors.surfaceStrong : theme.colors.surfaceMuted,
                   borderColor: theme.colors.border,
@@ -414,6 +418,7 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
                 onPress={onOpenAiCopilot}
                 style={[
                   styles.paletteBtn,
+                  compactActions && { paddingHorizontal: 10, paddingVertical: 6 },
                   { backgroundColor: theme.colors.surfaceMuted, borderColor: theme.colors.brand },
                 ]}
               >
@@ -429,16 +434,19 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
               onPress={() => setIsPaletteOpen(true)}
               style={[
                 styles.paletteBtn,
+                compactActions && { paddingHorizontal: 10, paddingVertical: 6 },
                 { backgroundColor: theme.colors.surfaceMuted, borderColor: theme.colors.border },
               ]}
             >
               <Ionicons name="search" size={14} color={theme.colors.brand} />
               <Text style={[styles.paletteBtnText, { color: theme.colors.textPrimary }]}>
-                Command Palette
+                {compactActions ? "Search" : "Command Palette"}
               </Text>
-              <View style={styles.kbdBox}>
-                <Text style={[styles.kbdText, { color: theme.colors.textMuted }]}>⌘K</Text>
-              </View>
+              {!compactActions && (
+                <View style={styles.kbdBox}>
+                  <Text style={[styles.kbdText, { color: theme.colors.textMuted }]}>⌘K</Text>
+                </View>
+              )}
             </Pressable>
           </View>
         </View>
@@ -460,12 +468,13 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
       )}
 
       {/* 4 FOCUSED EXECUTIVE SUMMARY KPI CARDS (Clear Hierarchy) */}
-      <View style={styles.kpiGrid}>
+      <View style={[styles.kpiGrid, compactActions && { gap: 8, marginBottom: 14 }]}>
         {/* Card 1: Clients Needing Attention */}
         <Pressable
           onPress={() => setActiveSection("ACTIONS")}
           style={[
             styles.kpiCard,
+            compactActions && { padding: 12, minWidth: 140 },
             {
               backgroundColor: theme.colors.surface,
               borderColor: theme.colors.border,
@@ -473,18 +482,18 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
             },
           ]}
         >
-          <View style={styles.kpiCardHeader}>
+          <View style={[styles.kpiCardHeader, compactActions && { marginBottom: 6 }]}>
             <View style={[styles.kpiIconBox, { backgroundColor: theme.colors.warningSoft }]}>
               <Ionicons name="people" size={15} color={theme.colors.brand} />
             </View>
-            <Text style={[styles.kpiTitle, { color: theme.colors.textMuted }]}>
-              CLIENTS NEEDING REVIEW
+            <Text style={[styles.kpiTitle, compactActions && { fontSize: 10 }, { color: theme.colors.textMuted }]}>
+              CLIENTS REVIEW
             </Text>
           </View>
-          <Text style={[styles.kpiValue, { color: theme.colors.textPrimary }]}>
+          <Text style={[styles.kpiValue, compactActions && { fontSize: 20, marginBottom: 2 }, { color: theme.colors.textPrimary }]}>
             {attentionClientsCount}
           </Text>
-          <Text style={[styles.kpiSubtext, { color: theme.colors.textSecondary }]}>
+          <Text style={[styles.kpiSubtext, compactActions && { fontSize: 11, lineHeight: 14 }, { color: theme.colors.textSecondary }]}>
             {reviewsDueCount} reviews scheduled
           </Text>
         </Pressable>
@@ -494,6 +503,7 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
           onPress={() => setActiveSection("ACTIONS")}
           style={[
             styles.kpiCard,
+            compactActions && { padding: 12, minWidth: 140 },
             {
               backgroundColor: theme.colors.surface,
               borderColor: criticalCount > 0 ? theme.colors.danger : theme.colors.border,
@@ -501,7 +511,7 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
             },
           ]}
         >
-          <View style={styles.kpiCardHeader}>
+          <View style={[styles.kpiCardHeader, compactActions && { marginBottom: 6 }]}>
             <View
               style={[
                 styles.kpiIconBox,
@@ -514,19 +524,20 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
                 color={criticalCount > 0 ? theme.colors.danger : theme.colors.success}
               />
             </View>
-            <Text style={[styles.kpiTitle, { color: theme.colors.textMuted }]}>
+            <Text style={[styles.kpiTitle, compactActions && { fontSize: 10 }, { color: theme.colors.textMuted }]}>
               CRITICAL ALERTS
             </Text>
           </View>
           <Text
             style={[
               styles.kpiValue,
+              compactActions && { fontSize: 20, marginBottom: 2 },
               { color: criticalCount > 0 ? theme.colors.danger : theme.colors.success },
             ]}
           >
             {criticalCount}
           </Text>
-          <Text style={[styles.kpiSubtext, { color: theme.colors.textSecondary }]}>
+          <Text style={[styles.kpiSubtext, compactActions && { fontSize: 11, lineHeight: 14 }, { color: theme.colors.textSecondary }]}>
             {highPriorityCount} high priority flags
           </Text>
         </Pressable>
@@ -536,6 +547,7 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
           onPress={() => onNavigateTab("Portfolios")}
           style={[
             styles.kpiCard,
+            compactActions && { padding: 12, minWidth: 140 },
             {
               backgroundColor: theme.colors.surface,
               borderColor: theme.colors.border,
@@ -543,18 +555,18 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
             },
           ]}
         >
-          <View style={styles.kpiCardHeader}>
+          <View style={[styles.kpiCardHeader, compactActions && { marginBottom: 6 }]}>
             <View style={[styles.kpiIconBox, { backgroundColor: theme.colors.surfaceStrong }]}>
               <Ionicons name="pie-chart" size={15} color={theme.colors.brand} />
             </View>
-            <Text style={[styles.kpiTitle, { color: theme.colors.textMuted }]}>
+            <Text style={[styles.kpiTitle, compactActions && { fontSize: 10 }, { color: theme.colors.textMuted }]}>
               PORTFOLIO AUM
             </Text>
           </View>
-          <Text style={[styles.kpiValue, { color: theme.colors.textPrimary }]}>
+          <Text style={[styles.kpiValue, compactActions && { fontSize: 19, marginBottom: 2 }, { color: theme.colors.textPrimary }]}>
             {formattedAum}
           </Text>
-          <Text style={[styles.kpiSubtext, { color: theme.colors.success }]}>
+          <Text style={[styles.kpiSubtext, compactActions && { fontSize: 11, lineHeight: 14 }, { color: theme.colors.success }]}>
             +4.6% Alpha vs Benchmark
           </Text>
         </Pressable>
@@ -564,6 +576,7 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
           onPress={() => setActiveSection("OPPORTUNITIES")}
           style={[
             styles.kpiCard,
+            compactActions && { padding: 12, minWidth: 140 },
             {
               backgroundColor: theme.colors.surface,
               borderColor: theme.colors.border,
@@ -571,18 +584,18 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
             },
           ]}
         >
-          <View style={styles.kpiCardHeader}>
+          <View style={[styles.kpiCardHeader, compactActions && { marginBottom: 6 }]}>
             <View style={[styles.kpiIconBox, { backgroundColor: theme.colors.accentSoft }]}>
               <Ionicons name="shield-checkmark" size={15} color={theme.colors.accent} />
             </View>
-            <Text style={[styles.kpiTitle, { color: theme.colors.textMuted }]}>
+            <Text style={[styles.kpiTitle, compactActions && { fontSize: 10 }, { color: theme.colors.textMuted }]}>
               TAX HARVESTING
             </Text>
           </View>
-          <Text style={[styles.kpiValue, { color: theme.colors.accent }]}>
+          <Text style={[styles.kpiValue, compactActions && { fontSize: 19, marginBottom: 2 }, { color: theme.colors.accent }]}>
             {opportunities.length} Available
           </Text>
-          <Text style={[styles.kpiSubtext, { color: theme.colors.textSecondary }]}>
+          <Text style={[styles.kpiSubtext, compactActions && { fontSize: 11, lineHeight: 14 }, { color: theme.colors.textSecondary }]}>
             Section 70/74 offset candidates
           </Text>
         </Pressable>

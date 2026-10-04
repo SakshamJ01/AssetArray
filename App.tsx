@@ -2841,22 +2841,24 @@ function AppContent() {
             activeCurrency={activeCurrency}
             onCycleCurrency={cycleCurrency}
           />
-          <GlobalStatusBar
-            selectedClient={selectedClient}
-            activeTab={activeTab}
-            onNavigateTab={(tab, params) => {
-              setActiveTab(tab as AppTab);
-              if (params?.clientId) setSelectedClientId(params.clientId);
-              if (tab === "Portfolios" && params?.view) {
-                setPortfolioActiveModal(params.view);
-              }
-            }}
-            theme={theme}
-            marketStatus={marketHealthMonitor.getOverallHealth().activeProviders > 0 ? "LIVE" : "SIMULATED"}
-            dataQualityPct={dataQualityReport?.overallScore ?? 0}
-            dataQualityTier={dataQualityReport?.overallTier ?? "MISSING"}
-            onClearClient={() => setSelectedClientId(null)}
-          />
+          {(isDesktop || selectedClient) && (
+            <GlobalStatusBar
+              selectedClient={selectedClient}
+              activeTab={activeTab}
+              onNavigateTab={(tab, params) => {
+                setActiveTab(tab as AppTab);
+                if (params?.clientId) setSelectedClientId(params.clientId);
+                if (tab === "Portfolios" && params?.view) {
+                  setPortfolioActiveModal(params.view);
+                }
+              }}
+              theme={theme}
+              marketStatus={marketHealthMonitor.getOverallHealth().activeProviders > 0 ? "LIVE" : "SIMULATED"}
+              dataQualityPct={dataQualityReport?.overallScore ?? 0}
+              dataQualityTier={dataQualityReport?.overallTier ?? "MISSING"}
+              onClearClient={() => setSelectedClientId(null)}
+            />
+          )}
           <ScreenTransition triggerKey={activeTab}>
             {activeTab === "Dashboard" ? (
         <AdvisorCommandCenter
@@ -2917,22 +2919,33 @@ function AppContent() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <View
-          style={[
-            styles.pageHeader,
-            isCompactPageHeader ? styles.pageHeaderCompact : null,
-            { backgroundColor: theme.colors.surface },
-          ]}
-        >
-          <View style={[styles.heroCopy, isCompactPageHeader ? styles.heroCopyCompact : null]}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 2 }}>
-              <Text style={[styles.heroEyebrow, { color: theme.colors.brand }]}>Asset Array</Text>
+        {!isDesktop ? (
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+              marginBottom: 10,
+              backgroundColor: theme.colors.surface,
+              borderRadius: 8,
+              borderWidth: 1,
+              borderColor: theme.colors.border,
+            }}
+          >
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <Text style={{ fontSize: 16, fontWeight: "800", color: theme.colors.textPrimary }}>
+                {activeTab}
+              </Text>
               <SyncBadge isSyncing={isSyncing} syncState={syncState} />
+            </View>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
               <Pressable
                 onPress={() => setIsPaywallVisible(true)}
                 style={{
                   paddingHorizontal: 8,
-                  paddingVertical: 2,
+                  paddingVertical: 3,
                   borderRadius: 12,
                   backgroundColor: isPro ? "rgba(224, 168, 76, 0.15)" : "rgba(255, 255, 255, 0.08)",
                   borderWidth: 1,
@@ -2944,48 +2957,58 @@ function AppContent() {
                 </Text>
               </Pressable>
             </View>
-            <Text
-              style={[
-                styles.pageHeaderTitle,
-                isCompactPageHeader ? styles.pageHeaderTitleCompact : null,
-                { color: theme.colors.textPrimary },
-              ]}
-            >
-              {activeTab}
-            </Text>
           </View>
+        ) : (
           <View
             style={[
-              styles.heroActionRow,
-              isCompactPageHeader ? styles.heroActionRowCompact : null,
+              styles.pageHeader,
+              { backgroundColor: theme.colors.surface },
             ]}
           >
-            {activeTab !== "AI Research" ? (
+            <View style={styles.heroCopy}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 2 }}>
+                <Text style={[styles.heroEyebrow, { color: theme.colors.brand }]}>Asset Array</Text>
+                <SyncBadge isSyncing={isSyncing} syncState={syncState} />
+                <Pressable
+                  onPress={() => setIsPaywallVisible(true)}
+                  style={{
+                    paddingHorizontal: 8,
+                    paddingVertical: 2,
+                    borderRadius: 12,
+                    backgroundColor: isPro ? "rgba(224, 168, 76, 0.15)" : "rgba(255, 255, 255, 0.08)",
+                    borderWidth: 1,
+                    borderColor: isPro ? theme.colors.brand : "rgba(255, 255, 255, 0.15)",
+                  }}
+                >
+                  <Text style={{ fontSize: 10, fontWeight: "800", color: isPro ? theme.colors.brand : theme.colors.textSecondary }}>
+                    {isPro ? "👑 PRO" : "⚡ UPGRADE"}
+                  </Text>
+                </Pressable>
+              </View>
+              <Text style={[styles.pageHeaderTitle, { color: theme.colors.textPrimary }]}>
+                {activeTab}
+              </Text>
+            </View>
+            <View style={styles.heroActionRow}>
+              {activeTab !== "AI Research" ? (
+                <Pressable
+                  style={[styles.secondaryButton, { backgroundColor: theme.colors.surfaceStrong }]}
+                  onPress={() => setActiveTab("AI Research")}
+                >
+                  <Text style={[styles.secondaryButtonText, { color: theme.colors.textPrimary }]}>
+                    AI Research
+                  </Text>
+                </Pressable>
+              ) : null}
               <Pressable
-                style={[
-                  styles.secondaryButton,
-                  isCompactPageHeader ? styles.secondaryButtonCompact : null,
-                  { backgroundColor: theme.colors.surfaceStrong },
-                ]}
-                onPress={() => setActiveTab("AI Research")}
+                style={[styles.secondaryButton, styles.logoutButton]}
+                onPress={() => void logoutFromBackend()}
               >
-                <Text style={[styles.secondaryButtonText, { color: theme.colors.textPrimary }]}>
-                  AI Research
-                </Text>
+                <Text style={[styles.secondaryButtonText, styles.logoutButtonText]}>Logout</Text>
               </Pressable>
-            ) : null}
-            <Pressable
-              style={[
-                styles.secondaryButton,
-                styles.logoutButton,
-                isCompactPageHeader ? styles.secondaryButtonCompact : null,
-              ]}
-              onPress={() => void logoutFromBackend()}
-            >
-              <Text style={[styles.secondaryButtonText, styles.logoutButtonText]}>Logout</Text>
-            </Pressable>
+            </View>
           </View>
-        </View>
+        )}
 
         {activeTab === "AI Research" ? (
           <AiResearchScreen
@@ -3054,6 +3077,7 @@ function AppContent() {
         {activeTab === "Workspace" ? (
           <WorkspaceScreen
             theme={theme}
+            onLogout={() => void logoutFromBackend()}
             onNavigateTab={(tab, params) => {
               setActiveTab(tab as AppTab);
               if (tab === "Portfolios" && params?.view) {

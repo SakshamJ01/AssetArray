@@ -1,5 +1,5 @@
 {
-  "executedAt": "2026-10-04T14:58:45.811Z",
+  "executedAt": "2026-10-04T18:30:13.449Z",
   "environment": "mobile-device-emulation",
   "devicesTested": [
     "iPhone 13 (390x844)",
@@ -24,7 +24,22 @@
     },
     {
       "device": "iPhone 13",
+      "screen": "Portfolios",
+      "hasZeroHorizontalOverflow": true
+    },
+    {
+      "device": "iPhone 13",
+      "screen": "Tools",
+      "hasZeroHorizontalOverflow": true
+    },
+    {
+      "device": "iPhone 13",
       "screen": "AI Research",
+      "hasZeroHorizontalOverflow": true
+    },
+    {
+      "device": "iPhone 13",
+      "screen": "Home",
       "hasZeroHorizontalOverflow": true
     },
     {
@@ -44,7 +59,22 @@
     },
     {
       "device": "Pixel 7",
+      "screen": "Portfolios",
+      "hasZeroHorizontalOverflow": true
+    },
+    {
+      "device": "Pixel 7",
+      "screen": "Tools",
+      "hasZeroHorizontalOverflow": true
+    },
+    {
+      "device": "Pixel 7",
       "screen": "AI Research",
+      "hasZeroHorizontalOverflow": true
+    },
+    {
+      "device": "Pixel 7",
+      "screen": "Home",
       "hasZeroHorizontalOverflow": true
     }
   ],
@@ -52,17 +82,31 @@
     {
       "device": "iPhone 13",
       "totalInteractive": 1,
-      "smallTargets": []
+      "smallTargets": [
+        {
+          "tag": "INPUT",
+          "text": "Search actions by client, issu",
+          "width": 316,
+          "height": 16
+        }
+      ]
     },
     {
       "device": "Pixel 7",
       "totalInteractive": 1,
-      "smallTargets": []
+      "smallTargets": [
+        {
+          "tag": "INPUT",
+          "text": "Search actions by client, issu",
+          "width": 338,
+          "height": 16
+        }
+      ]
     }
   ],
   "summary": {
-    "totalScreens": 8,
-    "passedScreens": 8,
+    "totalScreens": 14,
+    "passedScreens": 14,
     "failedScreens": 0,
     "horizontalOverflowViolations": 0
   }

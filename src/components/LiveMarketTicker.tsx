@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { AppTheme } from "../theme";
 import { CurrencyCode, CURRENCY_REGISTRY } from "../services/currency";
 import {
@@ -24,6 +24,9 @@ export const LiveMarketTicker: React.FC<LiveMarketTickerProps> = ({
   activeCurrency = "INR",
   onCycleCurrency,
 }) => {
+  const { width: windowWidth } = useWindowDimensions();
+  const isMobile = windowWidth < 600;
+
   const isDark =
     theme.colors.background === "#030712" ||
     theme.colors.textPrimary === "#ffffff" ||
@@ -97,6 +100,9 @@ export const LiveMarketTicker: React.FC<LiveMarketTickerProps> = ({
           {
             backgroundColor: isDark ? "rgba(11, 19, 38, 0.85)" : "rgba(248, 250, 252, 0.96)",
             borderColor: theme.colors.border,
+            height: isMobile ? 36 : 44,
+            paddingVertical: isMobile ? 4 : 6,
+            paddingHorizontal: isMobile ? 8 : 12,
           },
         ]}
       >
@@ -181,7 +187,7 @@ export const LiveMarketTicker: React.FC<LiveMarketTickerProps> = ({
           })}
         </ScrollView>
 
-        {onCycleCurrency ? (
+        {onCycleCurrency && !isMobile ? (
           <Pressable style={styles.currencyChip} onPress={onCycleCurrency}>
             <Text style={styles.currencyChipText}>
               {CURRENCY_REGISTRY[activeCurrency || "INR"]?.flag || "🇮🇳"}{" "}
@@ -191,18 +197,20 @@ export const LiveMarketTicker: React.FC<LiveMarketTickerProps> = ({
           </Pressable>
         ) : null}
 
-        <Pressable
-          style={[styles.refreshChip, isRefreshing && styles.refreshChipActive]}
-          onPress={() => {
-            realTimeMarket.triggerManualSync();
-            if (onRefresh) onRefresh();
-          }}
-          disabled={isRefreshing}
-        >
-          <Text style={styles.refreshChipText}>
-            {isRefreshing ? "Syncing..." : "⚡ Sync"}
-          </Text>
-        </Pressable>
+        {!isMobile ? (
+          <Pressable
+            style={[styles.refreshChip, isRefreshing && styles.refreshChipActive]}
+            onPress={() => {
+              realTimeMarket.triggerManualSync();
+              if (onRefresh) onRefresh();
+            }}
+            disabled={isRefreshing}
+          >
+            <Text style={styles.refreshChipText}>
+              {isRefreshing ? "Syncing..." : "⚡ Sync"}
+            </Text>
+          </Pressable>
+        ) : null}
       </View>
 
       {/* Level 2 Market Depth Terminal Modal */}

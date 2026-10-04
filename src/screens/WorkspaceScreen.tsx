@@ -7,6 +7,7 @@ import { AdvisorMessagesScreen } from "./workspace/AdvisorMessagesScreen";
 export interface WorkspaceScreenProps {
   theme: AppTheme;
   onNavigateTab?: (tab: string, params?: any) => void;
+  onLogout?: () => void;
   marketMessage: string;
   setMarketMessage: (msg: string) => void;
   setBroadcastMessage: (msg: string) => void;
@@ -52,6 +53,7 @@ export interface WorkspaceScreenProps {
 export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
   theme,
   onNavigateTab,
+  onLogout,
   marketMessage,
   setMarketMessage,
   setBroadcastMessage,
@@ -97,10 +99,17 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
             { label: "Research", icon: "search-outline" as const, tab: "AI Research", params: {} },
             { label: "Calculators", icon: "calculator-outline" as const, tab: "Tools", params: { calculator: "Cash Flow" } },
             { label: "Settings", icon: "settings-outline" as const, tab: "Settings", params: {} },
+            { label: "Logout", icon: "log-out-outline" as const, tab: "LOGOUT", params: {} },
           ].map((dest) => (
             <Pressable
               key={dest.label}
-              onPress={() => onNavigateTab && onNavigateTab(dest.tab, dest.params)}
+              onPress={() => {
+                if (dest.tab === "LOGOUT") {
+                  if (onLogout) onLogout();
+                } else if (onNavigateTab) {
+                  onNavigateTab(dest.tab, dest.params);
+                }
+              }}
               style={{
                 flex: 1,
                 minWidth: 100,
@@ -115,8 +124,8 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
                 borderColor: theme.colors.border,
               }}
             >
-              <Ionicons name={dest.icon} size={15} color={theme.colors.brand} />
-              <Text style={{ fontSize: 11, fontWeight: "700", color: theme.colors.textPrimary }}>
+              <Ionicons name={dest.icon} size={15} color={dest.tab === "LOGOUT" ? theme.colors.danger : theme.colors.brand} />
+              <Text style={{ fontSize: 11, fontWeight: "700", color: dest.tab === "LOGOUT" ? theme.colors.danger : theme.colors.textPrimary }}>
                 {dest.label}
               </Text>
             </Pressable>

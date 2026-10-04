@@ -1,6 +1,6 @@
 # Asset Array 💼📈
 
-[![Version 3.3.1](https://img.shields.io/badge/Version-3.3.1-E0A84C?style=for-the-badge&logo=git&logoColor=white)](https://github.com/SakshamJ01/AssetArray)
+[![Version 4.0.0](https://img.shields.io/badge/Version-4.0.0-E0A84C?style=for-the-badge&logo=git&logoColor=white)](https://github.com/SakshamJ01/AssetArray)
 [![Live Web App](https://img.shields.io/badge/Live%20Web%20App-asset--array.web.app-E0A84C?style=for-the-badge&logo=firebase&logoColor=white)](https://asset-array.web.app)
 [![Live Backend API](https://img.shields.io/badge/API-assetarray.onrender.com-46E3B7?style=for-the-badge&logo=render&logoColor=black)](https://assetarray.onrender.com/api/health)
 [![Cloud Database](https://img.shields.io/badge/Database-MongoDB%20Atlas-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://cloud.mongodb.com)
@@ -9,7 +9,7 @@
 [![RevenueCat](https://img.shields.io/badge/Monetization-RevenueCat-orange.svg)](https://www.revenuecat.com/)
 [![Built with Expo](https://img.shields.io/badge/Built%20with-Expo%20%2F%20React%20Native-blue.svg)](https://expo.dev/)
 [![Gemini & Ollama AI](https://img.shields.io/badge/AI-Google%20Gemini%20%2B%20Ollama-8E75B2.svg)](https://ai.google.dev/)
-[![Tests Passing](https://img.shields.io/badge/Tests-467%20Passed%20(85%20Suites)-22c55e.svg)](https://github.com/SakshamJ01/AssetArray)
+[![Tests Passing](https://img.shields.io/badge/Tests-477%20Passed%20(88%20Suites)-22c55e.svg)](https://github.com/SakshamJ01/AssetArray)
 
 ![Asset Array Hero Banner](assets/hero-thumbnail.jpg)
 
@@ -30,6 +30,49 @@ Engineered with a high-contrast **Obsidian & Champagne Gold** luxury aesthetic (
 | **Backend API** | Render (Node.js Express) | [assetarray.onrender.com](https://assetarray.onrender.com) | 🟢 [Health Status Check](https://assetarray.onrender.com/api/health) |
 | **Cloud Database** | MongoDB Atlas (Cloud Replica) | AWS Cloud Cluster | 🟢 Encrypted Storage Active |
 | **PDF Documentation** | Workspace PDF Artifact | `AssetArray_Full_Project_Documentation.pdf` | 🟢 PDF Generated |
+
+---
+
+## 🏛️ Enterprise Architecture Blueprint (5-Tier Tier-1 Stack)
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                          LAYER 1: UNIVERSAL PRESENTATION & UX                           │
+│  Universal Web (Next.js/Expo Web)  •  Native Mobile (iOS/Android)  •  Desktop Cmd Sidebar│
+└──────────────────────────────────────────┬──────────────────────────────────────────────┘
+                                           │
+┌──────────────────────────────────────────▼──────────────────────────────────────────────┐
+│                      LAYER 2: FEATURE CONTROLLERS & REACTIVE STATE                      │
+│  Domain Custom Hooks (usePortfolio, useMarketData)  •  Biometric & Hardware PIN Lock    │
+└──────────────────────────────────────────┬──────────────────────────────────────────────┘
+                                           │
+┌──────────────────────────────────────────▼──────────────────────────────────────────────┐
+│                LAYER 3: CORE DOMAIN & MATHEMATICAL ANALYTICS ENGINE                     │
+│  • GIPS TWR & Newton-Raphson XIRR Engine (<1e-7 tolerance)                              │
+│  • Modern Portfolio Theory (Sharpe, Sortino, Parametric/Historical VaR, Max Drawdown)  │
+│  • Brinson-Fachler Multi-Factor Attribution (Allocation, Selection, Interaction Alpha)  │
+│  • 1,000-Path Monte Carlo Geometric Brownian Simulation                                 │
+│  • FY 2025-26 Indian Statutory Tax Engine (12.5% LTCG / 20.0% STCG)                     │
+│  • Multi-Asset Rebalance Drift & Tax-Optimal Execution Router                           │
+└──────────────────────────────────────────┬──────────────────────────────────────────────┘
+                                           │
+┌──────────────────────────────────────────▼──────────────────────────────────────────────┐
+│              LAYER 4: INGESTION, STREAMING & INSTITUTIONAL GATEWAYS                     │
+│  • Broker Gateway (FIX 4.4 Protocol, Zerodha Kite, Upstox API v2, ICICI Direct Breeze)   │
+│  • Account Aggregator Framework (RBI Sahamati Consent Management & FIP Data Extraction)  │
+│  • Zero-PII Multi-Broker Statement Parser (CAMS, KFintech, Zerodha, Upstox, ICICI)      │
+│  • Real-Time Market Bus (Official AMFI NAV Feeds, Finnhub Global Quotes, L2 Depth)     │
+│  • Firm-Wide Batch Review & Dossier Generator (Automated Review Package for 100+ Clients)│
+└──────────────────────────────────────────┬──────────────────────────────────────────────┘
+                                           │
+┌──────────────────────────────────────────▼──────────────────────────────────────────────┐
+│               LAYER 5: SECURITY, STORAGE & COMPLIANCE INFRASTRUCTURE                    │
+│  • Zero-Knowledge Local Storage (PBKDF2 100k + AES-256-GCM Cryptographic Storage)       │
+│  • DPDP Act 2023 Redaction Pipeline (PAN, Aadhaar, Bank, Folio, Demat Sanitization)     │
+│  • Tamper-Proof Audit Logging & SHA-256 Receipt Fingerprints (AA-SIG-...)               │
+│  • Offline-First Sync Adapter & Cloud Vault Replication (MongoDB Atlas / Render API)   │
+└─────────────────────────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -74,18 +117,45 @@ Below is the deep, exhaustive breakdown of **every single feature, tool, workflo
 * **Multi-Broker Statement Support**: Automated parsing engine with auto-detection for **Zerodha**, **Upstox**, **ICICI Direct**, **Groww**, **CAMS**, and **NDSL eCAS** consolidated account statements (`src/services/statementParser.ts`).
 * **Deepened Zero-PII Redaction Layer**: Integrated `sanitizePii()` function scrubbing PAN numbers, Aadhaar IDs, email addresses, phone numbers, Demat/BO IDs (`[REDACTED_DEMAT_ID]`), bank accounts (`[REDACTED_BANK_ACCOUNT]`), IFSC codes (`[REDACTED_IFSC]`), and folio numbers (`[REDACTED_FOLIO]`) in accordance with India's DPDP Act 2023.
 * **1-Click Quick Broker Preset Chips**: Embedded quick sample chips (`⚡ Zerodha`, `⚡ Upstox`, `⚡ ICICI Direct`, `⚡ CAMS CAS`, `⚡ Groww`) directly in the modal for instant sample ingestion, validation, and testing.
-* **Prominent Button Placement**: Accessible via:
-  1. **Desktop Sidebar**: `📥 Import Statement (CAS)` button under `DESK ACTIONS`.
-  2. **Client Roster Header**: Blue `📥 Import Statement` button next to `+ Client`.
-  3. **Portfolios Workstation Bar**: Blue `📥 Import Statement` button next to `Rebalance`.
+* **Prominent Button Placement**: Accessible via Desktop Sidebar, Client Roster Header, and Portfolios Workstation Bar.
 * **Smart Asset Categorization**: Automatically maps parsed securities into Equities, Mutual Funds, Fixed Income, Commodities, and Cash with gain/loss metrics and allocations.
 
 ---
 
-### 4. 📊 Portfolio Analytics, Valuation & Performance Engine
+### 4. ⚡ Institutional Broker Gateway & Order Routing Engine
+* **Universal Broker Gateway (`src/services/brokerConnect/`)**: Unified routing engine translating rebalance drift and advisory recommendations into validated broker-specific order payloads.
+* **Supported Protocols & Connectors**:
+  * **Zerodha Kite Connect**: Formats regular, AMO, and Stop-Loss orders with exchange routing (`NSE`/`BSE`).
+  * **Upstox API v2**: Generates multi-order batches with validation against order slice limits.
+  * **ICICI Direct Breeze API**: Routes equity cash and derivatives transactions.
+  * **Institutional FIX 4.4 Protocol**: Compiles compliant `NewOrderSingle (MsgType=D)` messages with tags 11 (ClOrdID), 55 (Symbol), 54 (Side), 38 (OrderQty), 40 (OrdType), and 44 (Price).
+* **Cryptographic Execution Receipts**: Produces immutable SHA-256 receipt signatures (`AA-SIG-...`) for regulatory auditability.
+
+---
+
+### 5. 🏦 Account Aggregator (AA) Open Banking Framework
+* **RBI / Sahamati Standard Consent Lifecycle (`src/services/accountAggregator/`)**:
+  * Consent request creation with fine-grained date ranges, data frequency, and account types (Deposit, Mutual Funds, Equities).
+  * 6-digit multi-factor mobile OTP validation state machine (`validateOtp()`).
+  * FIP (Financial Information Provider) encrypted data unmarshaling.
+* **Automated Asset Hydration**: Automatically maps verified bank account balances and depository folios into the client's asset inventory.
+
+---
+
+### 6. 📁 Firm-Wide Batch Reporting & Multi-Client Review Engine
+* **Firm-Wide Review Generator (`src/services/batchReporting.ts`)**: Iterates across an entire advisor desk roster (100+ clients) and evaluates:
+  * Aggregated Firm AUM & Asset Class breakdown.
+  * GIPS Rebalance Drift Detection (flags clients with drift > 5.0%).
+  * 0–100 Portfolio Health Diagnostic scores.
+  * 30-Day and YTD Brinson-Fachler active alpha attribution.
+* **Multi-Format Export**: Generates compliance-ready CSV summaries and Markdown dossiers for investment committee meetings.
+
+---
+
+### 7. 📊 Portfolio Analytics, Valuation & Performance Engine
 * **Multi-Asset Class Support**: Tracks positions across 8 asset classes: Equities, Mutual Funds, Fixed Income, Commodities, Cash & Equivalents, Crypto, Real Estate, and International Assets.
 * **Holding Creation & Editing**: Add/edit position details including Asset Name, Asset Class, Ticker, Quantity, Invested Value, Current Market Value, Target Weight %, and Notes.
-* **Real-Time Live Valuation Sync**: Client portfolio market values (`currentValue = price * quantity`) dynamically update live as market securities tick.
+* **Real-Time Live Valuation Sync**: Client portfolio market values dynamically update live as market securities tick.
 * **Time-Weighted Return (TWR) Engine**: GIPS-informed sub-period return calculation isolating external cash flows (`src/services/performance/twr.ts`).
 * **Money-Weighted Return (XIRR) Engine**: Exact Newton-Raphson cash-flow yield calculation (`src/services/performance/xirr.ts`).
 * **Visual Holdings Treemap / Heatmap**: Interactive area-proportional rectangular tiles displaying asset weights and return performance.
@@ -93,61 +163,53 @@ Below is the deep, exhaustive breakdown of **every single feature, tool, workflo
 
 ---
 
-### 5. 📈 Real-Time Live Share Market Ticker & Level-2 Terminal
+### 8. 📈 Real-Time Live Share Market Ticker & Level-2 Terminal
 * **Live Micro-Flash Header Ticker**: Top bar streaming ticks for **Equities & Indices** (`RELIANCE`, `TCS`, `INFY`, `ITC`, `NVDA`, `BANKNIFTY`, `NIFTY 50`, `SENSEX`), **Commodities & Bonds** (`SILVER`, `SGB_GOLD`, `BHARATBOND30`, `IN_10Y_GSEC`), **FX** (`USD/INR`), and **Crypto** (`BTC/USD`, `ETH/USD`).
 * **Quant Indicators & Calculations**: Built-in quant helpers including Wilder-smoothed **Relative Strength Index** (`calculateRSI`, period 14) and top-of-book **Bid-Ask Spread in Basis Points** (`calculateSpreadBps`).
-* **Stochastic Brownian Ticking Engine**: Simulated realistic exchange micro-movement with green/red micro-glow animations matching exchange tick sizes.
+* **Stochastic Brownian Ticking Engine**: Realistic exchange micro-movement with green/red micro-glow animations matching exchange tick sizes.
 * **Level-2 Depth Terminal (`LiveMarketDepthModal`)**: Top 5 Bid & Ask order book depth with live quantities, buy/sell volume pressure gauge, intraday 30-tick SVG sparklines, day high/low range slider, and simulated trade execution.
 * **Official AMFI NAV Integration (`AmfiNavProvider`)**: Ingests official Indian Mutual Fund Net Asset Values from AMFI India endpoints.
-* **Live Finnhub Market Data (`FinnhubProvider`)**: Real US/global equity quotes and FX via the Finnhub API. Gated on `EXPO_PUBLIC_FINNHUB_API_KEY`; unconfigured or free-tier-unreachable symbols degrade honestly to `UNAVAILABLE` with **zero fabricated prices**.
-* **Multi-Provider Market Aggregator (`unifiedMarketProvider`)**: Automatic failover across Finnhub, Alpha Vantage, AMFI, and local stochastic ticker with 15s quote caching and freshness labels (`LIVE` / `DELAYED` / `STALE` / `UNAVAILABLE`).
+* **Live Finnhub Market Data (`FinnhubProvider`)**: Real US/global equity quotes and FX via the Finnhub API.
 
 ---
 
-### 6. 🛡️ Institutional Risk Intelligence & Portfolio Health Score
-* **0–100 Portfolio Health Score Diagnostic (`calculateHealthScore`)**: Multi-pillar rating evaluating:
-  1. *Data Completeness*
-  2. *Asset Diversification (HHI Entropy)*
-  3. *Single-Asset Concentration Defense*
-  4. *Geographic & Currency Spread*
-  5. *Liquidity & Debt Management*
-  * A holding-free portfolio is flagged `INSUFFICIENT_DATA` and renders an honest **NO DATA** empty state instead of a fabricated score.
+### 9. 🛡️ Institutional Risk Intelligence & Portfolio Health Score
+* **0–100 Portfolio Health Score Diagnostic (`calculateHealthScore`)**: Multi-pillar rating evaluating Data Completeness, Asset Diversification (HHI Entropy), Single-Asset Concentration Defense, Geographic & Currency Spread, and Liquidity & Debt Management.
 * **Modern Portfolio Theory (MPT) Risk Metrics**: Computes Portfolio Volatility (Standard Deviation), Sharpe Ratio, Beta against Benchmark, Max Drawdown, and High Watermark.
 * **Multi-Benchmark Comparison**: Benchmarks client performance against NIFTY 50, CRISIL Hybrid 65:35, and S&P 500.
 
 ---
 
-### 7. 🏛️ Brinson-Fachler Performance Attribution Engine
+### 10. 🏛️ Brinson-Fachler Performance Attribution Engine
 * **Alpha Decomposition**: Mathematically breaks active portfolio outperformance/underperformance into **Allocation Effect**, **Selection Effect**, and **Interaction Effect**.
 * **Plain-Language Explainability**: Auto-generates narrative summaries detailing top alpha drivers and drag positions.
-* **Honest Empty State**: An asset-free portfolio renders a dedicated empty panel instead of a fabricated factor/bps table — the model never implies a measured alpha it did not compute.
 
 ---
 
-### 8. ⚖️ Indian Tax Intelligence & Loss Harvesting (AY 2026-27 / FY 2025-26)
+### 11. ⚖️ Indian Tax Intelligence & Loss Harvesting (AY 2026-27 / FY 2025-26)
 * **Section 112A LTCG Tax Engine**: 12.5% tax rate calculation on long-term equity gains above the ₹1,25,000 statutory exemption limit.
 * **Section 111A STCG Tax Engine**: 20.0% tax rate calculation on short-term equity gains.
 * **Section 70 & 74 Set-off & Carry-Forward Engine**: Enforces statutory intra-head and inter-head gain/loss offset rules.
-* **Tax Lot FIFO/LIFO Evaluation**: Evaluates individual buy/sell tax lots for term classification (LTCG > 12 months for equity, STCG <= 12 months).
+* **Tax Lot FIFO/LIFO Evaluation**: Evaluates individual buy/sell tax lots for term classification.
 * **1-Click Tax Loss Harvesting Plan**: Identifies loss positions, computes immediate tax savings, and provides 30-day wash-sale protection guidance.
 
 ---
 
-### 9. 🎯 What-If Macro Scenario Sandbox & Stress Testing
+### 12. 🎯 What-If Macro Scenario Sandbox & Stress Testing
 * **Historical Crisis Presets (`PRESET_SCENARIOS`)**: Simulates shocks including *2008 GFC Crunch*, *Tech Correction*, *1970s Stagflation*, and *Emerging Markets Liquidity Boom*.
 * **Custom Shock Sliders**: Allows advisors to tweak equity market drops, interest rate shifts, and FX movements.
 * **Outcome Distribution & Tail Risk**: Computes P5 (worst-case tail risk), P50 (median NAV), P95 (resilience NAV), and post-shock Sharpe ratio shifts.
 
 ---
 
-### 10. 🎲 1,000-Path Monte Carlo Wealth Simulator
+### 13. 🎲 1,000-Path Monte Carlo Wealth Simulator
 * **Mulberry32 PRNG Generator**: Reproducible, seedable 1,000-run stochastic path simulation (`src/services/monteCarlo.ts`).
 * **Statistical Probability of Success**: Computes exact percentage probability of achieving target wealth goals.
 * **Percentile Trajectories**: Displays 10th (pessimistic), 50th (median), and 90th (optimistic) percentile visual curves.
 
 ---
 
-### 11. 🤖 Conversational AI Wealth Copilot & AI Advisor Brief
+### 14. 🤖 Conversational AI Wealth Copilot & AI Advisor Brief
 * **Multi-Provider AI Gateway (`AiRouter`)**: Routes AI prompts across Google Gemini (`gemini-2.5-flash`, `gemini-2.5-pro`), OpenAI, Anthropic, and local Ollama daemon (`qwen3:4b`, `llama3.2`).
 * **Dynamic Ollama Provider**: Dynamic local model discovery (`getActiveModel()`) for zero-latency, local AI copilot execution.
 * **Zero-Knowledge PII Sanitization**: Replaces client names and PII with deterministic tokens (e.g. `Client Ref #AA-881`) aligned with DPDP Act 2023.
@@ -156,14 +218,14 @@ Below is the deep, exhaustive breakdown of **every single feature, tool, workflo
 
 ---
 
-### 12. 📄 Executive PDF Report Studio & Client Shareable Portal
+### 15. 📄 Executive PDF Report Studio & Client Shareable Portal
 * **On-Device PDF Generation**: Generates high-resolution branded PDF portfolio summary reports using `expo-print` and `expo-sharing`.
 * **Advisor Branding & Stamping**: Stamps advisor credentials, disclaimers, asset breakdowns, and contact information.
 * **Shareable Client Portal (`ClientPortalModal`)**: Generates read-only investor dossier for client review.
 
 ---
 
-### 13. 🧮 Comprehensive Financial Calculators Center
+### 16. 🧮 Comprehensive Financial Calculators Center
 * **SIP Calculator**: Computes future wealth, total invested amount, and wealth gain for systematic investment plans.
 * **Cash Flow Calculator**: Models cumulative and payout cash flows.
 * **Retirement Calculator**: Estimates required retirement corpus based on inflation, current expenses, and post-retirement yield.
@@ -171,14 +233,14 @@ Below is the deep, exhaustive breakdown of **every single feature, tool, workflo
 
 ---
 
-### 14. 💳 Pro Advisor Monetization (RevenueCat)
+### 17. 💳 Pro Advisor Monetization (RevenueCat)
 * **Native In-App Purchases (`react-native-purchases`)**: Integrated RevenueCat SDK supporting iOS App Store, Google Play, and Web Test Store sandbox.
 * **Pro Paywall Modal (`PaywallScreen`)**: Conversion-optimized paywall supporting Monthly and Annual subscription tiers.
 * **Entitlement Gating (`pro_advisor`)**: Gates access to AI Portfolio Co-Pilot and Unlimited PDF Exports.
 
 ---
 
-### 15. ☁️ Enterprise End-to-End Cloud Synchronization
+### 18. ☁️ Enterprise End-to-End Cloud Synchronization
 * **E2EE Cloud Sync (`syncToCloud`, `restoreFromCloud`)**: Pushes/pulls AES-256 encrypted payloads to MongoDB Atlas via Render API.
 * **Live Sync Status Badge (`SyncBadge`)**: Real-time header badge displaying `SYNCING`, `OFFLINE`, `ERROR`, or `SYNCED`.
 * **Zero-Cache Firebase CDN Config**: `firebase.json` headers enforcing `no-cache, no-store, must-revalidate` on SPA routes to guarantee immediate bundle updates.
@@ -217,10 +279,13 @@ AssetArray/
 │   │   ├── PortfoliosScreen.tsx         # Unified portfolio analytics & action bar statement import
 │   │   └── PaywallScreen.tsx            # RevenueCat Pro Advisor Paywall UI
 │   └── services/
+│       ├── accountAggregator/           # RBI Sahamati consent generator, OTP validator & FIP data decryptor
+│       ├── batchReporting.ts            # Firm-wide review package & GIPS drift dossier generator
+│       ├── brokerConnect/               # Multi-broker order gateway (Zerodha, Upstox, Breeze, FIX 4.4)
 │       ├── statementParser.ts           # Zero-PII Zerodha/Upstox/ICICI Direct/Groww/CAMS statement parser
 │       ├── realTimeMarket.ts            # Ticker engine (ITC, NVDA, SILVER, BANKNIFTY) + RSI & Spread Bps
 │       └── aiGateway/providers/         # Resilient multi-model gateway (Gemini, Anthropic, OpenAI, Ollama)
-└── __tests__/                           # 85 passing Jest test suites (467 total unit/E2E tests)
+└── __tests__/                           # 88 passing Jest test suites (477 total unit/E2E tests)
 ```
 
 ---
@@ -251,40 +316,9 @@ npm install
 npm run web
 ```
 
-### 1b. Optional market data keys (root `.env`)
-Live market quotes are **key-gated and fully optional** — the app runs without them. To enable live Finnhub US/global equity quotes, create a **root-level** `.env` (gitignored) and add:
-```env
-EXPO_PUBLIC_FINNHUB_API_KEY=your_finnhub_token
-```
-Then rebuild (`npm run web` / `npm run deploy:web`).
-
-> **Build-time inlining note**: Expo's Metro bundler only inlines `EXPO_PUBLIC_*`
-> values for **direct** member access (`process.env.EXPO_PUBLIC_X`). Optional
-> chaining (`process.env?.EXPO_PUBLIC_X`) is not statically replaced and
-> resolves to `undefined` in the browser, so the Finnhub-gating paths use
-> guarded direct access to keep the key live in the web bundle.
->
-> Free-tier Finnhub covers US/global equities and FX but **not** Indian equities
-> or daily candles. Indian holdings price via the always-active AMFI NAV feed;
-> unsupported symbols return `UNAVAILABLE` with no fabricated price.
-
-**Secrets safety**: the root `.env` is gitignored and must never be committed.
-`backend/.env` (backend-only keys like `GEMINI_API_KEY`) is likewise ignored.
-
-### 2. Generate Full Project PDF Documentation
+### 2. Run Automated Test Verification & Live Browser QA
 ```bash
-node scripts/generate-pdf-docs.js
-# Generates AssetArray_Full_Project_Documentation.pdf in project root
-```
-
-### 3. Deploy Web App to Firebase Hosting
-```bash
-npm run deploy:web
-```
-
-### 4. Run Automated Test Verification & Live Browser QA
-```bash
-# Run full 85-suite Jest test regression (467 tests passing)
+# Run full 88-suite Jest test regression (477 tests passing)
 npm test
 
 # Run live headless Chrome browser verification (7 stages + storage reset)
@@ -302,3 +336,4 @@ npm run typecheck
 
 ## 📄 License
 This project is open source and available under the [MIT License](LICENSE).
+

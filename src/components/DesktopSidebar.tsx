@@ -16,6 +16,7 @@ export interface DesktopSidebarProps {
   onQuickAddClient: () => void;
   onQuickBroadcast: () => void;
   onQuickImportStatement?: () => void;
+  onQuickExportRoster?: () => void;
   onLockDesk: () => void;
   dueClientsCount?: number;
   advisorName?: string;
@@ -44,6 +45,7 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
   onQuickAddClient,
   onQuickBroadcast,
   onQuickImportStatement,
+  onQuickExportRoster,
   onLockDesk,
   dueClientsCount = 0,
   advisorName = "Senior Wealth Advisor",
@@ -175,6 +177,21 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
           >
             <Ionicons name="document-text-outline" size={16} color="#38BDF8" />
             <Text style={[styles.actionSecondaryText, { color: "#38BDF8" }]}>Import Statement (CAS)</Text>
+          </Pressable>
+        )}
+
+        {onQuickExportRoster && (
+          <Pressable
+            style={({ pressed }) => [
+              styles.actionButton,
+              styles.actionSecondary,
+              { marginTop: 6, borderColor: "rgba(16, 185, 129, 0.4)", backgroundColor: "rgba(16, 185, 129, 0.08)" },
+              pressed && styles.actionButtonPressed,
+            ]}
+            onPress={onQuickExportRoster}
+          >
+            <Ionicons name="download-outline" size={16} color="#10B981" />
+            <Text style={[styles.actionSecondaryText, { color: "#10B981" }]}>Export Roster (.csv)</Text>
           </Pressable>
         )}
       </View>

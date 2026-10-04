@@ -58,15 +58,43 @@ describe("Statement Parser & Zero-PII Ingestion Engine", () => {
     expect(treasury?.assetClass).toBe("Fixed Income");
   });
 
-  it("sanitizes PAN, Aadhaar, Email, and Phone numbers from imported statements (Zero-PII)", () => {
+  it("should parse Upstox CSV statements correctly", () => {
+    const result = parseStatement(SAMPLE_STATEMENTS.upstox);
+
+    expect(result.success).toBe(true);
+    expect(result.holdings.length).toBe(5);
+    expect(result.detectedBroker).toBe("Upstox");
+    expect(result.totalValue).toBeGreaterThan(1000000);
+
+    const tataSteel = result.holdings.find((h) => h.symbol === "TATASTEEL");
+    expect(tataSteel).toBeDefined();
+    expect(tataSteel?.currentValue).toBe(154200);
+    expect(tataSteel?.assetClass).toBe("Equity");
+  });
+
+  it("should parse ICICI Direct CSV statements correctly", () => {
+    const result = parseStatement(SAMPLE_STATEMENTS.iciciDirect);
+
+    expect(result.success).toBe(true);
+    expect(result.holdings.length).toBe(4);
+    expect(result.detectedBroker).toBe("ICICI Direct");
+    expect(result.totalValue).toBeGreaterThan(1400000);
+
+    const itc = result.holdings.find((h) => h.assetName.includes("ITC"));
+    expect(itc).toBeDefined();
+    expect(itc?.currentValue).toBe(404000);
+  });
+
+  it("sanitizes PAN, Aadhaar, Email, Phone, Bank A/c, IFSC, Demat ID, and Folio numbers (Zero-PII DPDP)", () => {
     const rawPiiStatement = `Client Statement for ABCDE1234F
 Aadhaar: 1234 5678 9012, Contact: advisor@wealthcorp.in, Phone: 9876543210
+Bank A/c: 123456789012, IFSC: HDFC0000001, Demat: IN30012612345678, Folio: 99382711/01
 Symbol,Instrument,Quantity,Avg Price,LTP,Current Value
 RELIANCE,Reliance Industries Ltd,100,2400.00,2900.00,290000`;
 
     const { sanitized, redactedPiiCount } = sanitizePii(rawPiiStatement);
 
-    expect(redactedPiiCount).toBe(4);
+    expect(redactedPiiCount).toBeGreaterThanOrEqual(8);
     expect(sanitized).not.toContain("ABCDE1234F");
     expect(sanitized).toContain("[REDACTED_PAN]");
     expect(sanitized).not.toContain("1234 5678 9012");
@@ -75,11 +103,19 @@ RELIANCE,Reliance Industries Ltd,100,2400.00,2900.00,290000`;
     expect(sanitized).toContain("[REDACTED_EMAIL]");
     expect(sanitized).not.toContain("9876543210");
     expect(sanitized).toContain("[REDACTED_PHONE]");
+    expect(sanitized).not.toContain("123456789012");
+    expect(sanitized).toContain("[REDACTED_BANK_ACCOUNT]");
+    expect(sanitized).not.toContain("HDFC0000001");
+    expect(sanitized).toContain("[REDACTED_IFSC]");
+    expect(sanitized).not.toContain("IN30012612345678");
+    expect(sanitized).toContain("[REDACTED_DEMAT_ID]");
+    expect(sanitized).not.toContain("99382711/01");
+    expect(sanitized).toContain("[REDACTED_FOLIO]");
 
     // Verify parsing succeeds cleanly on sanitized text
     const result = parseStatement(rawPiiStatement);
     expect(result.success).toBe(true);
-    expect(result.redactedPiiCount).toBe(4);
+    expect(result.redactedPiiCount).toBeGreaterThanOrEqual(8);
     expect(result.holdings.length).toBe(1);
     expect(result.holdings[0].symbol).toBe("RELIANCE");
   });

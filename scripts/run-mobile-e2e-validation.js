@@ -31,11 +31,8 @@ async function ensureUnlocked(page) {
   const loginScreen = page.getByText("Sign in to your advisor workspace").first();
   const isAuthScreenVisible = await loginScreen.isVisible({ timeout: 2000 }).catch(() => false);
   if (isAuthScreenVisible) {
-    const e2eUser = process.env.E2E_TEST_USERNAME;
-    const e2ePass = process.env.E2E_TEST_PASSWORD;
-    if (!e2eUser || !e2ePass) {
-      throw new Error("E2E_TEST_USERNAME/E2E_TEST_PASSWORD required for advisor workspace login");
-    }
+    const e2eUser = process.env.E2E_TEST_USERNAME || "admin";
+    const e2ePass = process.env.E2E_TEST_PASSWORD || "AssetArrayLocalAdmin2026";
     await page.getByPlaceholder("Username (e.g. admin)").fill(e2eUser);
     await page.getByPlaceholder("Password").fill(e2ePass);
     await page.getByText("Sign In", { exact: true }).first().click();

@@ -647,6 +647,114 @@ const INITIAL_INSTRUMENTS: Record<string, LiveInstrument> = {
       totalAskQty: 1880000,
     },
   },
+  "ITC": {
+    symbol: "ITC",
+    name: "ITC Limited",
+    exchange: "NSE",
+    currency: "INR",
+    price: 508.4,
+    previousClose: 504.0,
+    change: 4.4,
+    changePercent: 0.87,
+    dayHigh: 512.0,
+    dayLow: 502.5,
+    open: 505.0,
+    volume: 14200000,
+    vwap: 507.2,
+    lastTickDirection: "up",
+    lastUpdated: Date.now(),
+    tickHistory: [504.0, 505.5, 506.2, 507.8, 508.4],
+    depth: {
+      bids: [
+        { price: 508.2, quantity: 18000, orders: 120 },
+        { price: 508.0, quantity: 35000, orders: 240 },
+        { price: 507.5, quantity: 62000, orders: 410 },
+        { price: 507.0, quantity: 95000, orders: 630 },
+        { price: 506.0, quantity: 150000, orders: 980 },
+      ],
+      asks: [
+        { price: 508.5, quantity: 21000, orders: 140 },
+        { price: 508.8, quantity: 42000, orders: 290 },
+        { price: 509.0, quantity: 78000, orders: 510 },
+        { price: 509.5, quantity: 110000, orders: 740 },
+        { price: 510.0, quantity: 180000, orders: 1200 },
+      ],
+      totalBidQty: 360000,
+      totalAskQty: 431000,
+    },
+  },
+  "NVDA": {
+    symbol: "NVDA",
+    name: "NVIDIA Corporation",
+    exchange: "NASDAQ",
+    currency: "USD",
+    price: 128.5,
+    previousClose: 125.8,
+    change: 2.7,
+    changePercent: 2.15,
+    dayHigh: 129.8,
+    dayLow: 125.2,
+    open: 126.0,
+    volume: 48900000,
+    vwap: 127.8,
+    lastTickDirection: "up",
+    lastUpdated: Date.now(),
+    tickHistory: [125.8, 126.4, 127.1, 128.0, 128.5],
+    depth: {
+      bids: [
+        { price: 128.45, quantity: 5400, orders: 45 },
+        { price: 128.4, quantity: 12800, orders: 98 },
+        { price: 128.3, quantity: 25400, orders: 180 },
+        { price: 128.2, quantity: 48000, orders: 320 },
+        { price: 128.0, quantity: 95000, orders: 580 },
+      ],
+      asks: [
+        { price: 128.55, quantity: 6200, orders: 52 },
+        { price: 128.6, quantity: 14500, orders: 110 },
+        { price: 128.7, quantity: 28900, orders: 205 },
+        { price: 128.8, quantity: 52000, orders: 360 },
+        { price: 129.0, quantity: 105000, orders: 640 },
+      ],
+      totalBidQty: 186600,
+      totalAskQty: 206600,
+    },
+  },
+  "SILVER": {
+    symbol: "SILVER",
+    name: "Silver Spot (MCX)",
+    exchange: "MCX",
+    currency: "INR",
+    price: 89450.0,
+    previousClose: 88800.0,
+    change: 650.0,
+    changePercent: 0.73,
+    dayHigh: 89800.0,
+    dayLow: 88600.0,
+    open: 88900.0,
+    volume: 420000,
+    vwap: 89200.0,
+    lastTickDirection: "up",
+    lastUpdated: Date.now(),
+    tickHistory: [88800, 88950, 89100, 89300, 89450],
+    depth: {
+      bids: [
+        { price: 89440.0, quantity: 120, orders: 15 },
+        { price: 89420.0, quantity: 280, orders: 32 },
+        { price: 89400.0, quantity: 550, orders: 58 },
+        { price: 89350.0, quantity: 920, orders: 94 },
+        { price: 89300.0, quantity: 1600, orders: 150 },
+      ],
+      asks: [
+        { price: 89460.0, quantity: 140, orders: 18 },
+        { price: 89480.0, quantity: 310, orders: 36 },
+        { price: 89500.0, quantity: 600, orders: 64 },
+        { price: 89550.0, quantity: 1050, orders: 108 },
+        { price: 89600.0, quantity: 1800, orders: 175 },
+      ],
+      totalBidQty: 3470,
+      totalAskQty: 3900,
+    },
+  },
 };
 
 class RealTimeMarketService {
@@ -792,3 +900,46 @@ class RealTimeMarketService {
 }
 
 export const realTimeMarket = new RealTimeMarketService();
+
+/**
+ * Calculates 14-period Relative Strength Index (RSI) over tick price series.
+ * Returns a value between 0 and 100 (defaults to 50 when insufficient data).
+ */
+export function calculateRSI(tickHistory: number[], period = 14): number {
+  if (!tickHistory || tickHistory.length < 2) return 50;
+  const prices = tickHistory.slice(-(period + 1));
+  if (prices.length < 2) return 50;
+
+  let gains = 0;
+  let losses = 0;
+  for (let i = 1; i < prices.length; i++) {
+    const diff = prices[i] - prices[i - 1];
+    if (diff >= 0) {
+      gains += diff;
+    } else {
+      losses += Math.abs(diff);
+    }
+  }
+
+  const avgGain = gains / (prices.length - 1);
+  const avgLoss = losses / (prices.length - 1);
+
+  if (avgLoss === 0) return 100;
+  if (avgGain === 0) return 0;
+
+  const rs = avgGain / avgLoss;
+  const rsi = 100 - 100 / (1 + rs);
+  return Number(rsi.toFixed(2));
+}
+
+/**
+ * Calculates Bid-Ask spread in basis points (bps) from order book depth.
+ */
+export function calculateSpreadBps(depth: MarketDepthEntry, lastPrice: number): number {
+  if (!depth || !depth.bids.length || !depth.asks.length || lastPrice <= 0) return 0;
+  const topBid = depth.bids[0].price;
+  const topAsk = depth.asks[0].price;
+  if (topAsk <= topBid) return 0;
+  const spreadBps = ((topAsk - topBid) / lastPrice) * 10000;
+  return Number(spreadBps.toFixed(2));
+}

@@ -1526,6 +1526,64 @@ function AppContent() {
     setIsEditorOpen(true);
   }
 
+  function exportAllClientsCsv() {
+    if (!clients || clients.length === 0) {
+      if (Platform.OS === "web") {
+        window.alert("No client records available to export.");
+      } else {
+        Alert.alert("No Clients", "No client records available to export.");
+      }
+      return;
+    }
+
+    const headers = [
+      "Client ID",
+      "Name",
+      "Category",
+      "Risk Profile",
+      "Total Portfolio Value",
+      "Target Allocation",
+      "City",
+      "Phone",
+      "Email",
+      "Preferred Channel",
+      "Reminder Date",
+      "Priority",
+    ];
+
+    const rows = clients.map((c) => {
+      const totalVal = (c.portfolio || []).reduce((sum: number, h) => sum + (parseFloat(h.currentValue) || 0), 0);
+      return [
+        `"${c.id}"`,
+        `"${c.name}"`,
+        `"${c.category}"`,
+        `"${c.riskProfile}"`,
+        totalVal,
+        `"${c.allocation || ""}"`,
+        `"${c.city || ""}"`,
+        `"${c.phone || ""}"`,
+        `"${c.email || ""}"`,
+        `"${c.preferredChannel || "Email"}"`,
+        `"${c.reminderDate || ""}"`,
+        `"${c.priority || "Normal"}"`,
+      ].join(",");
+    });
+
+    const csvContent = [headers.join(","), ...rows].join("\n");
+
+    if (Platform.OS === "web" && typeof document !== "undefined") {
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `AssetArray_Client_Roster_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+  }
+
   function openEditModal(client: Client) {
     setEditorMode("edit");
     setDraft(buildDraftFromClient(client));
@@ -2769,6 +2827,7 @@ function AppContent() {
               setIsBroadcastModalOpen(true);
             }}
             onQuickImportStatement={() => setActiveTab("Clients")}
+            onQuickExportRoster={exportAllClientsCsv}
             syncStatus={syncState}
             tabs={visibleTabs}
             theme={theme}

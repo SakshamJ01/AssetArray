@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import {
   Image,
+  Platform,
   Pressable,
   Text,
   TextInput,
@@ -245,6 +246,62 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
 
   const hasActiveFilters = categoryFilter !== "All" || filterMode !== "All";
 
+  const exportRosterCsv = () => {
+    if (!filteredClients || filteredClients.length === 0) {
+      if (Platform.OS === "web") {
+        window.alert("No client records available to export.");
+      }
+      return;
+    }
+
+    const headers = [
+      "Client ID",
+      "Name",
+      "Category",
+      "Risk Profile",
+      "Total Portfolio Value",
+      "Target Allocation",
+      "City",
+      "Phone",
+      "Email",
+      "Preferred Channel",
+      "Reminder Date",
+      "Priority",
+    ];
+
+    const rows = filteredClients.map((c) => {
+      const totalVal = (c.portfolio || []).reduce((sum: number, h) => sum + (parseFloat(h.currentValue) || 0), 0);
+      return [
+        `"${c.id}"`,
+        `"${c.name}"`,
+        `"${c.category}"`,
+        `"${c.riskProfile}"`,
+        totalVal,
+        `"${c.allocation || ""}"`,
+        `"${c.city || ""}"`,
+        `"${c.phone || ""}"`,
+        `"${c.email || ""}"`,
+        `"${c.preferredChannel || "Email"}"`,
+        `"${c.reminderDate || ""}"`,
+        `"${c.priority || "Normal"}"`,
+      ].join(",");
+    });
+
+    const csvContent = [headers.join(","), ...rows].join("\n");
+
+    if (Platform.OS === "web" && typeof document !== "undefined") {
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `AssetArray_Client_Roster_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+  };
+
   return (
     <>
       {/* Search and Compact Filters Bar */}
@@ -487,6 +544,25 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
                   <Ionicons name="document-text-outline" size={14} color="#38BDF8" />
                   <Text style={{ fontSize: 12, fontWeight: "800", color: "#38BDF8" }}>
                     Import Statement
+                  </Text>
+                </Pressable>
+                <Pressable
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 4,
+                    paddingHorizontal: 10,
+                    paddingVertical: 6,
+                    borderRadius: 4,
+                    backgroundColor: "rgba(16, 185, 129, 0.12)",
+                    borderWidth: 1,
+                    borderColor: "rgba(16, 185, 129, 0.4)",
+                  }}
+                  onPress={exportRosterCsv}
+                >
+                  <Ionicons name="download-outline" size={14} color="#10B981" />
+                  <Text style={{ fontSize: 12, fontWeight: "800", color: "#10B981" }}>
+                    Export (.csv)
                   </Text>
                 </Pressable>
                 <Pressable

@@ -50,6 +50,34 @@ export function sanitizePii(rawText: string): { sanitized: string; redactedPiiCo
     return "[REDACTED_PHONE]";
   });
 
+  // 5. Redact Indian Bank Account Numbers (e.g. A/c: 123456789012)
+  text = text.replace(/(?:\b(?:A\/c|Account|Acct|Bank\s*A\/c|Bank\s*Acc)[\s:#-]*)([0-9]{9,18})\b/gi, (match, acc) => {
+    count++;
+    return match.replace(acc, "[REDACTED_BANK_ACCOUNT]");
+  });
+
+  // 6. Redact Indian IFSC Codes (e.g. HDFC0000001, SBIN0001234)
+  text = text.replace(/\b[A-Z]{4}0[A-Z0-9]{6}\b/g, () => {
+    count++;
+    return "[REDACTED_IFSC]";
+  });
+
+  // 7. Redact Demat / DP ID (e.g. IN30012612345678 or Demat: 1208160012345678)
+  text = text.replace(/\bIN\d{14}\b/g, () => {
+    count++;
+    return "[REDACTED_DEMAT_ID]";
+  });
+  text = text.replace(/(?:\b(?:Demat|DP\s*ID|BO\s*ID|Client\s*ID)[\s:#-]*)([A-Z0-9]{8,16})\b/gi, (match, id) => {
+    count++;
+    return match.replace(id, "[REDACTED_DEMAT_ID]");
+  });
+
+  // 8. Redact Folio numbers
+  text = text.replace(/(?:\bFolio(?:\s*No|\s*Number)?[\s:#-]*)([A-Z0-9\/\-_]{5,20})\b/gi, (match, folio) => {
+    count++;
+    return match.replace(folio, "[REDACTED_FOLIO]");
+  });
+
   return { sanitized: text, redactedPiiCount: count };
 }
 
@@ -64,6 +92,19 @@ HDFCBANK,HDFC Bank Limited,400,1450.00,1620.00,648000
 INFY,Infosys Ltd,300,1380.00,1750.25,525075
 GOLDBEES,Nippon India ETF Gold BeES,800,48.50,59.20,47360
 ICICIBANK,ICICI Bank Ltd,350,850.00,1090.00,381500`,
+
+  upstox: `Instrument,Quantity,Avg. Price,LTP,Current Value
+TATASTEEL,1000,118.50,154.20,154200
+INFY,150,1420.00,1890.00,283500
+RELIANCE,80,2400.00,2980.00,238400
+HDFCBANK,250,1490.00,1660.00,415000
+GOLDBEES,500,52.00,62.80,31400`,
+
+  iciciDirect: `Stock Name,ISIN,Quantity,Average Cost,Current Market Price,Total Current Value
+BHARTI AIRTEL LTD,INE397D01024,300,950.00,1650.00,495000
+ASIAN PAINTS LTD,INE021A01026,100,2850.00,3120.00,312000
+ITC LTD,INE154A01025,800,390.00,505.00,404000
+HDFC LIFE INSURANCE,INE795G01014,400,580.00,720.00,288000`,
 
   groww: `Company Name,ISIN,Shares,Avg. Buy Price,Current Market Price,Current Value
 Tata Motors Ltd,INE155A01022,500,620.00,980.00,490000
@@ -235,6 +276,7 @@ export function parseStatement(csvContent: string): ParsedStatementResult {
         h === "currentvalue" ||
         h === "marketvalue" ||
         h === "totalvalue" ||
+        h === "totalcurrentvalue" ||
         h === "value" ||
         h === "holdingvalue"
     );
@@ -279,10 +321,17 @@ export function parseStatement(csvContent: string): ParsedStatementResult {
   let detectedBroker = "Standard CSV";
   if (headers.includes("schemename") || headers.includes("foliono")) {
     detectedBroker = "CAMS / KFintech CAS";
+  } else if (
+    headers.includes("stockname") &&
+    (headers.includes("averagecost") || headers.includes("totalcurrentvalue") || headers.includes("currentmarketprice"))
+  ) {
+    detectedBroker = "ICICI Direct";
   } else if (headers.includes("companyname") && (headers.includes("isin") || headers.includes("avgbuyprice"))) {
     detectedBroker = "Groww Statement";
-  } else if (headers.includes("ltp") && headers.includes("instrument")) {
+  } else if (headers.includes("ltp") && headers.includes("instrument") && headers.includes("symbol")) {
     detectedBroker = "Zerodha Kite";
+  } else if (headers.includes("ltp") && headers.includes("instrument") && !headers.includes("symbol")) {
+    detectedBroker = "Upstox";
   } else if (headers.includes("ticker") && headers.includes("costbasis")) {
     detectedBroker = "Institutional Custodian";
   } else if (headers.includes("isin") && headers.includes("unitsheld")) {

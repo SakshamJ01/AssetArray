@@ -9,7 +9,7 @@
 [![RevenueCat](https://img.shields.io/badge/Monetization-RevenueCat-orange.svg)](https://www.revenuecat.com/)
 [![Built with Expo](https://img.shields.io/badge/Built%20with-Expo%20%2F%20React%20Native-blue.svg)](https://expo.dev/)
 [![Gemini & Ollama AI](https://img.shields.io/badge/AI-Google%20Gemini%20%2B%20Ollama-8E75B2.svg)](https://ai.google.dev/)
-[![Tests Passing](https://img.shields.io/badge/Tests-466%20Passed%20(85%20Suites)-22c55e.svg)](https://github.com/SakshamJ01/AssetArray)
+[![Tests Passing](https://img.shields.io/badge/Tests-467%20Passed%20(85%20Suites)-22c55e.svg)](https://github.com/SakshamJ01/AssetArray)
 
 ![Asset Array Hero Banner](assets/hero-thumbnail.jpg)
 
@@ -50,6 +50,7 @@ Below is the deep, exhaustive breakdown of **every single feature, tool, workflo
 * **Dual Luxury Theme Engine**: High-contrast Obsidian & Champagne Gold dark theme (`#030712`) and Swiss Private Banking light theme.
 * **Client-Side Zero-Knowledge Encryption**: End-to-end AES-256 client payload encryption before cloud transmission using PIN-derived cryptographic keys.
 * **Backend Environment Security Hardening**: Strict production rules requiring non-default `TOKEN_SECRET`, `REFRESH_SECRET`, and domain-restricted `CORS_ORIGIN`.
+* **1-Click Storage Hygiene Reset (`Clear All Local Data`)**: Comprehensive device data wiper in Settings that purges client rosters, portfolios, notes, auth tokens, biometric/PIN locks, and telemetry caches, returning the desk to the clean onboarding vault lock.
 
 ---
 
@@ -58,6 +59,8 @@ Below is the deep, exhaustive breakdown of **every single feature, tool, workflo
 * **Multi-Attribute Search & Filter**: Real-time search across client names, emails, phone numbers, cities, and risk profiles.
 * **Category Filters**: Instant segmentation by category (*All*, *HNI*, *Ultra HNI*, *Retail*, *Institutional*).
 * **Mode Filters**: Quick filtering by *All Clients*, *Due Reminders*, and *High Priority*.
+* **1-Click Client Roster CSV Export (`Export (.csv)`)**: Direct CSV export of all filtered client profiles, risk ratings, contact schedules, and portfolio values available in both the Client Roster toolbar and Desktop Sidebar (`Export Roster (.csv)`).
+* **Honest Empty State Protection**: Guarded roster export alerting the advisor honestly when zero clients are loaded, with zero mock or ghost client generation.
 * **Client Onboarding & Creation Modal**: Comprehensive draft editor capturing Name, Phone, Email, Category, Risk Profile, Preferred Channel (Email/WhatsApp/SMS), Watchlist Tickers, City, Target Asset Allocation, Contact Reminder Date, Priority Level, and Notes.
 * **Client Dossier Editor**: Edit existing client records and instantly persist updates across local storage and cloud state.
 * **Client Deletion**: Safe deletion workflow with confirmation prompt to prevent accidental data loss.
@@ -68,13 +71,14 @@ Below is the deep, exhaustive breakdown of **every single feature, tool, workflo
 ---
 
 ### 3. 📄 1-Click Statement & CAS Importer Engine (Zero-PII)
-* **Multi-Broker Statement Support**: Automated parsing engine for **Zerodha**, **Groww**, **CAMS**, and **NDSL eCAS** consolidated account statements (`src/services/statementParser.ts`).
-* **Zero-PII Redaction Layer**: Integrated `sanitizePii()` function scrubbing PAN numbers, Aadhaar IDs, email addresses, and mobile numbers in accordance with DPDP Act 2023.
+* **Multi-Broker Statement Support**: Automated parsing engine with auto-detection for **Zerodha**, **Upstox**, **ICICI Direct**, **Groww**, **CAMS**, and **NDSL eCAS** consolidated account statements (`src/services/statementParser.ts`).
+* **Deepened Zero-PII Redaction Layer**: Integrated `sanitizePii()` function scrubbing PAN numbers, Aadhaar IDs, email addresses, phone numbers, Demat/BO IDs (`[REDACTED_DEMAT_ID]`), bank accounts (`[REDACTED_BANK_ACCOUNT]`), IFSC codes (`[REDACTED_IFSC]`), and folio numbers (`[REDACTED_FOLIO]`) in accordance with India's DPDP Act 2023.
+* **1-Click Quick Broker Preset Chips**: Embedded quick sample chips (`⚡ Zerodha`, `⚡ Upstox`, `⚡ ICICI Direct`, `⚡ CAMS CAS`, `⚡ Groww`) directly in the modal for instant sample ingestion, validation, and testing.
 * **Prominent Button Placement**: Accessible via:
   1. **Desktop Sidebar**: `📥 Import Statement (CAS)` button under `DESK ACTIONS`.
   2. **Client Roster Header**: Blue `📥 Import Statement` button next to `+ Client`.
   3. **Portfolios Workstation Bar**: Blue `📥 Import Statement` button next to `Rebalance`.
-* **Smart Asset Categorization**: Automatically maps parsed securities into Equities, Mutual Funds, Fixed Income, Commodities, and Cash.
+* **Smart Asset Categorization**: Automatically maps parsed securities into Equities, Mutual Funds, Fixed Income, Commodities, and Cash with gain/loss metrics and allocations.
 
 ---
 
@@ -90,7 +94,8 @@ Below is the deep, exhaustive breakdown of **every single feature, tool, workflo
 ---
 
 ### 5. 📈 Real-Time Live Share Market Ticker & Level-2 Terminal
-* **Live Micro-Flash Header Ticker**: Top bar streaming ticks for **Equities & Indices** (`RELIANCE`, `TCS`, `INFY`, `BANKNIFTY`, `NIFTY 50`, `SENSEX`), **Sovereign Gold & Bonds** (`SGB_GOLD`, `BHARATBOND30`, `IN_10Y_GSEC`), **FX** (`USD/INR`), and **Crypto** (`BTC/USD`, `ETH/USD`).
+* **Live Micro-Flash Header Ticker**: Top bar streaming ticks for **Equities & Indices** (`RELIANCE`, `TCS`, `INFY`, `ITC`, `NVDA`, `BANKNIFTY`, `NIFTY 50`, `SENSEX`), **Commodities & Bonds** (`SILVER`, `SGB_GOLD`, `BHARATBOND30`, `IN_10Y_GSEC`), **FX** (`USD/INR`), and **Crypto** (`BTC/USD`, `ETH/USD`).
+* **Quant Indicators & Calculations**: Built-in quant helpers including Wilder-smoothed **Relative Strength Index** (`calculateRSI`, period 14) and top-of-book **Bid-Ask Spread in Basis Points** (`calculateSpreadBps`).
 * **Stochastic Brownian Ticking Engine**: Simulated realistic exchange micro-movement with green/red micro-glow animations matching exchange tick sizes.
 * **Level-2 Depth Terminal (`LiveMarketDepthModal`)**: Top 5 Bid & Ask order book depth with live quantities, buy/sell volume pressure gauge, intraday 30-tick SVG sparklines, day high/low range slider, and simulated trade execution.
 * **Official AMFI NAV Integration (`AmfiNavProvider`)**: Ingests official Indian Mutual Fund Net Asset Values from AMFI India endpoints.
@@ -184,33 +189,55 @@ Below is the deep, exhaustive breakdown of **every single feature, tool, workflo
 
 ```
 AssetArray/
-├── App.tsx                              # Root layout, live ticker sync, navigation orchestration
+├── .agents/rules/                       # Codified engineering rules & agentic pair-programming guardrails
+│   ├── expo-env-inlining.md             # Enforces direct EXPO_PUBLIC_* member access for Metro inlining
+│   ├── honest-analytics.md              # Enforces INSUFFICIENT_DATA / zero fabricated return metrics
+│   ├── e2e-storage-hygiene.md           # Mandates ephemeral browser context isolation & local storage reset
+│   └── git-push.md                      # Mandatory push-to-main synchronization
+├── App.tsx                              # Root layout, live ticker sync, navigation orchestration, auth & lock
 ├── firebase.json                        # Firebase Hosting configuration with SPA rewrites & zero-cache headers
 ├── render.yaml                          # Render.com Web Service Blueprint CI/CD
 ├── scripts/
+│   ├── verify-v4-enhancements.js        # Native Chrome headless automation verifying 7 live stages & storage reset
 │   ├── postbuild.js                     # Service worker cleanup, font preconnect & dark reset injector
 │   ├── generate-pdf-docs.js             # Headless Chrome script generating full project PDF documentation
 │   └── check-live.js                    # Live HTTP response & JS bundle status checker
 ├── src/
 │   ├── components/
-│   │   ├── DesktopSidebar.tsx           # Desktop navigation sidebar with Quick Import Statement button
+│   │   ├── DesktopSidebar.tsx           # Desktop navigation sidebar with Quick Import & Export Roster actions
 │   │   ├── LiveMarketTicker.tsx         # Real-time ticking header with micro-flash animations
 │   │   ├── AiWealthCopilot.tsx          # Floating conversational AI copilot (Gemini + Ollama)
 │   │   └── modals/
-│   │       ├── StatementImportModal.tsx # 1-Click Zero-PII CSV/Statement parser
-│   │       ├── LiveMarketDepthModal.tsx # Level 2 Orderbook Depth Terminal
+│   │       ├── StatementImportModal.tsx # 1-Click Zero-PII CSV/Statement parser with Upstox/ICICI presets
+│   │       ├── LiveMarketDepthModal.tsx # Level 2 Orderbook Depth Terminal with RSI & Spread Bps
 │   │       ├── MonteCarloModal.tsx      # 1,000-run statistical simulation studio
 │   │       └── RebalanceModal.tsx       # Institutional portfolio rebalancing
 │   ├── screens/
-│   │   ├── ClientsScreen.tsx            # Search, filter, client dossier & roster header import
+│   │   ├── ClientsScreen.tsx            # Search, filter, client dossier, statement import & roster CSV export
 │   │   ├── PortfoliosScreen.tsx         # Unified portfolio analytics & action bar statement import
 │   │   └── PaywallScreen.tsx            # RevenueCat Pro Advisor Paywall UI
 │   └── services/
-│       ├── statementParser.ts           # Zero-PII CAMS/Zerodha/Groww/NDSL statement parser
-│       ├── realTimeMarket.ts            # Ticker engine (BANKNIFTY, SGB_GOLD, BHARATBOND30)
-│       └── aiGateway/providers/ollama.ts# Local Ollama AI streaming provider
-└── __tests__/                           # 85 passing Jest test suites (466 total unit/E2E tests)
+│       ├── statementParser.ts           # Zero-PII Zerodha/Upstox/ICICI Direct/Groww/CAMS statement parser
+│       ├── realTimeMarket.ts            # Ticker engine (ITC, NVDA, SILVER, BANKNIFTY) + RSI & Spread Bps
+│       └── aiGateway/providers/         # Resilient multi-model gateway (Gemini, Anthropic, OpenAI, Ollama)
+└── __tests__/                           # 85 passing Jest test suites (467 total unit/E2E tests)
 ```
+
+---
+
+## 📜 Codified Engineering Rules (.agents/rules/)
+
+The repository enforces strict architectural contracts codified in `.agents/rules/`:
+
+1. **Expo Env Static Inlining (`expo-env-inlining.md`)**:
+   - `EXPO_PUBLIC_*` environment variables must always be accessed via **direct member access** (`process.env.EXPO_PUBLIC_VAR`).
+   - Optional chaining (`process.env?.EXPO_PUBLIC_VAR`) is prohibited because Metro bundler performs string-literal static replacement at build time; optional chaining bypasses inlining and resolves to `undefined` in web bundles.
+2. **Honest Empty Analytics (`honest-analytics.md`)**:
+   - Portfolios with zero holdings or unallocated clients must emit `INSUFFICIENT_DATA` or `NO_HOLDINGS`.
+   - Never synthesize fake returns, benchmark deltas, or ghost allocations.
+3. **E2E Storage Hygiene (`e2e-storage-hygiene.md`)**:
+   - Automated browser test runs must use fresh, ephemeral contexts (`browser.newContext({ storageState: undefined })`).
+   - Automated tests must sweep and clear `localStorage` / `sessionStorage` to prevent test-pollution of local advisor vaults.
 
 ---
 
@@ -255,10 +282,13 @@ node scripts/generate-pdf-docs.js
 npm run deploy:web
 ```
 
-### 4. Run Automated Test Verification
+### 4. Run Automated Test Verification & Live Browser QA
 ```bash
-# Run full 85-suite Jest test regression (466 tests passing)
+# Run full 85-suite Jest test regression (467 tests passing)
 npm test
+
+# Run live headless Chrome browser verification (7 stages + storage reset)
+node scripts/verify-v4-enhancements.js
 
 # Run the canonical 7-gate verification (tsc, backend syntax, tests,
 # AI audit, desktop E2E, mobile audit, production build)

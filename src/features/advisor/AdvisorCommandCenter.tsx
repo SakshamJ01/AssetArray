@@ -606,6 +606,7 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
         <View
           style={[
             styles.briefBanner,
+            compactActions && { padding: 10, marginBottom: 10 },
             {
               backgroundColor: theme.colors.surface,
               borderColor: theme.colors.border,
@@ -629,17 +630,20 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
             </Pressable>
           </View>
 
-          <Text style={[styles.briefHeadline, { color: theme.colors.textPrimary }]}>
+          <Text style={[styles.briefHeadline, compactActions && { fontSize: 13, marginBottom: 2 }, { color: theme.colors.textPrimary }]}>
             "{brief.headline}"
           </Text>
-          <Text style={[styles.briefSummary, { color: theme.colors.textSecondary }]}>
+          <Text
+            numberOfLines={compactActions ? 2 : undefined}
+            style={[styles.briefSummary, compactActions && { fontSize: 11, lineHeight: 15 }, { color: theme.colors.textSecondary }]}
+          >
             {brief.summary}
           </Text>
         </View>
       )}
 
       {/* HORIZON PERSPECTIVE & MODULE TABS */}
-      <View style={[styles.subnavBar, { borderBottomColor: theme.colors.border }]}>
+      <View style={[styles.subnavBar, compactActions && { marginBottom: 8, gap: 4 }, { borderBottomColor: theme.colors.border }]}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -660,6 +664,7 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
                 onPress={() => setActiveSection(tab.key as CommandCenterTab)}
                 style={[
                   styles.moduleTabBtn,
+                  compactActions && { paddingVertical: 6, paddingHorizontal: 8 },
                   isActive && [
                     styles.moduleTabActive,
                     { borderBottomColor: theme.colors.brand },
@@ -669,6 +674,7 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
                 <Text
                   style={[
                     styles.moduleTabText,
+                    compactActions && { fontSize: 11 },
                     {
                       color: isActive ? theme.colors.textPrimary : theme.colors.textMuted,
                       fontWeight: isActive ? "800" : "600",
@@ -682,36 +688,38 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
           })}
         </ScrollView>
 
-        {/* Perspective Switcher */}
-        <View
-          style={[
-            styles.horizonSwitcher,
-            { backgroundColor: theme.colors.surfaceMuted, borderColor: theme.colors.border },
-          ]}
-        >
-          {(["TODAY", "THIS_WEEK", "THIS_MONTH"] as HorizonPerspective[]).map((h) => (
-            <Pressable
-              key={h}
-              onPress={() => setHorizon(h)}
-              style={[
-                styles.horizonBtn,
-                horizon === h && { backgroundColor: theme.colors.brand },
-              ]}
-            >
-              <Text
+        {/* Perspective Switcher: hidden on mobile when viewing Actions to prevent duplicate filter rows */}
+        {(!compactActions || activeSection !== "ACTIONS") && (
+          <View
+            style={[
+              styles.horizonSwitcher,
+              { backgroundColor: theme.colors.surfaceMuted, borderColor: theme.colors.border },
+            ]}
+          >
+            {(["TODAY", "THIS_WEEK", "THIS_MONTH"] as HorizonPerspective[]).map((h) => (
+              <Pressable
+                key={h}
+                onPress={() => setHorizon(h)}
                 style={[
-                  styles.horizonBtnText,
-                  {
-                    color: horizon === h ? "#000000" : theme.colors.textSecondary,
-                    fontWeight: horizon === h ? "800" : "600",
-                  },
+                  styles.horizonBtn,
+                  horizon === h && { backgroundColor: theme.colors.brand },
                 ]}
               >
-                {h.replace("_", " ")}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
+                <Text
+                  style={[
+                    styles.horizonBtnText,
+                    {
+                      color: horizon === h ? "#000000" : theme.colors.textSecondary,
+                      fontWeight: horizon === h ? "800" : "600",
+                    },
+                  ]}
+                >
+                  {h.replace("_", " ")}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        )}
       </View>
 
       {/* ACTIVE MODULE VIEW */}

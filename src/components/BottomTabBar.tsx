@@ -106,7 +106,7 @@ export function BottomTabBar<T extends string>({
 const createStyles = (theme: AppTheme, bottomInset: number) =>
   StyleSheet.create({
     wrapper: {
-      backgroundColor: "rgba(3, 7, 18, 0.96)",
+      backgroundColor: "#030712",
       borderTopColor: "rgba(255, 255, 255, 0.08)",
       borderTopWidth: 1,
       bottom: 0,

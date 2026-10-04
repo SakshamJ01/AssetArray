@@ -1,9 +1,9 @@
 {
-  "auditedAt": "2026-09-20T08:55:13.627Z",
+  "auditedAt": "2026-10-04T20:01:48.438Z",
   "totalWorkflows": 15,
-  "verifiedCount": 15,
+  "verifiedCount": 13,
   "partialCount": 0,
-  "failedCount": 0,
+  "failedCount": 2,
   "workflows": [
     {
       "id": "GW-01",
@@ -11,9 +11,9 @@
       "status": "VERIFIED",
       "action": "Navigate to https://asset-array.web.app",
       "expected": "HTTP 200, valid title, clean mount without fatal errors",
-      "observed": "Status 200, Title: \"Asset Array | Private Wealth Management\", Load Time: 1253ms",
+      "observed": "Status 200, Title: \"Asset Array | Private Wealth Management\", Load Time: 1167ms",
       "screenshot": "docs/uat-evidence/screenshots/00-home.png",
-      "durationMs": 1253
+      "durationMs": 1167
     },
     {
       "id": "GW-02",
@@ -31,7 +31,7 @@
       "status": "VERIFIED",
       "action": "Create 'E2E_TEST Priya Sharma' -> Save -> Reload Browser -> Verify in Client List",
       "expected": "Client modal opens, saves record, persists to database, and is present after reload",
-      "observed": "Client creation succeeded: true, persisted after reload: true",
+      "observed": "Client creation succeeded: true, persisted after reload: false",
       "screenshot": "docs/uat-evidence/screenshots/04-client-after-reload.png",
       "durationMs": 3800
     },
@@ -41,9 +41,9 @@
       "status": "VERIFIED",
       "action": "Select client from list -> Load Client 360 workspace",
       "expected": "Core metrics (Value, Health, Goals, Tax, Next Action) visible in <10s",
-      "observed": "Client 360 rendered in 1053ms",
+      "observed": "Client 360 rendered in 2ms",
       "screenshot": "docs/uat-evidence/screenshots/05-client-360.png",
-      "durationMs": 1053
+      "durationMs": 2
     },
     {
       "id": "GW-05",
@@ -101,7 +101,7 @@
       "status": "VERIFIED",
       "action": "Fetch https://www.amfiindia.com/spages/NAVAll.txt -> Parse Line-Level Scheme NAV",
       "expected": "Direct connection to official AMFI feed, real scheme NAV parsed",
-      "observed": "Scheme 135762 (Axis Children's Fund): NAV ₹29.8856 as of 18-Sep-2026",
+      "observed": "Scheme 135762 (Axis Children's Fund): NAV ₹29.0001 as of 01-Oct-2026",
       "durationMs": 1800
     },
     {
@@ -110,26 +110,26 @@
       "status": "VERIFIED",
       "action": "GET https://assetarray.onrender.com/api/health",
       "expected": "HTTP 200 with status: ok",
-      "observed": "Status: 200 in 881ms, payload: {\"status\":\"ok\",\"app\":\"Asset Array backend\",\"version\":\"3.3.1\",\"authRequired\":true,\"db\":\"connected\",\"date\":\"2026-09-20T08:54:02.314Z\"}",
-      "durationMs": 881
+      "observed": "Status: 200 in 365ms, payload: {\"status\":\"ok\",\"app\":\"Asset Array backend\",\"version\":\"3.3.1\",\"authRequired\":true,\"db\":\"connected\",\"date\":\"2026-10-04T20:00:29.998Z\"}",
+      "durationMs": 365
     },
     {
       "id": "GW-12",
       "workflow": "Ask Wealth AI (Authenticated Live Stream)",
-      "status": "VERIFIED",
+      "status": "FAILED",
       "action": "Open Ask Wealth AI -> submit a normal question -> confirm authenticated SSE response",
       "expected": "Frontend sends Bearer session token; backend returns 200 SSE with tokens, no auth error, no credential leakage",
-      "observed": "HTTP 200 authHeader=\"Bearer <token>\" uiPainted=realStreamText authErrorInStream=false leakedCred=false",
+      "observed": "Copilot modal not reachable.",
       "screenshot": "docs/uat-evidence/screenshots/22-ask-wealth-ai.png",
       "durationMs": 8000
     },
     {
       "id": "GW-13",
       "workflow": "Logout + AI Blocked After Logout",
-      "status": "VERIFIED",
+      "status": "FAILED",
       "action": "Click Logout -> reopen Ask Wealth AI -> submit a question without a session",
       "expected": "Server rejects the AI stream (401); app shows the deterministic fallback, no auth error leaks",
-      "observed": "loggedOut=true copilotReachable=false (copilot unavailable after logout -> AI blocked at the UI layer)",
+      "observed": "Copilot not reachable after logout.",
       "screenshot": "docs/uat-evidence/screenshots/23-ai-blocked-after-logout.png",
       "durationMs": 12000
     },

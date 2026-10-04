@@ -646,7 +646,7 @@ function AppContent() {
     [darkModeEnabled]
   );
   const isCompactPageHeader = windowWidth < 420;
-  const contentBottomPadding = isDesktop ? 32 : insets.bottom + 100;
+  const contentBottomPadding = isDesktop ? 32 : Math.max(insets.bottom, 16) + 120;
 
   useEffect(() => {
     if (Platform.OS !== "web" || typeof window === "undefined") return;

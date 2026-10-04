@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { View, Text, StyleSheet, Pressable, ScrollView, TextInput } from "react-native";
+import { View, Text, StyleSheet, Pressable, ScrollView, TextInput, useWindowDimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { AdvisorAction, AdvisorActionStatus } from "../../types/advisor";
 import { AppTheme } from "../../theme";
@@ -27,6 +27,9 @@ export const PriorityQueue: React.FC<PriorityQueueProps> = ({
   const [activeFilter, setActiveFilter] = useState<QueueFilterTab>("TODAY");
   const [searchQuery, setSearchQuery] = useState("");
   const [engineFilter, setEngineFilter] = useState<string>("ALL");
+
+  const { width: windowWidth } = useWindowDimensions();
+  const isMobile = windowWidth < 600;
 
   const todayStr = new Date().toISOString().split("T")[0];
 
@@ -112,16 +115,17 @@ export const PriorityQueue: React.FC<PriorityQueueProps> = ({
   return (
     <View style={styles.container}>
       {/* Search & Engine Filters Bar */}
-      <View style={styles.searchBarRow}>
+      <View style={[styles.searchBarRow, isMobile && { marginBottom: 8, gap: 6 }]}>
         <View
           style={[
             styles.searchBox,
+            isMobile && { minWidth: 130, paddingVertical: 4 },
             { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
           ]}
         >
           <Ionicons name="search-outline" size={14} color={theme.colors.textMuted} />
           <TextInput
-            placeholder="Search actions by client, issue, or metric..."
+            placeholder={isMobile ? "Search actions..." : "Search actions by client, issue, or metric..."}
             placeholderTextColor={theme.colors.textMuted}
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -135,7 +139,12 @@ export const PriorityQueue: React.FC<PriorityQueueProps> = ({
         </View>
 
         {/* Engine Dropdown Pills */}
-        <View style={styles.engineFilters}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={[styles.engineFilters, { paddingVertical: 1 }]}
+          style={isMobile ? { maxWidth: "100%" } : undefined}
+        >
           {["ALL", "risk", "tax", "goals", "reminders"].map((eng) => (
             <Pressable
               key={eng}
@@ -162,11 +171,11 @@ export const PriorityQueue: React.FC<PriorityQueueProps> = ({
               </Text>
             </Pressable>
           ))}
-        </View>
+        </ScrollView>
       </View>
 
       {/* Horizon Tabs Row: single-line tabs scroll intentionally on narrow screens */}
-      <View style={{ borderBottomWidth: 1, borderBottomColor: theme.colors.border, marginBottom: 14 }}>
+      <View style={{ borderBottomWidth: 1, borderBottomColor: theme.colors.border, marginBottom: isMobile ? 8 : 14 }}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}

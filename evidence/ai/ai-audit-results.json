@@ -1,5 +1,5 @@
 {
-  "executedAt": "2026-09-20T08:53:27.375Z",
+  "executedAt": "2026-10-04T20:00:06.077Z",
   "environment": "test",
   "providerAudit": {
     "gemini": {
@@ -136,7 +136,7 @@
     }
   ],
   "secretLeakageAudit": {
-    "checkedFiles": 241,
+    "checkedFiles": 255,
     "leakFound": false
   },
   "summary": {

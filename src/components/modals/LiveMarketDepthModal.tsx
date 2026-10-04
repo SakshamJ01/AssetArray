@@ -15,6 +15,7 @@ import {
   LiveInstrument,
   realTimeMarket,
 } from "../../services/realTimeMarket";
+import { AlgoExecutionModal } from "./AlgoExecutionModal";
 
 export interface LiveMarketDepthModalProps {
   visible: boolean;
@@ -47,6 +48,7 @@ export const LiveMarketDepthModal: React.FC<LiveMarketDepthModalProps> = ({
   const [orderQty, setOrderQty] = useState<string>("50");
   const [orderSuccessMsg, setOrderSuccessMsg] = useState<string | null>(null);
   const [priceFlash, setPriceFlash] = useState<"up" | "down" | null>(null);
+  const [algoModalVisible, setAlgoModalVisible] = useState<boolean>(false);
   const flashTimerRef = useRef<any>(null);
   const orderTimerRef = useRef<any>(null);
 
@@ -608,6 +610,21 @@ export const LiveMarketDepthModal: React.FC<LiveMarketDepthModalProps> = ({
                 </Pressable>
               </View>
 
+              <Pressable
+                onPress={() => setAlgoModalVisible(true)}
+                style={[
+                  styles.algoLaunchBtn,
+                  {
+                    backgroundColor: "rgba(59, 130, 246, 0.15)",
+                    borderColor: "#3B82F6",
+                  },
+                ]}
+              >
+                <Text style={styles.algoLaunchBtnText}>
+                  ⚡ Launch Institutional Algo Slicer (TWAP / VWAP / Iceberg)
+                </Text>
+              </Pressable>
+
               {orderSuccessMsg && (
                 <View style={styles.successToast}>
                   <Text style={styles.successToastText}>{orderSuccessMsg}</Text>
@@ -617,6 +634,20 @@ export const LiveMarketDepthModal: React.FC<LiveMarketDepthModalProps> = ({
           </ScrollView>
         </View>
       </View>
+
+      {/* Algorithmic Execution Slicer Desk */}
+      {instrument && (
+        <AlgoExecutionModal
+          visible={algoModalVisible}
+          onClose={() => setAlgoModalVisible(false)}
+          theme={theme}
+          initialSymbol={instrument.symbol}
+          initialPrice={instrument.price}
+          initialQuantity={Math.max(1, parseInt(orderQty, 10) || 50)}
+          initialSide="BUY"
+          clientRefToken="DESK-TRADER"
+        />
+      )}
     </Modal>
   );
 };
@@ -966,6 +997,20 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "800",
     letterSpacing: 0.5,
+  },
+  algoLaunchBtn: {
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 10,
+  },
+  algoLaunchBtnText: {
+    color: "#60A5FA",
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 0.3,
   },
   successToast: {
     backgroundColor: "rgba(16, 185, 129, 0.15)",

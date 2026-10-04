@@ -15,6 +15,7 @@ import {
   TARGET_MODELS,
   TargetModel,
 } from "../../services/rebalancer";
+import { AlgoExecutionModal } from "./AlgoExecutionModal";
 
 export interface RebalanceModalProps {
   visible: boolean;
@@ -32,6 +33,11 @@ export const RebalanceModal: React.FC<RebalanceModalProps> = ({
   clientName = "Portfolio",
 }) => {
   const [selectedModelId, setSelectedModelId] = useState<string>("balanced_wealth");
+  const [algoModalVisible, setAlgoModalVisible] = useState<boolean>(false);
+  const [algoSymbol, setAlgoSymbol] = useState<string>("NIFTYBEES");
+  const [algoQuantity, setAlgoQuantity] = useState<number>(500);
+  const [algoSide, setAlgoSide] = useState<"BUY" | "SELL">("BUY");
+  const [algoPrice, setAlgoPrice] = useState<number>(250);
 
   const selectedModel = useMemo(
     () =>
@@ -177,6 +183,25 @@ export const RebalanceModal: React.FC<RebalanceModalProps> = ({
                     >
                       ({item.drift > 0 ? `+${item.drift}%` : `${item.drift}%`})
                     </Text>
+
+                    {(isBuy || isSell) && (
+                      <Pressable
+                        style={styles.algoTicketBtn}
+                        onPress={() => {
+                          const candidate = holdings.find((h) => h.assetClass === item.assetClass);
+                          const sym = candidate?.ticker || (item.assetClass === "Equity" ? "NIFTYBEES" : item.assetClass === "Debt" ? "LIQUIDBEES" : "GOLDBEES");
+                          const price = candidate && candidate.quantity ? candidate.currentValue / candidate.quantity : 250;
+                          const qty = Math.max(1, Math.round(item.amount / price));
+                          setAlgoSymbol(sym);
+                          setAlgoSide(isBuy ? "BUY" : "SELL");
+                          setAlgoQuantity(qty);
+                          setAlgoPrice(price);
+                          setAlgoModalVisible(true);
+                        }}
+                      >
+                        <Text style={styles.algoTicketBtnText}>⚡ Algo Slicer (TWAP/VWAP)</Text>
+                      </Pressable>
+                    )}
                   </View>
                 </View>
               );
@@ -227,6 +252,26 @@ export const RebalanceModal: React.FC<RebalanceModalProps> = ({
           {/* Footer Action */}
           <View style={styles.footer}>
             <Pressable
+              style={styles.algoDeskBtn}
+              onPress={() => {
+                const firstActionItem = result.items.find((i) => i.action !== "BALANCED" && i.amount > 0);
+                if (firstActionItem) {
+                  const candidate = holdings.find((h) => h.assetClass === firstActionItem.assetClass);
+                  const sym = candidate?.ticker || "NIFTYBEES";
+                  const price = candidate && candidate.quantity ? candidate.currentValue / candidate.quantity : 250;
+                  const qty = Math.max(1, Math.round(firstActionItem.amount / price));
+                  setAlgoSymbol(sym);
+                  setAlgoSide(firstActionItem.action as "BUY" | "SELL");
+                  setAlgoQuantity(qty);
+                  setAlgoPrice(price);
+                }
+                setAlgoModalVisible(true);
+              }}
+            >
+              <Text style={styles.algoDeskBtnText}>⚡ Launch Institutional Algo Execution</Text>
+            </Pressable>
+
+            <Pressable
               style={styles.doneBtn}
               onPress={() => {
                 Alert.alert(
@@ -236,11 +281,23 @@ export const RebalanceModal: React.FC<RebalanceModalProps> = ({
                 onClose();
               }}
             >
-              <Text style={styles.doneBtnText}>Apply & Close Simulator</Text>
+              <Text style={styles.doneBtnText}>Apply & Close</Text>
             </Pressable>
           </View>
         </View>
       </View>
+
+      {/* Institutional Algorithmic Order Slicer Modal */}
+      <AlgoExecutionModal
+        visible={algoModalVisible}
+        onClose={() => setAlgoModalVisible(false)}
+        theme={theme}
+        initialSymbol={algoSymbol}
+        initialQuantity={algoQuantity}
+        initialSide={algoSide}
+        initialPrice={algoPrice}
+        clientRefToken={clientName}
+      />
     </Modal>
   );
 };
@@ -555,16 +612,50 @@ const styles = StyleSheet.create({
     padding: 16,
     borderTopWidth: 1,
     borderTopColor: "rgba(255, 255, 255, 0.08)",
+    flexDirection: "row",
+    gap: 12,
+    justifyContent: "flex-end",
+    alignItems: "center",
+  },
+  algoTicketBtn: {
+    marginLeft: "auto",
+    backgroundColor: "rgba(59, 130, 246, 0.15)",
+    borderWidth: 1,
+    borderColor: "rgba(59, 130, 246, 0.4)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  algoTicketBtnText: {
+    color: "#60A5FA",
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 0.3,
+  },
+  algoDeskBtn: {
+    backgroundColor: "rgba(59, 130, 246, 0.2)",
+    borderWidth: 1,
+    borderColor: "#3B82F6",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  algoDeskBtnText: {
+    color: "#60A5FA",
+    fontSize: 13,
+    fontWeight: "800",
   },
   doneBtn: {
     backgroundColor: "#E0A84C",
+    paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: "center",
   },
   doneBtnText: {
     color: "#030712",
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "800",
   },
 });

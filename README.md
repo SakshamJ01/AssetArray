@@ -9,7 +9,7 @@
 [![RevenueCat](https://img.shields.io/badge/Monetization-RevenueCat-orange.svg)](https://www.revenuecat.com/)
 [![Built with Expo](https://img.shields.io/badge/Built%20with-Expo%20%2F%20React%20Native-blue.svg)](https://expo.dev/)
 [![Gemini & Ollama AI](https://img.shields.io/badge/AI-Google%20Gemini%20%2B%20Ollama-8E75B2.svg)](https://ai.google.dev/)
-[![Tests Passing](https://img.shields.io/badge/Tests-477%20Passed%20(88%20Suites)-22c55e.svg)](https://github.com/SakshamJ01/AssetArray)
+[![Tests Passing](https://img.shields.io/badge/Tests-484%20Passed%20(89%20Suites)-22c55e.svg)](https://github.com/SakshamJ01/AssetArray)
 
 ![Asset Array Hero Banner](assets/hero-thumbnail.jpg)
 
@@ -170,6 +170,17 @@ Below is the deep, exhaustive breakdown of **every single feature, tool, workflo
 * **Level-2 Depth Terminal (`LiveMarketDepthModal`)**: Top 5 Bid & Ask order book depth with live quantities, buy/sell volume pressure gauge, intraday 30-tick SVG sparklines, day high/low range slider, and simulated trade execution.
 * **Official AMFI NAV Integration (`AmfiNavProvider`)**: Ingests official Indian Mutual Fund Net Asset Values from AMFI India endpoints.
 * **Live Finnhub Market Data (`FinnhubProvider`)**: Real US/global equity quotes and FX via the Finnhub API.
+
+---
+
+### 9. ⚡ Institutional Algorithmic Execution Engine & EMS (TWAP / VWAP / Iceberg / POV)
+* **Time-Weighted Average Price (TWAP)**: Slices large portfolio rebalance orders across uniform time intervals with deterministic Gaussian/sinusoidal jitter (±12%) to eliminate predatory HFT front-running.
+* **Volume-Weighted Average Price (VWAP)**: Dynamic chunk allocations weighted by institutional intraday U-curve historical volume profiles (market open surges & closing cross positioning).
+* **Iceberg Slicing Engine**: Clips visible order book depth with customizable disclosed display quantities (e.g. 20% visible) and limit price stepping.
+* **Percentage of Volume (POV)**: Restricts execution rates to a fixed ceiling percentage of real-time market volume to avoid moving the market.
+* **Almgren-Chriss (2000) Market Impact & TCA Model**: Mathematically estimates permanent price drift, temporary liquidity penalty, and basis points saved vs. naive market sweeps.
+* **Institutional FIX 4.4 Tag Mapping**: Directly generates compliant FIX NewOrderSingle (`MsgType=D`) messages with Tag 847 (`TargetStrategy`: 1=TWAP, 2=VWAP, 3=Iceberg, 4=POV, 5=Sniper), Tag 848 (`TargetStrategyParameters`), Tag 11 (`ClOrdID`), Tag 113 (`DisclosedQty`), and Tag 10 (`Checksum`).
+* **Interactive Execution Desk (`AlgoExecutionModal`)**: Full-featured trading desk modal with live slice scheduling, timeline visualization, real-time execution animation, VWAP achieved tracking, and cryptographic SHA-256 audit receipts.
 
 ---
 

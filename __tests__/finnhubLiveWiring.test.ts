@@ -10,8 +10,8 @@
  */
 import { unifiedMarketProvider, FinnhubProvider } from "../src/services/market/marketProvider";
 
-const FINNHUB_KEY =
-  process.env?.EXPO_PUBLIC_FINNHUB_API_KEY || process.env?.FINNHUB_API_KEY;
+const env = typeof process !== "undefined" ? process.env : undefined;
+const FINNHUB_KEY = env ? env.EXPO_PUBLIC_FINNHUB_API_KEY || env.FINNHUB_API_KEY : undefined;
 
 const describeLive = FINNHUB_KEY ? describe : describe.skip;
 

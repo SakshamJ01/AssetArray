@@ -16,17 +16,18 @@ export class OllamaProvider implements AiProvider {
   private defaultModel: string;
 
   constructor(backendUrl?: string, localBaseUrl?: string, defaultModel?: string) {
+    const env = typeof process !== "undefined" ? process.env : undefined;
     this.backendUrl =
       backendUrl ||
-      (typeof process !== "undefined" && process.env?.EXPO_PUBLIC_API_URL) ||
+      (env && env.EXPO_PUBLIC_API_URL) ||
       "https://assetarray.onrender.com";
     this.localBaseUrl =
       localBaseUrl ||
-      (typeof process !== "undefined" && (process.env?.OLLAMA_BASE_URL || process.env?.EXPO_PUBLIC_OLLAMA_URL)) ||
+      (env && (env.OLLAMA_BASE_URL || env.EXPO_PUBLIC_OLLAMA_URL)) ||
       "http://localhost:11434";
     this.defaultModel =
       defaultModel ||
-      (typeof process !== "undefined" && (process.env?.OLLAMA_MODEL || process.env?.EXPO_PUBLIC_OLLAMA_MODEL)) ||
+      (env && (env.OLLAMA_MODEL || env.EXPO_PUBLIC_OLLAMA_MODEL)) ||
       "llama3.2";
   }
 
@@ -42,10 +43,8 @@ export class OllamaProvider implements AiProvider {
 
   public async getActiveModel(): Promise<string> {
     if (this.resolvedModel) return this.resolvedModel;
-    const envModel =
-      typeof process !== "undefined"
-        ? process.env?.OLLAMA_MODEL || process.env?.EXPO_PUBLIC_OLLAMA_MODEL
-        : undefined;
+    const env = typeof process !== "undefined" ? process.env : undefined;
+    const envModel = env ? env.OLLAMA_MODEL || env.EXPO_PUBLIC_OLLAMA_MODEL : undefined;
     if (envModel) {
       this.resolvedModel = envModel;
       return this.resolvedModel;

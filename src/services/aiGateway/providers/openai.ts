@@ -16,7 +16,7 @@ export class OpenAIProvider implements AiProvider {
   constructor(backendUrl?: string) {
     this.backendUrl =
       backendUrl ||
-      (typeof process !== "undefined" && process.env?.EXPO_PUBLIC_API_URL) ||
+      (typeof process !== "undefined" && process.env && process.env.EXPO_PUBLIC_API_URL) ||
       "https://assetarray.onrender.com";
   }
 

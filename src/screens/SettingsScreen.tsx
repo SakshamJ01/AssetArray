@@ -17,6 +17,8 @@ export interface SettingsScreenProps {
   resetLock: () => Promise<void>;
   darkModeEnabled: boolean;
   toggleDarkMode: (val: boolean) => Promise<void>;
+  themeMode?: "light" | "dark" | "terminal";
+  onSetThemeMode?: (val: "light" | "dark" | "terminal") => void;
   setIsSyncModalOpen: (val: boolean) => void;
   syncToCloud: () => Promise<void>;
   restoreFromCloud: () => Promise<void>;
@@ -111,6 +113,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   resetLock,
   darkModeEnabled,
   toggleDarkMode,
+  themeMode,
+  onSetThemeMode,
   setIsSyncModalOpen,
   syncToCloud,
   restoreFromCloud,
@@ -308,7 +312,43 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
       {/* 4. APPEARANCE & WORKSPACE SHELL */}
       <View style={localStyles.sectionPanel}>
-        <Text style={localStyles.sectionTitle}>Appearance & Display</Text>
+        <Text style={localStyles.sectionTitle}>Appearance & Institutional Theme</Text>
+        <Text style={localStyles.sectionSubtitle}>
+          Select your workstation aesthetic preset or toggle dark mode.
+        </Text>
+        {onSetThemeMode && (
+          <View style={{ flexDirection: "row", gap: 8, marginVertical: 12, flexWrap: "wrap" }}>
+            {[
+              { key: "dark", label: "Executive Gold", sub: "Private Banking Obsidian" },
+              { key: "terminal", label: "Terminal Aladdin", sub: "High-Density Cyber Slate" },
+              { key: "light", label: "Swiss Ivory", sub: "Daylight Banking Cream" },
+            ].map((t) => {
+              const active = themeMode === t.key || (!themeMode && t.key === (darkModeEnabled ? "dark" : "light"));
+              return (
+                <Pressable
+                  key={t.key}
+                  onPress={() => onSetThemeMode(t.key as any)}
+                  style={{
+                    flex: 1,
+                    minWidth: 130,
+                    padding: 10,
+                    borderRadius: 6,
+                    borderWidth: 1,
+                    borderColor: active ? theme.colors.brand : theme.colors.border,
+                    backgroundColor: active ? theme.colors.surfaceStrong : theme.colors.surfaceMuted,
+                  }}
+                >
+                  <Text style={{ fontSize: 13, fontWeight: "700", color: active ? theme.colors.brand : theme.colors.textPrimary }}>
+                    {t.label}
+                  </Text>
+                  <Text style={{ fontSize: 10, color: theme.colors.textSecondary, marginTop: 2 }}>
+                    {t.sub}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        )}
         <View style={localStyles.rowItem}>
           <View style={{ flex: 1 }}>
             <Text style={localStyles.rowTitle}>Workstation Dark Mode</Text>

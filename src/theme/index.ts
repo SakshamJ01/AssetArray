@@ -1,8 +1,8 @@
-import { darkColors, lightColors, ThemeColors } from "./colors";
+import { darkColors, lightColors, terminalColors, ThemeColors } from "./colors";
 import { radius, spacing } from "./spacing";
 import { typography } from "./typography";
 
-export type ThemeMode = "light" | "dark";
+export type ThemeMode = "light" | "dark" | "terminal";
 
 export type AppTheme = {
   colors: ThemeColors;
@@ -27,8 +27,8 @@ export type AppTheme = {
   };
 };
 
-export function buildAppTheme(mode: ThemeMode): AppTheme {
-  const colors = mode === "dark" ? darkColors : lightColors;
+export function buildAppTheme(mode: ThemeMode = "dark"): AppTheme {
+  const colors = mode === "terminal" ? (terminalColors as unknown as ThemeColors) : mode === "dark" ? darkColors : lightColors;
 
   return {
     colors,

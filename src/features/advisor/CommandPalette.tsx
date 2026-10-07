@@ -38,6 +38,14 @@ export interface CommandPaletteProps {
   onOpenBroadcast: () => void;
   onOpenAiCopilot?: () => void;
   onOpenAiResearch?: () => void;
+  onOpenFamilyVault?: () => void;
+  onOpenFundXray?: () => void;
+  onOpenConstitution?: () => void;
+  onOpenShadowWealth?: () => void;
+  onOpenMonteCarlo?: () => void;
+  onOpenRebalancer?: () => void;
+  onOpenStressTesting?: () => void;
+  onOpenWhatIf?: () => void;
 }
 
 export const CommandPalette: React.FC<CommandPaletteProps> = ({
@@ -55,6 +63,14 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   onOpenBroadcast,
   onOpenAiCopilot,
   onOpenAiResearch,
+  onOpenFamilyVault,
+  onOpenFundXray,
+  onOpenConstitution,
+  onOpenShadowWealth,
+  onOpenMonteCarlo,
+  onOpenRebalancer,
+  onOpenStressTesting,
+  onOpenWhatIf,
 }) => {
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -188,6 +204,101 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         onSelect: () => {
           onClose();
           onOpenDataQuality();
+        },
+      },
+      {
+        id: "cmd_family_vault",
+        category: "ACTION",
+        title: "Family Continuity Vault & Nominee Audit",
+        subtitle: "Audit folio nominee completeness & generate 1-click emergency playbook",
+        icon: "shield-checkmark-outline",
+        shortcut: "F",
+        onSelect: () => {
+          onClose();
+          onOpenFamilyVault?.();
+        },
+      },
+      {
+        id: "cmd_fund_xray",
+        category: "ACTION",
+        title: "Fund X-Ray & Overlap Matrix",
+        subtitle: "Deconstruct funds to underlying stocks and calculate true equity fee drag",
+        icon: "scan-outline",
+        shortcut: "X",
+        onSelect: () => {
+          onClose();
+          onOpenFundXray?.();
+        },
+      },
+      {
+        id: "cmd_constitution",
+        category: "ACTION",
+        title: "Anti-Impulse Investment Constitution",
+        subtitle: "Enforce IPS boundaries and simulate historical crash drawdowns",
+        icon: "lock-closed-outline",
+        shortcut: "C",
+        onSelect: () => {
+          onClose();
+          onOpenConstitution?.();
+        },
+      },
+      {
+        id: "cmd_shadow_wealth",
+        category: "ACTION",
+        title: "Shadow Wealth & Physical Asset Desk",
+        subtitle: "Revalue physical gold bullion lockers, real estate circle rates & debt notes",
+        icon: "cube-outline",
+        shortcut: "S",
+        onSelect: () => {
+          onClose();
+          onOpenShadowWealth?.();
+        },
+      },
+      {
+        id: "cmd_monte_carlo",
+        category: "ACTION",
+        title: "Monte Carlo Wealth Simulation",
+        subtitle: "Simulate 1,000 randomized stochastic paths for lifetime retirement security",
+        icon: "stats-chart-outline",
+        shortcut: "M",
+        onSelect: () => {
+          onClose();
+          onOpenMonteCarlo?.();
+        },
+      },
+      {
+        id: "cmd_rebalance",
+        category: "ACTION",
+        title: "Portfolio Rebalancing Desk",
+        subtitle: "Calculate drift deviation and execute order trade baskets",
+        icon: "git-compare-outline",
+        onSelect: () => {
+          onClose();
+          onOpenRebalancer?.();
+        },
+      },
+      {
+        id: "cmd_stress_test",
+        category: "ACTION",
+        title: "Historical Crisis Stress Testing",
+        subtitle: "Stress test portfolio resilience against GFC 2008 & Covid 2020 drawdowns",
+        icon: "trending-down-outline",
+        shortcut: "D",
+        onSelect: () => {
+          onClose();
+          onOpenStressTesting?.();
+        },
+      },
+      {
+        id: "cmd_what_if",
+        category: "ACTION",
+        title: "What-If Scenario Sandbox",
+        subtitle: "Interactive macro rates, currency depreciation & equity shock modeling",
+        icon: "flash-outline",
+        shortcut: "W",
+        onSelect: () => {
+          onClose();
+          onOpenWhatIf?.();
         },
       },
       {

@@ -18,8 +18,8 @@ import {
   DataQualityReport,
   WorkflowKpis,
 } from "../../types/advisor";
-import { Client, Goal, SmartAlert } from "../../types/wealth";
-import { AppTheme } from "../../theme";
+import { Client, Goal, SmartAlert, PortfolioHolding } from "../../types/wealth";
+import { AppTheme, ThemeMode } from "../../theme";
 import { PriorityQueue } from "./PriorityQueue";
 import { OpportunityCenter } from "./OpportunityCenter";
 import { DataQualityCenter } from "./DataQualityCenter";
@@ -31,10 +31,17 @@ import { CommandPalette } from "./CommandPalette";
 import { PortfolioTrajectoryChart, TrajectoryPeriod } from "./PortfolioTrajectoryChart";
 import { DataPoint } from "../../components/charts/PerformanceChart";
 import { IntelligenceHubCard } from "../../components/dashboard/IntelligenceHubCard";
+import { ExecutiveLaunchpad } from "../../components/dashboard/ExecutiveLaunchpad";
 import { FamilyVaultModal } from "../../components/modals/FamilyVaultModal";
 import { FundXrayModal } from "../../components/modals/FundXrayModal";
 import { ConstitutionModal } from "../../components/modals/ConstitutionModal";
 import { ShadowWealthModal } from "../../components/modals/ShadowWealthModal";
+import { TaxHarvestStudioModal } from "../../components/TaxHarvestStudioModal";
+import { RebalanceModal } from "../../components/modals/RebalanceModal";
+import { StressTestModal } from "../../components/modals/StressTestModal";
+import { MonteCarloModal } from "../../components/modals/MonteCarloModal";
+import { ScenarioSandboxModal } from "../../components/ScenarioSandboxModal";
+import { SimpleHolding } from "../../services/rebalancer";
 import { custodianSyncService } from "../../services/custodian/custodianSync";
 import {
   loadPersistedActions,
@@ -56,6 +63,8 @@ export interface AdvisorCommandCenterProps {
   clients: Client[];
   goals?: Goal[];
   theme: AppTheme;
+  themeMode?: ThemeMode;
+  onCycleTheme?: () => void;
   contentBottomPadding?: number;
   onNavigateTab: (tab: any, params?: any) => void;
   onSelectClient: (clientId: string) => void;
@@ -71,6 +80,8 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
   clients,
   goals = [],
   theme,
+  themeMode,
+  onCycleTheme,
   contentBottomPadding = 80,
   onNavigateTab,
   onSelectClient,
@@ -100,6 +111,29 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
   const [isFundXrayOpen, setIsFundXrayOpen] = useState(false);
   const [isConstitutionOpen, setIsConstitutionOpen] = useState(false);
   const [isShadowWealthOpen, setIsShadowWealthOpen] = useState(false);
+  const [isTaxHarvestOpen, setIsTaxHarvestOpen] = useState(false);
+  const [isRebalanceOpen, setIsRebalanceOpen] = useState(false);
+  const [isStressTestOpen, setIsStressTestOpen] = useState(false);
+  const [isMonteCarloOpen, setIsMonteCarloOpen] = useState(false);
+  const [isWhatIfOpen, setIsWhatIfOpen] = useState(false);
+
+  // Consolidated holdings for instant workstation analysis
+  const consolidatedHoldings: PortfolioHolding[] = useMemo(() => {
+    return clients.flatMap((c) => c.portfolio || []);
+  }, [clients]);
+
+  const simpleHoldings: SimpleHolding[] = useMemo(() => {
+    return consolidatedHoldings.map((h) => ({
+      id: h.id,
+      assetName: h.assetName,
+      ticker: h.ticker || h.assetName,
+      quantity: parseFloat(h.quantity) || 0,
+      currentValue: parseFloat(h.currentValue) || 0,
+      investedValue: parseFloat(h.investedValue) || 0,
+      assetClass: (h.assetClass as any) || "Equity",
+      targetWeight: parseFloat(h.targetWeight || "0") || 0,
+    }));
+  }, [consolidatedHoldings]);
 
   // Load and scan on mount or when clients/goals change
   const refreshCommandCenter = async () => {
@@ -457,6 +491,27 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
                 </View>
               )}
             </Pressable>
+
+            {/* Quick Theme Switcher Pill */}
+            {onCycleTheme && (
+              <Pressable
+                onPress={onCycleTheme}
+                style={[
+                  styles.paletteBtn,
+                  compactActions && { paddingHorizontal: 10, paddingVertical: 6 },
+                  { backgroundColor: theme.colors.surfaceMuted, borderColor: theme.colors.border },
+                ]}
+              >
+                <Ionicons
+                  name={themeMode === "terminal" ? "terminal-outline" : themeMode === "light" ? "sunny-outline" : "moon-outline"}
+                  size={14}
+                  color={theme.colors.brand}
+                />
+                <Text style={[styles.paletteBtnText, { color: theme.colors.textPrimary, fontWeight: "700" }]}>
+                  {themeMode === "terminal" ? "Terminal" : themeMode === "light" ? "Ivory" : "Gold"}
+                </Text>
+              </Pressable>
+            )}
           </View>
         </View>
       </View>
@@ -580,32 +635,32 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
           </Text>
         </Pressable>
 
-        {/* Card 4: Tax Optimization Opportunities */}
+        {/* Card 4: Tax Optimization Opportunities (1-Click Direct Launch) */}
         <Pressable
-          onPress={() => setActiveSection("OPPORTUNITIES")}
+          onPress={() => setIsTaxHarvestOpen(true)}
           style={[
             styles.kpiCard,
             compactActions && { padding: 12, minWidth: 140 },
             {
               backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.border,
+              borderColor: theme.colors.accent,
               borderRadius: 4,
             },
           ]}
         >
           <View style={[styles.kpiCardHeader, compactActions && { marginBottom: 6 }]}>
             <View style={[styles.kpiIconBox, { backgroundColor: theme.colors.accentSoft }]}>
-              <Ionicons name="shield-checkmark" size={15} color={theme.colors.accent} />
+              <Ionicons name="receipt" size={15} color={theme.colors.accent} />
             </View>
-            <Text style={[styles.kpiTitle, compactActions && { fontSize: 10 }, { color: theme.colors.textMuted }]}>
-              TAX HARVESTING
+            <Text style={[styles.kpiTitle, compactActions && { fontSize: 10 }, { color: theme.colors.accent }]}>
+              TAX HARVESTING (1-CLICK)
             </Text>
           </View>
           <Text style={[styles.kpiValue, compactActions && { fontSize: 19, marginBottom: 2 }, { color: theme.colors.accent }]}>
             {opportunities.length} Available
           </Text>
           <Text style={[styles.kpiSubtext, compactActions && { fontSize: 11, lineHeight: 14 }, { color: theme.colors.textSecondary }]}>
-            Section 70/74 offset candidates
+            Tap to open Section 70/74 studio →
           </Text>
         </Pressable>
       </View>
@@ -657,6 +712,22 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
         onOpenFundXray={() => setIsFundXrayOpen(true)}
         onOpenConstitution={() => setIsConstitutionOpen(true)}
         onOpenShadowWealth={() => setIsShadowWealthOpen(true)}
+        colors={theme.colors}
+      />
+
+      {/* 1-CLICK EXECUTIVE WORKSTATION LAUNCHPAD */}
+      <ExecutiveLaunchpad
+        onOpenTaxHarvest={() => setIsTaxHarvestOpen(true)}
+        onOpenRebalance={() => setIsRebalanceOpen(true)}
+        onOpenStressTest={() => setIsStressTestOpen(true)}
+        onOpenMonteCarlo={() => setIsMonteCarloOpen(true)}
+        onOpenWhatIf={() => setIsWhatIfOpen(true)}
+        onOpenFamilyVault={() => setIsFamilyVaultOpen(true)}
+        onOpenFundXray={() => setIsFundXrayOpen(true)}
+        onOpenConstitution={() => setIsConstitutionOpen(true)}
+        onOpenShadowWealth={() => setIsShadowWealthOpen(true)}
+        onOpenAiCopilot={onOpenAiCopilot}
+        onOpenBroadcast={onBroadcastOutreach}
         colors={theme.colors}
       />
 
@@ -924,7 +995,7 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
           onNavigateTab("Clients");
         }}
         onOpenPortfolios={() => onNavigateTab("Portfolios")}
-        onOpenTaxHarvesting={() => onNavigateTab("Portfolios", { view: "tax-harvest" })}
+        onOpenTaxHarvesting={() => setIsTaxHarvestOpen(true)}
         onOpenGoals={() => onNavigateTab("Tools", { calculator: "Goal Planner" })}
         onOpenAiBrief={() => setIsBriefModalOpen(true)}
         onOpenDecisionJournal={() => setIsDecisionModalOpen(true)}
@@ -932,6 +1003,14 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
         onOpenBroadcast={onBroadcastOutreach}
         onOpenAiCopilot={onOpenAiCopilot}
         onOpenAiResearch={onOpenAiResearch}
+        onOpenFamilyVault={() => setIsFamilyVaultOpen(true)}
+        onOpenFundXray={() => setIsFundXrayOpen(true)}
+        onOpenConstitution={() => setIsConstitutionOpen(true)}
+        onOpenShadowWealth={() => setIsShadowWealthOpen(true)}
+        onOpenMonteCarlo={() => setIsMonteCarloOpen(true)}
+        onOpenRebalancer={() => setIsRebalanceOpen(true)}
+        onOpenStressTesting={() => setIsStressTestOpen(true)}
+        onOpenWhatIf={() => setIsWhatIfOpen(true)}
       />
 
       {/* NEXT-GEN WEALTH INTELLIGENCE MODALS */}
@@ -965,6 +1044,49 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
         client={clients[0]}
         isDark={theme.colors.textPrimary === "#ffffff"}
         colors={theme.colors}
+      />
+
+      {/* ZERO-CLICK WORKSTATION POWER MODALS */}
+      <TaxHarvestStudioModal
+        visible={isTaxHarvestOpen}
+        theme={theme}
+        holdings={consolidatedHoldings}
+        portfolioName="Consolidated Advisory Ledger"
+        onClose={() => setIsTaxHarvestOpen(false)}
+      />
+
+      <RebalanceModal
+        visible={isRebalanceOpen}
+        theme={theme}
+        holdings={simpleHoldings}
+        clientName="Consolidated Book"
+        onClose={() => setIsRebalanceOpen(false)}
+      />
+
+      <StressTestModal
+        visible={isStressTestOpen}
+        theme={theme}
+        holdings={simpleHoldings}
+        clientName="Consolidated Book"
+        onClose={() => setIsStressTestOpen(false)}
+      />
+
+      <MonteCarloModal
+        visible={isMonteCarloOpen}
+        theme={theme}
+        initialCapital={totalAum > 0 ? totalAum : 5000000}
+        monthlyContribution={150000}
+        years={15}
+        clientName="Consolidated Advisory Portfolio"
+        onClose={() => setIsMonteCarloOpen(false)}
+      />
+
+      <ScenarioSandboxModal
+        visible={isWhatIfOpen}
+        theme={theme}
+        holdings={consolidatedHoldings}
+        portfolioName="Consolidated Advisory Ledger"
+        onClose={() => setIsWhatIfOpen(false)}
       />
     </ScrollView>
   );

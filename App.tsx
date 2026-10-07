@@ -84,7 +84,7 @@ import {
   refreshAdvisorToken,
   sendBroadcastCampaign,
 } from "./src/services/secureSync";
-import { buildAppTheme, styles } from "./src/theme";
+import { buildAppTheme, styles, ThemeMode } from "./src/theme";
 import { SyncBadge } from "./src/components/SyncBadge";
 import { fetchLiveMarketQuotes, getQuoteForSymbol, MarketQuote } from "./src/services/marketData";
 import { analyzeClientPortfolioWithAI, ClientAiRecommendation } from "./src/services/aiAdvisor";
@@ -179,6 +179,7 @@ const CLOUD_SETTINGS_KEY = "asset_array_cloud_settings";
 const AUTH_SESSION_KEY = "asset_array_auth_session";
 const MARKET_MESSAGE_KEY = "asset_array_market_message";
 const DARK_MODE_KEY = "asset_array_dark_mode";
+const THEME_MODE_KEY = "asset_array_theme_mode";
 const HAPTICS_KEY = "asset_array_haptics";
 const APP_VERSION = "3.3.1";
 const SUPPORT_EMAIL = "support@assetarray.app";
@@ -473,6 +474,7 @@ function AppContent() {
   const [isReady, setIsReady] = useState(false);
   const [storedPin, setStoredPin] = useState<string | null>(null);
   const [darkModeEnabled, setDarkModeEnabled] = useState(systemColorScheme === "dark");
+  const [themeMode, setThemeMode] = useState<ThemeMode>(systemColorScheme === "dark" ? "dark" : "light");
   const [hapticsEnabled, setHapticsEnabledState] = useState(true);
   const [pinInput, setPinInput] = useState("");
   const [pinSetup, setPinSetup] = useState("");
@@ -642,9 +644,20 @@ function AppContent() {
   }, [clients, goals]);
 
   const theme = useMemo(
-    () => buildAppTheme(darkModeEnabled ? "dark" : "light"),
-    [darkModeEnabled]
+    () => buildAppTheme(themeMode),
+    [themeMode]
   );
+
+  const cycleTheme = () => {
+    const modes: ThemeMode[] = ["dark", "terminal", "light"];
+    const nextIdx = (modes.indexOf(themeMode) + 1) % modes.length;
+    const nextMode = modes[nextIdx];
+    setThemeMode(nextMode);
+    setDarkModeEnabled(nextMode !== "light");
+    void storageService.setSecureItem(THEME_MODE_KEY, nextMode);
+    void storageService.setSecureItem(DARK_MODE_KEY, JSON.stringify(nextMode !== "light"));
+  };
+
   const isCompactPageHeader = windowWidth < 420;
   const contentBottomPadding = isDesktop ? 32 : Math.max(insets.bottom, 16) + 120;
 
@@ -653,8 +666,7 @@ function AppContent() {
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        setActiveTab("Clients");
+        // Do not force tab to Clients; allow Command Palette listener to open palette anywhere
       } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "b") {
         e.preventDefault();
         if (selectedClientIds.length === 0 && clients.length > 0) {
@@ -700,6 +712,7 @@ function AppContent() {
           rawVaultDocuments,
           rawAuthSession,
           rawHaptics,
+          rawThemeMode,
         ] = await Promise.all([
           storageService.getSecureItem(PIN_KEY),
           storageService.getSecureItem(BIOMETRIC_KEY),
@@ -711,6 +724,7 @@ function AppContent() {
           AsyncStorage.getItem(VAULT_DOCUMENTS_KEY),
           storageService.getSecureItem(AUTH_SESSION_KEY),
           storageService.getSecureItem(HAPTICS_KEY),
+          storageService.getSecureItem(THEME_MODE_KEY),
         ]);
 
         setStoredPin(pin);
@@ -738,7 +752,13 @@ function AppContent() {
           setBroadcastMessage(storedMessage);
         }
 
-        setDarkModeEnabled(parseStoredJson(rawDarkMode, true));
+        const isDark = parseStoredJson(rawDarkMode, true);
+        setDarkModeEnabled(isDark);
+        if (rawThemeMode === "terminal" || rawThemeMode === "dark" || rawThemeMode === "light") {
+          setThemeMode(rawThemeMode);
+        } else {
+          setThemeMode(isDark ? "dark" : "light");
+        }
         const nextHapticsEnabled = parseStoredJson(rawHaptics, true);
         setHapticsEnabledState(nextHapticsEnabled);
         setHapticsEnabled(nextHapticsEnabled);
@@ -1762,7 +1782,10 @@ function AppContent() {
   }
 
   async function toggleDarkMode(value: boolean) {
+    const nextMode: ThemeMode = value ? "dark" : "light";
+    setThemeMode(nextMode);
     setDarkModeEnabled(value);
+    await storageService.setSecureItem(THEME_MODE_KEY, nextMode);
     await persistDarkMode(value);
   }
 
@@ -2865,6 +2888,8 @@ function AppContent() {
           clients={clients}
           goals={goals}
           theme={theme}
+          themeMode={themeMode}
+          onCycleTheme={cycleTheme}
           contentBottomPadding={contentBottomPadding}
           onNavigateTab={(tab, params) => {
             setActiveTab(tab);
@@ -3242,6 +3267,13 @@ function AppContent() {
             resetLock={resetLock}
             darkModeEnabled={darkModeEnabled}
             toggleDarkMode={toggleDarkMode}
+            themeMode={themeMode}
+            onSetThemeMode={(m) => {
+              setThemeMode(m);
+              setDarkModeEnabled(m !== "light");
+              void storageService.setSecureItem(THEME_MODE_KEY, m);
+              void storageService.setSecureItem(DARK_MODE_KEY, JSON.stringify(m !== "light"));
+            }}
             setIsSyncModalOpen={setIsSyncModalOpen}
             syncToCloud={syncToCloud}
             restoreFromCloud={restoreFromCloud}

@@ -60,4 +60,35 @@ export const darkColors = {
   cardElevation: "rgba(13, 20, 36, 0.88)",
 };
 
+export const terminalColors = {
+  background: "#060a12", // High-density Bloomberg / Aladdin terminal slate
+  backgroundMuted: "#0a101d",
+  surface: "#0f172a", // Deep slate
+  surfaceMuted: "#141f36",
+  surfaceStrong: "#1b2a47",
+  border: "rgba(0, 229, 163, 0.22)", // Precision terminal emerald hairline
+  borderStrong: "rgba(0, 229, 163, 0.45)",
+  borderSubtle: "rgba(0, 229, 163, 0.12)",
+  textPrimary: "#ffffff",
+  textSecondary: "#94a3b8",
+  textMuted: "#64748b",
+  textOnBrand: "#060a12",
+  brand: "#00e5a3", // Electric terminal alpha emerald
+  brandStrong: "#00b37e",
+  accent: "#38bdf8", // Terminal cyan
+  accentSoft: "rgba(56, 189, 248, 0.15)",
+  danger: "#f43f5e",
+  dangerSoft: "rgba(244, 63, 94, 0.15)",
+  warning: "#fbbf24",
+  warningSoft: "rgba(251, 191, 36, 0.15)",
+  neutral: "#94a3b8",
+  neutralSoft: "#141f36",
+  overlay: "rgba(0, 0, 0, 0.8)",
+  shadow: "rgba(0, 0, 0, 0.5)",
+  success: "#00e5a3",
+  successSoft: "rgba(0, 229, 163, 0.15)",
+  cardHover: "#14213a",
+  cardElevation: "rgba(15, 23, 42, 0.95)",
+};
+
 export type ThemeColors = typeof lightColors;

@@ -517,7 +517,7 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
       {/* Main Dual Column: Roster & Details */}
       <View style={[styles.dualColumn, isDesktop && { flexDirection: "row", alignItems: "flex-start" }]}>
         {/* Left Column: Client List */}
-        <View style={styles.column}>
+        <View style={isDesktop ? styles.column : { width: "100%" }}>
           <View style={[styles.panel, { borderRadius: 4, borderWidth: 1 }]}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10, flexWrap: "wrap", gap: 8 }}>
               <View>
@@ -634,7 +634,7 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
         </View>
 
         {/* Right Column: Client 360 Workspace */}
-        <View style={[styles.column, { flex: isDesktop ? 2 : 1 }]}>
+        <View style={isDesktop ? [styles.column, { flex: 2 }] : { width: "100%" }}>
           {selectedClient ? (
             <>
               {!isDesktop && (
@@ -689,7 +689,7 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
 
       {/* Client Insights & Report Studio */}
       <View style={[styles.dualColumn, isDesktop && { flexDirection: "row", alignItems: "flex-start" }]}>
-        <View style={[styles.column, !isDesktop && { flex: 0, width: "100%" }]}>
+        <View style={isDesktop ? styles.column : { width: "100%" }}>
           <View style={styles.panel}>
             <Text style={styles.panelTitle}>Client insight engine</Text>
             <Text style={styles.panelSubtitle}>
@@ -716,7 +716,7 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
           </View>
         </View>
 
-        <View style={[styles.column, !isDesktop && { flex: 0, width: "100%" }]}>
+        <View style={isDesktop ? styles.column : { width: "100%" }}>
           <View style={styles.panel}>
             <Text style={styles.panelTitle}>Report studio</Text>
             <Text style={styles.panelSubtitle}>

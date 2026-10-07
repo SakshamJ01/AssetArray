@@ -3080,6 +3080,7 @@ function AppContent() {
               currencyDisplay={currencyDisplay}
               activeModal={portfolioActiveModal}
               onCloseActiveModal={() => setPortfolioActiveModal(null)}
+              isDesktop={isDesktop}
               styles={styles}
             />
             <PortfolioManagerSection

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
 import { AppTheme } from "../theme";
 import { PerformanceChart, Sparkline, HoldingsTreemap, NO_TRAJECTORY } from "../components/charts";
 import { RebalanceModal, StressTestModal, StatementImportModal } from "../components/modals";
@@ -16,6 +16,7 @@ import { SimpleHolding } from "../services/rebalancer";
 
 export interface PortfoliosScreenProps {
   theme: AppTheme;
+  isDesktop?: boolean;
   onNavigateTab?: (tab: string, params?: any) => void;
   onImportHoldings?: (holdings: SimpleHolding[], mode: "merge" | "replace") => void;
   unifiedPortfolioAnalytics: {
@@ -56,8 +57,11 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
   currencyDisplay,
   activeModal,
   onCloseActiveModal,
+  isDesktop,
   styles,
 }) => {
+  const { width } = useWindowDimensions();
+  const isDesktopEffective = isDesktop ?? width >= 1024;
 
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isRebalanceOpen, setIsRebalanceOpen] = useState(false);
@@ -472,8 +476,8 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
           />
         )}
 
-        <View style={styles.dualColumn}>
-          <View style={styles.column}>
+        <View style={[styles.dualColumn, isDesktopEffective && { flexDirection: "row", alignItems: "flex-start" }]}>
+          <View style={isDesktopEffective ? styles.column : { width: "100%" }}>
             <Text style={styles.sectionLabel}>Asset allocation</Text>
             {unifiedPortfolioAnalytics.allocation.length === 0 ? (
               <View style={styles.emptyState}>
@@ -505,7 +509,7 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
             )}
           </View>
 
-          <View style={styles.column}>
+          <View style={isDesktopEffective ? styles.column : { width: "100%" }}>
             <Text style={styles.sectionLabel}>Risk flags</Text>
             {unifiedPortfolioAnalytics.riskFlags.map((flag) => (
               <Text key={flag} style={styles.analyticsAlert}>
@@ -515,8 +519,8 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
           </View>
         </View>
 
-        <View style={styles.dualColumn}>
-          <View style={styles.column}>
+        <View style={[styles.dualColumn, isDesktopEffective && { flexDirection: "row", alignItems: "flex-start" }]}>
+          <View style={isDesktopEffective ? styles.column : { width: "100%" }}>
             <Text style={styles.sectionLabel}>Top performers</Text>
             {unifiedPortfolioAnalytics.topPerformers.length === 0 ? (
               <Text style={styles.detailBlock}>No performance data available yet.</Text>
@@ -553,7 +557,7 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
             )}
           </View>
 
-          <View style={styles.column}>
+          <View style={isDesktopEffective ? styles.column : { width: "100%" }}>
             <Text style={styles.sectionLabel}>Underperformers</Text>
             {unifiedPortfolioAnalytics.laggards.length === 0 ? (
               <Text style={styles.detailBlock}>No laggards detected yet.</Text>
@@ -637,8 +641,8 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
       </View>
 
       {/* Tax Optimization & Reporting */}
-      <View style={styles.dualColumn}>
-        <View style={styles.column}>
+      <View style={[styles.dualColumn, isDesktopEffective && { flexDirection: "row", alignItems: "flex-start" }]}>
+        <View style={isDesktopEffective ? styles.column : { width: "100%" }}>
           <View style={styles.panel}>
             <Text style={styles.panelTitle}>Tax optimization & reporting</Text>
             <Text style={styles.panelSubtitle}>

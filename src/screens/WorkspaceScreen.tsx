@@ -157,7 +157,7 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
 
       {/* AI Market Research Brief */}
       <View style={[styles.dualColumn, isDesktopEffective && { flexDirection: "row", alignItems: "flex-start" }]}>
-        <View style={[styles.column, !isDesktopEffective && { flex: 0, width: "100%" }]}>
+        <View style={isDesktopEffective ? styles.column : { width: "100%" }}>
           <View style={[styles.panel, styles.calculatorPanel]}>
             <Text style={styles.panelTitle}>AI market research</Text>
             <Text style={styles.panelSubtitle}>
@@ -251,7 +251,7 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
 
       {/* Advisor Portal & Data Aggregation */}
       <View style={[styles.dualColumn, isDesktopEffective && { flexDirection: "row", alignItems: "flex-start" }]}>
-        <View style={[styles.column, !isDesktopEffective && { flex: 0, width: "100%" }]}>
+        <View style={isDesktopEffective ? styles.column : { width: "100%" }}>
           <AdvisorMessagesScreen
             advisorMessages={advisorMessages}
             advisorMessageDraft={advisorMessageDraft}
@@ -261,7 +261,7 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
           />
         </View>
 
-        <View style={[styles.column, !isDesktopEffective && { flex: 0, width: "100%" }]}>
+        <View style={isDesktopEffective ? styles.column : { width: "100%" }}>
           <View style={styles.panel}>
             <Text style={styles.panelTitle}>Automated data aggregation</Text>
             <Text style={styles.panelSubtitle}>

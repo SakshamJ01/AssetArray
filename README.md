@@ -9,7 +9,7 @@
 [![RevenueCat](https://img.shields.io/badge/Monetization-RevenueCat-orange.svg)](https://www.revenuecat.com/)
 [![Built with Expo](https://img.shields.io/badge/Built%20with-Expo%20%2F%20React%20Native-blue.svg)](https://expo.dev/)
 [![Gemini & Ollama AI](https://img.shields.io/badge/AI-Google%20Gemini%20%2B%20Ollama-8E75B2.svg)](https://ai.google.dev/)
-[![Tests Passing](https://img.shields.io/badge/Tests-484%20Passed%20(89%20Suites)-22c55e.svg)](https://github.com/SakshamJ01/AssetArray)
+[![Tests Passing](https://img.shields.io/badge/Tests-498%20Passed%20(95%20Suites)-22c55e.svg)](https://github.com/SakshamJ01/AssetArray)
 
 ![Asset Array Hero Banner](assets/hero-thumbnail.jpg)
 
@@ -79,6 +79,36 @@ Engineered with a high-contrast **Obsidian & Champagne Gold** luxury aesthetic (
 ## 📖 Complete Exhaustive Feature & Functionality Directory
 
 Below is the deep, exhaustive breakdown of **every single feature, tool, workflow, and micro-functionality** built into AssetArray:
+
+---
+
+### 0. 🌟 Next-Gen Wealth Intelligence & Zero-Friction Workstation (v4.1)
+* **🛡️ Family Continuity Vault & Nominee Audit**:
+  - Comprehensive depository, registrar, and banking audit evaluating nominee completeness score across all client portfolio holdings.
+  - Generates a **1-Click Encrypted Family Continuity Playbook Dossier** with folio numbers, custodian emergency claim hotlines, and step-by-step handover instructions.
+  - Multi-client switcher with client-scoped `AsyncStorage` persistence (`ASSETARRAY_VAULT_<clientId>`).
+* **🔍 Look-Through Fund X-Ray & Overlap Matrix**:
+  - Unpacks composite mutual funds and ETFs into their underlying corporate equities.
+  - Calculates true single-stock consolidated weights, mutual fund overlap percentage, and 10-year redundant fee drag alpha recovery.
+  - 1-Click **Stage Rebalance Order** action to eliminate redundant expense ratios.
+* **⚖️ Anti-Impulse Investment Constitution**:
+  - Codifies strict Investment Policy Statement (IPS) rules: Max Single-Stock Cap (≤15%), Emergency Liquid Cash Reserve (≥5%), and Equity Ceiling Drift (≤80%).
+  - **Historical Crisis Simulator**: Simulates real drawdowns and recovery curves across historical crises (2008 GFC -52%, 2020 COVID -38%, 2000 Dot-Com -45%).
+  - **Pre-Trade Anti-Impulse Gate**: Intercepts emotional market liquidations with an interactive order check, activating a **24-Hour Behavioral Cooling-Off Gate** countdown and dual-signatory mandate.
+* **🪙 Shadow Wealth & Physical Asset Desk**:
+  - **Physical Gold Bullion Desk**: Dynamic revaluation against live spot bullion benchmarks (24K, 22K, 18K purity) with safe deposit locker tracking.
+  - **Real Estate Deeds Desk**: Registers residential and commercial property deeds, circle rates, square footage, and rental yields.
+  - **Private Debt Notes**: Accrued interest calculators across Simple, Annually Compounded, and Quarterly Compounded promissory notes.
+  - Full CRUD registration with persistent local storage (`ASSETARRAY_SHADOW_<clientId>`).
+* **⚡ Executive Quick-Launch Dock (Zero-Click Navigation)**:
+  - 1-Click access from the Executive Dashboard header to 11 workstation engines: Tax Harvest Studio, Rebalance Desk, Crisis Stress Test, Monte Carlo Sim, What-If Sandbox, Family Vault, Fund X-Ray, Investment Constitution, Shadow Wealth Desk, AI Copilot, and Outreach Broadcast.
+* **🎨 Institutional Multi-Theme Engine**:
+  - **Executive Gold**: Private banking luxury dark mode (`#030712` + `#E0A84C`).
+  - **Terminal Aladdin**: Quant/Hedge Fund cyber slate (`#060A12` + emerald `#00E5A3` & cyan `#38BDF8`).
+  - **Swiss Ivory**: Daylight private wealth aesthetic (`#F8F9FA` + `#B37E28`).
+  - 1-Click Theme Switcher Pill in the dashboard header and Settings.
+* **⌨️ Universal Command Palette (`⌘K` / `Ctrl+K`)**:
+  - Instant keyboard accelerator with direct routing to all wealth pillars, portfolios, clients, and workstation studios without key collisions.
 
 ---
 
@@ -277,26 +307,32 @@ AssetArray/
 │   └── check-live.js                    # Live HTTP response & JS bundle status checker
 ├── src/
 │   ├── components/
+│   │   ├── dashboard/                   # Executive Launchpad 1-click dock & Intelligence Hub cards
 │   │   ├── DesktopSidebar.tsx           # Desktop navigation sidebar with Quick Import & Export Roster actions
 │   │   ├── LiveMarketTicker.tsx         # Real-time ticking header with micro-flash animations
 │   │   ├── AiWealthCopilot.tsx          # Floating conversational AI copilot (Gemini + Ollama)
 │   │   └── modals/
-│   │       ├── StatementImportModal.tsx # 1-Click Zero-PII CSV/Statement parser with Upstox/ICICI presets
-│   │       ├── LiveMarketDepthModal.tsx # Level 2 Orderbook Depth Terminal with RSI & Spread Bps
+│   │       ├── FamilyVaultModal.tsx     # Family Continuity Vault & Nominee Audit dossier generator
+│   │       ├── FundXrayModal.tsx        # Look-Through Fund X-Ray & Overlap Matrix eliminator
+│   │       ├── ConstitutionModal.tsx    # Anti-Impulse Investment Constitution & Cooling-Off Gate
+│   │       ├── ShadowWealthModal.tsx    # Physical Gold Bullion, Real Estate & Private Debt Desk
+│   │       ├── TaxHarvestStudioModal.tsx# Realized & Unrealized Tax-Loss Harvesting Studio
 │   │       ├── MonteCarloModal.tsx      # 1,000-run statistical simulation studio
-│   │       └── RebalanceModal.tsx       # Institutional portfolio rebalancing
+│   │       ├── RebalanceModal.tsx       # Institutional portfolio rebalancing
+│   │       └── StressTestModal.tsx      # Historical Crisis Stress Testing studio
 │   ├── screens/
 │   │   ├── ClientsScreen.tsx            # Search, filter, client dossier, statement import & roster CSV export
 │   │   ├── PortfoliosScreen.tsx         # Unified portfolio analytics & action bar statement import
-│   │   └── PaywallScreen.tsx            # RevenueCat Pro Advisor Paywall UI
+│   │   └── SettingsScreen.tsx           # Institutional multi-theme selector & system health
 │   └── services/
+│       ├── intelligence/                # Wealth Intelligence engines (vault, xray, constitution, shadow)
 │       ├── accountAggregator/           # RBI Sahamati consent generator, OTP validator & FIP data decryptor
 │       ├── batchReporting.ts            # Firm-wide review package & GIPS drift dossier generator
 │       ├── brokerConnect/               # Multi-broker order gateway (Zerodha, Upstox, Breeze, FIX 4.4)
 │       ├── statementParser.ts           # Zero-PII Zerodha/Upstox/ICICI Direct/Groww/CAMS statement parser
 │       ├── realTimeMarket.ts            # Ticker engine (ITC, NVDA, SILVER, BANKNIFTY) + RSI & Spread Bps
 │       └── aiGateway/providers/         # Resilient multi-model gateway (Gemini, Anthropic, OpenAI, Ollama)
-└── __tests__/                           # 88 passing Jest test suites (477 total unit/E2E tests)
+└── __tests__/                           # 95 passing Jest test suites (498 total unit/E2E tests)
 ```
 
 ---
@@ -329,7 +365,7 @@ npm run web
 
 ### 2. Run Automated Test Verification & Live Browser QA
 ```bash
-# Run full 88-suite Jest test regression (477 tests passing)
+# Run full 95-suite Jest test regression (498 tests passing)
 npm test
 
 # Run live headless Chrome browser verification (7 stages + storage reset)

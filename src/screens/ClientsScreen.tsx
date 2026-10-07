@@ -311,7 +311,7 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
             <TextInput
               value={localSearch}
               onChangeText={setLocalSearch}
-              placeholder="Search name, email, phone, city, risk, category..."
+              placeholder={isDesktop ? "Search name, email, phone, city, risk, category..." : "Search clients..."}
               placeholderTextColor="#7f90a8"
               style={[styles.input, { borderRadius: 4, height: 38, marginBottom: 0 }]}
             />
@@ -526,13 +526,23 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
                   {filteredClients.length} visible client{filteredClients.length === 1 ? "" : "s"} in this view.
                 </Text>
               </View>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 6,
+                  flexWrap: "wrap",
+                  width: isDesktop ? undefined : "100%",
+                }}
+              >
                 <Pressable
                   style={{
+                    flex: isDesktop ? undefined : 1,
+                    justifyContent: "center",
                     flexDirection: "row",
                     alignItems: "center",
                     gap: 4,
-                    paddingHorizontal: 10,
+                    paddingHorizontal: isDesktop ? 10 : 6,
                     paddingVertical: 6,
                     borderRadius: 4,
                     backgroundColor: "rgba(56, 189, 248, 0.12)",
@@ -543,15 +553,17 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
                 >
                   <Ionicons name="document-text-outline" size={14} color="#38BDF8" />
                   <Text style={{ fontSize: 12, fontWeight: "800", color: "#38BDF8" }}>
-                    Import Statement
+                    {isDesktop ? "Import Statement" : "Import"}
                   </Text>
                 </Pressable>
                 <Pressable
                   style={{
+                    flex: isDesktop ? undefined : 1,
+                    justifyContent: "center",
                     flexDirection: "row",
                     alignItems: "center",
                     gap: 4,
-                    paddingHorizontal: 10,
+                    paddingHorizontal: isDesktop ? 10 : 6,
                     paddingVertical: 6,
                     borderRadius: 4,
                     backgroundColor: "rgba(16, 185, 129, 0.12)",
@@ -562,15 +574,17 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
                 >
                   <Ionicons name="download-outline" size={14} color="#10B981" />
                   <Text style={{ fontSize: 12, fontWeight: "800", color: "#10B981" }}>
-                    Export (.csv)
+                    {isDesktop ? "Export (.csv)" : "Export"}
                   </Text>
                 </Pressable>
                 <Pressable
                   style={{
+                    flex: isDesktop ? undefined : 1,
+                    justifyContent: "center",
                     flexDirection: "row",
                     alignItems: "center",
                     gap: 4,
-                    paddingHorizontal: 10,
+                    paddingHorizontal: isDesktop ? 10 : 6,
                     paddingVertical: 6,
                     borderRadius: 4,
                     backgroundColor: theme.colors.brand,

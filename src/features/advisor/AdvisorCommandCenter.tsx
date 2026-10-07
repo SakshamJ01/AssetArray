@@ -30,6 +30,11 @@ import { AdvisorBriefModal } from "./AdvisorBriefModal";
 import { CommandPalette } from "./CommandPalette";
 import { PortfolioTrajectoryChart, TrajectoryPeriod } from "./PortfolioTrajectoryChart";
 import { DataPoint } from "../../components/charts/PerformanceChart";
+import { IntelligenceHubCard } from "../../components/dashboard/IntelligenceHubCard";
+import { FamilyVaultModal } from "../../components/modals/FamilyVaultModal";
+import { FundXrayModal } from "../../components/modals/FundXrayModal";
+import { ConstitutionModal } from "../../components/modals/ConstitutionModal";
+import { ShadowWealthModal } from "../../components/modals/ShadowWealthModal";
 import { custodianSyncService } from "../../services/custodian/custodianSync";
 import {
   loadPersistedActions,
@@ -91,6 +96,10 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
   const [isDecisionModalOpen, setIsDecisionModalOpen] = useState(false);
   const [isBriefModalOpen, setIsBriefModalOpen] = useState(false);
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
+  const [isFamilyVaultOpen, setIsFamilyVaultOpen] = useState(false);
+  const [isFundXrayOpen, setIsFundXrayOpen] = useState(false);
+  const [isConstitutionOpen, setIsConstitutionOpen] = useState(false);
+  const [isShadowWealthOpen, setIsShadowWealthOpen] = useState(false);
 
   // Load and scan on mount or when clients/goals change
   const refreshCommandCenter = async () => {
@@ -642,6 +651,15 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
         </View>
       )}
 
+      {/* 1-CLICK INTELLIGENCE & CONTINUITY HUB */}
+      <IntelligenceHubCard
+        onOpenFamilyVault={() => setIsFamilyVaultOpen(true)}
+        onOpenFundXray={() => setIsFundXrayOpen(true)}
+        onOpenConstitution={() => setIsConstitutionOpen(true)}
+        onOpenShadowWealth={() => setIsShadowWealthOpen(true)}
+        colors={theme.colors}
+      />
+
       {/* HORIZON PERSPECTIVE & MODULE TABS */}
       <View style={[styles.subnavBar, compactActions && { marginBottom: 8, gap: 4 }, { borderBottomColor: theme.colors.border }]}>
         <ScrollView
@@ -914,6 +932,39 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
         onOpenBroadcast={onBroadcastOutreach}
         onOpenAiCopilot={onOpenAiCopilot}
         onOpenAiResearch={onOpenAiResearch}
+      />
+
+      {/* NEXT-GEN WEALTH INTELLIGENCE MODALS */}
+      <FamilyVaultModal
+        visible={isFamilyVaultOpen}
+        onClose={() => setIsFamilyVaultOpen(false)}
+        client={clients[0]}
+        isDark={theme.colors.textPrimary === "#ffffff"}
+        colors={theme.colors}
+      />
+
+      <FundXrayModal
+        visible={isFundXrayOpen}
+        onClose={() => setIsFundXrayOpen(false)}
+        client={clients[0]}
+        isDark={theme.colors.textPrimary === "#ffffff"}
+        colors={theme.colors}
+      />
+
+      <ConstitutionModal
+        visible={isConstitutionOpen}
+        onClose={() => setIsConstitutionOpen(false)}
+        client={clients[0]}
+        isDark={theme.colors.textPrimary === "#ffffff"}
+        colors={theme.colors}
+      />
+
+      <ShadowWealthModal
+        visible={isShadowWealthOpen}
+        onClose={() => setIsShadowWealthOpen(false)}
+        client={clients[0]}
+        isDark={theme.colors.textPrimary === "#ffffff"}
+        colors={theme.colors}
       />
     </ScrollView>
   );

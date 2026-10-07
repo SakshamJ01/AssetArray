@@ -116,6 +116,7 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
   const [isStressTestOpen, setIsStressTestOpen] = useState(false);
   const [isMonteCarloOpen, setIsMonteCarloOpen] = useState(false);
   const [isWhatIfOpen, setIsWhatIfOpen] = useState(false);
+  const [selectedIntelligenceClientId, setSelectedIntelligenceClientId] = useState<string | null>(null);
 
   // Consolidated holdings for instant workstation analysis
   const consolidatedHoldings: PortfolioHolding[] = useMemo(() => {
@@ -1017,7 +1018,10 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
       <FamilyVaultModal
         visible={isFamilyVaultOpen}
         onClose={() => setIsFamilyVaultOpen(false)}
-        client={clients[0]}
+        client={clients.find((c) => c.id === selectedIntelligenceClientId) || clients[0]}
+        clients={clients}
+        selectedClientId={selectedIntelligenceClientId || clients[0]?.id}
+        onSelectClient={(id) => setSelectedIntelligenceClientId(id)}
         isDark={theme.colors.textPrimary === "#ffffff"}
         colors={theme.colors}
       />
@@ -1025,7 +1029,10 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
       <FundXrayModal
         visible={isFundXrayOpen}
         onClose={() => setIsFundXrayOpen(false)}
-        client={clients[0]}
+        client={clients.find((c) => c.id === selectedIntelligenceClientId) || clients[0]}
+        clients={clients}
+        selectedClientId={selectedIntelligenceClientId || clients[0]?.id}
+        onSelectClient={(id) => setSelectedIntelligenceClientId(id)}
         isDark={theme.colors.textPrimary === "#ffffff"}
         colors={theme.colors}
       />
@@ -1033,7 +1040,10 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
       <ConstitutionModal
         visible={isConstitutionOpen}
         onClose={() => setIsConstitutionOpen(false)}
-        client={clients[0]}
+        client={clients.find((c) => c.id === selectedIntelligenceClientId) || clients[0]}
+        clients={clients}
+        selectedClientId={selectedIntelligenceClientId || clients[0]?.id}
+        onSelectClient={(id) => setSelectedIntelligenceClientId(id)}
         isDark={theme.colors.textPrimary === "#ffffff"}
         colors={theme.colors}
       />
@@ -1041,7 +1051,10 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
       <ShadowWealthModal
         visible={isShadowWealthOpen}
         onClose={() => setIsShadowWealthOpen(false)}
-        client={clients[0]}
+        client={clients.find((c) => c.id === selectedIntelligenceClientId) || clients[0]}
+        clients={clients}
+        selectedClientId={selectedIntelligenceClientId || clients[0]?.id}
+        onSelectClient={(id) => setSelectedIntelligenceClientId(id)}
         isDark={theme.colors.textPrimary === "#ffffff"}
         colors={theme.colors}
       />

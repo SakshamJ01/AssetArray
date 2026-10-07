@@ -132,7 +132,7 @@ export const IntelligenceHubCard: React.FC<IntelligenceHubCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 16,
+    borderRadius: 12,
     borderWidth: 1,
     padding: 16,
     marginVertical: 12,
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
   tileIconCircle: {
     width: 28,
     height: 28,
-    borderRadius: 14,
+    borderRadius: 999,
     justifyContent: "center",
     alignItems: "center",
   },

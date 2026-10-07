@@ -1,0 +1,16 @@
+[
+  {
+    "engine": "Chromium",
+    "status": "PASSED",
+    "title": "Asset Array | Private Wealth Management",
+    "zeroOverflow": true
+  },
+  {
+    "engine": "Firefox",
+    "status": "SKIPPED_BINARY_MISSING"
+  },
+  {
+    "engine": "WebKit (Safari Engine)",
+    "status": "SKIPPED_BINARY_MISSING"
+  }
+]

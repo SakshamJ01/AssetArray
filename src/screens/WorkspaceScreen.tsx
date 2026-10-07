@@ -1,11 +1,12 @@
 import React from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Pressable, Text, TextInput, useWindowDimensions, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { AppTheme } from "../theme";
 import { AdvisorMessagesScreen } from "./workspace/AdvisorMessagesScreen";
 
 export interface WorkspaceScreenProps {
   theme: AppTheme;
+  isDesktop?: boolean;
   onNavigateTab?: (tab: string, params?: any) => void;
   onLogout?: () => void;
   marketMessage: string;
@@ -52,6 +53,7 @@ export interface WorkspaceScreenProps {
 
 export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
   theme,
+  isDesktop,
   onNavigateTab,
   onLogout,
   marketMessage,
@@ -74,6 +76,9 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
   currencyDisplay,
   styles,
 }) => {
+  const { width } = useWindowDimensions();
+  const isDesktopEffective = isDesktop ?? width >= 1024;
+
   return (
     <>
       {/* Secondary Destinations / Quick Hub (Rule 45) */}
@@ -151,8 +156,8 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
       </View>
 
       {/* AI Market Research Brief */}
-      <View style={styles.dualColumn}>
-        <View style={styles.column}>
+      <View style={[styles.dualColumn, isDesktopEffective && { flexDirection: "row", alignItems: "flex-start" }]}>
+        <View style={[styles.column, !isDesktopEffective && { flex: 0, width: "100%" }]}>
           <View style={[styles.panel, styles.calculatorPanel]}>
             <Text style={styles.panelTitle}>AI market research</Text>
             <Text style={styles.panelSubtitle}>
@@ -245,8 +250,8 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
       </View>
 
       {/* Advisor Portal & Data Aggregation */}
-      <View style={styles.dualColumn}>
-        <View style={styles.column}>
+      <View style={[styles.dualColumn, isDesktopEffective && { flexDirection: "row", alignItems: "flex-start" }]}>
+        <View style={[styles.column, !isDesktopEffective && { flex: 0, width: "100%" }]}>
           <AdvisorMessagesScreen
             advisorMessages={advisorMessages}
             advisorMessageDraft={advisorMessageDraft}
@@ -256,7 +261,7 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
           />
         </View>
 
-        <View style={styles.column}>
+        <View style={[styles.column, !isDesktopEffective && { flex: 0, width: "100%" }]}>
           <View style={styles.panel}>
             <Text style={styles.panelTitle}>Automated data aggregation</Text>
             <Text style={styles.panelSubtitle}>

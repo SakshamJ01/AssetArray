@@ -407,6 +407,7 @@ export const styles = StyleSheet.create({
   },
   column: {
     flex: 1,
+    minWidth: 0,
   },
   emptyState: {
     backgroundColor: "#0B111E",

@@ -688,8 +688,8 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
       </View>
 
       {/* Client Insights & Report Studio */}
-      <View style={styles.dualColumn}>
-        <View style={styles.column}>
+      <View style={[styles.dualColumn, isDesktop && { flexDirection: "row", alignItems: "flex-start" }]}>
+        <View style={[styles.column, !isDesktop && { flex: 0, width: "100%" }]}>
           <View style={styles.panel}>
             <Text style={styles.panelTitle}>Client insight engine</Text>
             <Text style={styles.panelSubtitle}>
@@ -716,7 +716,7 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
           </View>
         </View>
 
-        <View style={styles.column}>
+        <View style={[styles.column, !isDesktop && { flex: 0, width: "100%" }]}>
           <View style={styles.panel}>
             <Text style={styles.panelTitle}>Report studio</Text>
             <Text style={styles.panelSubtitle}>

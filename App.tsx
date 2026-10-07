@@ -3102,6 +3102,7 @@ function AppContent() {
         {activeTab === "Workspace" ? (
           <WorkspaceScreen
             theme={theme}
+            isDesktop={isDesktop}
             onLogout={() => void logoutFromBackend()}
             onNavigateTab={(tab, params) => {
               setActiveTab(tab as AppTab);

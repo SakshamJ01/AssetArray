@@ -56,8 +56,8 @@ const AI_OPENAI_FAST_MODEL = process.env.AI_OPENAI_FAST_MODEL || "gpt-4o-mini";
 const AI_OPENAI_RESEARCH_MODEL = process.env.AI_OPENAI_RESEARCH_MODEL || "gpt-4o";
 const AI_ANTHROPIC_FAST_MODEL = process.env.AI_ANTHROPIC_FAST_MODEL || "claude-3-5-haiku-20241022";
 const AI_ANTHROPIC_RESEARCH_MODEL = process.env.AI_ANTHROPIC_RESEARCH_MODEL || "claude-3-5-sonnet-20241022";
-const AI_OPENROUTER_FAST_MODEL = process.env.AI_OPENROUTER_FAST_MODEL || "meta-llama/llama-3.3-70b-instruct:free";
-const AI_OPENROUTER_RESEARCH_MODEL = process.env.AI_OPENROUTER_RESEARCH_MODEL || "google/gemini-2.0-flash-exp:free";
+const AI_OPENROUTER_FAST_MODEL = process.env.AI_OPENROUTER_FAST_MODEL || "openrouter/free";
+const AI_OPENROUTER_RESEARCH_MODEL = process.env.AI_OPENROUTER_RESEARCH_MODEL || "openrouter/free";
 
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434";
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "llama3.2";

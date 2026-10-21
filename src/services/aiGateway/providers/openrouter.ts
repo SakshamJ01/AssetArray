@@ -49,7 +49,7 @@ export class OpenRouterProvider implements AiProvider {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeout);
 
-    const modelName = options?.model || "meta-llama/llama-3.3-70b-instruct:free";
+    const modelName = options?.model || "openrouter/free";
     callbacks.onStateChange?.("CONNECTING", `Connecting to OpenRouter (${modelName})...`);
 
     const prompt = buildTaskPrompt(query, taskType, context);

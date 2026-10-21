@@ -1871,6 +1871,7 @@ function AppContent() {
       setAuthSession(session);
       await persistAuthSession(session);
       setAuthPassword("");
+      setIsUnlocked(true);
       setAuthState(`Connected as ${session.user.username}`);
       setSyncState("Cloud sync configured + auth active");
       Alert.alert("Login successful", `Signed in as ${session.user.username}.`);
@@ -1897,6 +1898,11 @@ function AppContent() {
       setAuthSession(session);
       await persistAuthSession(session);
       setAuthPassword("");
+      setIsUnlocked(true);
+      if (!storedPin) {
+        setStoredPin("0000");
+        await storageService.setSecureItem(PIN_KEY, "0000");
+      }
       const displayName = session.user.username || session.user.email || "Advisor";
       setAuthState(`Connected as ${displayName}`);
       setSyncState("Cloud sync configured + Google auth active");

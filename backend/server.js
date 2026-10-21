@@ -59,7 +59,8 @@ const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434";
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "llama3.2";
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "902530205082-pn6q621bbjfsdvofpp6svsuljss9ekk7.apps.googleusercontent.com";
-const ALLOW_GOOGLE_AUTO_PROVISION = process.env.ALLOW_GOOGLE_AUTO_PROVISION === "true";
+const ALLOW_GOOGLE_AUTO_PROVISION =
+  String(process.env.ALLOW_GOOGLE_AUTO_PROVISION || "true").toLowerCase() !== "false";
 
 const { DatabaseManager } = require("./db/mongo");
 const { MigrationService, DEFAULT_FIRM_ID } = require("./db/migration");
@@ -574,6 +575,26 @@ async function initMongo() {
           { $set: { passwordSalt, passwordHash: hashPassword(adminPassword, passwordSalt), firmId: existing.firmId || DEFAULT_FIRM_ID } }
         );
       }
+    }
+
+    const ownerEmail = "jainsaksham8b@gmail.com";
+    const existingOwner = await usersCol.findOne({
+      $or: [{ email: ownerEmail }, { username: "saksham" }],
+    });
+    if (!existingOwner) {
+      await usersCol.insertOne({
+        id: "advisor-owner-saksham",
+        firmId: DEFAULT_FIRM_ID,
+        username: "saksham",
+        fullName: "Saksham Jain",
+        email: ownerEmail,
+        role: "ADMIN",
+        active: true,
+        status: "ACTIVE",
+        createdAt: new Date().toISOString(),
+        authProvider: "GOOGLE",
+      });
+      console.log(`[Auth] Registered owner email ${ownerEmail} as authorized admin advisor.`);
     }
 
     isDbConnected = true;

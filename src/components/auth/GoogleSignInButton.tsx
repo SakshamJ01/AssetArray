@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
   googleIconContainer: {
     width: 20,
     height: 20,
-    borderRadius: 10,
+    borderRadius: 9999,
     backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",

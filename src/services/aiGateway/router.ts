@@ -9,6 +9,7 @@ import { GeminiProvider } from "./providers/gemini";
 import { OllamaProvider } from "./providers/ollama";
 import { OpenAIProvider } from "./providers/openai";
 import { AnthropicProvider } from "./providers/anthropic";
+import { OpenRouterProvider } from "./providers/openrouter";
 import { generateDeterministicSummary } from "./fallback";
 import { aiTelemetry } from "./telemetry";
 import {
@@ -41,7 +42,8 @@ export class AiRouter {
   private lastRoutingDecision: RoutingDecision | null = null;
 
   constructor() {
-    // Free-first priority: Gemini Free Cloud API -> Ollama Local -> Optional Paid
+    // Free-first priority: OpenRouter Free Models -> Gemini Free Cloud API -> Ollama Local -> Optional Paid
+    this.registerProvider(new OpenRouterProvider());
     this.registerProvider(new GeminiProvider());
     this.registerProvider(new OllamaProvider());
     this.registerProvider(new OpenAIProvider());

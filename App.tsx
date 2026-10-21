@@ -3560,23 +3560,41 @@ function AppContent() {
         accessToken={authSession?.accessToken ?? null}
         endpoint={cloudSettings.endpoint}
         onUnauthorized={refreshAccessTokenIfNeeded}
-        clientContext={
-          selectedClientId
-            ? (() => {
-                const target = clients.find((c) => c.id === selectedClientId);
-                if (!target) return undefined;
-                const totalAum = (target.portfolio || []).reduce(
-                  (sum, h) => sum + (parseFloat(h.currentValue) || parseFloat(h.investedValue) || 0),
-                  0
-                );
-                return {
-                  clientName: target.name,
-                  totalAum,
-                  riskProfile: target.riskProfile,
-                };
-              })()
-            : undefined
-        }
+        allClients={clients}
+        selectedClientId={selectedClientId}
+        onSelectClientId={(id) => setSelectedClientId(id)}
+        goals={goals}
+        unifiedPortfolioAnalytics={unifiedPortfolioAnalytics}
+        activeCurrency={activeCurrency}
+        onOpenHoldingModal={(holdingPrefill) => {
+          if (holdingPrefill) {
+            setHoldingDraft({
+              assetName: holdingPrefill.assetName || "",
+              assetClass: holdingPrefill.assetClass || "Stocks",
+              ticker: holdingPrefill.ticker || "",
+              quantity: holdingPrefill.quantity || "",
+              investedValue: holdingPrefill.investedValue || "",
+              currentValue: holdingPrefill.currentValue || "",
+              targetWeight: holdingPrefill.targetWeight || "",
+              notes: holdingPrefill.notes || "",
+            });
+            setPortfolioMode("add");
+            setEditingHoldingId(null);
+          }
+          setIsPortfolioModalOpen(true);
+        }}
+        onDraftWhatsApp={(client, message) => {
+          if (client) {
+            setSelectedClientId(client.id);
+            setSelectedClientIds([client.id]);
+          }
+          setBroadcastChannel("WhatsApp");
+          setBroadcastMessage(message);
+          setIsBroadcastModalOpen(true);
+        }}
+        onNavigateToTab={(tab) => {
+          setActiveTab(tab as AppTab);
+        }}
       />
 
       <SyncConfigModal

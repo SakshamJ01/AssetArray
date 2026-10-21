@@ -48,6 +48,7 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
 const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "";
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || "";
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || "";
 
 const AI_GEMINI_FAST_MODEL = process.env.AI_GEMINI_FAST_MODEL || GEMINI_MODEL;
 const AI_GEMINI_RESEARCH_MODEL = process.env.AI_GEMINI_RESEARCH_MODEL || "gemini-2.5-flash";
@@ -55,6 +56,9 @@ const AI_OPENAI_FAST_MODEL = process.env.AI_OPENAI_FAST_MODEL || "gpt-4o-mini";
 const AI_OPENAI_RESEARCH_MODEL = process.env.AI_OPENAI_RESEARCH_MODEL || "gpt-4o";
 const AI_ANTHROPIC_FAST_MODEL = process.env.AI_ANTHROPIC_FAST_MODEL || "claude-3-5-haiku-20241022";
 const AI_ANTHROPIC_RESEARCH_MODEL = process.env.AI_ANTHROPIC_RESEARCH_MODEL || "claude-3-5-sonnet-20241022";
+const AI_OPENROUTER_FAST_MODEL = process.env.AI_OPENROUTER_FAST_MODEL || "meta-llama/llama-3.3-70b-instruct:free";
+const AI_OPENROUTER_RESEARCH_MODEL = process.env.AI_OPENROUTER_RESEARCH_MODEL || "google/gemini-2.0-flash-exp:free";
+
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434";
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "llama3.2";
 
@@ -219,7 +223,7 @@ function buildResearchPrompt(query) {
   ].join("\n");
 }
 
-function buildStreamPrompt(query, taskType, portfolioContext, clientContext, macroContext) {
+function buildStreamPrompt(query, taskType, portfolioContext, clientContext, macroContext, rawContextPrompt) {
   const modelSpecialization =
     taskType === "tax_analytics"
       ? "SPECIALIZATION: Indian Income Tax Act (Finance Act 2024 / AY 2026-27, Sections 111A, 112A, 70, 74). Explain loss set-off rules. Disclaim that this is not statutory tax advice."
@@ -233,24 +237,37 @@ function buildStreamPrompt(query, taskType, portfolioContext, clientContext, mac
   const clientStr = clientContext ? JSON.stringify(clientContext, null, 2) : "Desk General";
   const macroStr = macroContext ? String(macroContext) : "Current benchmark and rate levels steady.";
 
-  return [
-    "You are the AssetArray AI Wealth Intelligence Engine.",
+  const promptSections = [
+    "You are the AssetArray AI Wealth Intelligence Engine, an institutional wealth copilot.",
     modelSpecialization,
     "GROUNDING RULES:",
-    "1. Cite exact quantitative metrics from the PORTFOLIO DATA and MACRO CONTEXT provided below.",
+    "1. Cite exact quantitative metrics (AUM, specific tickers, weights %, return %, tax lots, gains/losses) from the VERIFIED CLIENT PORTFOLIO CONTEXT provided below.",
     "2. Do not hallucinate numbers or cite generic hypotheticals when concrete data is provided.",
     "3. Adhere strictly to institutional claims policy: never claim GIPS compliance, never guarantee returns, never promise tax savings.",
     "4. Differentiate between FACT, DETERMINISTIC MODEL RESULT, and ADVISOR ACTION.",
+    "5. Whenever relevant, propose concrete advisor action buttons (e.g. Rebalance Holdings, Draft WhatsApp, Export PDF, View Goals).",
     `CURRENT DATE/TIMESTAMP: ${new Date().toISOString()}`,
-    "--- PORTFOLIO DATA ---",
-    portfolioStr,
-    "--- CLIENT MANDATE ---",
-    clientStr,
+  ];
+
+  if (rawContextPrompt) {
+    promptSections.push("--- VERIFIED CLIENT & PORTFOLIO RECORD ---", rawContextPrompt);
+  } else {
+    promptSections.push(
+      "--- PORTFOLIO DATA ---",
+      portfolioStr,
+      "--- CLIENT MANDATE ---",
+      clientStr
+    );
+  }
+
+  promptSections.push(
     "--- MACRO CONTEXT ---",
     macroStr,
     "--- USER / ADVISOR INQUIRY ---",
-    query,
-  ].join("\n\n");
+    query
+  );
+
+  return promptSections.join("\n\n");
 }
 
 function generateGroundedFallbackText(query, taskType, portfolioContext, clientContext) {
@@ -979,6 +996,13 @@ app.get("/api/ai/status", requireAuth, (req, res) => {
       status: ANTHROPIC_API_KEY ? "AVAILABLE" : "NOT_CONFIGURED",
       models: { fast: AI_ANTHROPIC_FAST_MODEL, research: AI_ANTHROPIC_RESEARCH_MODEL },
     },
+    openrouter: {
+      id: "openrouter",
+      name: "OpenRouter (Free Tier Models)",
+      isConfigured: Boolean(OPENROUTER_API_KEY),
+      status: OPENROUTER_API_KEY ? "AVAILABLE" : "NOT_CONFIGURED",
+      models: { fast: AI_OPENROUTER_FAST_MODEL, research: AI_OPENROUTER_RESEARCH_MODEL },
+    },
     ruleEngine: {
       id: "verified-rule-engine",
       name: "Deterministic Financial Rule Engine",
@@ -991,7 +1015,8 @@ app.get("/api/ai/status", requireAuth, (req, res) => {
 
 // Streaming AI Intelligence Proxy with SSE, Model Ensemble & Grounded Token Generator
 app.post("/api/ai/stream", requireAuth, async (req, res) => {
-  const { provider = "gemini", query, taskType = "briefing", portfolioContext, clientContext, macroContext } = req.body || {};
+  const { provider = "gemini", query, taskType = "briefing", portfolioContext, clientContext, macroContext, rawContextPrompt: explicitPrompt } = req.body || {};
+  const effectiveRawContext = explicitPrompt || portfolioContext?.rawContextPrompt || null;
 
   if (!query || typeof query !== "string") {
     res.status(400).json({ error: "query string is required." });
@@ -1011,7 +1036,7 @@ app.post("/api/ai/stream", requireAuth, async (req, res) => {
   if (provider === "ollama") {
     try {
       const selectedModel = req.body.model || OLLAMA_MODEL;
-      const fullPrompt = buildStreamPrompt(query, taskType, portfolioContext, clientContext, macroContext);
+      const fullPrompt = buildStreamPrompt(query, taskType, portfolioContext, clientContext, macroContext, effectiveRawContext);
       const ollamaRes = await fetch(`${OLLAMA_BASE_URL}/api/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1193,6 +1218,80 @@ app.post("/api/ai/stream", requireAuth, async (req, res) => {
     }
   }
 
+  // 2.5. OPENROUTER Provider Stream (High-Intelligence Free Tier)
+  if (provider === "openrouter") {
+    if (!OPENROUTER_API_KEY) {
+      res.write(`data: ${JSON.stringify({ error: "OpenRouter is not configured on this server.", provider: "openrouter", notConfigured: true })}\n\n`);
+      res.end();
+      return;
+    }
+
+    try {
+      const selectedModel = req.body.model || (taskType === "DEEP_RESEARCH" ? AI_OPENROUTER_RESEARCH_MODEL : AI_OPENROUTER_FAST_MODEL);
+      const fullPrompt = buildStreamPrompt(query, taskType, portfolioContext, clientContext, macroContext, effectiveRawContext);
+      const openRouterRes = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+          "HTTP-Referer": "https://assetarray.com",
+          "X-Title": "AssetArray Wealth Engine",
+        },
+        body: JSON.stringify({
+          model: selectedModel,
+          messages: [
+            {
+              role: "system",
+              content: "You are AssetArray AI, an institutional Wall-Street-grade wealth intelligence copilot. You cite verified portfolio holdings, tickers, quantities, tax lots, and allocation drift with absolute mathematical precision.",
+            },
+            { role: "user", content: fullPrompt },
+          ],
+          stream: true,
+          temperature: 0.35,
+        }),
+      });
+
+      if (!openRouterRes.ok || !openRouterRes.body) {
+        throw new Error(`OpenRouter HTTP ${openRouterRes.status}`);
+      }
+
+      const reader = openRouterRes.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (trimmed === "data: [DONE]") {
+            res.write(`data: ${JSON.stringify({ done: true, model: selectedModel, provider: "openrouter", taskType, groundedAt })}\n\n`);
+            res.end();
+            return;
+          }
+          if (trimmed.startsWith("data:")) {
+            try {
+              const parsed = JSON.parse(trimmed.replace(/^data:\s*/, ""));
+              const token = parsed.choices?.[0]?.delta?.content;
+              if (token) {
+                res.write(`data: ${JSON.stringify({ token, model: selectedModel, provider: "openrouter", taskType })}\n\n`);
+              }
+            } catch {}
+          }
+        }
+      }
+      res.write(`data: ${JSON.stringify({ done: true, model: selectedModel, provider: "openrouter", taskType, groundedAt })}\n\n`);
+      res.end();
+      return;
+    } catch (err) {
+      console.warn("[AI Stream] OpenRouter stream exception:", err.message);
+    }
+  }
+
   // 3. GEMINI Provider Stream (Default)
   const selectedModel =
     taskType === "DEEP_RESEARCH"
@@ -1201,7 +1300,7 @@ app.post("/api/ai/stream", requireAuth, async (req, res) => {
 
   if (gemini) {
     try {
-      const fullPrompt = buildStreamPrompt(query, taskType, portfolioContext, clientContext, macroContext);
+      const fullPrompt = buildStreamPrompt(query, taskType, portfolioContext, clientContext, macroContext, effectiveRawContext);
       const responseStream = await gemini.models.generateContentStream({
         model: selectedModel,
         contents: fullPrompt,

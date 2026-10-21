@@ -47,6 +47,7 @@ export interface StreamContextPayload {
   topHoldings?: string[];
   macroContext?: string | string[];
   evidence?: Record<string, any>;
+  rawContextPrompt?: string;
 }
 
 export interface AiStreamCallbacks {

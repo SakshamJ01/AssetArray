@@ -63,6 +63,11 @@ export function buildTaskPrompt(
         parts.push(context.macroContext);
       }
     }
+
+    if (context.rawContextPrompt) {
+      parts.push("\n=== VERIFIED GROUNDED CONTEXT (HOLDINGS, GOALS, DRIFT & TAX LOTS) ===");
+      parts.push(context.rawContextPrompt);
+    }
   }
 
   parts.push(`\n=== TASK: ${taskType} ===`);

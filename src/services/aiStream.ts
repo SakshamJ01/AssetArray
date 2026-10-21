@@ -23,6 +23,7 @@ export interface StreamContext {
   taxLossAvailable?: number;
   topHoldings?: string[];
   evidence?: StreamEvidence[];
+  rawContextPrompt?: string;
 }
 
 export interface StreamOptions {
@@ -68,6 +69,7 @@ export async function streamAiResponse(options: StreamOptions): Promise<void> {
     topHoldings: context?.topHoldings,
     macroContext,
     evidence: context?.evidence,
+    rawContextPrompt: context?.rawContextPrompt,
   };
 
   try {

@@ -1,5 +1,5 @@
 {
-  "executedAt": "2026-10-04T20:01:48.842Z",
+  "executedAt": "2026-10-11T15:15:53.087Z",
   "environment": "mobile-device-emulation",
   "devicesTested": [
     "iPhone 13 (390x844)",
@@ -85,7 +85,7 @@
       "smallTargets": [
         {
           "tag": "INPUT",
-          "text": "Search actions by client, issu",
+          "text": "Search actions...",
           "width": 316,
           "height": 16
         }
@@ -97,8 +97,8 @@
       "smallTargets": [
         {
           "tag": "INPUT",
-          "text": "Search actions by client, issu",
-          "width": 338,
+          "text": "Search actions...",
+          "width": 145,
           "height": 16
         }
       ]

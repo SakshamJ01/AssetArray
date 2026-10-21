@@ -10,7 +10,7 @@
     ],
     "icon": "./assets/icon.png",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#030712"
     },
@@ -21,7 +21,7 @@
     "android": {
       "package": "com.assetarray.app",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#030712"
       }
     },

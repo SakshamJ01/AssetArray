@@ -51,11 +51,11 @@ describe("Consolidated Portfolio Trajectory (real history only)", () => {
     const result = await buildConsolidatedTrajectory(["c1", "c2"]);
 
     expect(result.ALL).toHaveLength(2);
-    const latest = [...result.ALL].sort((a, b) => a.date.localeCompare(b.date)).slice(-1)[0];
+    const earliest = result.ALL[0];
+    const latest = result.ALL[result.ALL.length - 1];
     expect(latest.value).toBe(2_900_000);
 
     // The 40d-ago point reflects only c1 (c2 had no point that day)
-    const earliest = [...result.ALL].sort((a, b) => a.date.localeCompare(b.date))[0];
     expect(earliest.value).toBe(2_000_000);
   });
 });

@@ -186,7 +186,14 @@ export class AiRouter {
         accumulatedText = "";
 
         await provider.streamResponse(effectiveQuery, taskType, context, {
-          onStateChange: callbacks.onStateChange,
+          onStateChange: (state, message) => {
+            // Suppress intermediate provider FAILED status from poisoning the UI when
+            // other fallback providers remain in the candidate chain
+            if (state === "FAILED" && attempt < chain.length) {
+              return;
+            }
+            callbacks.onStateChange?.(state, message);
+          },
           onToken: (token) => {
             accumulatedText += token;
             callbacks.onToken(token);
@@ -213,7 +220,11 @@ export class AiRouter {
               groundingReport,
             } as any);
           },
-          onError: callbacks.onError,
+          onError: (err) => {
+            // Log provider failure internally; do NOT prematurely trigger global onError
+            // while fallback loop is still active
+            console.warn(`[AiRouter] Candidate provider ${provider.id} error:`, err?.message);
+          },
         }, {
           timeoutMs,
           accessToken: options?.accessToken,

@@ -17,13 +17,14 @@ describe("Free-First AI Architecture", () => {
     aiTelemetry.clear();
   });
 
-  test("enforces Free-First provider chain: Gemini Free -> Ollama Local -> Optional Paid", () => {
+  test("enforces Free-First provider chain: OpenRouter -> Gemini Free -> Ollama Local -> Optional Paid", () => {
     const briefChain = router.resolveProviderChain("ADVISOR_BRIEF");
     const chainIds = briefChain.map((p) => p.id);
 
-    // Gemini and Ollama must always take priority over optional paid providers
-    expect(chainIds[0]).toBe("gemini");
-    expect(chainIds[1]).toBe("ollama");
+    // Free tier providers must always take priority over optional paid providers
+    expect(chainIds[0]).toBe("openrouter");
+    expect(chainIds[1]).toBe("gemini");
+    expect(chainIds[2]).toBe("ollama");
   });
 
   test("supports all required institutional task types including CLIENT_INSIGHT and GOAL_EXPLANATION", () => {

@@ -5,11 +5,31 @@
 
 import { AiTaskType, StreamContextPayload } from "./types";
 
+export function isConversationalGreeting(text: string): boolean {
+  const clean = (text || "").trim().toLowerCase().replace(/[!?.,;]/g, "");
+  const greetings = new Set([
+    "hi", "hello", "hey", "hiya", "howdy", "good morning", "good afternoon",
+    "good evening", "sup", "yo", "test", "who are you", "what can you do", "help",
+    "thanks", "thank you", "ok", "okay"
+  ]);
+  return greetings.has(clean);
+}
+
 export function buildTaskPrompt(
   query: string,
   taskType: AiTaskType,
   context?: StreamContextPayload
 ): string {
+  if (isConversationalGreeting(query)) {
+    const scopeName = context?.clientName || "Entire Practice";
+    return [
+      "You are the AssetArray AI Wealth Copilot.",
+      `The advisor said: "${query}".`,
+      `Active Scope: ${scopeName}.`,
+      "Respond warmly, crisply, and professionally in 1-2 short sentences. Acknowledge the greeting, confirm the active scope, and mention 2-3 specific things you can assist with (such as portfolio breakdown, tax-loss harvesting, rebalancing drift, or meeting notes). Do NOT output formal memorandum headers, dates, disclaimers, or compliance fact sheets.",
+    ].join("\n");
+  }
+
   const parts: string[] = [];
 
   parts.push("=== INSTITUTIONAL ADVISORY GOVERNANCE DIRECTIVE ===");
@@ -18,9 +38,9 @@ export function buildTaskPrompt(
   parts.push("1. ONLY reference verified figures explicitly supplied in PORTFOLIO DATA or CLIENT MANDATE.");
   parts.push("2. If a specific metric, holding, or tax lot is not provided, state that it is unavailable.");
   parts.push("3. NEVER invent AUM, percentage returns, health scores, tax losses, or security holdings.");
-  parts.push("4. Differentiate clearly between OBSERVED FACTS, MODEL PROJECTIONS, and ADVISOR ACTION ITEMS.");
+  parts.push("4. Answer the user's specific inquiry directly and concisely in clean Markdown without unnecessary boilerplate headers, memorandum dates, or 'OBSERVED FACTS' sections.");
   parts.push("5. If the inquiry asks about a security, asset class, or holding NOT in VERIFIED PORTFOLIO DATA, explicitly refuse: 'There is no record of [requested asset] in this client\\'s verified portfolio.' Never invent holdings.");
-  parts.push(`TIMESTAMP: ${new Date().toISOString()}`);
+
 
   if (context) {
     parts.push("\n=== VERIFIED PORTFOLIO DATA ===");

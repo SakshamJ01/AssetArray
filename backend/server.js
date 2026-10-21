@@ -223,7 +223,27 @@ function buildResearchPrompt(query) {
   ].join("\n");
 }
 
+function isConversationalGreeting(text) {
+  const clean = (text || "").trim().toLowerCase().replace(/[!?.,;]/g, "");
+  const greetings = new Set([
+    "hi", "hello", "hey", "hiya", "howdy", "good morning", "good afternoon",
+    "good evening", "sup", "yo", "test", "who are you", "what can you do", "help",
+    "thanks", "thank you", "ok", "okay"
+  ]);
+  return greetings.has(clean);
+}
+
 function buildStreamPrompt(query, taskType, portfolioContext, clientContext, macroContext, rawContextPrompt) {
+  if (isConversationalGreeting(query)) {
+    const scopeName = clientContext?.name || portfolioContext?.clientName || "Entire Practice";
+    return [
+      "You are AssetArray Wealth Copilot, an elite AI wealth intelligence assistant.",
+      `The advisor said: "${query}".`,
+      `Active Scope: ${scopeName}.`,
+      "Respond in 1-2 friendly, crisp, professional sentences. Greet the advisor, confirm the active scope, and state 2-3 specific things you can help analyze (such as portfolio breakdown, asset allocation drift, tax-loss harvesting, or meeting notes). Do NOT output memorandum headers, dates, disclaimers, or compliance fact sheets.",
+    ].join("\n");
+  }
+
   const modelSpecialization =
     taskType === "tax_analytics"
       ? "SPECIALIZATION: Indian Income Tax Act (Finance Act 2024 / AY 2026-27, Sections 111A, 112A, 70, 74). Explain loss set-off rules. Disclaim that this is not statutory tax advice."
@@ -231,11 +251,10 @@ function buildStreamPrompt(query, taskType, portfolioContext, clientContext, mac
       ? "SPECIALIZATION: Brinson-Fachler Multi-Factor Attribution (Allocation, Selection, Interaction effect). Ground explanation in portfolio weights and benchmark delta."
       : taskType === "scenario_stress"
       ? "SPECIALIZATION: Macroeconomic Scenario Sandbox. Analyze beta and asset class sensitivities under factor shocks."
-      : "SPECIALIZATION: Executive Wealth Advisor Briefing. High clarity, succinct summary, actionable next steps.";
+      : "SPECIALIZATION: Executive Wealth Advisor Intelligence. Answer the advisor's question with high clarity, precision, and actionable next steps.";
 
   const portfolioStr = portfolioContext ? JSON.stringify(portfolioContext, null, 2) : "No portfolio metrics provided";
   const clientStr = clientContext ? JSON.stringify(clientContext, null, 2) : "Desk General";
-  const macroStr = macroContext ? String(macroContext) : "Current benchmark and rate levels steady.";
 
   const promptSections = [
     "You are the AssetArray AI Wealth Intelligence Engine, an institutional wealth copilot.",
@@ -244,9 +263,8 @@ function buildStreamPrompt(query, taskType, portfolioContext, clientContext, mac
     "1. Cite exact quantitative metrics (AUM, specific tickers, weights %, return %, tax lots, gains/losses) from the VERIFIED CLIENT PORTFOLIO CONTEXT provided below.",
     "2. Do not hallucinate numbers or cite generic hypotheticals when concrete data is provided.",
     "3. Adhere strictly to institutional claims policy: never claim GIPS compliance, never guarantee returns, never promise tax savings.",
-    "4. Differentiate between FACT, DETERMINISTIC MODEL RESULT, and ADVISOR ACTION.",
-    "5. Whenever relevant, propose concrete advisor action buttons (e.g. Rebalance Holdings, Draft WhatsApp, Export PDF, View Goals).",
-    `CURRENT DATE/TIMESTAMP: ${new Date().toISOString()}`,
+    "4. Answer the user's specific inquiry directly and concisely in clean Markdown. Do NOT generate unnecessary boilerplate headers, memorandum dates, or 'OBSERVED FACTS' sections unless specifically asked.",
+    "5. Whenever relevant, propose concrete advisor action items (e.g. Rebalance Holdings, Draft WhatsApp, Export PDF, View Goals).",
   ];
 
   if (rawContextPrompt) {
@@ -260,9 +278,11 @@ function buildStreamPrompt(query, taskType, portfolioContext, clientContext, mac
     );
   }
 
+  if (macroContext && String(macroContext).trim() && !isConversationalGreeting(query)) {
+    promptSections.push("--- MACRO CONTEXT ---", String(macroContext));
+  }
+
   promptSections.push(
-    "--- MACRO CONTEXT ---",
-    macroStr,
     "--- USER / ADVISOR INQUIRY ---",
     query
   );
@@ -1242,7 +1262,7 @@ app.post("/api/ai/stream", requireAuth, async (req, res) => {
           messages: [
             {
               role: "system",
-              content: "You are AssetArray AI, an institutional Wall-Street-grade wealth intelligence copilot. You cite verified portfolio holdings, tickers, quantities, tax lots, and allocation drift with absolute mathematical precision.",
+              content: "You are AssetArray Wealth Copilot, an elite AI assistant for wealth advisors. Be helpful, concise, and direct. When the user greets you or makes small talk, respond warmly and briefly in 1-2 short sentences without memorandum headers, dates, disclaimers, or 'OBSERVED FACTS'. When answering portfolio or financial questions, answer the inquiry directly and cite verified data accurately.",
             },
             { role: "user", content: fullPrompt },
           ],
@@ -1304,7 +1324,10 @@ app.post("/api/ai/stream", requireAuth, async (req, res) => {
       const responseStream = await gemini.models.generateContentStream({
         model: selectedModel,
         contents: fullPrompt,
-        config: { temperature: 0.35 },
+        config: {
+          systemInstruction: "You are AssetArray Wealth Copilot, an elite AI assistant for wealth advisors. Be helpful, concise, and direct. When the user greets you or makes small talk, respond warmly and briefly in 1-2 short sentences without memorandum headers, dates, disclaimers, or 'OBSERVED FACTS'. When answering portfolio questions, answer directly and cite verified portfolio data accurately.",
+          temperature: 0.35,
+        },
       });
 
       for await (const chunk of responseStream) {

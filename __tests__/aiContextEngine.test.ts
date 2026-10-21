@@ -164,5 +164,26 @@ describe("Institutional AI Context Engine & OpenRouter Provider", () => {
       expect(openRouter.isConfigured()).toBe(true);
       expect(openRouter.getStatus()).toBe("AVAILABLE");
     });
+
+    test("prioritizes openrouter free tier as primary provider in provider chain", () => {
+      const chain = aiRouter.resolveProviderChain("ADVISOR_BRIEF");
+      expect(chain.length).toBeGreaterThan(0);
+      expect(chain[0].id).toBe("openrouter");
+    });
+  });
+
+  describe("4. Conversational Flow & Anti-Boilerplate Guard", () => {
+    test("detects greetings and avoids dumping rigid audit headers or OBSERVED FACTS", () => {
+      const { isConversationalGreeting, buildTaskPrompt } = require("../src/services/aiGateway/schemas");
+      expect(isConversationalGreeting("hi")).toBe(true);
+      expect(isConversationalGreeting("Hello!")).toBe(true);
+      expect(isConversationalGreeting("What is the top holding?")).toBe(false);
+
+      const prompt = buildTaskPrompt("hi", "ADVISOR_BRIEF", { clientName: "Rajesh Sharma" });
+      expect(prompt).not.toContain("OBSERVED FACTS");
+      expect(prompt).not.toContain("TIMESTAMP:");
+      expect(prompt).toContain("Rajesh Sharma");
+      expect(prompt).toContain("Respond warmly, crisply, and professionally");
+    });
   });
 });

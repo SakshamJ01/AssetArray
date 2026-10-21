@@ -110,8 +110,8 @@ export class AiRouter {
       case "DOCUMENT_EXTRACTION":
       case "DEEP_RESEARCH":
       default:
-        // Free-first hierarchy: Gemini Free Cloud -> Ollama Local Free -> Optional Paid
-        order = ["gemini", "ollama", "openai", "anthropic"];
+        // Free-first hierarchy: OpenRouter Free Tier -> Gemini Free Cloud -> Ollama Local Free -> Optional Paid
+        order = ["openrouter", "gemini", "ollama", "openai", "anthropic"];
         break;
     }
 

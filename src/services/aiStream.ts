@@ -4,7 +4,7 @@
  * explicit streaming state transitions, verified portfolio context, and zero-fabrication fallbacks.
  */
 
-import { aiRouter, AiStreamState, AiTaskType, StreamContextPayload } from "./aiGateway";
+import { aiRouter, AiStreamState, AiTaskType, StreamContextPayload, isConversationalGreeting } from "./aiGateway";
 import { marketNewsService } from "./market/newsFeed";
 
 export type StreamEvidence = {
@@ -55,9 +55,12 @@ export async function streamAiResponse(options: StreamOptions): Promise<void> {
     mappedTask = "FAST_SUMMARY";
   }
 
-  const macroContext = marketNewsService.getGroundingContextForAI(
-    context?.topHoldings?.map((h) => h.split(" ")[0]) || []
-  );
+  const isGreeting = isConversationalGreeting(query);
+  const macroContext = isGreeting
+    ? undefined
+    : marketNewsService.getGroundingContextForAI(
+        context?.topHoldings?.map((h) => h.split(" ")[0]) || []
+      );
 
   const payloadContext: StreamContextPayload = {
     clientName: context?.clientName,

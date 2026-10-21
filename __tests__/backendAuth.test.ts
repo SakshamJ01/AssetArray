@@ -148,4 +148,39 @@ describe("AUTH REGRESSION", () => {
     // The removed demo-login surface must not resurface.
     expect(serverSrc).not.toMatch(/Demo identity is not available/);
   });
+
+  test("TEST 9: Google auth endpoint is wired and requires idToken", () => {
+    const serverSrc = readRepo("backend/server.js");
+    expect(serverSrc).toMatch(/app\.post\("\/api\/auth\/google"/);
+    expect(serverSrc).toMatch(/idToken is required/);
+    expect(serverSrc).toMatch(/verifyGoogleIdToken/);
+  });
+
+  test("TEST 10: Google auth enforces Option B (rejects unregistered email when auto-provision disabled)", () => {
+    const serverSrc = readRepo("backend/server.js");
+    // Verifies Option B whitelist protection
+    expect(serverSrc).toMatch(/ALLOW_GOOGLE_AUTO_PROVISION/);
+    expect(serverSrc).toMatch(/is not registered with an authorized firm/);
+    expect(serverSrc).toMatch(/unregistered: true/);
+  });
+
+  test("TEST 11: Google token verification checks audience, issuer, expiration, and email_verified", () => {
+    const serverSrc = readRepo("backend/server.js");
+    expect(serverSrc).toMatch(/Token audience mismatch/);
+    expect(serverSrc).toMatch(/Invalid token issuer/);
+    expect(serverSrc).toMatch(/Google ID token has expired/);
+    expect(serverSrc).toMatch(/Google account email must be verified/);
+  });
+
+  test("TEST 12: Frontend exposes GoogleSignInButton and loginWithGoogle safely", () => {
+    const syncSrc = readRepo("src/services/secureSync.ts");
+    const appSrc = readRepo("App.tsx");
+    expect(syncSrc).toMatch(/export async function loginWithGoogle/);
+    expect(syncSrc).toMatch(/\/api\/auth\/google/);
+    expect(appSrc).toMatch(/GoogleSignInButton/);
+    expect(appSrc).toMatch(/handleGoogleLogin/);
+    // Never leak client secret to frontend
+    expect(appSrc).not.toMatch(/GOOGLE_CLIENT_SECRET/);
+    expect(syncSrc).not.toMatch(/GOOGLE_CLIENT_SECRET/);
+  });
 });

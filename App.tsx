@@ -77,6 +77,7 @@ import {
   getAdvisorProfile,
   getAiProviderStatus,
   loginAdvisor,
+  loginWithGoogle,
   logoutAdvisor,
   pullPayload,
   pushPayload,
@@ -84,6 +85,7 @@ import {
   refreshAdvisorToken,
   sendBroadcastCampaign,
 } from "./src/services/secureSync";
+import { GoogleSignInButton } from "./src/components/auth/GoogleSignInButton";
 import { buildAppTheme, styles, ThemeMode } from "./src/theme";
 import { SyncBadge } from "./src/components/SyncBadge";
 import { fetchLiveMarketQuotes, getQuoteForSymbol, MarketQuote } from "./src/services/marketData";
@@ -1878,6 +1880,36 @@ function AppContent() {
     }
   }
 
+  async function handleGoogleLogin(idToken: string) {
+    const endpoint = cloudSettings.endpoint.trim() || DEFAULT_BACKEND_ENDPOINT;
+    try {
+      setAuthState("Signing in with Google...");
+      const response = await loginWithGoogle({
+        endpoint,
+        idToken,
+      });
+      const session: AuthSession = {
+        user: response.user,
+        accessToken: response.accessToken,
+        refreshToken: response.refreshToken,
+        expiresAt: Date.now() + response.expiresIn * 1000,
+      };
+      setAuthSession(session);
+      await persistAuthSession(session);
+      setAuthPassword("");
+      const displayName = session.user.username || session.user.email || "Advisor";
+      setAuthState(`Connected as ${displayName}`);
+      setSyncState("Cloud sync configured + Google auth active");
+      Alert.alert("Google Sign-In Successful", `Signed in as ${displayName}.`);
+    } catch (error) {
+      setAuthState("Google Sign-In failed");
+      Alert.alert(
+        "Authentication Notice",
+        error instanceof Error ? error.message : "Unable to authenticate with Google."
+      );
+    }
+  }
+
   async function logoutFromBackend() {
     const session = authSession;
     if (session && cloudSettings.endpoint.trim()) {
@@ -2749,13 +2781,27 @@ function AppContent() {
             Sign in with your secure advisor credential to access client records, cloud backup, and campaigns.
           </Text>
 
-          <View style={{ flexDirection: "row", alignItems: "center", marginVertical: 12, width: "100%" }}>
-            <View style={{ flex: 1, height: 1, backgroundColor: "rgba(255,255,255,0.12)" }} />
-            <Text style={{ color: "#7f90a8", paddingHorizontal: 10, fontSize: 11, fontWeight: "600" }}>
-              SIGN IN TO YOUR WORKSPACE
-            </Text>
-            <View style={{ flex: 1, height: 1, backgroundColor: "rgba(255,255,255,0.12)" }} />
-          </View>
+          {/* 1-Click Institutional Google Sign-In on Web */}
+          {Platform.OS === "web" && (
+            <View style={{ width: "100%", alignItems: "center", marginTop: 8, marginBottom: 4 }}>
+              <GoogleSignInButton
+                clientId={process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || "902530205082-pn6q621bbjfsdvofpp6svsuljss9ekk7.apps.googleusercontent.com"}
+                onSuccess={(idToken) => void handleGoogleLogin(idToken)}
+                onError={(err) => {
+                  setAuthState(err);
+                  Alert.alert("Google Sign-In Notice", err);
+                }}
+                disabled={authState.includes("Signing in...")}
+              />
+              <View style={{ flexDirection: "row", alignItems: "center", marginVertical: 10, width: "100%" }}>
+                <View style={{ flex: 1, height: 1, backgroundColor: "rgba(255,255,255,0.12)" }} />
+                <Text style={{ color: "#7f90a8", paddingHorizontal: 10, fontSize: 11, fontWeight: "600" }}>
+                  OR SIGN IN WITH USERNAME
+                </Text>
+                <View style={{ flex: 1, height: 1, backgroundColor: "rgba(255,255,255,0.12)" }} />
+              </View>
+            </View>
+          )}
 
           <TextInput
             value={cloudSettings.endpoint}

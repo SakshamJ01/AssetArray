@@ -58,6 +58,9 @@ const AI_ANTHROPIC_RESEARCH_MODEL = process.env.AI_ANTHROPIC_RESEARCH_MODEL || "
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434";
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "llama3.2";
 
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "902530205082-pn6q621bbjfsdvofpp6svsuljss9ekk7.apps.googleusercontent.com";
+const ALLOW_GOOGLE_AUTO_PROVISION = process.env.ALLOW_GOOGLE_AUTO_PROVISION === "true";
+
 const { DatabaseManager } = require("./db/mongo");
 const { MigrationService, DEFAULT_FIRM_ID } = require("./db/migration");
 const { auditLogger } = require("./audit/auditLogger");
@@ -145,6 +148,9 @@ function sanitizeUser(user) {
     username: user.username,
     role: normalizeRole(user.role),
     firmId: user.firmId || DEFAULT_FIRM_ID,
+    email: user.email || null,
+    picture: user.picture || null,
+    authProvider: user.authProvider || (user.googleId ? "GOOGLE" : "LOCAL"),
     createdAt: user.createdAt,
     active: user.active,
   };
@@ -638,6 +644,149 @@ app.post("/api/auth/login", requireDb, async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: "Login failed." });
+  }
+});
+
+async function verifyGoogleIdToken(idToken) {
+  if (!idToken || typeof idToken !== "string") {
+    throw new Error("idToken string is required.");
+  }
+  const tokenUrl = `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`;
+  const response = await fetch(tokenUrl);
+  if (!response.ok) {
+    const errBody = await response.json().catch(() => ({}));
+    throw new Error(errBody.error_description || "Invalid Google token signature.");
+  }
+  const payload = await response.json();
+  if (GOOGLE_CLIENT_ID && payload.aud !== GOOGLE_CLIENT_ID) {
+    throw new Error("Token audience mismatch: not issued for AssetArray.");
+  }
+  const validIssuers = ["accounts.google.com", "https://accounts.google.com"];
+  if (!validIssuers.includes(payload.iss)) {
+    throw new Error("Invalid token issuer.");
+  }
+  const nowSec = Math.floor(Date.now() / 1000);
+  if (Number(payload.exp) < nowSec) {
+    throw new Error("Google ID token has expired.");
+  }
+  if (payload.email_verified !== "true" && payload.email_verified !== true) {
+    throw new Error("Google account email must be verified.");
+  }
+  return {
+    googleId: payload.sub,
+    email: (payload.email || "").toLowerCase(),
+    name: payload.name || (payload.email || "").split("@")[0],
+    picture: payload.picture || null,
+  };
+}
+
+app.post("/api/auth/google", requireDb, async (req, res) => {
+  try {
+    const { idToken } = req.body || {};
+    if (!idToken || typeof idToken !== "string") {
+      res.status(400).json({ error: "idToken is required." });
+      return;
+    }
+
+    let googleProfile;
+    try {
+      const verifier = req.app.get("mockGoogleVerifier") || verifyGoogleIdToken;
+      googleProfile = await verifier(idToken);
+    } catch (err) {
+      await audit("auth.google_login_failed", {
+        reason: err.message,
+        ip: getClientIp(req),
+      });
+      res.status(401).json({ error: err.message || "Invalid Google token." });
+      return;
+    }
+
+    const { googleId, email, name, picture } = googleProfile;
+    if (!email) {
+      res.status(400).json({ error: "Google account did not return a valid email address." });
+      return;
+    }
+
+    const cleanEmail = email.toLowerCase().trim();
+    let user = await usersCol.findOne({
+      $or: [
+        { googleId },
+        { email: cleanEmail },
+        { username: cleanEmail },
+      ],
+    });
+
+    if (!user) {
+      // Option B: Whitelist / Pre-Registered Email Only
+      if (!ALLOW_GOOGLE_AUTO_PROVISION) {
+        await audit("auth.google_login_unregistered", {
+          email: cleanEmail,
+          ip: getClientIp(req),
+        });
+        res.status(403).json({
+          error: `Your Google account (${cleanEmail}) is not registered with an authorized firm. Please contact your firm administrator to invite your email.`,
+          unregistered: true,
+          email: cleanEmail,
+        });
+        return;
+      }
+
+      // Auto-provision fallback if enabled
+      const cleanUsername = cleanEmail.split("@")[0].replace(/[^a-z0-9_-]/g, "_");
+      const newUserId = `usr_${Date.now()}_${crypto.randomUUID().substring(0, 6)}`;
+      const newUser = {
+        id: newUserId,
+        firmId: DEFAULT_FIRM_ID,
+        username: cleanUsername,
+        fullName: name || cleanUsername,
+        email: cleanEmail,
+        googleId,
+        picture,
+        role: "ADVISOR",
+        active: true,
+        status: "ACTIVE",
+        createdAt: new Date().toISOString(),
+        authProvider: "GOOGLE",
+      };
+      await usersCol.insertOne(newUser);
+      user = newUser;
+      await audit("auth.google_user_provisioned", { userId: user.id, email: cleanEmail, role: user.role });
+    } else {
+      if (user.active === false) {
+        await audit("auth.google_login_disabled", { userId: user.id, email: cleanEmail, ip: getClientIp(req) });
+        res.status(403).json({ error: "Account is disabled. Contact your firm administrator." });
+        return;
+      }
+
+      const updates = {};
+      if (!user.googleId) updates.googleId = googleId;
+      if (!user.email) updates.email = cleanEmail;
+      if (picture && !user.picture) updates.picture = picture;
+      if (!user.authProvider) updates.authProvider = "GOOGLE";
+      if (Object.keys(updates).length > 0) {
+        await usersCol.updateOne({ id: user.id }, { $set: updates });
+        user = { ...user, ...updates };
+      }
+    }
+
+    const { accessToken, refreshToken } = await buildTokens(user);
+    await audit("auth.google_login_success", {
+      userId: user.id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+    });
+
+    res.json({
+      ok: true,
+      user: sanitizeUser(user),
+      accessToken,
+      refreshToken,
+      expiresIn: ACCESS_TOKEN_TTL_SECONDS,
+    });
+  } catch (error) {
+    console.error("[Auth] Google sign-in exception:", error);
+    res.status(500).json({ error: "Google authentication failed." });
   }
 });
 

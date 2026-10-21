@@ -64,8 +64,16 @@ export type AuthUser = {
   username: string;
   role: string;
   firmId?: string;
+  email?: string | null;
+  picture?: string | null;
+  authProvider?: string;
   createdAt?: string;
   active?: boolean;
+};
+
+export type GoogleLoginOptions = {
+  endpoint: string;
+  idToken: string;
 };
 
 type LoginOptions = {
@@ -314,6 +322,31 @@ export async function loginAdvisor({ endpoint, username, password }: LoginOption
     expiresIn: number;
   }>;
 }
+
+export async function loginWithGoogle({ endpoint, idToken }: GoogleLoginOptions) {
+  const response = await fetch(`${normalizeEndpoint(endpoint)}/api/auth/google`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ idToken }),
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      await readErrorMessage(response, "Google sign-in failed. Please verify credentials.")
+    );
+  }
+
+  return response.json() as Promise<{
+    ok: true;
+    user: AuthUser;
+    accessToken: string;
+    refreshToken: string;
+    expiresIn: number;
+  }>;
+}
+
 export async function refreshAdvisorToken({ endpoint, refreshToken }: RefreshOptions) {
   const response = await fetch(`${normalizeEndpoint(endpoint)}/api/auth/refresh`, {
     method: "POST",

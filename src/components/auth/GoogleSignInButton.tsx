@@ -104,6 +104,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
             onError("Google sign-in did not return a credential.");
           }
         },
+        auto_select: true,
         cancel_on_tap_outside: true,
       });
 
@@ -119,6 +120,9 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
           logo_alignment: "left",
         });
       }
+
+      // Automatically trigger One Tap / auto-login if account is recognized
+      window.google.accounts.id.prompt();
     } catch (err) {
       console.error("[GoogleSignIn] Initialization error:", err);
       onError(err instanceof Error ? err.message : "Google Sign-In initialization failed.");
@@ -132,10 +136,26 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
     }
     if (window.google?.accounts?.id) {
       window.google.accounts.id.prompt();
+      const mount = document.getElementById("google-signin-mount");
+      if (mount) {
+        const btn = mount.querySelector<HTMLElement>("div[role='button'], iframe");
+        if (btn) btn.click();
+      }
     } else {
       onError("Google Identity Services is still loading. Please retry in a moment.");
     }
   };
+
+  useEffect(() => {
+    if (Platform.OS === "web" && typeof window !== "undefined") {
+      (window as any).triggerGoogleSignIn = handleManualTrigger;
+    }
+    return () => {
+      if (Platform.OS === "web" && typeof window !== "undefined") {
+        delete (window as any).triggerGoogleSignIn;
+      }
+    };
+  }, []);
 
   if (Platform.OS !== "web") {
     return null;
@@ -153,6 +173,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
       {/* Official Google GSI Rendered Button Mount Point */}
       <div
         ref={containerRef}
+        id="google-signin-mount"
         style={{
           display: isInitializing ? "none" : "flex",
           justifyContent: "center",

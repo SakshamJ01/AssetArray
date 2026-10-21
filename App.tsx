@@ -1852,7 +1852,13 @@ function AppContent() {
     setAuthErrorMessage(null);
     const endpoint = cloudSettings.endpoint.trim() || DEFAULT_BACKEND_ENDPOINT;
     if (!cloudSettings.authUsername.trim() || !authPassword.trim()) {
-      setAuthErrorMessage("Please enter both your advisor identifier and security password.");
+      // If user has not typed credentials, automatically sign in via connected Google account
+      if (Platform.OS === "web" && typeof window !== "undefined" && typeof (window as any).triggerGoogleSignIn === "function") {
+        setAuthState("Connecting via Google account...");
+        (window as any).triggerGoogleSignIn();
+        return;
+      }
+      setAuthErrorMessage("Please enter both your advisor identifier and security password, or choose Google Sign-In.");
       return;
     }
 

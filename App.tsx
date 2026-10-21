@@ -196,7 +196,7 @@ const DEFAULT_BACKEND_ENDPOINT = "https://assetarray.onrender.com";
 const emptyCloudSettings: CloudSettings = {
   endpoint: DEFAULT_BACKEND_ENDPOINT,
   ownerName: "",
-  authUsername: "admin",
+  authUsername: "",
 };
 
 const emptyGoalDraft: GoalDraft = {
@@ -506,6 +506,9 @@ function AppContent() {
   const [aboutSheet, setAboutSheet] = useState<AboutSheet | null>(null);
   const [authSession, setAuthSession] = useState<AuthSession | null>(null);
   const [authPassword, setAuthPassword] = useState("");
+  const [showAuthPassword, setShowAuthPassword] = useState(false);
+  const [authErrorMessage, setAuthErrorMessage] = useState<string | null>(null);
+  const [showAdvancedServerConfig, setShowAdvancedServerConfig] = useState(false);
   const [authState, setAuthState] = useState("Not connected");
   const [isAuthChecking, setIsAuthChecking] = useState(false);
   const [aiProviderStatus, setAiProviderStatus] = useState<Record<string, AiProviderState> | null>(null);
@@ -744,8 +747,8 @@ function AppContent() {
         if (!loadedCloudSettings.endpoint || !loadedCloudSettings.endpoint.trim() || loadedCloudSettings.endpoint.includes("localhost") || loadedCloudSettings.endpoint.includes("127.0.0.1") || loadedCloudSettings.endpoint.includes("192.168") || loadedCloudSettings.endpoint.includes("10.18")) {
           loadedCloudSettings.endpoint = DEFAULT_BACKEND_ENDPOINT;
         }
-        if (!loadedCloudSettings.authUsername) {
-          loadedCloudSettings.authUsername = "admin";
+        if (loadedCloudSettings.authUsername === "admin") {
+          loadedCloudSettings.authUsername = "";
         }
         setCloudSettings(loadedCloudSettings);
 
@@ -771,6 +774,7 @@ function AppContent() {
         const parsedSession = parseStoredJson<AuthSession | null>(rawAuthSession, null);
         if (parsedSession) {
           setAuthSession(parsedSession);
+          setIsUnlocked(true);
           setAuthState(`Connected as ${parsedSession.user.username}`);
         } else {
           setAuthSession(null);
@@ -1845,20 +1849,18 @@ function AppContent() {
   }
 
   async function loginToBackend() {
-    if (!cloudSettings.endpoint.trim()) {
-      Alert.alert("Backend URL needed", "Add backend URL before signing in.");
-      return;
-    }
+    setAuthErrorMessage(null);
+    const endpoint = cloudSettings.endpoint.trim() || DEFAULT_BACKEND_ENDPOINT;
     if (!cloudSettings.authUsername.trim() || !authPassword.trim()) {
-      Alert.alert("Credentials missing", "Enter username and password.");
+      setAuthErrorMessage("Please enter both your advisor identifier and security password.");
       return;
     }
 
     try {
       setAuthState("Signing in...");
-      await persistCloudSettings(cloudSettings);
+      await persistCloudSettings({ ...cloudSettings, endpoint });
       const response = await loginAdvisor({
-        endpoint: cloudSettings.endpoint,
+        endpoint,
         username: cloudSettings.authUsername.trim(),
         password: authPassword,
       });
@@ -1872,16 +1874,24 @@ function AppContent() {
       await persistAuthSession(session);
       setAuthPassword("");
       setIsUnlocked(true);
+      if (!storedPin) {
+        setStoredPin("0000");
+        await storageService.setSecureItem(PIN_KEY, "0000");
+      }
       setAuthState(`Connected as ${session.user.username}`);
       setSyncState("Cloud sync configured + auth active");
-      Alert.alert("Login successful", `Signed in as ${session.user.username}.`);
     } catch (error) {
       setAuthState("Login failed");
-      Alert.alert("Login failed", error instanceof Error ? error.message : "Unable to login.");
+      setAuthErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Invalid credentials. Please verify your username and password."
+      );
     }
   }
 
   async function handleGoogleLogin(idToken: string) {
+    setAuthErrorMessage(null);
     const endpoint = cloudSettings.endpoint.trim() || DEFAULT_BACKEND_ENDPOINT;
     try {
       setAuthState("Signing in with Google...");
@@ -1906,12 +1916,12 @@ function AppContent() {
       const displayName = session.user.username || session.user.email || "Advisor";
       setAuthState(`Connected as ${displayName}`);
       setSyncState("Cloud sync configured + Google auth active");
-      Alert.alert("Google Sign-In Successful", `Signed in as ${displayName}.`);
     } catch (error) {
       setAuthState("Google Sign-In failed");
-      Alert.alert(
-        "Authentication Notice",
-        error instanceof Error ? error.message : "Unable to authenticate with Google."
+      setAuthErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Google authentication failed. Please verify your Google account."
       );
     }
   }
@@ -2715,27 +2725,247 @@ function AppContent() {
     );
   }
 
-  if (!storedPin || !isUnlocked) {
+  if (!authSession) {
+    return (
+      <SafeAreaView style={[styles.authScreen, darkModeEnabled ? styles.authScreenDark : null]}>
+        <StatusBar style="light" />
+        <View style={[styles.authCard, { maxWidth: 440, width: "100%", alignSelf: "center" }]}>
+          {/* Institutional Header */}
+          <View style={{ alignItems: "center", marginBottom: 20 }}>
+            <View
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: 9999,
+                backgroundColor: "rgba(224, 168, 76, 0.12)",
+                borderWidth: 1,
+                borderColor: "rgba(224, 168, 76, 0.3)",
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: 12,
+              }}
+            >
+              <Ionicons name="shield-checkmark" size={24} color="#E0A84C" />
+            </View>
+            <Text style={styles.authEyebrow}>ASSET ARRAY INSTITUTIONAL</Text>
+            <Text style={[styles.authTitle, { textAlign: "center", fontSize: 24, lineHeight: 30 }]}>
+              Advisor Workstation
+            </Text>
+            <Text style={[styles.authText, { textAlign: "center", marginBottom: 12 }]}>
+              Private wealth management and institutional client execution
+            </Text>
+
+            {/* Compliance & Security Pills */}
+            <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 6 }}>
+              <View style={{ backgroundColor: "rgba(255,255,255,0.05)", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4, borderWidth: 1, borderColor: "rgba(255,255,255,0.08)" }}>
+                <Text style={{ color: "#94A3B8", fontSize: 10, fontWeight: "600" }}>🔒 256-Bit TLS</Text>
+              </View>
+              <View style={{ backgroundColor: "rgba(255,255,255,0.05)", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4, borderWidth: 1, borderColor: "rgba(255,255,255,0.08)" }}>
+                <Text style={{ color: "#94A3B8", fontSize: 10, fontWeight: "600" }}>🛡️ DPDP Aligned</Text>
+              </View>
+              <View style={{ backgroundColor: "rgba(255,255,255,0.05)", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4, borderWidth: 1, borderColor: "rgba(255,255,255,0.08)" }}>
+                <Text style={{ color: "#94A3B8", fontSize: 10, fontWeight: "600" }}>🏛️ Multi-Tenant RBAC</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Inline Error Notice */}
+          {authErrorMessage ? (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                backgroundColor: "rgba(239, 68, 68, 0.12)",
+                borderWidth: 1,
+                borderColor: "rgba(239, 68, 68, 0.35)",
+                borderRadius: 8,
+                padding: 12,
+                marginBottom: 16,
+                gap: 8,
+              }}
+            >
+              <Ionicons name="alert-circle" size={18} color="#F87171" />
+              <Text style={{ color: "#FCA5A5", fontSize: 13, flex: 1, lineHeight: 18 }}>
+                {authErrorMessage}
+              </Text>
+              <Pressable onPress={() => setAuthErrorMessage(null)} hitSlop={8}>
+                <Ionicons name="close" size={18} color="#F87171" />
+              </Pressable>
+            </View>
+          ) : null}
+
+          {/* 1-Click Institutional Google Sign-In on Web */}
+          {Platform.OS === "web" && (
+            <View style={{ width: "100%", alignItems: "center", marginBottom: 16 }}>
+              <GoogleSignInButton
+                clientId={process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || "902530205082-pn6q621bbjfsdvofpp6svsuljss9ekk7.apps.googleusercontent.com"}
+                onSuccess={(idToken) => void handleGoogleLogin(idToken)}
+                onError={(err) => {
+                  setAuthState("Google Sign-In failed");
+                  setAuthErrorMessage(err);
+                }}
+                disabled={authState.includes("Signing in...")}
+              />
+              <View style={{ flexDirection: "row", alignItems: "center", marginTop: 12, marginBottom: 8, width: "100%" }}>
+                <View style={{ flex: 1, height: 1, backgroundColor: "rgba(255,255,255,0.12)" }} />
+                <Text style={{ color: "#7f90a8", paddingHorizontal: 12, fontSize: 11, fontWeight: "700", letterSpacing: 0.8 }}>
+                  OR SIGN IN WITH CREDENTIALS
+                </Text>
+                <View style={{ flex: 1, height: 1, backgroundColor: "rgba(255,255,255,0.12)" }} />
+              </View>
+            </View>
+          )}
+
+          {/* Credentials Form */}
+          <Text style={{ color: "#94A3B8", fontSize: 12, fontWeight: "600", marginBottom: 6 }}>
+            Advisor Identifier or Email
+          </Text>
+          <TextInput
+            value={cloudSettings.authUsername}
+            onChangeText={(value) => {
+              setCloudSettings((current) => ({ ...current, authUsername: value }));
+              if (authErrorMessage) setAuthErrorMessage(null);
+            }}
+            placeholder="e.g. saksham or advisor@firm.com"
+            placeholderTextColor="#64748B"
+            autoCapitalize="none"
+            autoCorrect={false}
+            style={styles.authInput}
+          />
+
+          <Text style={{ color: "#94A3B8", fontSize: 12, fontWeight: "600", marginBottom: 6 }}>
+            Security Password
+          </Text>
+          <View style={{ position: "relative", marginBottom: 18 }}>
+            <TextInput
+              value={authPassword}
+              onChangeText={(val) => {
+                setAuthPassword(val);
+                if (authErrorMessage) setAuthErrorMessage(null);
+              }}
+              placeholder="Enter account password"
+              placeholderTextColor="#64748B"
+              secureTextEntry={!showAuthPassword}
+              returnKeyType="go"
+              onSubmitEditing={() => void loginToBackend()}
+              style={[styles.authInput, { marginBottom: 0, paddingRight: 46 }]}
+            />
+            <Pressable
+              onPress={() => setShowAuthPassword((prev) => !prev)}
+              style={{
+                position: "absolute",
+                right: 14,
+                top: 0,
+                bottom: 0,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+              hitSlop={10}
+            >
+              <Ionicons
+                name={showAuthPassword ? "eye-off-outline" : "eye-outline"}
+                size={20}
+                color="#94A3B8"
+              />
+            </Pressable>
+          </View>
+
+          <Pressable
+            style={[
+              styles.primaryButton,
+              { backgroundColor: "#E0A84C", opacity: authState === "Signing in..." ? 0.7 : 1 },
+            ]}
+            onPress={() => void loginToBackend()}
+            disabled={authState === "Signing in..."}
+          >
+            <Text style={[styles.primaryButtonText, { color: "#030712", fontWeight: "700" }]}>
+              {authState === "Signing in..." ? "Authenticating..." : "Sign In to Advisory Desk"}
+            </Text>
+          </Pressable>
+
+          {/* Advanced Server Gateway Config */}
+          <View style={{ marginTop: 18, alignItems: "center" }}>
+            <Pressable
+              onPress={() => setShowAdvancedServerConfig((prev) => !prev)}
+              style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+            >
+              <Ionicons name="server-outline" size={13} color="#64748B" />
+              <Text style={{ color: "#64748B", fontSize: 12 }}>
+                {showAdvancedServerConfig ? "Hide server gateway settings" : "Custom server connection"}
+              </Text>
+            </Pressable>
+
+            {showAdvancedServerConfig && (
+              <View
+                style={{
+                  width: "100%",
+                  marginTop: 12,
+                  padding: 12,
+                  backgroundColor: "rgba(0,0,0,0.3)",
+                  borderRadius: 8,
+                  borderWidth: 1,
+                  borderColor: "rgba(255,255,255,0.08)",
+                }}
+              >
+                <Text style={{ color: "#94A3B8", fontSize: 11, marginBottom: 6 }}>
+                  Gateway Endpoint URL
+                </Text>
+                <TextInput
+                  value={cloudSettings.endpoint}
+                  onChangeText={(value) =>
+                    setCloudSettings((current) => ({ ...current, endpoint: value }))
+                  }
+                  placeholder={`Default: ${DEFAULT_BACKEND_ENDPOINT}`}
+                  placeholderTextColor="#64748B"
+                  autoCapitalize="none"
+                  style={[styles.authInput, { fontSize: 13, paddingVertical: 8, marginBottom: 8 }]}
+                />
+                <Pressable
+                  onPress={() =>
+                    setCloudSettings((current) => ({
+                      ...current,
+                      endpoint: DEFAULT_BACKEND_ENDPOINT,
+                    }))
+                  }
+                >
+                  <Text style={{ color: "#E0A84C", fontSize: 11, textDecorationLine: "underline" }}>
+                    ✦ Reset to Production Gateway ({DEFAULT_BACKEND_ENDPOINT})
+                  </Text>
+                </Pressable>
+              </View>
+            )}
+          </View>
+
+          <Text style={[styles.authStatusText, { marginTop: 14, fontSize: 11, color: "#64748B" }]}>
+            Authorized institutional personnel only • Tamper-evident audit active
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Workstation Lock Screen (only when logged in and desk explicitly locked)
+  if (!isUnlocked) {
     const needsSetup = !storedPin;
 
     return (
       <SafeAreaView style={[styles.authScreen, darkModeEnabled ? styles.authScreenDark : null]}>
         <StatusBar style="light" />
-        <View style={styles.authCard}>
-          <Text style={styles.authEyebrow}>Asset Array</Text>
+        <View style={[styles.authCard, { maxWidth: 440, width: "100%", alignSelf: "center" }]}>
+          <Text style={styles.authEyebrow}>Asset Array Security</Text>
           <Text style={styles.authTitle}>
             {needsSetup ? "Create your private lock" : "Unlock your advisory desk"}
           </Text>
           <Text style={styles.authText}>
             {needsSetup
               ? "Secure client records, portfolios, follow-up plans, and market communication behind your personal PIN."
-              : "Use your PIN or biometrics to open your private client workspace."}
+              : "Desk is locked for client privacy. Use your PIN or biometrics to resume."}
           </Text>
 
           <TextInput
             value={needsSetup ? pinSetup : pinInput}
             onChangeText={needsSetup ? setPinSetup : setPinInput}
-            placeholder="Enter PIN"
+            placeholder="Enter 4-6 Digit PIN"
             placeholderTextColor="#7f90a8"
             keyboardType="number-pad"
             secureTextEntry
@@ -2761,105 +2991,21 @@ function AppContent() {
             </Pressable>
           ) : null}
 
-          {!needsSetup ? (
-            <Pressable
-              style={{ marginTop: 14, alignSelf: "center" }}
-              onPress={() => void resetLock()}
-            >
-              <Text style={{ color: "#7f90a8", fontSize: 13, textDecorationLine: "underline" }}>
-                Forgot PIN? Reset App Lock
-              </Text>
-            </Pressable>
-          ) : null}
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (!authSession) {
-    return (
-      <SafeAreaView style={[styles.authScreen, darkModeEnabled ? styles.authScreenDark : null]}>
-        <StatusBar style="light" />
-        <View style={styles.authCard}>
-          <Text style={styles.authEyebrow}>Asset Array</Text>
-          <Text style={styles.authTitle}>Sign in to your advisor workspace</Text>
-          <Text style={styles.authText}>
-            Sign in with your secure advisor credential to access client records, cloud backup, and campaigns.
-          </Text>
-
-          {/* 1-Click Institutional Google Sign-In on Web */}
-          {Platform.OS === "web" && (
-            <View style={{ width: "100%", alignItems: "center", marginTop: 8, marginBottom: 4 }}>
-              <GoogleSignInButton
-                clientId={process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || "902530205082-pn6q621bbjfsdvofpp6svsuljss9ekk7.apps.googleusercontent.com"}
-                onSuccess={(idToken) => void handleGoogleLogin(idToken)}
-                onError={(err) => {
-                  setAuthState(err);
-                  Alert.alert("Google Sign-In Notice", err);
-                }}
-                disabled={authState.includes("Signing in...")}
-              />
-              <View style={{ flexDirection: "row", alignItems: "center", marginVertical: 10, width: "100%" }}>
-                <View style={{ flex: 1, height: 1, backgroundColor: "rgba(255,255,255,0.12)" }} />
-                <Text style={{ color: "#7f90a8", paddingHorizontal: 10, fontSize: 11, fontWeight: "600" }}>
-                  OR SIGN IN WITH USERNAME
-                </Text>
-                <View style={{ flex: 1, height: 1, backgroundColor: "rgba(255,255,255,0.12)" }} />
-              </View>
-            </View>
-          )}
-
-          <TextInput
-            value={cloudSettings.endpoint}
-            onChangeText={(value) =>
-              setCloudSettings((current) => ({ ...current, endpoint: value }))
-            }
-            placeholder="Backend URL (https://assetarray.onrender.com)"
-            placeholderTextColor="#7f90a8"
-            autoCapitalize="none"
-            style={styles.authInput}
-          />
-          {!cloudSettings.endpoint.trim() ? (
-            <Pressable
-              style={{ alignSelf: "flex-start", marginBottom: 12, marginTop: -4 }}
-              onPress={() =>
-                setCloudSettings((current) => ({
-                  ...current,
-                  endpoint: DEFAULT_BACKEND_ENDPOINT,
-                  authUsername: current.authUsername || "admin",
-                }))
-              }
-            >
+          <View style={{ marginTop: 16, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+            <Pressable onPress={() => void logoutFromBackend()}>
               <Text style={{ color: "#E0A84C", fontSize: 13, textDecorationLine: "underline" }}>
-                ✦ Auto-fill Cloud Backend ({DEFAULT_BACKEND_ENDPOINT})
+                Sign In with Different Account
               </Text>
             </Pressable>
-          ) : null}
-          <TextInput
-            value={cloudSettings.authUsername}
-            onChangeText={(value) =>
-              setCloudSettings((current) => ({ ...current, authUsername: value }))
-            }
-            placeholder="Username (e.g. admin)"
-            placeholderTextColor="#7f90a8"
-            autoCapitalize="none"
-            style={styles.authInput}
-          />
-          <TextInput
-            value={authPassword}
-            onChangeText={setAuthPassword}
-            placeholder="Password"
-            placeholderTextColor="#7f90a8"
-            secureTextEntry
-            style={styles.authInput}
-          />
 
-          <Pressable style={styles.primaryButton} onPress={() => void loginToBackend()}>
-            <Text style={styles.primaryButtonText}>
-              {authState === "Signing in..." ? "Signing In..." : "Sign In"}
-            </Text>
-          </Pressable>
-          <Text style={styles.authStatusText}>{authState}</Text>
+            {!needsSetup ? (
+              <Pressable onPress={() => void resetLock()}>
+                <Text style={{ color: "#7f90a8", fontSize: 13, textDecorationLine: "underline" }}>
+                  Reset App Lock
+                </Text>
+              </Pressable>
+            ) : null}
+          </View>
         </View>
       </SafeAreaView>
     );

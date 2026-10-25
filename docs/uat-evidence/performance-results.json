@@ -1,10 +1,10 @@
 {
-  "measuredAt": "2026-09-06T09:29:59.497Z",
+  "measuredAt": "2026-10-25T16:53:54.763Z",
   "environment": "Jest Runtime / Node v24.15.0",
   "benchmarks": {
-    "portfolioValuation100HoldingsMs": 5.33,
-    "monteCarlo1000RunsMs": 136.84,
-    "statutoryTaxEvaluationMs": 0.08,
-    "advisorPriorityScoreMs": 0.66
+    "portfolioValuation100HoldingsMs": 1.97,
+    "monteCarlo1000RunsMs": 39.46,
+    "statutoryTaxEvaluationMs": 0.03,
+    "advisorPriorityScoreMs": 0.25
   }
 }

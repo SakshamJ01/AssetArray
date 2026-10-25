@@ -18,7 +18,8 @@ import {
   Goal,
 } from "../types/wealth";
 import { AssetAllocationBar } from "../components/AssetAllocationBar";
-import { StatementImportModal, ClientPortalModal } from "../components/modals";
+import { StatementImportModal } from "../components/modals/StatementImportModal";
+import { ClientPortalModal } from "../components/modals/ClientPortalModal";
 import { SimpleHolding } from "../services/rebalancer";
 import { Client360Workspace, MobileExecutiveBriefCard } from "../components/client360";
 

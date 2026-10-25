@@ -32,7 +32,12 @@ export interface AlgoExecutionModalProps {
   clientRefToken?: string;
 }
 
-export const AlgoExecutionModal: React.FC<AlgoExecutionModalProps> = ({
+export const AlgoExecutionModal: React.FC<AlgoExecutionModalProps> = (props) => {
+  if (!props.visible) return null;
+  return <AlgoExecutionModalContent {...props} />;
+};
+
+const AlgoExecutionModalContent: React.FC<AlgoExecutionModalProps> = ({
   visible,
   onClose,
   theme,

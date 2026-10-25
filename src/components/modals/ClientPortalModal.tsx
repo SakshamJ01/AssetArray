@@ -19,7 +19,12 @@ export interface ClientPortalModalProps {
   advisorName?: string;
 }
 
-export const ClientPortalModal: React.FC<ClientPortalModalProps> = ({
+export const ClientPortalModal: React.FC<ClientPortalModalProps> = (props) => {
+  if (!props.visible || !props.client) return null;
+  return <ClientPortalModalContent {...props} />;
+};
+
+const ClientPortalModalContent: React.FC<ClientPortalModalProps> = ({
   visible,
   onClose,
   theme,

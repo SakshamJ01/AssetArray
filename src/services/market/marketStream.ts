@@ -26,6 +26,9 @@ export class CentralizedMarketStream {
     this.timer = setInterval(() => {
       this.tick();
     }, this.TICK_INTERVAL_MS);
+    if (typeof (this.timer as any)?.unref === "function") {
+      (this.timer as any).unref();
+    }
   }
 
   public stop(): void {

@@ -30,7 +30,12 @@ export interface LiveMarketDepthModalProps {
   }) => void;
 }
 
-export const LiveMarketDepthModal: React.FC<LiveMarketDepthModalProps> = ({
+export const LiveMarketDepthModal: React.FC<LiveMarketDepthModalProps> = (props) => {
+  if (!props.visible) return null;
+  return <LiveMarketDepthModalContent {...props} />;
+};
+
+const LiveMarketDepthModalContent: React.FC<LiveMarketDepthModalProps> = ({
   visible,
   onClose,
   theme,

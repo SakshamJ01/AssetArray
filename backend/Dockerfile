@@ -13,7 +13,7 @@ WORKDIR /app
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 COPY --from=deps /app/node_modules ./node_modules
-COPY server.js ./
+COPY . ./
 
 # Cloud Run mandates PORT=8080
 ENV PORT=8080

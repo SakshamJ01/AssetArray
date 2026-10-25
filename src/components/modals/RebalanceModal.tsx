@@ -25,7 +25,12 @@ export interface RebalanceModalProps {
   clientName?: string;
 }
 
-export const RebalanceModal: React.FC<RebalanceModalProps> = ({
+export const RebalanceModal: React.FC<RebalanceModalProps> = (props) => {
+  if (!props.visible) return null;
+  return <RebalanceModalContent {...props} />;
+};
+
+const RebalanceModalContent: React.FC<RebalanceModalProps> = ({
   visible,
   onClose,
   holdings,

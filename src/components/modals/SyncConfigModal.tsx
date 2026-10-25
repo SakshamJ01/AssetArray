@@ -37,6 +37,7 @@ export const SyncConfigModal: React.FC<SyncConfigModalProps> = ({
   onSave,
   theme,
 }) => {
+  if (!visible) return null;
   return (
     <Modal visible={visible} transparent animationType={isDesktop ? "fade" : "slide"}>
       <View style={[styles.modalBackdrop, isDesktop && styles.modalBackdropCenter]}>

@@ -18,6 +18,7 @@ export const AboutLegalModal: React.FC<AboutLegalModalProps> = ({
   onClose,
   theme,
 }) => {
+  if (!visible) return null;
   return (
     <Modal visible={visible} transparent animationType={isDesktop ? "fade" : "slide"}>
       <View style={[styles.modalBackdrop, isDesktop && styles.modalBackdropCenter]}>

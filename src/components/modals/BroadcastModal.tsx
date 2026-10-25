@@ -61,6 +61,7 @@ export const BroadcastModal: React.FC<BroadcastModalProps> = ({
   cloudSettings,
   theme,
 }) => {
+  if (!visible) return null;
   return (
     <Modal visible={visible} transparent animationType={isDesktop ? "fade" : "slide"}>
       <View style={[styles.modalBackdrop, isDesktop && styles.modalBackdropCenter]}>

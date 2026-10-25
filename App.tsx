@@ -59,14 +59,7 @@ import { AiWealthCopilot } from "./src/components/AiWealthCopilot";
 import { AdvisorCommandCenter } from "./src/features/advisor";
 import { AdvisorMessagesScreen } from "./src/screens/workspace/AdvisorMessagesScreen";
 import { setHapticsEnabled, triggerSuccessHaptic } from "./src/services/haptics";
-import {
-  ClientEditorModal,
-  HoldingEditorModal,
-  SyncConfigModal,
-  BroadcastModal,
-  AboutLegalModal,
-  ConfirmModal,
-} from "./src/components/modals";
+import { AppModalsHost } from "./src/components/modals/AppModalsHost";
 import {
   AiResearchResult,
   AuthUser,
@@ -3516,41 +3509,6 @@ function AppContent() {
         />
       )}
 
-      <ClientEditorModal
-        visible={isEditorOpen}
-        isDesktop={isDesktop}
-        editorMode={editorMode}
-        draft={draft}
-        updateDraft={updateDraft}
-        onClose={closeEditor}
-        onSubmit={submitDraft}
-        theme={theme}
-      />
-
-      <HoldingEditorModal
-        visible={isPortfolioModalOpen}
-        isDesktop={isDesktop}
-        portfolioMode={portfolioMode}
-        holdingDraft={holdingDraft}
-        updateHoldingDraft={updateHoldingDraft}
-        onClose={closeHoldingModal}
-        onSave={saveHolding}
-        theme={theme}
-      />
-
-      <ConfirmModal
-        visible={pendingConfirm !== null}
-        isDesktop={isDesktop}
-        title={pendingConfirm?.title ?? ""}
-        message={pendingConfirm?.message ?? ""}
-        confirmLabel={pendingConfirm?.confirmLabel ?? "Delete"}
-        onCancel={() => setPendingConfirm(null)}
-        onConfirm={() => {
-          pendingConfirm?.action();
-          setPendingConfirm(null);
-        }}
-        theme={theme}
-      />
 
       <AiWealthCopilot
         theme={theme}
@@ -3597,26 +3555,36 @@ function AppContent() {
         }}
       />
 
-      <SyncConfigModal
-        visible={isSyncModalOpen}
+      <AppModalsHost
+        theme={theme}
         isDesktop={isDesktop}
+        insetsBottom={insets.bottom}
+        isEditorOpen={isEditorOpen}
+        editorMode={editorMode}
+        draft={draft}
+        updateDraft={updateDraft}
+        closeEditor={closeEditor}
+        submitDraft={submitDraft}
+        isPortfolioModalOpen={isPortfolioModalOpen}
+        portfolioMode={portfolioMode}
+        holdingDraft={holdingDraft}
+        updateHoldingDraft={updateHoldingDraft}
+        closeHoldingModal={closeHoldingModal}
+        saveHolding={saveHolding}
+        pendingConfirm={pendingConfirm}
+        setPendingConfirm={setPendingConfirm}
+        isSyncModalOpen={isSyncModalOpen}
+        setIsSyncModalOpen={setIsSyncModalOpen}
         cloudSettings={cloudSettings}
         setCloudSettings={setCloudSettings}
         defaultBackendEndpoint={DEFAULT_BACKEND_ENDPOINT}
         authState={authState}
         authSession={authSession}
-        onLogout={() => void logoutFromBackend()}
-        onClose={() => setIsSyncModalOpen(false)}
-        onSave={() => void saveCloudSettingsAction()}
-        theme={theme}
-      />
-
-      <BroadcastModal
-        visible={isBroadcastModalOpen}
-        isDesktop={isDesktop}
-        insetsBottom={insets.bottom}
-        onClose={() => setIsBroadcastModalOpen(false)}
-        onSend={() => void runBroadcastCampaign()}
+        logoutFromBackend={logoutFromBackend}
+        saveCloudSettingsAction={saveCloudSettingsAction}
+        isBroadcastModalOpen={isBroadcastModalOpen}
+        setIsBroadcastModalOpen={setIsBroadcastModalOpen}
+        runBroadcastCampaign={runBroadcastCampaign}
         broadcastChannel={broadcastChannel}
         setBroadcastChannel={setBroadcastChannel}
         broadcastMessage={broadcastMessage}
@@ -3628,56 +3596,15 @@ function AppContent() {
         broadcastPreview={broadcastPreview}
         broadcastTargets={broadcastTargets}
         resolveBroadcastContact={resolveBroadcastContact}
-        authSession={authSession}
-        cloudSettings={cloudSettings}
-        theme={theme}
-      />
-
-      <AboutLegalModal
-        visible={Boolean(aboutSheet)}
-        isDesktop={isDesktop}
         aboutSheet={aboutSheet}
-        onClose={() => setAboutSheet(null)}
-        theme={theme}
+        setAboutSheet={setAboutSheet}
+        isPaywallVisible={isPaywallVisible}
+        setIsPaywallVisible={setIsPaywallVisible}
+        revenueCatPackages={revenueCatPackages}
+        isPaywallLoading={isPaywallLoading}
+        setIsPaywallLoading={setIsPaywallLoading}
+        setIsPro={setIsPro}
       />
-
-      <Modal
-        visible={isPaywallVisible}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setIsPaywallVisible(false)}
-      >
-        <PaywallScreen
-          theme={theme}
-          packages={revenueCatPackages}
-          isLoading={isPaywallLoading}
-          onPurchase={async (pkg) => {
-            setIsPaywallLoading(true);
-            const success = await purchasePackage(pkg);
-            if (success) {
-              setIsPro(true);
-              setIsPaywallVisible(false);
-              await triggerSuccessHaptic();
-              Alert.alert("Welcome to Pro", "Thank you for subscribing to Pro Advisor!");
-            }
-            setIsPaywallLoading(false);
-          }}
-          onRestore={async () => {
-            setIsPaywallLoading(true);
-            const success = await restorePurchases();
-            if (success) {
-              setIsPro(true);
-              setIsPaywallVisible(false);
-              await triggerSuccessHaptic();
-              Alert.alert("Purchases Restored", "Your Pro Advisor subscription has been restored.");
-            } else {
-              Alert.alert("Restore Failed", "No active subscription found.");
-            }
-            setIsPaywallLoading(false);
-          }}
-          onClose={() => setIsPaywallVisible(false)}
-        />
-      </Modal>
     </SafeAreaView>
   );
 }

@@ -16,12 +16,6 @@ function getClientOpenRouterKey(): string {
     if (typeof process !== "undefined" && process.env && (process.env as any).EXPO_PUBLIC_OPENROUTER_API_KEY) {
       return (process.env as any).EXPO_PUBLIC_OPENROUTER_API_KEY;
     }
-    if (typeof atob === "function") {
-      return atob("c2stb3ItdjEtMjczMDc4NWJkNTI2ZGZhYTEwNjNmNjFkZDMyOThkOWRlNzg0YjEwMGJhOGE1N2MxYzYyMGEyYjE1YzQ2MDRkMw==");
-    }
-    if (typeof Buffer !== "undefined") {
-      return Buffer.from("c2stb3ItdjEtMjczMDc4NWJkNTI2ZGZhYTEwNjNmNjFkZDMyOThkOWRlNzg0YjEwMGJhOGE1N2MxYzYyMGEyYjE1YzQ2MDRkMw==", "base64").toString("utf-8");
-    }
   } catch {}
   return "";
 }

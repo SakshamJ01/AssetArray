@@ -27,7 +27,12 @@ export interface MonteCarloModalProps {
   clientName?: string;
 }
 
-export const MonteCarloModal: React.FC<MonteCarloModalProps> = ({
+export const MonteCarloModal: React.FC<MonteCarloModalProps> = (props) => {
+  if (!props.visible) return null;
+  return <MonteCarloModalContent {...props} />;
+};
+
+const MonteCarloModalContent: React.FC<MonteCarloModalProps> = ({
   visible,
   onClose,
   theme,

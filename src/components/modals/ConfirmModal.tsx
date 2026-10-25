@@ -28,6 +28,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   onConfirm,
   theme,
 }) => {
+  if (!visible) return null;
   return (
     <Modal visible={visible} transparent animationType={isDesktop ? "fade" : "slide"}>
       <View style={[styles.backdrop, isDesktop && styles.backdropCenter]}>

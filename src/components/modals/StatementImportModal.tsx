@@ -25,7 +25,12 @@ export interface StatementImportModalProps {
   onImportHoldings?: (holdings: SimpleHolding[], mode: "merge" | "replace") => void;
 }
 
-export const StatementImportModal: React.FC<StatementImportModalProps> = ({
+export const StatementImportModal: React.FC<StatementImportModalProps> = (props) => {
+  if (!props.visible) return null;
+  return <StatementImportModalContent {...props} />;
+};
+
+const StatementImportModalContent: React.FC<StatementImportModalProps> = ({
   visible,
   onClose,
   theme,

@@ -41,6 +41,8 @@ export const ClientEditorModal: React.FC<ClientEditorModalProps> = ({
 }) => {
   const isDark = theme.colors.background === "#030712" || theme.colors.textPrimary === "#ffffff" || theme.colors.textPrimary === "#FFFFFF";
 
+  if (!visible) return null;
+
   return (
     <Modal visible={visible} transparent animationType={isDesktop ? "fade" : "slide"}>
       <KeyboardAvoidingView

@@ -24,7 +24,12 @@ export interface StressTestModalProps {
   clientName?: string;
 }
 
-export const StressTestModal: React.FC<StressTestModalProps> = ({
+export const StressTestModal: React.FC<StressTestModalProps> = (props) => {
+  if (!props.visible) return null;
+  return <StressTestModalContent {...props} />;
+};
+
+const StressTestModalContent: React.FC<StressTestModalProps> = ({
   visible,
   onClose,
   holdings,

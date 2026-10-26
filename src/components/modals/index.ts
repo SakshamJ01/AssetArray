@@ -11,3 +11,4 @@ export * from "./ClientPortalModal";
 export * from "./LiveMarketDepthModal";
 export * from "./AlgoExecutionModal";
 export * from "./ConfirmModal";
+export * from "./AccountAggregatorModal";

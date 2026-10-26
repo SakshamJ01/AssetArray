@@ -5,4 +5,5 @@ export * from "./WorkspaceScreen";
 export * from "./SettingsScreen";
 export * from "./PaywallScreen";
 export * from "./AiResearchScreen";
+export * from "./portal/InvestorPortalScreen";
 

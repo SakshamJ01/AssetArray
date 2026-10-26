@@ -138,7 +138,49 @@ export const BroadcastModal: React.FC<BroadcastModalProps> = ({
               })}
             </View>
 
-            <Text style={styles.inputLabel}>Advisory Brief</Text>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+              <Text style={styles.inputLabel}>Advisory Brief</Text>
+              <Text style={{ fontSize: 10, color: theme.colors.textMuted }}>Smart Tokens: {"{ClientName}, {NetWorth}, {PortalLink}"}</Text>
+            </View>
+
+            {/* Quick Outreach Presets */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 6 }}>
+              <View style={{ flexDirection: "row", gap: 6 }}>
+                <Pressable
+                  onPress={() =>
+                    setBroadcastMessage(
+                      "Dear {ClientName},\n\nHere is your monthly wealth performance snapshot from Asset Array:\n• Portfolio Net Worth: {NetWorth}\n• Return: {MonthlyReturn}\n• Equity Exposure: {EquityAllocation}\n\nReview your private dashboard:\n{PortalLink}\n\nWarm regards,\nAsset Array Wealth Desk"
+                    )
+                  }
+                  style={styles.presetChip}
+                >
+                  <Text style={styles.presetChipText}>📊 Monthly Review</Text>
+                </Pressable>
+
+                <Pressable
+                  onPress={() =>
+                    setBroadcastMessage(
+                      "Dear {ClientName},\n\nQuarterly portfolio rebalancing recommendations have been generated for your review. Please review the proposal on your private portal: {PortalLink}\n\nAsset Array Advisory Desk"
+                    )
+                  }
+                  style={styles.presetChip}
+                >
+                  <Text style={styles.presetChipText}>⚖️ Rebalance Proposal</Text>
+                </Pressable>
+
+                <Pressable
+                  onPress={() =>
+                    setBroadcastMessage(
+                      "Dear {ClientName},\n\nMarket briefing: Our tactical positioning remains fully aligned with your risk mandate. Access your live portfolio statement at: {PortalLink}"
+                    )
+                  }
+                  style={styles.presetChip}
+                >
+                  <Text style={styles.presetChipText}>⚡ Market Briefing</Text>
+                </Pressable>
+              </View>
+            </ScrollView>
+
             <TextInput
               value={broadcastMessage}
               onChangeText={setBroadcastMessage}
@@ -421,5 +463,18 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     fontWeight: "700",
     fontSize: 14,
+  },
+  presetChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 6,
+    backgroundColor: "rgba(224, 168, 76, 0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(224, 168, 76, 0.3)",
+  },
+  presetChipText: {
+    color: "#E0A84C",
+    fontSize: 11,
+    fontWeight: "700",
   },
 });

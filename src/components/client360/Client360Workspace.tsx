@@ -38,6 +38,7 @@ export interface Client360WorkspaceProps {
   onNavigateTab?: (tab: string, params?: any) => void;
   onExportReport: (client: Client) => void;
   onOpenImport: () => void;
+  onOpenAaSync?: () => void;
   onOpenPortal: () => void;
   onEditClient: (client: Client) => void;
   onDeleteClient: (client: Client) => void;
@@ -54,6 +55,7 @@ export const Client360Workspace: React.FC<Client360WorkspaceProps> = ({
   onNavigateTab,
   onExportReport,
   onOpenImport,
+  onOpenAaSync,
   onOpenPortal,
   onEditClient,
   onDeleteClient,
@@ -216,6 +218,16 @@ export const Client360Workspace: React.FC<Client360WorkspaceProps> = ({
               Import Statement
             </Text>
           </Pressable>
+          {onOpenAaSync && (
+            <Pressable
+              style={workspaceStyles.toolButton}
+              onPress={onOpenAaSync}
+            >
+              <Text style={[workspaceStyles.toolButtonText, { color: "#10B981" }]}>
+                Sync via AA
+              </Text>
+            </Pressable>
+          )}
           <Pressable
             style={workspaceStyles.toolButton}
             onPress={onOpenPortal}

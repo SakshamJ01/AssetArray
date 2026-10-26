@@ -1,6 +1,6 @@
 import { documentExporter } from "../platform/export";
 import { ClientInput } from "./aiAdvisor";
-import { AssetClass, PortfolioHolding } from "../types/wealth";
+import { AssetClass, PortfolioHolding, FirmProfile, defaultFirmProfile } from "../types/wealth";
 import { calculateHealthScore } from "./healthScore";
 import { calculateAttribution, STANDARD_BENCHMARKS } from "./attribution";
 import { generateTaxHarvestReport } from "./taxIntelligence";
@@ -20,13 +20,22 @@ export interface GeneratePdfOptions {
   client: ClientInput;
   advisorName?: string;
   currencySymbol?: string;
+  firmProfile?: Partial<FirmProfile>;
 }
 
 export async function exportClientPdfReport({
   client,
   advisorName = "Asset Array Private Wealth",
   currencySymbol = "₹",
+  firmProfile,
 }: GeneratePdfOptions) {
+  const firm = {
+    ...defaultFirmProfile,
+    ...firmProfile,
+    sebiRegNo: firmProfile?.sebiRegistrationNumber || firmProfile?.sebiRegNo || defaultFirmProfile.sebiRegNo,
+    contactEmail: firmProfile?.advisorEmail || firmProfile?.contactEmail || defaultFirmProfile.contactEmail,
+    address: firmProfile?.officeAddress || firmProfile?.address || defaultFirmProfile.address,
+  };
   const rawHoldings = client.portfolio || [];
   const holdings: PortfolioHolding[] = rawHoldings.map((h, i) => ({
     id: `holding-${i}`,
@@ -297,8 +306,8 @@ export async function exportClientPdfReport({
   <!-- 1. HEADER BANNER -->
   <div class="header-banner">
     <div>
-      <div class="brand-title">ASSET ARRAY</div>
-      <div class="brand-subtitle">Private Wealth Advisory • Executive Valuation Statement</div>
+      <div class="brand-title">${firm.firmName.toUpperCase()}</div>
+      <div class="brand-subtitle">${firm.tagline} • SEBI Reg: ${firm.sebiRegNo}</div>
     </div>
     <div class="statement-meta">
       <div class="statement-label">Statement Ref</div>
@@ -420,8 +429,8 @@ export async function exportClientPdfReport({
     </div>
     <div class="signature-block">
       <div class="signature-line"></div>
-      <div style="font-size: 11px; font-weight: 700; color: #0f172a;">${advisorName}</div>
-      <div style="font-size: 9px; color: #64748b;">Managing Director • Wealth Advisory</div>
+      <div style="font-size: 11px; font-weight: 700; color: #0f172a;">${advisorName} • ${firm.firmName}</div>
+      <div style="font-size: 9px; color: #64748b;">Managing Director • SEBI Reg: ${firm.sebiRegNo} • ${firm.contactEmail}</div>
     </div>
   </div>
 </body>

@@ -43,7 +43,11 @@ const ClientPortalModalContent: React.FC<ClientPortalModalProps> = ({
 
   if (!client) return null;
 
-  const portalUrl = `https://asset-array.web.app/portal/investor-${client.id || "8829"}?auth=fiduciary_token_${Date.now().toString(36)}`;
+  const baseUrl =
+    Platform.OS === "web" && typeof window !== "undefined" && window.location?.origin
+      ? window.location.origin
+      : "https://asset-array.web.app";
+  const portalUrl = `${baseUrl}/?portal=${client.id || "8829"}&token=fiduciary_token_${Date.now().toString(36)}`;
 
   const handleCopyLink = () => {
     if (Platform.OS === "web" && typeof navigator !== "undefined" && navigator.clipboard) {

@@ -1,4 +1,9 @@
-import { generateFirmWideReviewPackage } from "../src/services/batchReporting";
+import {
+  generateFirmWideReviewPackage,
+  generateClientReviewSnippet,
+  formatBroadcastTemplate,
+  generateFirmWideMonthlyReview,
+} from "../src/services/batchReporting";
 import { Client } from "../src/types/wealth";
 
 describe("BatchReporting Engine", () => {
@@ -104,5 +109,39 @@ describe("BatchReporting Engine", () => {
     // Verify Executive Markdown summary
     expect(pkg.markdownSummary).toContain("# EXECUTIVE FIRM-WIDE ADVISORY REVIEW");
     expect(pkg.markdownSummary).toContain("Batch ID");
+  });
+
+  it("generates personalized monthly review snippets with portal links", () => {
+    const snippet = generateClientReviewSnippet(sampleClients[0], "Alpha Wealth Advisory");
+
+    expect(snippet.clientId).toBe("c-1");
+    expect(snippet.clientName).toBe("Rajesh Sharma");
+    expect(snippet.totalAumFormatted).toContain("20.00 L");
+    expect(snippet.portalLink).toContain("?portal=c-1");
+    expect(snippet.whatsappMessage).toContain("Rajesh Sharma");
+    expect(snippet.whatsappMessage).toContain("Alpha Wealth Advisory");
+    expect(snippet.emailSubject).toContain("Rajesh Sharma");
+  });
+
+  it("formats broadcast templates with dynamic tokens for clients", () => {
+    const template = "Hello {ClientName}, your portfolio is valued at {NetWorth}. Visit {PortalLink}";
+    const formatted = formatBroadcastTemplate(template, sampleClients[0]);
+
+    expect(formatted).toContain("Hello Rajesh Sharma");
+    expect(formatted).toContain("20.00 L");
+    expect(formatted).toContain("?portal=c-1");
+  });
+
+  it("generates firm-wide monthly review with parallelized analytics and client snippets", () => {
+    const monthlyReview = generateFirmWideMonthlyReview(sampleClients, {
+      firmName: "Apex Multi-Family Office",
+    });
+
+    expect(monthlyReview.summary.totalClients).toBe(2);
+    expect(monthlyReview.summary.totalFirmAum).toBe(2650000);
+    expect(monthlyReview.clientSnippets.length).toBe(2);
+    expect(monthlyReview.clientSnippets[0].whatsappMessage).toContain("Apex Multi-Family Office");
+    expect(monthlyReview.clientSnippets[0].portalLink).toContain("?portal=c-1");
+    expect(monthlyReview.package.reports.length).toBe(2);
   });
 });

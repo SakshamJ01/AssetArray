@@ -1,7 +1,9 @@
-import React, { useState } from "react";
-import { Alert, Pressable, StyleSheet, Switch, Text, View, Platform } from "react-native";
+import React, { useState, useEffect } from "react";
+import { Alert, Pressable, StyleSheet, Switch, Text, View, Platform, TextInput } from "react-native";
 import { AppTheme } from "../theme";
 import { radiusTokens, surfaceTokens, semanticStatusColors } from "../theme/tokens";
+import { storageService } from "../platform/storage";
+import { FirmProfile, defaultFirmProfile } from "../types/wealth";
 
 export interface SettingsScreenProps {
   theme: AppTheme;
@@ -131,6 +133,26 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   finnhubConfigured,
   styles,
 }) => {
+  const [firmProfile, setFirmProfile] = useState<FirmProfile>(defaultFirmProfile);
+  const [isFirmProfileSaved, setIsFirmProfileSaved] = useState(false);
+
+  useEffect(() => {
+    void storageService.getSecureItem("asset_array_firm_profile").then((raw) => {
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          setFirmProfile((prev) => ({ ...prev, ...parsed }));
+        } catch {}
+      }
+    });
+  }, []);
+
+  const handleSaveFirmProfile = async () => {
+    await storageService.setSecureItem("asset_array_firm_profile", JSON.stringify(firmProfile));
+    setIsFirmProfileSaved(true);
+    setTimeout(() => setIsFirmProfileSaved(false), 2500);
+  };
+
   const dataSources = React.useMemo(
     () => buildDataSources(aiProviderStatus, finnhubConfigured, syncState),
     [aiProviderStatus, finnhubConfigured, syncState]
@@ -395,7 +417,134 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         </Pressable>
       </View>
 
-      {/* 7. SUBSCRIPTION */}
+      {/* 7. FIRM IDENTITY & REGULATORY BRANDING */}
+      <View style={localStyles.sectionPanel}>
+        <View style={localStyles.headerRow}>
+          <Text style={localStyles.sectionTitle}>Firm Identity & Regulatory Branding</Text>
+          {isFirmProfileSaved && (
+            <View style={[localStyles.actionBadge, { backgroundColor: "rgba(16, 185, 129, 0.15)", borderColor: "#10B981" }]}>
+              <Text style={[localStyles.actionBadgeText, { color: "#10B981" }]}>✓ Saved to Vault</Text>
+            </View>
+          )}
+        </View>
+        <Text style={localStyles.sectionSubtitle}>
+          Configure your advisory firm name, SEBI registration number, and custom accent branding. Automatically injected into generated PDF dossiers and client portals.
+        </Text>
+
+        <View style={localStyles.formGrid}>
+          <View style={localStyles.formGroup}>
+            <Text style={localStyles.formLabel}>Firm Name</Text>
+            <TextInput
+              style={localStyles.input}
+              value={firmProfile.firmName}
+              onChangeText={(text) => setFirmProfile((prev) => ({ ...prev, firmName: text }))}
+              placeholder="e.g. Asset Array Wealth Management"
+              placeholderTextColor="#64748B"
+            />
+          </View>
+
+          <View style={localStyles.formGroup}>
+            <Text style={localStyles.formLabel}>SEBI Registration Number</Text>
+            <TextInput
+              style={localStyles.input}
+              value={firmProfile.sebiRegistrationNumber || firmProfile.sebiRegNo}
+              onChangeText={(text) =>
+                setFirmProfile((prev) => ({ ...prev, sebiRegNo: text, sebiRegistrationNumber: text }))
+              }
+              placeholder="e.g. INA000018924"
+              placeholderTextColor="#64748B"
+            />
+          </View>
+
+          <View style={localStyles.formGroup}>
+            <Text style={localStyles.formLabel}>AMFI / ARN Registration</Text>
+            <TextInput
+              style={localStyles.input}
+              value={firmProfile.arnNumber}
+              onChangeText={(text) => setFirmProfile((prev) => ({ ...prev, arnNumber: text }))}
+              placeholder="e.g. ARN-198422"
+              placeholderTextColor="#64748B"
+            />
+          </View>
+
+          <View style={localStyles.formGroup}>
+            <Text style={localStyles.formLabel}>Advisory Tagline / Mandate</Text>
+            <TextInput
+              style={localStyles.input}
+              value={firmProfile.tagline}
+              onChangeText={(text) => setFirmProfile((prev) => ({ ...prev, tagline: text }))}
+              placeholder="e.g. Fiduciary Multi-Asset Wealth Advisory & Family Office Desk"
+              placeholderTextColor="#64748B"
+            />
+          </View>
+
+          <View style={localStyles.formGroup}>
+            <Text style={localStyles.formLabel}>Advisor / Contact Email</Text>
+            <TextInput
+              style={localStyles.input}
+              value={firmProfile.advisorEmail || firmProfile.contactEmail}
+              onChangeText={(text) =>
+                setFirmProfile((prev) => ({ ...prev, contactEmail: text, advisorEmail: text }))
+              }
+              placeholder="e.g. wealth@assetarray.app"
+              placeholderTextColor="#64748B"
+              keyboardType="email-address"
+            />
+          </View>
+
+          <View style={localStyles.formGroup}>
+            <Text style={localStyles.formLabel}>Advisor / Office Phone</Text>
+            <TextInput
+              style={localStyles.input}
+              value={firmProfile.advisorPhone || firmProfile.contactPhone}
+              onChangeText={(text) =>
+                setFirmProfile((prev) => ({ ...prev, contactPhone: text, advisorPhone: text }))
+              }
+              placeholder="e.g. +91 22 6890 4400"
+              placeholderTextColor="#64748B"
+            />
+          </View>
+
+          <View style={localStyles.formGroup}>
+            <Text style={localStyles.formLabel}>Registered Office Address</Text>
+            <TextInput
+              style={localStyles.input}
+              value={firmProfile.officeAddress || firmProfile.address || ""}
+              onChangeText={(text) =>
+                setFirmProfile((prev) => ({ ...prev, address: text, officeAddress: text }))
+              }
+              placeholder="e.g. Nariman Point, Mumbai 400021"
+              placeholderTextColor="#64748B"
+            />
+          </View>
+
+          <View style={localStyles.formGroup}>
+            <Text style={localStyles.formLabel}>Custom Accent / Brand Color</Text>
+            <TextInput
+              style={localStyles.input}
+              value={firmProfile.primaryBrandColor || "#E0A84C"}
+              onChangeText={(text) =>
+                setFirmProfile((prev) => ({ ...prev, primaryBrandColor: text }))
+              }
+              placeholder="e.g. #E0A84C"
+              placeholderTextColor="#64748B"
+            />
+          </View>
+        </View>
+
+        <View style={localStyles.buttonRow}>
+          <Pressable
+            style={[localStyles.btnSecondary, { backgroundColor: surfaceTokens.brand, borderColor: surfaceTokens.brand }]}
+            onPress={() => void handleSaveFirmProfile()}
+          >
+            <Text style={[localStyles.btnSecondaryText, { color: "#030712", fontWeight: "700" }]}>
+              Save Regulatory Branding
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+
+      {/* 8. SUBSCRIPTION */}
       <View style={localStyles.sectionPanel}>
         <View style={localStyles.headerRow}>
           <Text style={localStyles.sectionTitle}>Subscription</Text>
@@ -417,7 +566,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         </View>
       </View>
 
-      {/* 8. ABOUT & GOVERNANCE */}
+      {/* 9. ABOUT & GOVERNANCE */}
       <View style={localStyles.sectionPanel}>
         <View style={localStyles.headerRow}>
           <Text style={localStyles.sectionTitle}>About AssetArray</Text>
@@ -650,5 +799,28 @@ const localStyles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "700",
     color: surfaceTokens.brand,
+  },
+  formGrid: {
+    gap: 10,
+    marginTop: 6,
+    marginBottom: 6,
+  },
+  formGroup: {
+    gap: 4,
+  },
+  formLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#94A3B8",
+  },
+  input: {
+    backgroundColor: surfaceTokens.surfaceMuted,
+    borderWidth: 1,
+    borderColor: surfaceTokens.borderDefault,
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    color: "#F8FAFC",
+    fontSize: 12,
   },
 });

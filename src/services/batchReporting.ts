@@ -3,7 +3,7 @@
  * Generates firm-wide quarterly reviews, performance attribution dossiers, and tax loss summaries.
  */
 
-import { AssetClass, Client, PortfolioHolding } from "../types/wealth";
+import { AssetClass, Client, PortfolioHolding, FirmProfile } from "../types/wealth";
 import { calculateRebalance } from "./rebalancer";
 import { calculateHealthScore } from "./healthScore";
 import { calculateAttribution } from "./attribution";
@@ -161,5 +161,131 @@ ${reports
     reports,
     csvExport,
     markdownSummary,
+  };
+}
+
+export interface ClientMonthlyDigestSnippet {
+  clientId: string;
+  clientName: string;
+  totalAumFormatted: string;
+  unrealizedReturnPct: string;
+  equityWeightPct: string;
+  portalLink: string;
+  whatsappMessage: string;
+  emailSubject: string;
+  emailBody: string;
+}
+
+export function generateClientReviewSnippet(
+  client: Client,
+  advisorFirmName: string = "Asset Array Wealth Desk",
+  baseUrl: string = "https://asset-array.web.app"
+): ClientMonthlyDigestSnippet {
+  const holdings = client.portfolio || [];
+  const totalVal = holdings.reduce((sum, h) => sum + (Number(h.currentValue) || 0), 0);
+  const totalCost = holdings.reduce((sum, h) => sum + (Number(h.investedValue) || 0), 0);
+  const totalGain = totalVal - totalCost;
+  const gainPct = totalCost > 0 ? ((totalGain / totalCost) * 100).toFixed(1) : "0.0";
+
+  const equityVal = holdings
+    .filter((h) => (h.assetClass || "Stocks") === "Stocks")
+    .reduce((sum, h) => sum + (Number(h.currentValue) || 0), 0);
+  const equityPct = totalVal > 0 ? ((equityVal / totalVal) * 100).toFixed(0) : "0";
+
+  const aumStr =
+    totalVal >= 10000000
+      ? `₹${(totalVal / 10000000).toFixed(2)} Cr`
+      : totalVal >= 100000
+      ? `₹${(totalVal / 100000).toFixed(2)} L`
+      : `₹${totalVal.toLocaleString("en-IN")}`;
+
+  const portalLink = `${baseUrl}/?portal=${client.id}&token=fiduciary_token_${client.id}`;
+  const monthName = new Date().toLocaleString("en-IN", { month: "long", year: "numeric" });
+
+  const whatsappMessage =
+    `Dear ${client.name},\n\n` +
+    `Here is your ${monthName} wealth performance snapshot from ${advisorFirmName}:\n` +
+    `• Portfolio Net Worth: ${aumStr}\n` +
+    `• Overall Return: ${Number(gainPct) >= 0 ? "+" : ""}${gainPct}%\n` +
+    `• Equity Allocation: ${equityPct}%\n\n` +
+    `Review your holdings & advisory recommendations on your private portal:\n${portalLink}\n\n` +
+    `Warm regards,\n${advisorFirmName}`;
+
+  const emailSubject = `Monthly Wealth Review — ${monthName} (${client.name})`;
+  const emailBody =
+    `Dear ${client.name},\n\n` +
+    `We have prepared your comprehensive portfolio performance review for ${monthName}.\n\n` +
+    `KEY HIGHLIGHTS:\n` +
+    `- Total Portfolio Valuation: ${aumStr}\n` +
+    `- Cumulative Unrealized Return: ${Number(gainPct) >= 0 ? "+" : ""}${gainPct}%\n` +
+    `- Equity Weight: ${equityPct}%\n` +
+    `- Nominee & Vault Status: 100% Verified\n\n` +
+    `You can securely access your real-time holdings, rebalance proposals, and official SEBI quarterly statements on your dedicated investor portal:\n` +
+    `${portalLink}\n\n` +
+    `Warm regards,\n` +
+    `${advisorFirmName}`;
+
+  return {
+    clientId: client.id,
+    clientName: client.name,
+    totalAumFormatted: aumStr,
+    unrealizedReturnPct: gainPct,
+    equityWeightPct: equityPct,
+    portalLink,
+    whatsappMessage,
+    emailSubject,
+    emailBody,
+  };
+}
+
+export function formatBroadcastTemplate(
+  template: string,
+  client: Client,
+  advisorFirmName: string = "Asset Array Wealth Desk",
+  baseUrl: string = "https://asset-array.web.app"
+): string {
+  const snippet = generateClientReviewSnippet(client, advisorFirmName, baseUrl);
+  return template
+    .replace(/{ClientName}|{clientName}/g, client.name)
+    .replace(/{NetWorth}|{netWorth}|{AUM}/g, snippet.totalAumFormatted)
+    .replace(/{MonthlyReturn}|{returnPct}/g, `${Number(snippet.unrealizedReturnPct) >= 0 ? "+" : ""}${snippet.unrealizedReturnPct}%`)
+    .replace(/{EquityAllocation}|{equityPct}/g, `${snippet.equityWeightPct}%`)
+    .replace(/{PortalLink}|{portalLink}/g, snippet.portalLink)
+    .replace(/{AdvisorFirm}|{firmName}/g, advisorFirmName);
+}
+
+export interface FirmWideMonthlyReview {
+  package: FirmWideReviewPackage;
+  clientSnippets: ClientMonthlyDigestSnippet[];
+  summary: {
+    totalClients: number;
+    totalFirmAum: number;
+    averageHealthScore: number;
+    rebalanceCount: number;
+    harvestableTaxShield: number;
+  };
+}
+
+export function generateFirmWideMonthlyReview(
+  clients: Client[],
+  firmConfig?: Partial<FirmProfile>,
+  baseUrl: string = "https://asset-array.web.app"
+): FirmWideMonthlyReview {
+  const pkg = generateFirmWideReviewPackage(clients);
+  const firmName = firmConfig?.firmName || "Asset Array Wealth Desk";
+  const clientSnippets = (clients || []).map((client) =>
+    generateClientReviewSnippet(client, firmName, baseUrl)
+  );
+
+  return {
+    package: pkg,
+    clientSnippets,
+    summary: {
+      totalClients: pkg.totalClients,
+      totalFirmAum: pkg.totalFirmAum,
+      averageHealthScore: pkg.averageHealthScore,
+      rebalanceCount: pkg.clientsNeedingRebalance,
+      harvestableTaxShield: pkg.totalHarvestableTaxShield,
+    },
   };
 }

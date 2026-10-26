@@ -170,6 +170,46 @@ export type CloudSettings = {
   authUsername: string;
 };
 
+export type SaaSTier = "FOUNDATION" | "COMMERCIAL_RIA" | "INSTITUTIONAL_MULTI_DESK";
+export type FirmTier = "SOLO_RIA" | "BOUTIQUE_WEALTH" | "FAMILY_OFFICE";
+
+export interface FirmProfile {
+  firmName: string;
+  sebiRegNo: string;
+  sebiRegistrationNumber?: string;
+  arnNumber: string;
+  tagline: string;
+  contactEmail: string;
+  advisorEmail?: string;
+  contactPhone: string;
+  advisorPhone?: string;
+  address?: string;
+  officeAddress?: string;
+  logoUrl?: string;
+  primaryBrandColor?: string;
+  tier?: FirmTier;
+  saasTier: SaaSTier;
+  whitelabelEnabled: boolean;
+}
+
+export const defaultFirmProfile: FirmProfile = {
+  firmName: "Asset Array Wealth Management",
+  sebiRegNo: "INA000018924",
+  sebiRegistrationNumber: "INA000018924",
+  arnNumber: "ARN-198422",
+  tagline: "Fiduciary Multi-Asset Wealth Advisory & Family Office Desk",
+  contactEmail: "wealth@assetarray.app",
+  advisorEmail: "wealth@assetarray.app",
+  contactPhone: "+91 22 6890 4400",
+  advisorPhone: "+91 22 6890 4400",
+  address: "Nariman Point, Mumbai 400021, India",
+  officeAddress: "Nariman Point, Mumbai 400021, India",
+  primaryBrandColor: "#E0A84C",
+  tier: "BOUTIQUE_WEALTH",
+  saasTier: "COMMERCIAL_RIA",
+  whitelabelEnabled: true,
+};
+
 export type AuthSession = {
   user: AuthUser;
   accessToken: string;

@@ -19,6 +19,7 @@ import {
 } from "../types/wealth";
 import { AssetAllocationBar } from "../components/AssetAllocationBar";
 import { StatementImportModal } from "../components/modals/StatementImportModal";
+import { AccountAggregatorModal } from "../components/modals/AccountAggregatorModal";
 import { ClientPortalModal } from "../components/modals/ClientPortalModal";
 import { SimpleHolding } from "../services/rebalancer";
 import { Client360Workspace, MobileExecutiveBriefCard } from "../components/client360";
@@ -230,6 +231,7 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
   const [localSearch, setLocalSearch] = React.useState(searchQuery);
   const [isFilterExpanded, setIsFilterExpanded] = React.useState(false);
   const [showImportModal, setShowImportModal] = React.useState(false);
+  const [showAaModal, setShowAaModal] = React.useState(false);
   const [showPortalModal, setShowPortalModal] = React.useState(false);
 
   React.useEffect(() => {
@@ -567,6 +569,27 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
                     paddingHorizontal: isDesktop ? 10 : 6,
                     paddingVertical: 6,
                     borderRadius: 4,
+                    backgroundColor: "rgba(224, 168, 76, 0.12)",
+                    borderWidth: 1,
+                    borderColor: "rgba(224, 168, 76, 0.4)",
+                  }}
+                  onPress={() => setShowAaModal(true)}
+                >
+                  <Ionicons name="link-outline" size={14} color="#E0A84C" />
+                  <Text style={{ fontSize: 12, fontWeight: "800", color: "#E0A84C" }}>
+                    {isDesktop ? "AA Auto-Sync" : "AA Sync"}
+                  </Text>
+                </Pressable>
+                <Pressable
+                  style={{
+                    flex: isDesktop ? undefined : 1,
+                    justifyContent: "center",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 4,
+                    paddingHorizontal: isDesktop ? 10 : 6,
+                    paddingVertical: 6,
+                    borderRadius: 4,
                     backgroundColor: "rgba(16, 185, 129, 0.12)",
                     borderWidth: 1,
                     borderColor: "rgba(16, 185, 129, 0.4)",
@@ -668,6 +691,7 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
                   });
                 }}
                 onOpenImport={() => setShowImportModal(true)}
+                onOpenAaSync={() => setShowAaModal(true)}
                 onOpenPortal={() => setShowPortalModal(true)}
                 onEditClient={openEditModal}
                 onDeleteClient={deleteClient}
@@ -742,6 +766,15 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
         onClose={() => setShowImportModal(false)}
         theme={theme}
         clientName={selectedClient ? selectedClient.name : "Client Portfolio"}
+        onImportHoldings={onImportHoldings}
+      />
+
+      <AccountAggregatorModal
+        visible={showAaModal}
+        onClose={() => setShowAaModal(false)}
+        theme={theme}
+        clientName={selectedClient ? selectedClient.name : "Client Portfolio"}
+        clientId={selectedClient ? selectedClient.id : "CLIENT-01"}
         onImportHoldings={onImportHoldings}
       />
 

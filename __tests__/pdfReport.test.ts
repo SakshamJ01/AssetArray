@@ -79,4 +79,31 @@ describe("PDF Report Data Formatter", () => {
 
     spy.mockRestore();
   });
+
+  it("injects custom firm profile whitelabel branding and SEBI registration into PDF HTML", async () => {
+    const { exportClientPdfReport } = await import("../src/services/pdfReport");
+    const { documentExporter } = await import("../src/platform/export");
+    const spy = jest.spyOn(documentExporter, "exportHtmlReport").mockResolvedValue();
+
+    await exportClientPdfReport({
+      client: sampleClient,
+      advisorName: "Vikram Malhotra",
+      firmProfile: {
+        firmName: "Apex Multi-Family Office",
+        sebiRegistrationNumber: "INA000099999",
+        tagline: "Ultra HNI Private Wealth Advisory",
+        advisorEmail: "desk@apexwealth.in",
+      },
+    });
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    const callArg = spy.mock.calls[0][0];
+    expect(callArg.html).toContain("APEX MULTI-FAMILY OFFICE");
+    expect(callArg.html).toContain("INA000099999");
+    expect(callArg.html).toContain("Ultra HNI Private Wealth Advisory");
+    expect(callArg.html).toContain("desk@apexwealth.in");
+    expect(callArg.html).toContain("Vikram Malhotra • Apex Multi-Family Office");
+
+    spy.mockRestore();
+  });
 });

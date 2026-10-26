@@ -94,6 +94,7 @@ import {
   WorkspaceScreen,
   SettingsScreen,
   AiResearchScreen,
+  InvestorPortalScreen,
 } from "./src/screens";
 import { PortfolioManagerSection } from "./src/components/PortfolioManagerSection";
 import { getClientAvatar } from "./src/services/avatars";
@@ -159,6 +160,7 @@ import {
   defaultMessage,
 } from "./src/types/wealth";
 import { SimpleHolding } from "./src/services/rebalancer";
+import { formatBroadcastTemplate } from "./src/services/batchReporting";
 import {
   CLIENTS_QUARANTINE_KEY,
   loadAndMigrateClients,
@@ -515,6 +517,25 @@ function AppContent() {
   const [isClientAiLoading, setIsClientAiLoading] = useState(false);
   const [isAiCopilotOpen, setIsAiCopilotOpen] = useState(false);
   const [activeCurrency, setActiveCurrency] = useState<CurrencyCode>("INR");
+  const [portalClientId, setPortalClientId] = useState<string | null>(() => {
+    if (Platform.OS !== "web" || typeof window === "undefined") return null;
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      let p = searchParams.get("portal") || searchParams.get("clientId");
+      if (!p && window.location.hash) {
+        const hashStr = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : window.location.hash;
+        const hashParams = new URLSearchParams(hashStr.includes("?") ? hashStr.split("?")[1] : hashStr);
+        p = hashParams.get("portal") || hashParams.get("clientId");
+      }
+      if (!p && window.location.pathname.includes("/portal/")) {
+        const match = window.location.pathname.match(/\/portal\/(?:investor-)?([a-zA-Z0-9_-]+)/);
+        if (match) p = match[1];
+      }
+      return p;
+    } catch {
+      return null;
+    }
+  });
 
   useEffect(() => {
     void loadCurrencyPreference().then((c) => setActiveCurrency(c));
@@ -2549,7 +2570,9 @@ function AppContent() {
     try {
       setBroadcastState("Opening device app...");
       const stamp = formatDate();
-      const encodedMessage = encodeURIComponent(messageToSend);
+      const primaryClient = validTargets[0];
+      const messageToDispatch = primaryClient ? formatBroadcastTemplate(messageToSend, primaryClient) : messageToSend;
+      const encodedMessage = encodeURIComponent(messageToDispatch);
       let dispatchUrl = "";
 
       if (
@@ -2720,6 +2743,52 @@ function AppContent() {
       <SafeAreaView style={styles.loadingScreen}>
         <StatusBar style="light" />
         <Text style={styles.loadingTitle}>Preparing Asset Array...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (portalClientId) {
+    const activePortalClient: Client = clients.find(
+      (c) => c.id === portalClientId || c.name.toLowerCase() === portalClientId.toLowerCase()
+    ) || {
+      id: portalClientId,
+      name: `Private Investor Mandate (${portalClientId})`,
+      phone: "+91 98200 12345",
+      email: "investor@assetarray.app",
+      category: "HNI",
+      priority: "High",
+      riskProfile: "Moderate Growth",
+      preferredChannel: "Email",
+      watchlist: [],
+      notes: "Investor Portal Client Session",
+      city: "Mumbai",
+      allocation: "Balanced (65:25:10)",
+      reminderDate: todayISO(),
+      lastContact: todayISO(),
+      updateHistory: [],
+      portfolio: [],
+    };
+
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#030712" }}>
+        <StatusBar style="light" />
+        <InvestorPortalScreen
+          client={activePortalClient}
+          advisorName={authSession?.user?.username ? `${authSession.user.username} Advisory Desk` : "Senior Wealth Advisory Desk"}
+          currencySymbol={activeCurrency === "INR" ? "₹" : activeCurrency}
+          backendEndpoint={cloudSettings.endpoint}
+          authToken={authSession?.accessToken}
+          onExitPortal={() => {
+            setPortalClientId(null);
+            if (Platform.OS === "web" && typeof window !== "undefined" && window.history) {
+              const url = new URL(window.location.href);
+              url.searchParams.delete("portal");
+              url.searchParams.delete("token");
+              url.searchParams.delete("clientId");
+              window.history.replaceState({}, "", url.pathname + (url.search || ""));
+            }
+          }}
+        />
       </SafeAreaView>
     );
   }

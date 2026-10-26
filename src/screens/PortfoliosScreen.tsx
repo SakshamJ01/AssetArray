@@ -5,6 +5,7 @@ import { PerformanceChart, Sparkline, HoldingsTreemap, NO_TRAJECTORY } from "../
 import { RebalanceModal } from "../components/modals/RebalanceModal";
 import { StressTestModal } from "../components/modals/StressTestModal";
 import { StatementImportModal } from "../components/modals/StatementImportModal";
+import { AccountAggregatorModal } from "../components/modals/AccountAggregatorModal";
 import { HealthScoreCard } from "../components/HealthScoreCard";
 import { AttributionModal } from "../components/AttributionModal";
 import { TaxHarvestStudioModal } from "../components/TaxHarvestStudioModal";
@@ -66,6 +67,7 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
   const isDesktopEffective = isDesktop ?? width >= 1024;
 
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [isAaSyncOpen, setIsAaSyncOpen] = useState(false);
   const [isRebalanceOpen, setIsRebalanceOpen] = useState(false);
   const [isStressTestOpen, setIsStressTestOpen] = useState(false);
   const [isAttributionOpen, setIsAttributionOpen] = useState(false);
@@ -175,6 +177,24 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
             >
               <Text style={[styles.secondaryButtonText, { color: "#38BDF8", fontWeight: "800" }]}>
                 📥 Import Statement
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.secondaryButton,
+                {
+                  paddingHorizontal: 12,
+                  paddingVertical: 7,
+                  backgroundColor: "rgba(16, 185, 129, 0.12)",
+                  borderColor: "rgba(16, 185, 129, 0.4)",
+                  borderWidth: 1,
+                  borderRadius: 8,
+                },
+              ]}
+              onPress={() => setIsAaSyncOpen(true)}
+            >
+              <Text style={[styles.secondaryButtonText, { color: "#10B981", fontWeight: "800" }]}>
+                🔗 Sync via AA
               </Text>
             </Pressable>
             <Pressable
@@ -765,6 +785,15 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
         onClose={() => setIsImportOpen(false)}
         theme={theme}
         clientName="Unified Portfolio"
+        onImportHoldings={onImportHoldings}
+      />
+
+      <AccountAggregatorModal
+        visible={isAaSyncOpen}
+        onClose={() => setIsAaSyncOpen(false)}
+        theme={theme}
+        clientName="Unified Portfolio"
+        clientId="UNIFIED-AA-01"
         onImportHoldings={onImportHoldings}
       />
     </>

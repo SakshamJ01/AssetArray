@@ -470,7 +470,7 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 620,
     maxHeight: "90%",
-    borderRadius: 16,
+    borderRadius: 12,
     borderWidth: 1,
     overflow: "hidden",
   },
@@ -504,7 +504,7 @@ const styles = StyleSheet.create({
   closeBtn: {
     width: 32,
     height: 32,
-    borderRadius: 16,
+    borderRadius: 9999,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -523,7 +523,7 @@ const styles = StyleSheet.create({
   stepDot: {
     width: 20,
     height: 20,
-    borderRadius: 10,
+    borderRadius: 9999,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -566,7 +566,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 12,
     padding: 12,
-    borderRadius: 10,
+    borderRadius: 8,
     borderWidth: 1,
   },
   checkbox: {

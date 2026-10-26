@@ -712,7 +712,7 @@ const styles = StyleSheet.create({
     padding: 28,
   },
   headerCard: {
-    borderRadius: 14,
+    borderRadius: 12,
     borderWidth: 1,
     padding: 20,
     marginBottom: 20,
@@ -732,7 +732,7 @@ const styles = StyleSheet.create({
   brandIconBox: {
     width: 46,
     height: 46,
-    borderRadius: 10,
+    borderRadius: 8,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
@@ -871,7 +871,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   sectionCard: {
-    borderRadius: 14,
+    borderRadius: 12,
     borderWidth: 1,
     padding: 20,
     marginBottom: 20,
@@ -928,7 +928,7 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   actionBanner: {
-    borderRadius: 14,
+    borderRadius: 12,
     borderWidth: 1,
     padding: 20,
     marginBottom: 20,
@@ -1016,7 +1016,7 @@ const styles = StyleSheet.create({
   filterChip: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 20,
+    borderRadius: 9999,
     borderWidth: 1,
     marginRight: 8,
   },
@@ -1026,7 +1026,7 @@ const styles = StyleSheet.create({
   },
   tableContainer: {
     borderWidth: 1,
-    borderRadius: 10,
+    borderRadius: 8,
     overflow: "hidden",
   },
   tableHeader: {
@@ -1084,7 +1084,7 @@ const styles = StyleSheet.create({
     marginTop: 14,
   },
   goalItemCard: {
-    borderRadius: 10,
+    borderRadius: 8,
     borderWidth: 1,
     padding: 14,
   },
@@ -1136,7 +1136,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   footerCard: {
-    borderRadius: 14,
+    borderRadius: 12,
     borderWidth: 1,
     padding: 20,
     marginTop: 8,

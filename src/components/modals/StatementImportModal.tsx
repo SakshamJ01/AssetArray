@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { AppTheme } from "../../theme";
@@ -37,6 +38,9 @@ const StatementImportModalContent: React.FC<StatementImportModalProps> = ({
   clientName = "Client Portfolio",
   onImportHoldings,
 }) => {
+  const { width: windowWidth } = useWindowDimensions();
+  const isMobile = windowWidth < 768;
+
   const isDark =
     theme.colors.background === "#030712" ||
     theme.colors.textPrimary === "#ffffff" ||
@@ -121,10 +125,11 @@ const StatementImportModalContent: React.FC<StatementImportModalProps> = ({
       transparent
       onRequestClose={onClose}
     >
-      <View style={styles.backdrop}>
+      <View style={[styles.backdrop, isMobile && { padding: 8 }]}>
         <View
           style={[
             styles.dialog,
+            isMobile && { maxWidth: "100%", maxHeight: "96%", borderRadius: 8 },
             {
               backgroundColor: isDark ? "#070D1B" : "#FFFFFF",
               borderColor: isDark

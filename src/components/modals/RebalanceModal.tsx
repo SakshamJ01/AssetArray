@@ -6,6 +6,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { AppTheme } from "../../theme";
@@ -37,6 +38,9 @@ const RebalanceModalContent: React.FC<RebalanceModalProps> = ({
   theme,
   clientName = "Portfolio",
 }) => {
+  const { width } = useWindowDimensions();
+  const isMobile = width < 768;
+
   const [selectedModelId, setSelectedModelId] = useState<string>("balanced_wealth");
   const [algoModalVisible, setAlgoModalVisible] = useState<boolean>(false);
   const [algoSymbol, setAlgoSymbol] = useState<string>("NIFTYBEES");
@@ -62,15 +66,15 @@ const RebalanceModalContent: React.FC<RebalanceModalProps> = ({
       transparent
       onRequestClose={onClose}
     >
-      <View style={styles.backdrop}>
-        <View style={styles.dialog}>
+      <View style={[styles.backdrop, isMobile && { padding: 8 }]}>
+        <View style={[styles.dialog, isMobile && { maxWidth: "100%", maxHeight: "96%", borderRadius: 8 }]}>
           {/* Header */}
-          <View style={styles.header}>
+          <View style={[styles.header, isMobile && { padding: 14 }]}>
             <View style={{ flex: 1 }}>
               <View style={styles.tagBadge}>
                 <Text style={styles.tagText}>GOVERNANCE ENGINE</Text>
               </View>
-              <Text style={styles.title}>Portfolio Rebalance & Tax Harvesting</Text>
+              <Text style={[styles.title, isMobile && { fontSize: 16 }]}>Portfolio Rebalance & Tax Harvesting</Text>
               <Text style={styles.subtitle}>
                 Simulate target rebalancing allocation for {clientName} based on benchmark models.
               </Text>
@@ -81,7 +85,7 @@ const RebalanceModalContent: React.FC<RebalanceModalProps> = ({
           </View>
 
           <ScrollView
-            style={styles.content}
+            style={[styles.content, isMobile && { padding: 12 }]}
             showsVerticalScrollIndicator={false}
           >
             {/* Target Model Selector */}
@@ -93,7 +97,7 @@ const RebalanceModalContent: React.FC<RebalanceModalProps> = ({
                   <Pressable
                     key={model.id}
                     onPress={() => setSelectedModelId(model.id)}
-                    style={[styles.modelCard, isActive && styles.modelCardActive]}
+                    style={[styles.modelCard, isMobile && { minWidth: "100%" }, isActive && styles.modelCardActive]}
                   >
                     <View style={styles.modelCardHeader}>
                       <Text style={[styles.modelName, isActive && styles.modelNameActive]}>
@@ -172,26 +176,28 @@ const RebalanceModalContent: React.FC<RebalanceModalProps> = ({
                     </View>
                   </View>
 
-                  <View style={styles.weightsCompareRow}>
-                    <Text style={styles.compareText}>
-                      Current: <Text style={styles.valText}>{item.currentWeight}%</Text>
-                    </Text>
-                    <Text style={styles.arrowText}>→</Text>
-                    <Text style={styles.compareText}>
-                      Target: <Text style={styles.valText}>{item.targetWeight}%</Text>
-                    </Text>
-                    <Text
-                      style={[
-                        styles.driftDeltaText,
-                        item.drift > 0 ? { color: "#EF4444" } : { color: "#10B981" },
-                      ]}
-                    >
-                      ({item.drift > 0 ? `+${item.drift}%` : `${item.drift}%`})
-                    </Text>
+                  <View style={[styles.weightsCompareRow, isMobile && { flexWrap: "wrap", rowGap: 8 }]}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                      <Text style={styles.compareText}>
+                        Current: <Text style={styles.valText}>{item.currentWeight}%</Text>
+                      </Text>
+                      <Text style={styles.arrowText}>→</Text>
+                      <Text style={styles.compareText}>
+                        Target: <Text style={styles.valText}>{item.targetWeight}%</Text>
+                      </Text>
+                      <Text
+                        style={[
+                          styles.driftDeltaText,
+                          item.drift > 0 ? { color: "#EF4444" } : { color: "#10B981" },
+                        ]}
+                      >
+                        ({item.drift > 0 ? `+${item.drift}%` : `${item.drift}%`})
+                      </Text>
+                    </View>
 
                     {(isBuy || isSell) && (
                       <Pressable
-                        style={styles.algoTicketBtn}
+                        style={[styles.algoTicketBtn, isMobile && { width: "100%", marginLeft: 0, marginTop: 4, paddingVertical: 8, alignItems: "center" }]}
                         onPress={() => {
                           const candidate = holdings.find((h) => h.assetClass === item.assetClass);
                           const sym = candidate?.ticker || (item.assetClass === "Equity" ? "NIFTYBEES" : item.assetClass === "Debt" ? "LIQUIDBEES" : "GOLDBEES");
@@ -255,9 +261,9 @@ const RebalanceModalContent: React.FC<RebalanceModalProps> = ({
           </ScrollView>
 
           {/* Footer Action */}
-          <View style={styles.footer}>
+          <View style={[styles.footer, isMobile && { flexDirection: "column", gap: 8, padding: 12 }]}>
             <Pressable
-              style={styles.algoDeskBtn}
+              style={[styles.algoDeskBtn, isMobile && { width: "100%", alignItems: "center", justifyContent: "center" }]}
               onPress={() => {
                 const firstActionItem = result.items.find((i) => i.action !== "BALANCED" && i.amount > 0);
                 if (firstActionItem) {
@@ -277,7 +283,7 @@ const RebalanceModalContent: React.FC<RebalanceModalProps> = ({
             </Pressable>
 
             <Pressable
-              style={styles.doneBtn}
+              style={[styles.doneBtn, isMobile && { width: "100%", alignItems: "center", justifyContent: "center" }]}
               onPress={() => {
                 Alert.alert(
                   "Rebalance Strategy Generated",

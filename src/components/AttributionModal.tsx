@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Pressable,
   ScrollView,
+  useWindowDimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -31,6 +32,8 @@ export const AttributionModal: React.FC<AttributionModalProps> = ({
   portfolioName,
   onClose,
 }) => {
+  const { width } = useWindowDimensions();
+  const isMobile = width < 768;
   const { colors } = theme;
   const [selectedBenchmarkKey, setSelectedBenchmarkKey] =
     useState<keyof typeof STANDARD_BENCHMARKS>("BALANCED_HYBRID");
@@ -54,17 +57,18 @@ export const AttributionModal: React.FC<AttributionModalProps> = ({
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
-      <View style={[styles.overlay, { backgroundColor: colors.overlay }]}>
+      <View style={[styles.overlay, { backgroundColor: colors.overlay }, isMobile && { padding: 8 }]}>
         <View
           style={[
             styles.modalContainer,
             { backgroundColor: colors.surface, borderColor: colors.border },
+            isMobile && { maxWidth: "100%", maxHeight: "96%", borderRadius: 8 },
           ]}
         >
           {/* Header */}
-          <View style={styles.header}>
-            <View>
-              <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
+          <View style={[styles.header, isMobile && { padding: 14 }]}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.headerTitle, { color: colors.textPrimary }, isMobile && { fontSize: 16 }]}>
                 Performance Attribution
               </Text>
               <Text style={[styles.headerSub, { color: colors.textMuted }]}>
@@ -280,94 +284,101 @@ export const AttributionModal: React.FC<AttributionModalProps> = ({
               Asset Class Attribution Table
             </Text>
 
-            <View
-              style={[
-                styles.tableContainer,
-                { backgroundColor: colors.surface, borderColor: colors.border },
-              ]}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={true}
+              style={{ width: "100%" }}
+              contentContainerStyle={{ minWidth: isMobile ? 540 : "100%" }}
             >
-              <View style={[styles.tableHeader, { backgroundColor: colors.backgroundMuted }]}>
-                <Text style={[styles.thCell, { flex: 2, color: colors.textSecondary }]}>
-                  Asset Class
-                </Text>
-                <Text style={[styles.thCell, { flex: 1.2, color: colors.textSecondary }]}>
-                  Port / Bmk
-                </Text>
-                <Text style={[styles.thCell, { flex: 1.2, color: colors.textSecondary }]}>
-                  Alloc (bps)
-                </Text>
-                <Text style={[styles.thCell, { flex: 1.2, color: colors.textSecondary }]}>
-                  Select (bps)
-                </Text>
-                <Text style={[styles.thCell, { flex: 1.2, color: colors.textSecondary }]}>
-                  Total (bps)
-                </Text>
+              <View
+                style={[
+                  styles.tableContainer,
+                  { backgroundColor: colors.surface, borderColor: colors.border, width: "100%" },
+                ]}
+              >
+                <View style={[styles.tableHeader, { backgroundColor: colors.backgroundMuted }]}>
+                  <Text style={[styles.thCell, { flex: 2, color: colors.textSecondary }]}>
+                    Asset Class
+                  </Text>
+                  <Text style={[styles.thCell, { flex: 1.2, color: colors.textSecondary }]}>
+                    Port / Bmk
+                  </Text>
+                  <Text style={[styles.thCell, { flex: 1.2, color: colors.textSecondary }]}>
+                    Alloc (bps)
+                  </Text>
+                  <Text style={[styles.thCell, { flex: 1.2, color: colors.textSecondary }]}>
+                    Select (bps)
+                  </Text>
+                  <Text style={[styles.thCell, { flex: 1.2, color: colors.textSecondary }]}>
+                    Total (bps)
+                  </Text>
+                </View>
+
+                {result.breakdown.map((row, idx) => {
+                  const totalBps = Math.round(row.totalActiveContribution * 10000);
+                  const allocBps = Math.round(row.allocationEffect * 10000);
+                  const selectBps = Math.round(row.selectionEffect * 10000);
+
+                  return (
+                    <View
+                      key={idx}
+                      style={[
+                        styles.tableRow,
+                        {
+                          borderBottomColor: colors.border,
+                          backgroundColor:
+                            idx % 2 === 0 ? "transparent" : colors.surfaceMuted,
+                        },
+                      ]}
+                    >
+                      <Text style={[styles.tdCell, { flex: 2, fontWeight: "600", color: colors.textPrimary }]}>
+                        {row.category}
+                      </Text>
+                      <Text style={[styles.tdCell, { flex: 1.2, color: colors.textMuted }]}>
+                        {(row.portfolioWeight * 100).toFixed(0)}% / {(row.benchmarkWeight * 100).toFixed(0)}%
+                      </Text>
+                      <Text
+                        style={[
+                          styles.tdCell,
+                          {
+                            flex: 1.2,
+                            color: allocBps >= 0 ? colors.accent : colors.danger,
+                          },
+                        ]}
+                      >
+                        {allocBps >= 0 ? "+" : ""}
+                        {allocBps}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.tdCell,
+                          {
+                            flex: 1.2,
+                            color: selectBps >= 0 ? colors.accent : colors.danger,
+                          },
+                        ]}
+                      >
+                        {selectBps >= 0 ? "+" : ""}
+                        {selectBps}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.tdCell,
+                          {
+                            flex: 1.2,
+                            fontWeight: "700",
+                            color: totalBps >= 0 ? colors.accent : colors.danger,
+                          },
+                        ]}
+                      >
+                        {totalBps >= 0 ? "+" : ""}
+                        {totalBps}
+                      </Text>
+                    </View>
+                  );
+                })}
               </View>
-
-              {result.breakdown.map((row, idx) => {
-                const totalBps = Math.round(row.totalActiveContribution * 10000);
-                const allocBps = Math.round(row.allocationEffect * 10000);
-                const selectBps = Math.round(row.selectionEffect * 10000);
-
-                return (
-                  <View
-                    key={idx}
-                    style={[
-                      styles.tableRow,
-                      {
-                        borderBottomColor: colors.border,
-                        backgroundColor:
-                          idx % 2 === 0 ? "transparent" : colors.surfaceMuted,
-                      },
-                    ]}
-                  >
-                    <Text style={[styles.tdCell, { flex: 2, fontWeight: "600", color: colors.textPrimary }]}>
-                      {row.category}
-                    </Text>
-                    <Text style={[styles.tdCell, { flex: 1.2, color: colors.textMuted }]}>
-                      {(row.portfolioWeight * 100).toFixed(0)}% / {(row.benchmarkWeight * 100).toFixed(0)}%
-                    </Text>
-                    <Text
-                      style={[
-                        styles.tdCell,
-                        {
-                          flex: 1.2,
-                          color: allocBps >= 0 ? colors.accent : colors.danger,
-                        },
-                      ]}
-                    >
-                      {allocBps >= 0 ? "+" : ""}
-                      {allocBps}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.tdCell,
-                        {
-                          flex: 1.2,
-                          color: selectBps >= 0 ? colors.accent : colors.danger,
-                        },
-                      ]}
-                    >
-                      {selectBps >= 0 ? "+" : ""}
-                      {selectBps}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.tdCell,
-                        {
-                          flex: 1.2,
-                          fontWeight: "700",
-                          color: totalBps >= 0 ? colors.accent : colors.danger,
-                        },
-                      ]}
-                    >
-                      {totalBps >= 0 ? "+" : ""}
-                      {totalBps}
-                    </Text>
-                  </View>
-                );
-              })}
-            </View>
+            </ScrollView>
               </>
             ) : (
               <View style={styles.emptyState}>
@@ -499,12 +510,15 @@ const styles = StyleSheet.create({
   },
   summaryBarRow: {
     flexDirection: "row",
-    gap: 10,
+    flexWrap: "wrap",
+    gap: 8,
     marginBottom: 18,
   },
   effectCard: {
-    flex: 1,
-    padding: 12,
+    flexGrow: 1,
+    flexBasis: 95,
+    minWidth: 95,
+    padding: 10,
     borderRadius: 12,
     borderWidth: 1,
     alignItems: "center",

@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Pressable,
   ScrollView,
+  useWindowDimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { generateTaxHarvestReport, INDIAN_TAX_RATES } from "../services/taxIntelligence";
@@ -27,6 +28,8 @@ export const TaxHarvestStudioModal: React.FC<TaxHarvestStudioModalProps> = ({
   portfolioName,
   onClose,
 }) => {
+  const { width } = useWindowDimensions();
+  const isMobile = width < 768;
   const { colors } = theme;
   const [selectedLots, setSelectedLots] = useState<Record<string, boolean>>({});
 
@@ -44,17 +47,18 @@ export const TaxHarvestStudioModal: React.FC<TaxHarvestStudioModalProps> = ({
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
-      <View style={[styles.overlay, { backgroundColor: colors.overlay }]}>
+      <View style={[styles.overlay, { backgroundColor: colors.overlay }, isMobile && { padding: 8 }]}>
         <View
           style={[
             styles.modalContainer,
             { backgroundColor: colors.surface, borderColor: colors.border },
+            isMobile && { maxWidth: "100%", maxHeight: "96%", borderRadius: 8 },
           ]}
         >
           {/* Header */}
-          <View style={styles.header}>
-            <View>
-              <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
+          <View style={[styles.header, isMobile && { padding: 14 }]}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.headerTitle, { color: colors.textPrimary }, isMobile && { fontSize: 16 }]}>
                 Indian Tax-Loss Harvesting Studio
               </Text>
               <Text style={[styles.headerSub, { color: colors.textMuted }]}>
@@ -68,7 +72,7 @@ export const TaxHarvestStudioModal: React.FC<TaxHarvestStudioModalProps> = ({
 
           <ScrollView
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.scrollContent}
+            contentContainerStyle={[styles.scrollContent, isMobile && { padding: 12 }]}
           >
             {/* KPI Cards */}
             <View style={styles.kpiRow}>
@@ -158,62 +162,69 @@ export const TaxHarvestStudioModal: React.FC<TaxHarvestStudioModalProps> = ({
                 </Text>
               </View>
             ) : (
-              <View
-                style={[
-                  styles.tableContainer,
-                  { backgroundColor: colors.surface, borderColor: colors.border },
-                ]}
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={true}
+                style={{ width: "100%" }}
+                contentContainerStyle={{ minWidth: isMobile ? 540 : "100%" }}
               >
-                <View style={[styles.tableHeader, { backgroundColor: colors.backgroundMuted }]}>
-                  <Text style={[styles.thCell, { flex: 0.5 }]}>Pick</Text>
-                  <Text style={[styles.thCell, { flex: 2, color: colors.textSecondary }]}>Asset / Ticker</Text>
-                  <Text style={[styles.thCell, { flex: 1.2, color: colors.textSecondary }]}>Period</Text>
-                  <Text style={[styles.thCell, { flex: 1.4, color: colors.textSecondary }]}>Unrealized Loss</Text>
-                  <Text style={[styles.thCell, { flex: 1.3, color: colors.textSecondary }]}>Estimated Tax Impact</Text>
-                </View>
+                <View
+                  style={[
+                    styles.tableContainer,
+                    { backgroundColor: colors.surface, borderColor: colors.border, width: "100%" },
+                  ]}
+                >
+                  <View style={[styles.tableHeader, { backgroundColor: colors.backgroundMuted }]}>
+                    <Text style={[styles.thCell, { flex: 0.5 }]}>Pick</Text>
+                    <Text style={[styles.thCell, { flex: 2, color: colors.textSecondary }]}>Asset / Ticker</Text>
+                    <Text style={[styles.thCell, { flex: 1.2, color: colors.textSecondary }]}>Period</Text>
+                    <Text style={[styles.thCell, { flex: 1.4, color: colors.textSecondary }]}>Unrealized Loss</Text>
+                    <Text style={[styles.thCell, { flex: 1.3, color: colors.textSecondary }]}>Estimated Tax Impact</Text>
+                  </View>
 
-                {harvestCandidates.map((lot, idx) => {
-                  const isChecked = selectedLots[lot.holdingId] !== false;
-                  return (
-                    <Pressable
-                      key={lot.holdingId || idx}
-                      onPress={() => toggleLot(lot.holdingId)}
-                      style={[
-                        styles.tableRow,
-                        {
-                          borderBottomColor: colors.border,
-                          backgroundColor: isChecked ? colors.accentSoft : "transparent",
-                        },
-                      ]}
-                    >
-                      <View style={{ flex: 0.5, alignItems: "center" }}>
-                        <Ionicons
-                          name={isChecked ? "checkbox" : "square-outline"}
-                          size={18}
-                          color={isChecked ? colors.accent : colors.textMuted}
-                        />
-                      </View>
-                      <View style={{ flex: 2 }}>
-                        <Text style={[styles.tdMain, { color: colors.textPrimary }]}>
-                          {lot.assetName}
+                  {harvestCandidates.map((lot, idx) => {
+                    const isChecked = selectedLots[lot.holdingId] !== false;
+                    return (
+                      <Pressable
+                        key={lot.holdingId || idx}
+                        onPress={() => toggleLot(lot.holdingId)}
+                        style={[
+                          styles.tableRow,
+                          {
+                            borderBottomColor: colors.border,
+                            backgroundColor: isChecked ? colors.accentSoft : "transparent",
+                          },
+                        ]}
+                      >
+                        <View style={{ flex: 0.5, alignItems: "center" }}>
+                          <Ionicons
+                            name={isChecked ? "checkbox" : "square-outline"}
+                            size={18}
+                            color={isChecked ? colors.accent : colors.textMuted}
+                          />
+                        </View>
+                        <View style={{ flex: 2 }}>
+                          <Text style={[styles.tdMain, { color: colors.textPrimary }]}>
+                            {lot.assetName}
+                          </Text>
+                          <Text style={[styles.tdSub, { color: colors.textMuted }]}>
+                            {lot.ticker} • {lot.applicableTaxRatePct}% Rate
+                          </Text>
+                        </View>
+                        <Text style={[styles.tdCell, { flex: 1.2, color: colors.textSecondary }]}>
+                          {lot.isLongTerm ? "LTCG (>12m)" : "STCG (<12m)"}
                         </Text>
-                        <Text style={[styles.tdSub, { color: colors.textMuted }]}>
-                          {lot.ticker} • {lot.applicableTaxRatePct}% Rate
+                        <Text style={[styles.tdCell, { flex: 1.4, fontWeight: "700", color: colors.danger }]}>
+                          -₹{Math.round(Math.abs(lot.unrealizedGainLoss)).toLocaleString("en-IN")}
                         </Text>
-                      </View>
-                      <Text style={[styles.tdCell, { flex: 1.2, color: colors.textSecondary }]}>
-                        {lot.isLongTerm ? "LTCG (>12m)" : "STCG (<12m)"}
-                      </Text>
-                      <Text style={[styles.tdCell, { flex: 1.4, fontWeight: "700", color: colors.danger }]}>
-                        -₹{Math.round(Math.abs(lot.unrealizedGainLoss)).toLocaleString("en-IN")}
-                      </Text>
-                      <Text style={[styles.tdCell, { flex: 1.3, fontWeight: "800", color: colors.accent }]}>
-                        +₹{Math.round(lot.potentialTaxShield).toLocaleString("en-IN")}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
+                        <Text style={[styles.tdCell, { flex: 1.3, fontWeight: "800", color: colors.accent }]}>
+                          +₹{Math.round(lot.potentialTaxShield).toLocaleString("en-IN")}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </ScrollView>
             )}
 
             {/* Wash Sale Protection Advisory */}
@@ -286,14 +297,17 @@ const styles = StyleSheet.create({
   },
   kpiRow: {
     flexDirection: "row",
-    gap: 10,
+    flexWrap: "wrap",
+    gap: 8,
     marginBottom: 14,
   },
   kpiCard: {
-    flex: 1,
-    borderRadius: 4,
+    flexGrow: 1,
+    flexBasis: 120,
+    minWidth: 120,
+    borderRadius: 8,
     borderWidth: 1,
-    padding: 12,
+    padding: 10,
     alignItems: "center",
   },
   kpiCardLabel: {

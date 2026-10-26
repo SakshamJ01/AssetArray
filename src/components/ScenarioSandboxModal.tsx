@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Pressable,
   ScrollView,
+  useWindowDimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { simulateScenario, PRESET_SCENARIOS } from "../services/scenarioEngine";
@@ -27,6 +28,8 @@ export const ScenarioSandboxModal: React.FC<ScenarioSandboxModalProps> = ({
   portfolioName,
   onClose,
 }) => {
+  const { width } = useWindowDimensions();
+  const isMobile = width < 768;
   const { colors } = theme;
   const [selectedPresetKey, setSelectedPresetKey] =
     useState<keyof typeof PRESET_SCENARIOS>("TECH_CORRECTION");
@@ -50,17 +53,18 @@ export const ScenarioSandboxModal: React.FC<ScenarioSandboxModalProps> = ({
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
-      <View style={[styles.overlay, { backgroundColor: colors.overlay }]}>
+      <View style={[styles.overlay, { backgroundColor: colors.overlay }, isMobile && { padding: 8 }]}>
         <View
           style={[
             styles.modalContainer,
             { backgroundColor: colors.surface, borderColor: colors.border },
+            isMobile && { maxWidth: "100%", maxHeight: "96%", borderRadius: 8 },
           ]}
         >
           {/* Header */}
-          <View style={styles.header}>
-            <View>
-              <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
+          <View style={[styles.header, isMobile && { padding: 14 }]}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.headerTitle, { color: colors.textPrimary }, isMobile && { fontSize: 16 }]}>
                 What-If Scenario Sandbox
               </Text>
               <Text style={[styles.headerSub, { color: colors.textMuted }]}>
@@ -74,7 +78,7 @@ export const ScenarioSandboxModal: React.FC<ScenarioSandboxModalProps> = ({
 
           <ScrollView
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.scrollContent}
+            contentContainerStyle={[styles.scrollContent, isMobile && { padding: 12 }]}
           >
             {/* Scenario Preset Selector */}
             <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>
@@ -94,6 +98,7 @@ export const ScenarioSandboxModal: React.FC<ScenarioSandboxModalProps> = ({
                     }}
                     style={[
                       styles.presetCard,
+                      isMobile && { width: "100%" },
                       {
                         backgroundColor: active ? colors.brand + "18" : colors.surfaceMuted,
                         borderColor: active ? colors.brand : colors.border,

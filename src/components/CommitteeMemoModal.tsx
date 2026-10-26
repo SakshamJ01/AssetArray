@@ -7,6 +7,7 @@ import {
   Pressable,
   ScrollView,
   Platform,
+  useWindowDimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { generateCommitteeMemo } from "../services/committeeMemo";
@@ -26,6 +27,8 @@ export const CommitteeMemoModal: React.FC<CommitteeMemoModalProps> = ({
   client,
   onClose,
 }) => {
+  const { width } = useWindowDimensions();
+  const isMobile = width < 768;
   const { colors } = theme;
   const [copied, setCopied] = useState(false);
 
@@ -41,17 +44,18 @@ export const CommitteeMemoModal: React.FC<CommitteeMemoModalProps> = ({
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
-      <View style={[styles.overlay, { backgroundColor: colors.overlay }]}>
+      <View style={[styles.overlay, { backgroundColor: colors.overlay }, isMobile && { padding: 8 }]}>
         <View
           style={[
             styles.modalContainer,
             { backgroundColor: colors.surface, borderColor: colors.border },
+            isMobile && { maxWidth: "100%", maxHeight: "96%", borderRadius: 8 },
           ]}
         >
           {/* Header */}
-          <View style={styles.header}>
-            <View>
-              <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
+          <View style={[styles.header, isMobile && { padding: 14 }]}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.headerTitle, { color: colors.textPrimary }, isMobile && { fontSize: 16 }]}>
                 Investment Committee Memorandum
               </Text>
               <Text style={[styles.headerSub, { color: colors.textMuted }]}>
@@ -65,7 +69,7 @@ export const CommitteeMemoModal: React.FC<CommitteeMemoModalProps> = ({
 
           <ScrollView
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.scrollContent}
+            contentContainerStyle={[styles.scrollContent, isMobile && { padding: 12 }]}
           >
             {/* Metadata Pill Banner */}
             <View
@@ -250,13 +254,16 @@ const styles = StyleSheet.create({
   },
   metaBanner: {
     flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
     padding: 12,
-    borderRadius: 12,
+    borderRadius: 8,
     borderWidth: 1,
     marginBottom: 16,
   },
   metaCol: {
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: 90,
     alignItems: "center",
   },
   metaLabel: {

@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { AppTheme } from "../../theme";
@@ -42,6 +43,9 @@ const LiveMarketDepthModalContent: React.FC<LiveMarketDepthModalProps> = ({
   symbol,
   onExecuteTrade,
 }) => {
+  const { width: windowWidth } = useWindowDimensions();
+  const isMobile = windowWidth < 768;
+
   const isDark =
     theme.colors.background === "#030712" ||
     theme.colors.textPrimary === "#ffffff" ||
@@ -132,12 +136,12 @@ const LiveMarketDepthModalContent: React.FC<LiveMarketDepthModalProps> = ({
     }, 3000);
   };
 
-  // Sparkline tick points
+  // Sparkline tick points with responsive width
   const ticks = instrument.tickHistory;
   const minTick = Math.min(...ticks);
   const maxTick = Math.max(...ticks);
   const tickRange = maxTick - minTick || 1;
-  const chartW = 340;
+  const chartW = Math.max(200, Math.min(340, windowWidth - (isMobile ? 70 : 80)));
   const chartH = 60;
   const stepX = chartW / Math.max(1, ticks.length - 1);
 
@@ -154,10 +158,11 @@ const LiveMarketDepthModalContent: React.FC<LiveMarketDepthModalProps> = ({
       transparent
       onRequestClose={onClose}
     >
-      <View style={styles.backdrop}>
+      <View style={[styles.backdrop, isMobile && { padding: 8 }]}>
         <View
           style={[
             styles.dialog,
+            isMobile && { maxWidth: "100%", maxHeight: "96%", borderRadius: 8 },
             {
               backgroundColor: isDark ? "#070D1B" : "#FFFFFF",
               borderColor: isDark
@@ -232,7 +237,7 @@ const LiveMarketDepthModalContent: React.FC<LiveMarketDepthModalProps> = ({
 
           <ScrollView
             style={styles.scrollArea}
-            contentContainerStyle={{ padding: 20 }}
+            contentContainerStyle={{ padding: isMobile ? 12 : 20 }}
             showsVerticalScrollIndicator={false}
           >
             {/* Live LTP & Flash Banner */}
@@ -294,7 +299,7 @@ const LiveMarketDepthModalContent: React.FC<LiveMarketDepthModalProps> = ({
               </View>
 
               {/* Intraday Live Micro-Tick Sparkline */}
-              <View style={styles.chartCol}>
+              <View style={[styles.chartCol, isMobile && { width: "100%", alignItems: "center", marginTop: 8 }]}>
                 <Text style={styles.chartColLabel}>INTRADAY TICKS (REAL-TIME)</Text>
                 {Platform.OS === "web" ? (
                   // @ts-ignore
@@ -469,7 +474,7 @@ const LiveMarketDepthModalContent: React.FC<LiveMarketDepthModalProps> = ({
                 />
               </View>
 
-              <View style={styles.depthColumns}>
+              <View style={[styles.depthColumns, isMobile && { flexDirection: "column", gap: 16 }]}>
                 {/* Bids Column */}
                 <View style={styles.depthSideCol}>
                   <View style={styles.depthTableHeader}>
@@ -549,7 +554,7 @@ const LiveMarketDepthModalContent: React.FC<LiveMarketDepthModalProps> = ({
                 Fiduciary Order Execution Desk
               </Text>
 
-              <View style={styles.tradeInputRow}>
+              <View style={[styles.tradeInputRow, isMobile && { flexDirection: "column", gap: 10 }]}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.tradeInputLabel}>Quantity (Shares)</Text>
                   <TextInput
@@ -596,10 +601,10 @@ const LiveMarketDepthModalContent: React.FC<LiveMarketDepthModalProps> = ({
                 </View>
               </View>
 
-              <View style={styles.actionBtnRow}>
+              <View style={[styles.actionBtnRow, isMobile && { flexDirection: "column", gap: 8 }]}>
                 <Pressable
                   onPress={() => handleOrder("BUY")}
-                  style={[styles.tradeBtn, { backgroundColor: "#10B981" }]}
+                  style={[styles.tradeBtn, { backgroundColor: "#10B981" }, isMobile && { width: "100%", alignItems: "center" }]}
                 >
                   <Text style={styles.tradeBtnText}>
                     BUY {instrument.symbol}
@@ -607,7 +612,7 @@ const LiveMarketDepthModalContent: React.FC<LiveMarketDepthModalProps> = ({
                 </Pressable>
                 <Pressable
                   onPress={() => handleOrder("SELL")}
-                  style={[styles.tradeBtn, { backgroundColor: "#EF4444" }]}
+                  style={[styles.tradeBtn, { backgroundColor: "#EF4444" }, isMobile && { width: "100%", alignItems: "center" }]}
                 >
                   <Text style={styles.tradeBtnText}>
                     SELL {instrument.symbol}

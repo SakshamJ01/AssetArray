@@ -160,164 +160,330 @@ export const PortfoliosScreen: React.FC<PortfoliosScreenProps> = React.memo(({
               and risk visibility.
             </Text>
           </View>
-          <View style={[styles.actionGroupWrap, { justifyContent: "flex-start", gap: 8 }]}>
-            <Pressable
-              style={[
-                styles.secondaryButton,
-                {
-                  paddingHorizontal: 12,
-                  paddingVertical: 7,
-                  backgroundColor: "rgba(56, 189, 248, 0.12)",
-                  borderColor: "rgba(56, 189, 248, 0.4)",
-                  borderWidth: 1,
-                  borderRadius: 8,
-                },
-              ]}
-              onPress={() => setIsImportOpen(true)}
+          {isDesktopEffective ? (
+            <View style={[styles.actionGroupWrap, { justifyContent: "flex-start", gap: 8 }]}>
+              <Pressable
+                style={[
+                  styles.secondaryButton,
+                  {
+                    paddingHorizontal: 12,
+                    paddingVertical: 7,
+                    backgroundColor: "rgba(56, 189, 248, 0.12)",
+                    borderColor: "rgba(56, 189, 248, 0.4)",
+                    borderWidth: 1,
+                    borderRadius: 8,
+                  },
+                ]}
+                onPress={() => setIsImportOpen(true)}
+              >
+                <Text style={[styles.secondaryButtonText, { color: "#38BDF8", fontWeight: "800" }]}>
+                  📥 Import Statement
+                </Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.secondaryButton,
+                  {
+                    paddingHorizontal: 12,
+                    paddingVertical: 7,
+                    backgroundColor: "rgba(16, 185, 129, 0.12)",
+                    borderColor: "rgba(16, 185, 129, 0.4)",
+                    borderWidth: 1,
+                    borderRadius: 8,
+                  },
+                ]}
+                onPress={() => setIsAaSyncOpen(true)}
+              >
+                <Text style={[styles.secondaryButtonText, { color: "#10B981", fontWeight: "800" }]}>
+                  🔗 Sync via AA
+                </Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.secondaryButton,
+                  {
+                    paddingHorizontal: 12,
+                    paddingVertical: 7,
+                    backgroundColor: "#111C2E",
+                    borderColor: "rgba(224, 168, 76, 0.3)",
+                    borderWidth: 1,
+                    borderRadius: 8,
+                  },
+                ]}
+                onPress={() => setIsRebalanceOpen(true)}
+              >
+                <Text style={[styles.secondaryButtonText, { color: "#E0A84C", fontWeight: "700" }]}>
+                  ⚖️ Rebalance
+                </Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.secondaryButton,
+                  {
+                    paddingHorizontal: 12,
+                    paddingVertical: 7,
+                    backgroundColor: "#111C2E",
+                    borderColor: "rgba(239, 68, 68, 0.3)",
+                    borderWidth: 1,
+                    borderRadius: 8,
+                  },
+                ]}
+                onPress={() => setIsStressTestOpen(true)}
+              >
+                <Text style={[styles.secondaryButtonText, { color: "#F87171", fontWeight: "700" }]}>
+                  🛡️ Stress Test
+                </Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.secondaryButton,
+                  {
+                    paddingHorizontal: 12,
+                    paddingVertical: 7,
+                    backgroundColor: "#111C2E",
+                    borderColor: "rgba(56, 189, 248, 0.3)",
+                    borderWidth: 1,
+                    borderRadius: 8,
+                  },
+                ]}
+                onPress={() => setIsAttributionOpen(true)}
+              >
+                <Text style={[styles.secondaryButtonText, { color: "#38BDF8", fontWeight: "700" }]}>
+                  📊 Attribution
+                </Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.secondaryButton,
+                  {
+                    paddingHorizontal: 12,
+                    paddingVertical: 7,
+                    backgroundColor: "#111C2E",
+                    borderColor: "rgba(16, 185, 129, 0.3)",
+                    borderWidth: 1,
+                    borderRadius: 8,
+                  },
+                ]}
+                onPress={() => setIsTaxStudioOpen(true)}
+              >
+                <Text style={[styles.secondaryButtonText, { color: "#10B981", fontWeight: "700" }]}>
+                  📑 Tax Harvest
+                </Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.secondaryButton,
+                  {
+                    paddingHorizontal: 12,
+                    paddingVertical: 7,
+                    backgroundColor: "#111C2E",
+                    borderColor: "rgba(129, 140, 248, 0.3)",
+                    borderWidth: 1,
+                    borderRadius: 8,
+                  },
+                ]}
+                onPress={() => setIsScenarioOpen(true)}
+              >
+                <Text style={[styles.secondaryButtonText, { color: "#818CF8", fontWeight: "700" }]}>
+                  🎯 What-If
+                </Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.secondaryButton,
+                  {
+                    paddingHorizontal: 12,
+                    paddingVertical: 7,
+                    backgroundColor: "#111C2E",
+                    borderColor: "rgba(224, 168, 76, 0.4)",
+                    borderWidth: 1,
+                    borderRadius: 8,
+                  },
+                ]}
+                onPress={() => setIsMemoOpen(true)}
+              >
+                <Text style={[styles.secondaryButtonText, { color: "#E0A84C", fontWeight: "700" }]}>
+                  📜 IC Memo
+                </Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.primaryButton,
+                  { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 8 },
+                ]}
+                onPress={() => void refreshLiveMarketPrices()}
+                disabled={isMarketRefreshing}
+              >
+                <Text style={styles.primaryButtonText}>
+                  {isMarketRefreshing ? "Updating..." : "⚡ Refresh Prices"}
+                </Text>
+              </Pressable>
+            </View>
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ flexDirection: "row", gap: 8, paddingVertical: 4 }}
+              style={{ width: "100%", marginTop: 8 }}
             >
-              <Text style={[styles.secondaryButtonText, { color: "#38BDF8", fontWeight: "800" }]}>
-                📥 Import Statement
-              </Text>
-            </Pressable>
-            <Pressable
-              style={[
-                styles.secondaryButton,
-                {
-                  paddingHorizontal: 12,
-                  paddingVertical: 7,
-                  backgroundColor: "rgba(16, 185, 129, 0.12)",
-                  borderColor: "rgba(16, 185, 129, 0.4)",
-                  borderWidth: 1,
-                  borderRadius: 8,
-                },
-              ]}
-              onPress={() => setIsAaSyncOpen(true)}
-            >
-              <Text style={[styles.secondaryButtonText, { color: "#10B981", fontWeight: "800" }]}>
-                🔗 Sync via AA
-              </Text>
-            </Pressable>
-            <Pressable
-              style={[
-                styles.secondaryButton,
-                {
-                  paddingHorizontal: 12,
-                  paddingVertical: 7,
-                  backgroundColor: "#111C2E",
-                  borderColor: "rgba(224, 168, 76, 0.3)",
-                  borderWidth: 1,
-                  borderRadius: 8,
-                },
-              ]}
-              onPress={() => setIsRebalanceOpen(true)}
-            >
-              <Text style={[styles.secondaryButtonText, { color: "#E0A84C", fontWeight: "700" }]}>
-                ⚖️ Rebalance
-              </Text>
-            </Pressable>
-            <Pressable
-              style={[
-                styles.secondaryButton,
-                {
-                  paddingHorizontal: 12,
-                  paddingVertical: 7,
-                  backgroundColor: "#111C2E",
-                  borderColor: "rgba(239, 68, 68, 0.3)",
-                  borderWidth: 1,
-                  borderRadius: 8,
-                },
-              ]}
-              onPress={() => setIsStressTestOpen(true)}
-            >
-              <Text style={[styles.secondaryButtonText, { color: "#F87171", fontWeight: "700" }]}>
-                🛡️ Stress Test
-              </Text>
-            </Pressable>
-            <Pressable
-              style={[
-                styles.secondaryButton,
-                {
-                  paddingHorizontal: 12,
-                  paddingVertical: 7,
-                  backgroundColor: "#111C2E",
-                  borderColor: "rgba(56, 189, 248, 0.3)",
-                  borderWidth: 1,
-                  borderRadius: 8,
-                },
-              ]}
-              onPress={() => setIsAttributionOpen(true)}
-            >
-              <Text style={[styles.secondaryButtonText, { color: "#38BDF8", fontWeight: "700" }]}>
-                📊 Attribution
-              </Text>
-            </Pressable>
-            <Pressable
-              style={[
-                styles.secondaryButton,
-                {
-                  paddingHorizontal: 12,
-                  paddingVertical: 7,
-                  backgroundColor: "#111C2E",
-                  borderColor: "rgba(16, 185, 129, 0.3)",
-                  borderWidth: 1,
-                  borderRadius: 8,
-                },
-              ]}
-              onPress={() => setIsTaxStudioOpen(true)}
-            >
-              <Text style={[styles.secondaryButtonText, { color: "#10B981", fontWeight: "700" }]}>
-                📑 Tax Harvest
-              </Text>
-            </Pressable>
-            <Pressable
-              style={[
-                styles.secondaryButton,
-                {
-                  paddingHorizontal: 12,
-                  paddingVertical: 7,
-                  backgroundColor: "#111C2E",
-                  borderColor: "rgba(129, 140, 248, 0.3)",
-                  borderWidth: 1,
-                  borderRadius: 8,
-                },
-              ]}
-              onPress={() => setIsScenarioOpen(true)}
-            >
-              <Text style={[styles.secondaryButtonText, { color: "#818CF8", fontWeight: "700" }]}>
-                🎯 What-If
-              </Text>
-            </Pressable>
-            <Pressable
-              style={[
-                styles.secondaryButton,
-                {
-                  paddingHorizontal: 12,
-                  paddingVertical: 7,
-                  backgroundColor: "#111C2E",
-                  borderColor: "rgba(224, 168, 76, 0.4)",
-                  borderWidth: 1,
-                  borderRadius: 8,
-                },
-              ]}
-              onPress={() => setIsMemoOpen(true)}
-            >
-              <Text style={[styles.secondaryButtonText, { color: "#E0A84C", fontWeight: "700" }]}>
-                📜 IC Memo
-              </Text>
-            </Pressable>
-            <Pressable
-              style={[
-                styles.primaryButton,
-                { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 8 },
-              ]}
-              onPress={() => void refreshLiveMarketPrices()}
-              disabled={isMarketRefreshing}
-            >
-              <Text style={styles.primaryButtonText}>
-                {isMarketRefreshing ? "Updating..." : "⚡ Refresh Prices"}
-              </Text>
-            </Pressable>
-          </View>
+              <Pressable
+                style={[
+                  styles.secondaryButton,
+                  {
+                    paddingHorizontal: 12,
+                    paddingVertical: 7,
+                    backgroundColor: "rgba(56, 189, 248, 0.12)",
+                    borderColor: "rgba(56, 189, 248, 0.4)",
+                    borderWidth: 1,
+                    borderRadius: 8,
+                  },
+                ]}
+                onPress={() => setIsImportOpen(true)}
+              >
+                <Text style={[styles.secondaryButtonText, { color: "#38BDF8", fontWeight: "800" }]}>
+                  📥 Import Statement
+                </Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.secondaryButton,
+                  {
+                    paddingHorizontal: 12,
+                    paddingVertical: 7,
+                    backgroundColor: "rgba(16, 185, 129, 0.12)",
+                    borderColor: "rgba(16, 185, 129, 0.4)",
+                    borderWidth: 1,
+                    borderRadius: 8,
+                  },
+                ]}
+                onPress={() => setIsAaSyncOpen(true)}
+              >
+                <Text style={[styles.secondaryButtonText, { color: "#10B981", fontWeight: "800" }]}>
+                  🔗 Sync via AA
+                </Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.secondaryButton,
+                  {
+                    paddingHorizontal: 12,
+                    paddingVertical: 7,
+                    backgroundColor: "#111C2E",
+                    borderColor: "rgba(224, 168, 76, 0.3)",
+                    borderWidth: 1,
+                    borderRadius: 8,
+                  },
+                ]}
+                onPress={() => setIsRebalanceOpen(true)}
+              >
+                <Text style={[styles.secondaryButtonText, { color: "#E0A84C", fontWeight: "700" }]}>
+                  ⚖️ Rebalance
+                </Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.secondaryButton,
+                  {
+                    paddingHorizontal: 12,
+                    paddingVertical: 7,
+                    backgroundColor: "#111C2E",
+                    borderColor: "rgba(239, 68, 68, 0.3)",
+                    borderWidth: 1,
+                    borderRadius: 8,
+                  },
+                ]}
+                onPress={() => setIsStressTestOpen(true)}
+              >
+                <Text style={[styles.secondaryButtonText, { color: "#F87171", fontWeight: "700" }]}>
+                  🛡️ Stress Test
+                </Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.secondaryButton,
+                  {
+                    paddingHorizontal: 12,
+                    paddingVertical: 7,
+                    backgroundColor: "#111C2E",
+                    borderColor: "rgba(56, 189, 248, 0.3)",
+                    borderWidth: 1,
+                    borderRadius: 8,
+                  },
+                ]}
+                onPress={() => setIsAttributionOpen(true)}
+              >
+                <Text style={[styles.secondaryButtonText, { color: "#38BDF8", fontWeight: "700" }]}>
+                  📊 Attribution
+                </Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.secondaryButton,
+                  {
+                    paddingHorizontal: 12,
+                    paddingVertical: 7,
+                    backgroundColor: "#111C2E",
+                    borderColor: "rgba(16, 185, 129, 0.3)",
+                    borderWidth: 1,
+                    borderRadius: 8,
+                  },
+                ]}
+                onPress={() => setIsTaxStudioOpen(true)}
+              >
+                <Text style={[styles.secondaryButtonText, { color: "#10B981", fontWeight: "700" }]}>
+                  📑 Tax Harvest
+                </Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.secondaryButton,
+                  {
+                    paddingHorizontal: 12,
+                    paddingVertical: 7,
+                    backgroundColor: "#111C2E",
+                    borderColor: "rgba(129, 140, 248, 0.3)",
+                    borderWidth: 1,
+                    borderRadius: 8,
+                  },
+                ]}
+                onPress={() => setIsScenarioOpen(true)}
+              >
+                <Text style={[styles.secondaryButtonText, { color: "#818CF8", fontWeight: "700" }]}>
+                  🎯 What-If
+                </Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.secondaryButton,
+                  {
+                    paddingHorizontal: 12,
+                    paddingVertical: 7,
+                    backgroundColor: "#111C2E",
+                    borderColor: "rgba(224, 168, 76, 0.4)",
+                    borderWidth: 1,
+                    borderRadius: 8,
+                  },
+                ]}
+                onPress={() => setIsMemoOpen(true)}
+              >
+                <Text style={[styles.secondaryButtonText, { color: "#E0A84C", fontWeight: "700" }]}>
+                  📜 IC Memo
+                </Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.primaryButton,
+                  { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 8 },
+                ]}
+                onPress={() => void refreshLiveMarketPrices()}
+                disabled={isMarketRefreshing}
+              >
+                <Text style={styles.primaryButtonText}>
+                  {isMarketRefreshing ? "Updating..." : "⚡ Refresh Prices"}
+                </Text>
+              </Pressable>
+            </ScrollView>
+          )}
         </View>
         <View
           style={{

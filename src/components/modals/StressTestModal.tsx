@@ -6,6 +6,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { AppTheme } from "../../theme";
@@ -36,6 +37,9 @@ const StressTestModalContent: React.FC<StressTestModalProps> = ({
   theme,
   clientName = "Portfolio",
 }) => {
+  const { width } = useWindowDimensions();
+  const isMobile = width < 768;
+
   const [selectedScenarioId, setSelectedScenarioId] = useState<string>("gfc_2008");
 
   const selectedScenario = useMemo(
@@ -70,15 +74,15 @@ const StressTestModalContent: React.FC<StressTestModalProps> = ({
       transparent
       onRequestClose={onClose}
     >
-      <View style={styles.backdrop}>
-        <View style={styles.dialog}>
+      <View style={[styles.backdrop, isMobile && { padding: 8 }]}>
+        <View style={[styles.dialog, isMobile && { maxWidth: "100%", maxHeight: "96%", borderRadius: 8 }]}>
           {/* Header */}
-          <View style={styles.header}>
+          <View style={[styles.header, isMobile && { padding: 14 }]}>
             <View style={{ flex: 1 }}>
               <View style={styles.tagBadge}>
                 <Text style={styles.tagText}>RISK ARCHITECTURE</Text>
               </View>
-              <Text style={styles.title}>Macro Stress-Testing Crisis Simulator</Text>
+              <Text style={[styles.title, isMobile && { fontSize: 16 }]}>Macro Stress-Testing Crisis Simulator</Text>
               <Text style={styles.subtitle}>
                 Simulate portfolio resilience under extreme macro stress events for {clientName}.
               </Text>
@@ -88,7 +92,7 @@ const StressTestModalContent: React.FC<StressTestModalProps> = ({
             </Pressable>
           </View>
 
-          <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          <ScrollView style={[styles.content, isMobile && { padding: 12 }]} showsVerticalScrollIndicator={false}>
             {/* Scenario Selector Chips */}
             <Text style={styles.sectionHeader}>SELECT MACRO CRISIS SCENARIO</Text>
             <View style={styles.scenariosGrid}>
@@ -100,6 +104,7 @@ const StressTestModalContent: React.FC<StressTestModalProps> = ({
                     onPress={() => setSelectedScenarioId(scenario.id)}
                     style={[
                       styles.scenarioCard,
+                      isMobile && { minWidth: "100%" },
                       isActive && styles.scenarioCardActive,
                     ]}
                   >
@@ -121,7 +126,7 @@ const StressTestModalContent: React.FC<StressTestModalProps> = ({
             </View>
 
             {/* Stress Test Hero Metrics */}
-            <View style={styles.heroSummary}>
+            <View style={[styles.heroSummary, isMobile && { flexDirection: "column", gap: 14, alignItems: "stretch", padding: 12 }]}>
               <View style={styles.heroColumn}>
                 <Text style={styles.heroLabel}>PROJECTED DRAWDOWN</Text>
                 <Text style={styles.drawdownValue}>
@@ -132,7 +137,7 @@ const StressTestModalContent: React.FC<StressTestModalProps> = ({
                 </Text>
               </View>
 
-              <View style={styles.heroDivider} />
+              <View style={[styles.heroDivider, isMobile && { width: "100%", height: 1, marginHorizontal: 0, marginVertical: 2 }]} />
 
               <View style={styles.heroColumn}>
                 <Text style={styles.heroLabel}>RESILIENCE RATING</Text>
@@ -205,9 +210,9 @@ const StressTestModalContent: React.FC<StressTestModalProps> = ({
           </ScrollView>
 
           {/* Footer */}
-          <View style={styles.footer}>
+          <View style={[styles.footer, isMobile && { padding: 12 }]}>
             <Pressable
-              style={styles.doneBtn}
+              style={[styles.doneBtn, isMobile && { width: "100%", alignItems: "center" }]}
               onPress={() => {
                 Alert.alert(
                   "Stress Test Documented",

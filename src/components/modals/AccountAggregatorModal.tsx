@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -42,6 +43,9 @@ const AccountAggregatorModalContent: React.FC<AccountAggregatorModalProps> = ({
   clientId = "CLIENT-AA-001",
   onImportHoldings,
 }) => {
+  const { width: windowWidth } = useWindowDimensions();
+  const isMobile = windowWidth < 768;
+
   const isDark =
     theme.colors.background === "#030712" ||
     theme.colors.textPrimary === "#ffffff" ||
@@ -132,10 +136,11 @@ const AccountAggregatorModalContent: React.FC<AccountAggregatorModalProps> = ({
       transparent
       onRequestClose={onClose}
     >
-      <View style={styles.backdrop}>
+      <View style={[styles.backdrop, isMobile && { padding: 8 }]}>
         <View
           style={[
             styles.dialog,
+            isMobile && { maxWidth: "100%", maxHeight: "96%", borderRadius: 8 },
             {
               backgroundColor: isDark ? "#070D1B" : "#FFFFFF",
               borderColor: isDark ? "rgba(224, 168, 76, 0.35)" : "rgba(179, 126, 40, 0.35)",

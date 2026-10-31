@@ -55,6 +55,7 @@ if (Platform.OS === "web" && typeof document !== "undefined") {
 }
 import { BottomTabBar } from "./src/components/BottomTabBar";
 import { DesktopSidebar } from "./src/components/DesktopSidebar";
+import { AppShell } from "./src/components/layout";
 import { AiWealthCopilot } from "./src/components/AiWealthCopilot";
 import { AdvisorCommandCenter } from "./src/features/advisor";
 import { AdvisorMessagesScreen } from "./src/screens/workspace/AdvisorMessagesScreen";
@@ -226,200 +227,23 @@ const emptyVaultDocumentDraft: VaultDocumentDraft = {
 
 const emptyConnectedAccounts: ConnectedAccount[] = [];
 
-function todayISO() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function formatDate(date = new Date()) {
-  return date.toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
-
-function formatReminderDate(value: string) {
-  if (!value) {
-    return "Not scheduled";
-  }
-
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) {
-    return value;
-  }
-
-  return parsed.toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
-
-function isReminderDue(value: string) {
-  return Boolean(value) && value <= todayISO();
-}
-
-function numericValue(raw: string) {
-  const cleaned = raw.replace(/,/g, "").trim();
-  const parsed = Number(cleaned);
-  return Number.isFinite(parsed) ? parsed : 0;
-}
-
-function currencyDisplay(raw: string) {
-  const value = numericValue(raw);
-  return value.toLocaleString("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  });
-}
-
-function compactText(text: string, fallback: string) {
-  const cleaned = text.trim().replace(/\s+/g, " ");
-  return cleaned || fallback;
-}
-
-function parseStoredJson<T>(raw: string | null, fallback: T) {
-  if (!raw) {
-    return fallback;
-  }
-
-  try {
-    return JSON.parse(raw) as T;
-  } catch {
-    return fallback;
-  }
-}
-
-function personalizedClientMessage(client: Client, marketNote: string) {
-  return `Hello ${client.name}, based on your ${client.riskProfile || "current"} profile and ${client.category} segment, ${marketNote}`;
-}
-
-function resolveBroadcastContact(client: Client, channel: BroadcastChannel) {
-  if (channel === "Email") {
-    return client.email.trim();
-  }
-
-  if (channel === "SMS" || channel === "WhatsApp") {
-    return client.phone.trim();
-  }
-
-  if (client.preferredChannel === "Email") {
-    return client.email.trim();
-  }
-
-  if (client.preferredChannel === "SMS" || client.preferredChannel === "WhatsApp") {
-    return client.phone.trim();
-  }
-
-  return client.phone.trim() || client.email.trim();
-}
-
-function clientInsightList(client: Client) {
-  const insights: string[] = [];
-  const holdingCount = client.portfolio.length;
-  const totalCurrent = client.portfolio.reduce(
-    (sum, item) => sum + numericValue(item.currentValue),
-    0
-  );
-  const biggestHolding = [...client.portfolio].sort(
-    (a, b) => numericValue(b.currentValue) - numericValue(a.currentValue)
-  )[0];
-
-  if (holdingCount === 0) {
-    insights.push("Portfolio data missing. Add holdings to unlock portfolio review insights.");
-  } else {
-    insights.push(`Current portfolio tracks ${holdingCount} holding${holdingCount === 1 ? "" : "s"} worth about ${currencyDisplay(`${totalCurrent}`)}.`);
-  }
-  if (biggestHolding && totalCurrent > 0) {
-    const concentration = (numericValue(biggestHolding.currentValue) / totalCurrent) * 100;
-    insights.push(
-      `${biggestHolding.assetName} is the largest exposure at roughly ${concentration.toFixed(1)}% of tracked current value.`
-    );
-  }
-  if (!client.reminderDate) {
-    insights.push("No follow-up reminder is scheduled yet.");
-  } else if (isReminderDue(client.reminderDate)) {
-    insights.push("Follow-up is due now and should be prioritised.");
-  }
-  if (!client.notes.trim()) {
-    insights.push("Private note section is still empty, so meeting context may be incomplete.");
-  }
-  return insights;
-}
-
-function buildClientFromDraft(draft: ClientDraft, existing?: Client): Client {
-  return {
-    id: existing?.id ?? `${Date.now()}`,
-    name: draft.name.trim(),
-    phone: draft.phone.trim(),
-    email: draft.email.trim(),
-    category: draft.category,
-    riskProfile: draft.riskProfile.trim(),
-    preferredChannel: draft.preferredChannel,
-    watchlist: draft.watchlist
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean),
-    notes: draft.notes.trim(),
-    city: draft.city.trim(),
-    allocation: draft.allocation.trim(),
-    reminderDate: draft.reminderDate,
-    priority: draft.priority,
-    avatarUrl: draft.avatarUrl?.trim() || existing?.avatarUrl || "",
-    lastContact: existing?.lastContact ?? "Not contacted yet",
-    updateHistory: existing?.updateHistory ?? [],
-    portfolio: existing?.portfolio ?? [],
-  };
-}
-
-function buildDraftFromClient(client: Client): ClientDraft {
-  return {
-    name: client.name,
-    phone: client.phone,
-    email: client.email,
-    category: client.category,
-    riskProfile: client.riskProfile,
-    preferredChannel: client.preferredChannel,
-    watchlist: client.watchlist.join(", "),
-    notes: client.notes,
-    city: client.city,
-    allocation: client.allocation,
-    reminderDate: client.reminderDate,
-    priority: client.priority,
-    avatarUrl: client.avatarUrl || "",
-  };
-}
-
-function buildHoldingFromDraft(
-  draft: HoldingDraft,
-  existing?: PortfolioHolding
-): PortfolioHolding {
-  return {
-    id: existing?.id ?? `${Date.now()}`,
-    assetName: draft.assetName.trim(),
-    assetClass: draft.assetClass,
-    ticker: draft.ticker.trim(),
-    quantity: draft.quantity.trim(),
-    investedValue: draft.investedValue.trim(),
-    currentValue: draft.currentValue.trim(),
-    targetWeight: draft.targetWeight.trim(),
-    notes: draft.notes.trim(),
-  };
-}
-
-function buildHoldingDraftFromHolding(holding: PortfolioHolding): HoldingDraft {
-  return {
-    assetName: holding.assetName,
-    assetClass: holding.assetClass ?? "Stocks",
-    ticker: holding.ticker,
-    quantity: holding.quantity,
-    investedValue: holding.investedValue,
-    currentValue: holding.currentValue,
-    targetWeight: holding.targetWeight,
-    notes: holding.notes,
-  };
-}
+import {
+  todayISO,
+  formatDate,
+  formatReminderDate,
+  isReminderDue,
+  numericValue,
+  currencyDisplay,
+  compactText,
+  parseStoredJson,
+  personalizedClientMessage,
+  resolveBroadcastContact,
+  clientInsightList,
+  buildClientFromDraft,
+  buildDraftFromClient,
+  buildHoldingFromDraft,
+  buildHoldingDraftFromHolding,
+} from "./src/services/wealthHelpers";
 
 async function persistClients(clients: Client[]) {
   // Synthetic aggregates must never be written into the roster store.
@@ -3211,58 +3035,48 @@ function AppContent() {
         { backgroundColor: theme.colors.background },
       ]}
     >
-      <StatusBar style={darkModeEnabled ? "light" : "dark"} />
-      <View style={{ flex: 1, flexDirection: isDesktop ? "row" : "column", width: "100%", height: "100%" }}>
-        {isDesktop && (
-          <DesktopSidebar
-            activeTab={visibleTabs.some((tab) => tab.key === activeTab) ? activeTab : "Dashboard"}
-            advisorName={authSession?.user?.username || "Senior Wealth Advisor"}
-            dueClientsCount={dueClients.length}
-            isPro={isPro}
-            onChange={setActiveTab}
-            onLockDesk={() => setIsUnlocked(false)}
-            onOpenProModal={() => setIsPaywallVisible(true)}
-            onQuickAddClient={openAddModal}
-            onQuickBroadcast={() => {
-              if (selectedClientIds.length === 0 && clients.length > 0) {
-                setSelectedClientIds(clients.map((client) => client.id));
-              }
-              setIsBroadcastModalOpen(true);
-            }}
-            onQuickImportStatement={() => setIsOnboardingWizardOpen(true)}
-            onQuickExportRoster={exportAllClientsCsv}
-            syncStatus={syncState}
-            tabs={visibleTabs}
-            theme={theme}
-          />
-        )}
-        <View style={{ flex: 1, height: "100%", overflow: "hidden" }}>
-          <LiveMarketTicker
-            theme={theme}
-            onRefresh={() => void refreshLiveMarketPrices()}
-            isRefreshing={isMarketRefreshing}
-            activeCurrency={activeCurrency}
-            onCycleCurrency={cycleCurrency}
-          />
-          {(isDesktop || selectedClient) && (
-            <GlobalStatusBar
-              selectedClient={selectedClient}
-              activeTab={activeTab}
-              onNavigateTab={(tab, params) => {
-                setActiveTab(tab as AppTab);
-                if (params?.clientId) setSelectedClientId(params.clientId);
-                if (tab === "Portfolios" && params?.view) {
-                  setPortfolioActiveModal(params.view);
-                }
-              }}
-              theme={theme}
-              marketStatus={marketHealthMonitor.getOverallHealth().activeProviders > 0 ? "LIVE" : "SIMULATED"}
-              dataQualityPct={dataQualityReport?.overallScore ?? 0}
-              dataQualityTier={dataQualityReport?.overallTier ?? "MISSING"}
-              onClearClient={() => setSelectedClientId(null)}
-            />
-          )}
-          <ScreenTransition triggerKey={activeTab}>
+      <AppShell
+        isDesktop={isDesktop}
+        theme={theme}
+        darkModeEnabled={darkModeEnabled}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        visibleTabs={visibleTabs}
+        mobileTabs={mobileTabs}
+        selectedClient={selectedClient}
+        advisorName={authSession?.user?.username || "Senior Wealth Advisor"}
+        dueClientsCount={dueClients.length}
+        isPro={isPro}
+        syncStatus={syncState}
+        marketStatus={marketHealthMonitor.getOverallHealth().activeProviders > 0 ? "LIVE" : "SIMULATED"}
+        dataQualityPct={dataQualityReport?.overallScore ?? 0}
+        dataQualityTier={dataQualityReport?.overallTier ?? "MISSING"}
+        activeCurrency={activeCurrency}
+        isMarketRefreshing={isMarketRefreshing}
+        onRefreshMarket={() => void refreshLiveMarketPrices()}
+        onCycleCurrency={cycleCurrency}
+        onLockDesk={() => setIsUnlocked(false)}
+        onOpenProModal={() => setIsPaywallVisible(true)}
+        onQuickAddClient={openAddModal}
+        onQuickBroadcast={() => {
+          if (selectedClientIds.length === 0 && clients.length > 0) {
+            setSelectedClientIds(clients.map((client) => client.id));
+          }
+          setIsBroadcastModalOpen(true);
+        }}
+        onQuickImportStatement={() => setIsOnboardingWizardOpen(true)}
+        onQuickExportRoster={exportAllClientsCsv}
+        onClearSelectedClient={() => setSelectedClientId(null)}
+        onNavigateTab={(tab, params) => {
+          setActiveTab(tab as AppTab);
+          if (params?.clientId) setSelectedClientId(params.clientId);
+          if (tab === "Portfolios" && params?.view) {
+            setPortfolioActiveModal(params.view);
+          }
+        }}
+        insetsBottom={insets.bottom}
+        contentBottomPadding={contentBottomPadding}
+      >
             {activeTab === "Dashboard" ? (
         <AdvisorCommandCenter
           clients={clients}
@@ -3680,19 +3494,7 @@ function AppContent() {
         ) : null}
       </ScrollView>
       )}
-          </ScreenTransition>
-        </View>
-      </View>
-
-      {!isDesktop && (
-        <BottomTabBar
-          activeTab={mobileTabs.some((tab) => tab.key === activeTab) ? activeTab : "Workspace"}
-          bottomInset={insets.bottom}
-          onChange={setActiveTab}
-          tabs={mobileTabs}
-          theme={theme}
-        />
-      )}
+      </AppShell>
 
 
       <AiWealthCopilot

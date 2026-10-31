@@ -40,7 +40,8 @@ export function isReminderDue(value: string) {
 }
 
 export function numericValue(raw: string) {
-  const cleaned = (raw || "").replace(/,/g, "").trim();
+  const cleaned = (raw || "").replace(/[^0-9.-]/g, "").trim();
+  if (!cleaned || cleaned === "-" || cleaned === ".") return 0;
   const parsed = Number(cleaned);
   return Number.isFinite(parsed) ? parsed : 0;
 }

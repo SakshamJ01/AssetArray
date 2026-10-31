@@ -114,5 +114,22 @@ describe("Financial Calculators Service", () => {
       expect(result.targetCorpus).toBeGreaterThan(0);
       expect(result.requiredMonthlySip).toBeGreaterThan(0);
     });
+
+    it("should compute retirement corpus accurately when inflation exceeds return rate (negative real yield)", () => {
+      const result = calculateRetirement({
+        monthlyExpense: 50000,
+        inflation: 8,
+        returnRate: 6,
+        yearsToRetire: 10,
+        retirementYears: 20,
+      });
+
+      expect(result.ready).toBe(true);
+      expect(result.futureMonthlyExpense).toBeGreaterThan(50000);
+      const annualExp = result.futureMonthlyExpense * 12;
+      // Because real return is negative, target corpus must exceed naive flat multiple (annualExp * 20)
+      expect(result.targetCorpus).toBeGreaterThan(annualExp * 20);
+      expect(result.requiredMonthlySip).toBeGreaterThan(0);
+    });
   });
 });

@@ -1,4 +1,5 @@
 import { requestAiResearch, AiResearchResult } from "./secureSync";
+import { CurrencyCode, CURRENCY_REGISTRY, formatWealthAmount } from "./currency";
 
 export interface PortfolioHoldingInput {
   assetName: string;
@@ -25,6 +26,7 @@ export interface ClientInput {
 export interface PortfolioAnalysisOptions {
   endpoint: string;
   client: ClientInput;
+  currencyCode?: CurrencyCode;
   accessToken?: string | null;
   onUnauthorized?: () => Promise<string | null>;
 }
@@ -39,6 +41,7 @@ export interface ClientAiRecommendation {
 export async function analyzeClientPortfolioWithAI({
   endpoint,
   client,
+  currencyCode = "INR",
   accessToken,
   onUnauthorized,
 }: PortfolioAnalysisOptions): Promise<ClientAiRecommendation> {
@@ -48,8 +51,11 @@ export async function analyzeClientPortfolioWithAI({
   const totalGainLoss = totalValue - totalCost;
   const gainLossPercent = totalCost > 0 ? ((totalGainLoss / totalCost) * 100).toFixed(1) : "0";
 
+  const sym = CURRENCY_REGISTRY[currencyCode]?.symbol || "₹";
+  const formattedTotalValue = formatWealthAmount(totalValue, currencyCode);
+
   const holdingsSummary = holdings.map(
-    (h) => `- ${h.assetName} (${h.assetClass}): Value $${(Number(h.currentValue) || 0).toLocaleString()}, Cost $${(Number(h.investedValue) || 0).toLocaleString()}`
+    (h) => `- ${h.assetName} (${h.assetClass}): Value ${sym}${(Number(h.currentValue) || 0).toLocaleString()}, Cost ${sym}${(Number(h.investedValue) || 0).toLocaleString()}`
   ).join("\n");
 
   const query = `
@@ -57,7 +63,7 @@ Perform an advisor decision-support portfolio analysis for client:
 - Client Name: ${client.name}
 - Category: ${client.category} (Priority: ${client.priority})
 - Risk Preference: ${client.notes?.toLowerCase().includes("conservative") ? "Conservative" : "Balanced/Growth"}
-- Total Portfolio Value: $${totalValue.toLocaleString()} (Gain/Loss: ${gainLossPercent}%)
+- Total Portfolio Value: ${formattedTotalValue} (Gain/Loss: ${gainLossPercent}%)
 
 Holdings Breakdown:
 ${holdingsSummary || "No holdings entered yet."}
@@ -72,7 +78,7 @@ Provide an objective, non-guaranteed analysis including market observations, pot
     onUnauthorized,
   });
 
-  const whatsappDraft = `Hi ${client.name}, here is a quick market & portfolio update regarding your wealth strategy with Asset Array. Your portfolio total stands at $${totalValue.toLocaleString()}. Based on recent market trends (${aiResult.sentiment}), we recommend ${aiResult.opportunities[0] || "maintaining balanced allocation"}. Let me know if you would like to schedule a quick call!`;
+  const whatsappDraft = `Hi ${client.name}, here is a quick market & portfolio update regarding your wealth strategy with Asset Array. Your portfolio total stands at ${formattedTotalValue}. Based on recent market trends (${aiResult.sentiment}), we recommend ${aiResult.opportunities[0] || "maintaining balanced allocation"}. Let me know if you would like to schedule a quick call!`;
 
   const emailDraft = `Subject: Portfolio Insight & Market Strategy Update - ${client.name}
 
@@ -82,7 +88,7 @@ I hope this message finds you well.
 
 Below is your latest portfolio overview and tailored advisor analysis:
 
-- Portfolio Value: $${totalValue.toLocaleString()} (${gainLossPercent}% overall return)
+- Portfolio Value: ${formattedTotalValue} (${gainLossPercent}% overall return)
 - Market Sentiment: ${aiResult.sentiment}
 - Key Highlights: ${aiResult.summary}
 

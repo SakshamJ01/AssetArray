@@ -209,7 +209,7 @@ export function calculateRetirement({
   const annualExpenseAtRetirement = futureMonthlyExpense * 12;
   const realReturn = (1 + returnRate / 100) / (1 + inflation / 100) - 1;
   const targetCorpus =
-    realReturn > 0
+    Math.abs(realReturn) > 1e-6
       ? annualExpenseAtRetirement * ((1 - Math.pow(1 + realReturn, -retirementYears)) / realReturn)
       : annualExpenseAtRetirement * retirementYears;
   const monthlyRate = returnRate / 100 / 12;

@@ -78,6 +78,12 @@ import {
   refreshAdvisorToken,
   sendBroadcastCampaign,
 } from "./src/services/secureSync";
+import {
+  isPinLocked,
+  recordPinFailure,
+  clearPinFailures,
+  pinLockDelayMs,
+} from "./src/services/pinCrypto";
 import { GoogleSignInButton } from "./src/components/auth/GoogleSignInButton";
 import { buildAppTheme, styles, ThemeMode } from "./src/theme";
 import { SyncBadge } from "./src/components/SyncBadge";
@@ -1551,13 +1557,42 @@ function AppContent() {
   }
 
   function unlockAction() {
+    if (isPinLocked()) {
+      const waitSec = Math.max(1, Math.ceil(pinLockDelayMs() / 1000));
+      const msg = `Desk is temporarily locked due to repeated incorrect PIN attempts. Please wait ${waitSec} second${waitSec === 1 ? "" : "s"}.`;
+      if (Platform.OS === "web") {
+        window.alert(msg);
+      } else {
+        Alert.alert("Desk Locked", msg);
+      }
+      return;
+    }
+
     if (pinInput === storedPin) {
+      clearPinFailures();
       setIsUnlocked(true);
       setPinInput("");
       return;
     }
 
-    Alert.alert("Access denied", "The PIN you entered is incorrect.");
+    const { count, lockedUntil } = recordPinFailure();
+    if (lockedUntil > Date.now()) {
+      const waitSec = Math.max(1, Math.ceil((lockedUntil - Date.now()) / 1000));
+      const msg = `Incorrect PIN. Desk is locked for ${waitSec} seconds due to repeated failed attempts.`;
+      if (Platform.OS === "web") {
+        window.alert(msg);
+      } else {
+        Alert.alert("Desk Locked", msg);
+      }
+    } else {
+      const remaining = 5 - (count % 5);
+      const msg = `Incorrect PIN. ${remaining} attempt${remaining === 1 ? "" : "s"} remaining before lockout.`;
+      if (Platform.OS === "web") {
+        window.alert(msg);
+      } else {
+        Alert.alert("Access Denied", msg);
+      }
+    }
   }
 
   function openAddModal() {
@@ -2097,6 +2132,7 @@ function AppContent() {
       const recommendation = await analyzeClientPortfolioWithAI({
         endpoint: cloudSettings.endpoint,
         client: targetClient,
+        currencyCode: activeCurrency,
         accessToken,
         onUnauthorized: refreshAccessTokenIfNeeded,
       });
@@ -2636,19 +2672,11 @@ function AppContent() {
   async function resetLock() {
     await storageService.removeSecureItem(PIN_KEY);
     await storageService.removeSecureItem(BIOMETRIC_KEY);
-    // Narrowly scoped reset of the local client roster store. This clears any
-    // stale/local client state (including inherited test records) so the vault
-    // starts clean; legitimate cloud backups remain available for restore.
-    await resetClientStorage();
-    await persistClients([]);
     setStoredPin(null);
     setPinInput("");
     setPinSetup("");
     setBiometricEnabled(false);
     setIsUnlocked(false);
-    setClients([]);
-    setSelectedClientId(null);
-    setSelectedClientIds([]);
   }
 
   // Full wipe of ALL locally stored Asset Array state: client roster, goals,

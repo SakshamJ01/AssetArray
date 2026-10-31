@@ -924,6 +924,7 @@ export function calculateRSI(tickHistory: number[], period = 14): number {
   const avgGain = gains / (prices.length - 1);
   const avgLoss = losses / (prices.length - 1);
 
+  if (avgGain === 0 && avgLoss === 0) return 50;
   if (avgLoss === 0) return 100;
   if (avgGain === 0) return 0;
 
@@ -936,7 +937,7 @@ export function calculateRSI(tickHistory: number[], period = 14): number {
  * Calculates Bid-Ask spread in basis points (bps) from order book depth.
  */
 export function calculateSpreadBps(depth: MarketDepthEntry, lastPrice: number): number {
-  if (!depth || !depth.bids.length || !depth.asks.length || lastPrice <= 0) return 0;
+  if (!depth || !depth.bids?.length || !depth.asks?.length || lastPrice <= 0) return 0;
   const topBid = depth.bids[0].price;
   const topAsk = depth.asks[0].price;
   if (topAsk <= topBid) return 0;

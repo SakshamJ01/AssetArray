@@ -82,16 +82,36 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({
   const displayVal = activePoint ? activePoint.value : endVal;
   const displayDate = activePoint ? activePoint.date : `Current • ${period}`;
 
+  const formatValParts = (val: number) => {
+    const abs = Math.abs(val);
+    if (abs >= 10000000) {
+      return { num: (val / 10000000).toFixed(2), unit: "Cr" };
+    }
+    if (abs >= 100000) {
+      return { num: (val / 100000).toFixed(2), unit: "L" };
+    }
+    if (abs > 100) {
+      return { num: val.toLocaleString("en-IN", { maximumFractionDigits: 2 }), unit: "" };
+    }
+    return { num: val.toFixed(2), unit: val > 0 && val < 100 ? "Cr" : "" };
+  };
+
+  const formattedDisplay = formatValParts(displayVal);
+  const formattedDelta = formatValParts(Math.abs(deltaVal));
+
   // Calculate coordinates
   const points = useMemo(() => {
     const step = (chartWidth - paddingX * 2) / Math.max(1, series.length - 1);
+    const isFlat = maxVal === minVal;
     return series.map((pt, idx) => ({
       x: paddingX + idx * step,
-      y: paddingTop + usableHeight - ((pt.value - minVal) / valRange) * usableHeight,
+      y: isFlat
+        ? paddingTop + usableHeight / 2
+        : paddingTop + usableHeight - ((pt.value - minVal) / valRange) * usableHeight,
       date: pt.date,
       value: pt.value,
     }));
-  }, [chartWidth, minVal, series, usableHeight, valRange]);
+  }, [chartWidth, maxVal, minVal, series, usableHeight, valRange]);
 
   // Build SVG path with smooth cubic control points
   const pathData = useMemo(() => {
@@ -203,11 +223,13 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({
         <View style={styles.valuationRow}>
           <Text style={[styles.currencyPrefix, { color: brandColor }]}>{currencyPrefix}</Text>
           <Text style={[styles.valuationValue, { color: isDark ? "#F8FAFC" : theme.colors.textPrimary }]}>
-            {displayVal.toFixed(2)}
+            {formattedDisplay.num}
           </Text>
-          <Text style={[styles.denominationLabel, { color: isDark ? "#94A3B8" : theme.colors.textSecondary }]}>
-            Cr
-          </Text>
+          {formattedDisplay.unit ? (
+            <Text style={[styles.denominationLabel, { color: isDark ? "#94A3B8" : theme.colors.textSecondary }]}>
+              {formattedDisplay.unit}
+            </Text>
+          ) : null}
         </View>
 
         <View
@@ -225,7 +247,8 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({
             {isPositive ? "▲" : "▼"} {Math.abs(deltaPercent).toFixed(1)}% (
             {isPositive ? "+" : "-"}
             {currencyPrefix}
-            {Math.abs(deltaVal).toFixed(2)} Cr)
+            {formattedDelta.num}
+            {formattedDelta.unit ? ` ${formattedDelta.unit}` : ""})
           </Text>
         </View>
 

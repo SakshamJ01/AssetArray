@@ -40,6 +40,7 @@ const ClientPortalModalContent: React.FC<ClientPortalModalProps> = ({
 
   const [copiedLink, setCopiedLink] = useState(false);
   const [rebalanceApproved, setRebalanceApproved] = useState(false);
+  const [approvalHash, setApprovalHash] = useState<string>("");
 
   if (!client) return null;
 
@@ -58,6 +59,10 @@ const ClientPortalModalContent: React.FC<ClientPortalModalProps> = ({
   };
 
   const handleApproveRebalance = () => {
+    const rawId = client.id || "client";
+    const seed = rawId.split("").reduce((acc, ch) => (acc * 31 + ch.charCodeAt(0)) | 0, 0);
+    const hashHex = Math.abs(seed ^ Date.now()).toString(16).padStart(8, "0").slice(-8);
+    setApprovalHash(`0x${hashHex.slice(0, 4)}...${hashHex.slice(-4)}`);
     setRebalanceApproved(true);
   };
 
@@ -84,9 +89,12 @@ const ClientPortalModalContent: React.FC<ClientPortalModalProps> = ({
 
   const formatAum = (val: number) => {
     if (val === 0) return "₹0";
-    if (val >= 10000000) return `₹${(val / 10000000).toFixed(2)} Cr`;
-    if (val >= 100000) return `₹${(val / 100000).toFixed(2)} L`;
-    return `₹${val.toLocaleString("en-IN")}`;
+    const isNegative = val < 0;
+    const abs = Math.abs(val);
+    const prefix = isNegative ? "-₹" : "₹";
+    if (abs >= 10000000) return `${prefix}${(abs / 10000000).toFixed(2)} Cr`;
+    if (abs >= 100000) return `${prefix}${(abs / 100000).toFixed(2)} L`;
+    return `${prefix}${abs.toLocaleString("en-IN")}`;
   };
 
   return (
@@ -270,7 +278,7 @@ const ClientPortalModalContent: React.FC<ClientPortalModalProps> = ({
                       { color: unrealizedGainLoss >= 0 ? "#10B981" : "#EF4444" },
                     ]}
                   >
-                    {totalAum > 0 ? formatAum(unrealizedGainLoss) : "--"}
+                    {(totalAum > 0 || totalCost > 0) ? formatAum(unrealizedGainLoss) : "--"}
                   </Text>
                 </View>
                 <View style={styles.kpiItem}>
@@ -395,7 +403,7 @@ const ClientPortalModalContent: React.FC<ClientPortalModalProps> = ({
               {rebalanceApproved ? (
                 <View style={styles.approvalSuccess}>
                   <Text style={styles.approvalSuccessText}>
-                    ✓ Approved by {client.name} • Audit Hash: 0x7a8e...f21d • Advisor Dispatched
+                    ✓ Approved by {client.name} • Audit Hash: {approvalHash || "0xverified"} • Advisor Dispatched
                   </Text>
                 </View>
               ) : (

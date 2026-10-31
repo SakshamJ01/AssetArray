@@ -112,12 +112,40 @@ export function calculateRebalance(
   const currentByClass: Record<string, number> = {};
   holdings.forEach((h) => {
     const rawClass = (h.assetClass || "Alternative").trim();
-    const normalizedClass =
-      rawClass.toLowerCase().includes("stock") || rawClass.toLowerCase().includes("equity")
-        ? "Equity"
-        : rawClass.toLowerCase().includes("bond") || rawClass.toLowerCase().includes("debt")
-        ? "Debt"
-        : "Alternative";
+    const rawLower = rawClass.toLowerCase();
+    const nameLower = (h.assetName || "").toLowerCase();
+    let normalizedClass: "Equity" | "Debt" | "Alternative" = "Alternative";
+
+    if (
+      rawLower.includes("stock") ||
+      rawLower.includes("equity") ||
+      nameLower.includes("equity") ||
+      nameLower.includes("flexi cap") ||
+      nameLower.includes("large cap") ||
+      nameLower.includes("mid cap") ||
+      nameLower.includes("small cap") ||
+      nameLower.includes("index fund") ||
+      nameLower.includes("nifty") ||
+      nameLower.includes("sensex")
+    ) {
+      normalizedClass = "Equity";
+    } else if (
+      rawLower.includes("bond") ||
+      rawLower.includes("debt") ||
+      rawLower.includes("gilt") ||
+      rawLower.includes("treasury") ||
+      rawLower.includes("fixed") ||
+      nameLower.includes("debt fund") ||
+      nameLower.includes("bond") ||
+      nameLower.includes("gsec") ||
+      nameLower.includes("liquid fund")
+    ) {
+      normalizedClass = "Debt";
+    } else if (rawLower.includes("fund") || rawLower.includes("etf")) {
+      normalizedClass = "Equity";
+    } else {
+      normalizedClass = "Alternative";
+    }
 
     currentByClass[normalizedClass] =
       (currentByClass[normalizedClass] || 0) + (Number(h.currentValue) || 0);

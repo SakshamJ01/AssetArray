@@ -120,13 +120,22 @@ const AccountAggregatorModalContent: React.FC<AccountAggregatorModalProps> = ({
       setTimeout(() => {
         onClose();
       }, 1500);
+    } else {
+      setSuccessStatus(`Aggregated ${aggregatedData.holdings.length} verified positions across ${aggregatedData.fipCount} institutions.`);
+      setTimeout(() => {
+        onClose();
+      }, 1200);
     }
   };
 
   const formatCurrency = (val: number) => {
-    if (val >= 10000000) return `₹${(val / 10000000).toFixed(2)} Cr`;
-    if (val >= 100000) return `₹${(val / 100000).toFixed(2)} L`;
-    return `₹${val.toLocaleString("en-IN")}`;
+    if (val === 0) return "₹0";
+    const isNegative = val < 0;
+    const abs = Math.abs(val);
+    const prefix = isNegative ? "-₹" : "₹";
+    if (abs >= 10000000) return `${prefix}${(abs / 10000000).toFixed(2)} Cr`;
+    if (abs >= 100000) return `${prefix}${(abs / 100000).toFixed(2)} L`;
+    return `${prefix}${abs.toLocaleString("en-IN")}`;
   };
 
   return (

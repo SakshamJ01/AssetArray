@@ -1,4 +1,9 @@
-import { realTimeMarket, LiveInstrument } from "../src/services/realTimeMarket";
+import {
+  realTimeMarket,
+  LiveInstrument,
+  calculateRSI,
+  calculateSpreadBps,
+} from "../src/services/realTimeMarket";
 
 describe("Real-Time Share Market Streaming Engine", () => {
   afterAll(() => {
@@ -51,5 +56,31 @@ describe("Real-Time Share Market Streaming Engine", () => {
     if (!nifty) throw new Error("Nifty not found");
     const expectedChange = Number((nifty.price - nifty.previousClose).toFixed(2));
     expect(nifty.change).toBeCloseTo(expectedChange, 1);
+  });
+
+  it("should return neutral RSI (50) for flat static price series instead of 100", () => {
+    const flatTicks = [100, 100, 100, 100, 100, 100, 100, 100, 100, 100];
+    expect(calculateRSI(flatTicks)).toBe(50);
+
+    const risingTicks = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
+    expect(calculateRSI(risingTicks)).toBe(100);
+
+    const fallingTicks = [20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10];
+    expect(calculateRSI(fallingTicks)).toBe(0);
+  });
+
+  it("should calculate spread bps and handle edge cases safely", () => {
+    const validDepth = {
+      bids: [{ price: 99.5, quantity: 100, orders: 1 }],
+      asks: [{ price: 100.5, quantity: 100, orders: 1 }],
+      totalBidQty: 100,
+      totalAskQty: 100,
+    };
+    expect(calculateSpreadBps(validDepth, 100)).toBe(100); // (1 / 100) * 10000 = 100 bps
+
+    // Undefined/empty depth guards
+    expect(calculateSpreadBps({ bids: [], asks: [], totalBidQty: 0, totalAskQty: 0 }, 100)).toBe(0);
+    expect(calculateSpreadBps({} as any, 100)).toBe(0);
+    expect(calculateSpreadBps(validDepth, 0)).toBe(0);
   });
 });

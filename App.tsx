@@ -60,6 +60,7 @@ import { AdvisorCommandCenter } from "./src/features/advisor";
 import { AdvisorMessagesScreen } from "./src/screens/workspace/AdvisorMessagesScreen";
 import { setHapticsEnabled, triggerSuccessHaptic } from "./src/services/haptics";
 import { AppModalsHost } from "./src/components/modals/AppModalsHost";
+import { FirstLoginPinModal } from "./src/components/modals/FirstLoginPinModal";
 import {
   AiResearchResult,
   AuthUser,
@@ -523,6 +524,8 @@ function AppContent() {
   const [isClientAiLoading, setIsClientAiLoading] = useState(false);
   const [isAiCopilotOpen, setIsAiCopilotOpen] = useState(false);
   const [activeCurrency, setActiveCurrency] = useState<CurrencyCode>("INR");
+  const [isFirstLoginPinSetupOpen, setIsFirstLoginPinSetupOpen] = useState(false);
+  const [lockedDueToInactivity, setLockedDueToInactivity] = useState(false);
   const [portalClientId, setPortalClientId] = useState<string | null>(() => {
     if (Platform.OS !== "web" || typeof window === "undefined") return null;
     try {
@@ -600,6 +603,36 @@ function AppContent() {
 
     return () => unsubscribe();
   }, []);
+
+  // 15-Minute Institutional Inactivity Auto-Lock
+  useEffect(() => {
+    if (!isUnlocked || !authSession) return;
+    const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
+    let timer: any = null;
+
+    const resetTimer = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        setLockedDueToInactivity(true);
+        setIsUnlocked(false);
+      }, INACTIVITY_TIMEOUT_MS);
+    };
+
+    resetTimer();
+
+    if (Platform.OS === "web" && typeof window !== "undefined") {
+      const events = ["mousemove", "mousedown", "keydown", "scroll", "touchstart"];
+      events.forEach((evt) => window.addEventListener(evt, resetTimer, { passive: true }));
+      return () => {
+        if (timer) clearTimeout(timer);
+        events.forEach((evt) => window.removeEventListener(evt, resetTimer));
+      };
+    }
+
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [isUnlocked, authSession]);
 
 
   const cycleCurrency = () => {
@@ -1539,8 +1572,21 @@ function AppContent() {
     });
 
     if (result.success) {
+      setLockedDueToInactivity(false);
       setIsUnlocked(true);
       setPinInput("");
+    }
+  }
+
+  async function handleSaveNewDeskPin(newPin: string) {
+    await storageService.setSecureItem(PIN_KEY, newPin);
+    setStoredPin(newPin);
+    setIsFirstLoginPinSetupOpen(false);
+    await triggerSuccessHaptic();
+    if (Platform.OS === "web") {
+      window.alert("Personal Desk PIN successfully set!");
+    } else {
+      Alert.alert("PIN Updated", "Your personal desk PIN is now configured.");
     }
   }
 
@@ -1553,6 +1599,7 @@ function AppContent() {
     await storageService.setSecureItem(PIN_KEY, pinSetup);
     setStoredPin(pinSetup);
     setPinSetup("");
+    setLockedDueToInactivity(false);
     setIsUnlocked(true);
   }
 
@@ -1570,6 +1617,7 @@ function AppContent() {
 
     if (pinInput === storedPin) {
       clearPinFailures();
+      setLockedDueToInactivity(false);
       setIsUnlocked(true);
       setPinInput("");
       return;
@@ -1928,10 +1976,12 @@ function AppContent() {
       setAuthSession(session);
       await persistAuthSession(session);
       setAuthPassword("");
+      setLockedDueToInactivity(false);
       setIsUnlocked(true);
       if (!storedPin) {
         setStoredPin("0000");
         await storageService.setSecureItem(PIN_KEY, "0000");
+        setIsFirstLoginPinSetupOpen(true);
       }
       setAuthState(`Connected as ${session.user.username}`);
       setSyncState("Cloud sync configured + auth active");
@@ -1963,10 +2013,12 @@ function AppContent() {
       setAuthSession(session);
       await persistAuthSession(session);
       setAuthPassword("");
+      setLockedDueToInactivity(false);
       setIsUnlocked(true);
       if (!storedPin) {
         setStoredPin("0000");
         await storageService.setSecureItem(PIN_KEY, "0000");
+        setIsFirstLoginPinSetupOpen(true);
       }
       const displayName = session.user.username || session.user.email || "Advisor";
       setAuthState(`Connected as ${displayName}`);
@@ -3058,6 +3110,28 @@ function AppContent() {
               : "Desk is locked for client privacy. Use your PIN or biometrics to resume."}
           </Text>
 
+          {lockedDueToInactivity ? (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                backgroundColor: "rgba(224, 168, 76, 0.12)",
+                borderWidth: 1,
+                borderColor: "rgba(224, 168, 76, 0.35)",
+                borderRadius: 8,
+                padding: 10,
+                marginTop: 10,
+                marginBottom: 16,
+                gap: 8,
+              }}
+            >
+              <Ionicons name="time-outline" size={16} color="#E0A84C" />
+              <Text style={{ color: "#E0A84C", fontSize: 12, fontWeight: "600", flex: 1, lineHeight: 16 }}>
+                Desk automatically locked after 15 minutes of inactivity to protect client privacy.
+              </Text>
+            </View>
+          ) : null}
+
           <TextInput
             value={needsSetup ? pinSetup : pinInput}
             onChangeText={needsSetup ? setPinSetup : setPinInput}
@@ -3701,6 +3775,15 @@ function AppContent() {
         isPaywallLoading={isPaywallLoading}
         setIsPaywallLoading={setIsPaywallLoading}
         setIsPro={setIsPro}
+      />
+
+      <FirstLoginPinModal
+        visible={isFirstLoginPinSetupOpen}
+        isDesktop={isDesktop}
+        advisorName={authSession?.user?.username || authSession?.user?.email || "Advisor"}
+        theme={theme}
+        onSavePin={handleSaveNewDeskPin}
+        onSkip={() => setIsFirstLoginPinSetupOpen(false)}
       />
     </SafeAreaView>
   );

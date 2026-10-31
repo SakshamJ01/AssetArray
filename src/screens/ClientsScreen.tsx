@@ -149,39 +149,45 @@ const ClientRowItem = React.memo<ClientRowItemProps>(
               source={{ uri: avatarUri }}
               style={[styles.clientListAvatar, { borderRadius: 8, width: 36, height: 36 }]}
             />
-            <View style={[styles.clientRowMain, { flex: 1 }]}>
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 4 }}>
-                <Text style={[styles.clientName, { fontSize: 14, fontWeight: "700", color: theme.colors.textPrimary, letterSpacing: -0.2 }]}>
+            <View style={[styles.clientRowMain, { flex: 1, minWidth: 0 }]}>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                <Text
+                  style={[styles.clientName, { flex: 1, fontSize: 14, fontWeight: "700", color: theme.colors.textPrimary, letterSpacing: -0.2 }]}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
                   {client.name}
                 </Text>
-                <Text style={{ fontSize: 13, fontWeight: "800", color: theme.colors.brand, fontVariant: ["tabular-nums"], letterSpacing: -0.2 }}>
+                <Text style={{ flexShrink: 0, fontSize: 13, fontWeight: "800", color: theme.colors.brand, fontVariant: ["tabular-nums"], letterSpacing: -0.2 }}>
                   {formattedAum}
                 </Text>
               </View>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 4, flexWrap: "wrap" }}>
-                <View style={{ paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, backgroundColor: theme.colors.surfaceStrong, borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.08)", maxWidth: "100%", flexShrink: 1 }}>
-                  <Text style={{ fontSize: 10, fontWeight: "700", color: theme.colors.textSecondary, letterSpacing: 0.2 }} numberOfLines={1}>
-                    {client.category || "HNI"}
-                  </Text>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 4, gap: 6 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flexShrink: 1, flexWrap: "wrap" }}>
+                  <View style={{ paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, backgroundColor: theme.colors.surfaceStrong, borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.08)", flexShrink: 0 }}>
+                    <Text style={{ fontSize: 10, fontWeight: "700", color: theme.colors.textSecondary, letterSpacing: 0.2 }} numberOfLines={1}>
+                      {client.category || "HNI"}
+                    </Text>
+                  </View>
+                  <View style={{ paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, backgroundColor: theme.colors.surfaceStrong, borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.08)", flexShrink: 0 }}>
+                    <Text style={{ fontSize: 10, fontWeight: "700", color: theme.colors.textMuted }} numberOfLines={1}>
+                      {client.riskProfile || "Moderate"}
+                    </Text>
+                  </View>
+                  <View style={{ paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, backgroundColor: healthScore >= 75 ? "rgba(16, 185, 129, 0.12)" : "rgba(245, 158, 11, 0.12)", borderWidth: 1, borderColor: healthScore >= 75 ? "rgba(16, 185, 129, 0.3)" : "rgba(245, 158, 11, 0.3)", flexShrink: 0 }}>
+                    <Text style={{ fontSize: 10, fontWeight: "800", color: healthScore >= 75 ? "#10B981" : "#F59E0B", fontVariant: ["tabular-nums"] }}>
+                      H:{healthScore}
+                    </Text>
+                  </View>
                 </View>
-                <View style={{ paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, backgroundColor: theme.colors.surfaceStrong, borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.08)", maxWidth: "100%", flexShrink: 1 }}>
-                  <Text style={{ fontSize: 10, fontWeight: "700", color: theme.colors.textMuted }} numberOfLines={1}>
-                    {client.riskProfile || "Moderate"}
-                  </Text>
-                </View>
-                <View style={{ paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, backgroundColor: healthScore >= 75 ? "rgba(16, 185, 129, 0.12)" : "rgba(245, 158, 11, 0.12)", borderWidth: 1, borderColor: healthScore >= 75 ? "rgba(16, 185, 129, 0.3)" : "rgba(245, 158, 11, 0.3)" }}>
-                  <Text style={{ fontSize: 10, fontWeight: "800", color: healthScore >= 75 ? "#10B981" : "#F59E0B", fontVariant: ["tabular-nums"] }}>
-                    H:{healthScore}
-                  </Text>
-                </View>
-                <Text style={{ fontSize: 11, color: theme.colors.textMuted, marginLeft: "auto" }}>
+                <Text style={{ fontSize: 11, color: theme.colors.textMuted, flexShrink: 0 }}>
                   Review: {formattedDate}
                 </Text>
               </View>
             </View>
           </View>
           {isDue ? (
-            <View style={[styles.dueBadge, { borderRadius: 6, backgroundColor: "rgba(239, 68, 68, 0.15)", borderWidth: 1, borderColor: "rgba(239, 68, 68, 0.35)", paddingHorizontal: 8, paddingVertical: 3 }]}>
+            <View style={[styles.dueBadge, { borderRadius: 6, backgroundColor: "rgba(239, 68, 68, 0.15)", borderWidth: 1, borderColor: "rgba(239, 68, 68, 0.35)", paddingHorizontal: 8, paddingVertical: 3, flexShrink: 0, marginLeft: 8 }]}>
               <Text style={[styles.dueBadgeText, { color: "#EF4444", fontWeight: "800", fontSize: 10 }]}>Due</Text>
             </View>
           ) : null}
@@ -318,7 +324,7 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
               onChangeText={setLocalSearch}
               placeholder={isDesktop ? "Search name, email, phone, city, risk, category..." : "Search clients..."}
               placeholderTextColor="#7f90a8"
-              style={[styles.input, { borderRadius: 4, height: 38, marginBottom: 0 }]}
+              style={[styles.input, { borderRadius: 4, height: 42, paddingVertical: 8, marginBottom: 0 }]}
             />
           </View>
           <Pressable
@@ -326,9 +332,10 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
             style={{
               flexDirection: "row",
               alignItems: "center",
+              justifyContent: "center",
               gap: 5,
               paddingHorizontal: 12,
-              paddingVertical: 9,
+              height: 42,
               borderRadius: 4,
               backgroundColor: hasActiveFilters ? theme.colors.brand : theme.colors.surfaceMuted,
               borderWidth: 1,
@@ -490,7 +497,7 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
         >
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
             <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: theme.colors.brand }} />
-            <Text style={[styles.broadcastStripText, { color: theme.colors.textPrimary, fontWeight: "700", fontSize: 12 }]}>
+            <Text style={[styles.broadcastStripText, { color: theme.colors.textPrimary, fontWeight: "700", fontSize: 12, marginBottom: 0 }]}>
               {selectedClientIds.length} client{selectedClientIds.length === 1 ? "" : "s"} selected
             </Text>
           </View>
@@ -531,122 +538,232 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
                   {filteredClients.length} visible client{filteredClients.length === 1 ? "" : "s"} in this view.
                 </Text>
               </View>
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 6,
-                  flexWrap: "wrap",
-                  width: isDesktop ? undefined : "100%",
-                }}
-              >
-                <Pressable
+              {isDesktop ? (
+                <View
                   style={{
-                    flex: isDesktop ? undefined : 1,
-                    justifyContent: "center",
                     flexDirection: "row",
                     alignItems: "center",
-                    gap: 4,
-                    paddingHorizontal: isDesktop ? 10 : 6,
-                    paddingVertical: 6,
-                    borderRadius: 4,
-                    backgroundColor: "rgba(56, 189, 248, 0.12)",
-                    borderWidth: 1,
-                    borderColor: "rgba(56, 189, 248, 0.4)",
+                    gap: 6,
+                    flexWrap: "wrap",
+                    justifyContent: "flex-end",
                   }}
-                  onPress={() => setShowImportModal(true)}
                 >
-                  <Ionicons name="document-text-outline" size={14} color="#38BDF8" />
-                  <Text style={{ fontSize: 12, fontWeight: "800", color: "#38BDF8" }}>
-                    {isDesktop ? "Import Statement" : "Import"}
-                  </Text>
-                </Pressable>
-                <Pressable
-                  style={{
-                    flex: isDesktop ? undefined : 1,
-                    justifyContent: "center",
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 4,
-                    paddingHorizontal: isDesktop ? 10 : 6,
-                    paddingVertical: 6,
-                    borderRadius: 4,
-                    backgroundColor: "rgba(224, 168, 76, 0.12)",
-                    borderWidth: 1,
-                    borderColor: "rgba(224, 168, 76, 0.4)",
-                  }}
-                  onPress={() => setShowAaModal(true)}
-                >
-                  <Ionicons name="link-outline" size={14} color="#E0A84C" />
-                  <Text style={{ fontSize: 12, fontWeight: "800", color: "#E0A84C" }}>
-                    {isDesktop ? "AA Auto-Sync" : "AA Sync"}
-                  </Text>
-                </Pressable>
-                <Pressable
-                  style={{
-                    flex: isDesktop ? undefined : 1,
-                    justifyContent: "center",
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 4,
-                    paddingHorizontal: isDesktop ? 10 : 6,
-                    paddingVertical: 6,
-                    borderRadius: 4,
-                    backgroundColor: "rgba(16, 185, 129, 0.12)",
-                    borderWidth: 1,
-                    borderColor: "rgba(16, 185, 129, 0.4)",
-                  }}
-                  onPress={exportRosterCsv}
-                >
-                  <Ionicons name="download-outline" size={14} color="#10B981" />
-                  <Text style={{ fontSize: 12, fontWeight: "800", color: "#10B981" }}>
-                    {isDesktop ? "Export (.csv)" : "Export"}
-                  </Text>
-                </Pressable>
-                {onOpenOnboardingWizard && (
                   <Pressable
-                    testID="open-onboarding-wizard-btn"
                     style={{
-                      flex: isDesktop ? undefined : 1,
                       justifyContent: "center",
                       flexDirection: "row",
                       alignItems: "center",
                       gap: 4,
-                      paddingHorizontal: isDesktop ? 10 : 6,
-                      paddingVertical: 6,
+                      paddingHorizontal: 10,
+                      paddingVertical: 7,
                       borderRadius: 4,
-                      backgroundColor: "rgba(224, 168, 76, 0.15)",
+                      backgroundColor: "rgba(56, 189, 248, 0.12)",
                       borderWidth: 1,
-                      borderColor: theme.colors.brand,
+                      borderColor: "rgba(56, 189, 248, 0.4)",
                     }}
-                    onPress={() => void onOpenOnboardingWizard()}
+                    onPress={() => setShowImportModal(true)}
                   >
-                    <Ionicons name="sparkles" size={13} color={theme.colors.brand} />
-                    <Text style={{ fontSize: 12, fontWeight: "800", color: theme.colors.brand }}>
-                      ⚡ 1-Click Onboard
+                    <Ionicons name="document-text-outline" size={14} color="#38BDF8" />
+                    <Text style={{ fontSize: 12, fontWeight: "800", color: "#38BDF8" }} numberOfLines={1}>
+                      Import Statement
                     </Text>
                   </Pressable>
-                )}
-                <Pressable
-                  style={{
-                    flex: isDesktop ? undefined : 1,
-                    justifyContent: "center",
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 4,
-                    paddingHorizontal: isDesktop ? 10 : 6,
-                    paddingVertical: 6,
-                    borderRadius: 4,
-                    backgroundColor: theme.colors.brand,
-                  }}
-                  onPress={() => void onAddClient()}
-                >
-                  <Ionicons name="person-add-outline" size={14} color="#050914" />
-                  <Text style={{ fontSize: 12, fontWeight: "800", color: "#050914" }}>
-                    + Client
-                  </Text>
-                </Pressable>
-              </View>
+                  <Pressable
+                    style={{
+                      justifyContent: "center",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 4,
+                      paddingHorizontal: 10,
+                      paddingVertical: 7,
+                      borderRadius: 4,
+                      backgroundColor: "rgba(224, 168, 76, 0.12)",
+                      borderWidth: 1,
+                      borderColor: "rgba(224, 168, 76, 0.4)",
+                    }}
+                    onPress={() => setShowAaModal(true)}
+                  >
+                    <Ionicons name="link-outline" size={14} color="#E0A84C" />
+                    <Text style={{ fontSize: 12, fontWeight: "800", color: "#E0A84C" }} numberOfLines={1}>
+                      AA Auto-Sync
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    style={{
+                      justifyContent: "center",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 4,
+                      paddingHorizontal: 10,
+                      paddingVertical: 7,
+                      borderRadius: 4,
+                      backgroundColor: "rgba(16, 185, 129, 0.12)",
+                      borderWidth: 1,
+                      borderColor: "rgba(16, 185, 129, 0.4)",
+                    }}
+                    onPress={exportRosterCsv}
+                  >
+                    <Ionicons name="download-outline" size={14} color="#10B981" />
+                    <Text style={{ fontSize: 12, fontWeight: "800", color: "#10B981" }} numberOfLines={1}>
+                      Export (.csv)
+                    </Text>
+                  </Pressable>
+                  {onOpenOnboardingWizard && (
+                    <Pressable
+                      testID="open-onboarding-wizard-btn"
+                      style={{
+                        justifyContent: "center",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 4,
+                        paddingHorizontal: 10,
+                        paddingVertical: 7,
+                        borderRadius: 4,
+                        backgroundColor: "rgba(224, 168, 76, 0.15)",
+                        borderWidth: 1,
+                        borderColor: theme.colors.brand,
+                      }}
+                      onPress={() => void onOpenOnboardingWizard()}
+                    >
+                      <Ionicons name="sparkles" size={13} color={theme.colors.brand} />
+                      <Text style={{ fontSize: 12, fontWeight: "800", color: theme.colors.brand }} numberOfLines={1}>
+                        ⚡ 1-Click Onboard
+                      </Text>
+                    </Pressable>
+                  )}
+                  <Pressable
+                    style={{
+                      justifyContent: "center",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 4,
+                      paddingHorizontal: 10,
+                      paddingVertical: 7,
+                      borderRadius: 4,
+                      backgroundColor: theme.colors.brand,
+                    }}
+                    onPress={() => void onAddClient()}
+                  >
+                    <Ionicons name="person-add-outline" size={14} color="#050914" />
+                    <Text style={{ fontSize: 12, fontWeight: "800", color: "#050914" }} numberOfLines={1}>
+                      + Client
+                    </Text>
+                  </Pressable>
+                </View>
+              ) : (
+                <View style={{ width: "100%", gap: 6, marginTop: 4 }}>
+                  <View style={{ flexDirection: "row", gap: 6 }}>
+                    {onOpenOnboardingWizard && (
+                      <Pressable
+                        testID="open-onboarding-wizard-btn"
+                        style={{
+                          flex: 1,
+                          justifyContent: "center",
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: 4,
+                          paddingVertical: 8,
+                          paddingHorizontal: 8,
+                          borderRadius: 4,
+                          backgroundColor: "rgba(224, 168, 76, 0.15)",
+                          borderWidth: 1,
+                          borderColor: theme.colors.brand,
+                        }}
+                        onPress={() => void onOpenOnboardingWizard()}
+                      >
+                        <Ionicons name="sparkles" size={13} color={theme.colors.brand} />
+                        <Text style={{ fontSize: 12, fontWeight: "800", color: theme.colors.brand }} numberOfLines={1}>
+                          ⚡ 1-Click Onboard
+                        </Text>
+                      </Pressable>
+                    )}
+                    <Pressable
+                      style={{
+                        flex: 1,
+                        justifyContent: "center",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 4,
+                        paddingVertical: 8,
+                        paddingHorizontal: 8,
+                        borderRadius: 4,
+                        backgroundColor: theme.colors.brand,
+                      }}
+                      onPress={() => void onAddClient()}
+                    >
+                      <Ionicons name="person-add-outline" size={14} color="#050914" />
+                      <Text style={{ fontSize: 12, fontWeight: "800", color: "#050914" }} numberOfLines={1}>
+                        + Client
+                      </Text>
+                    </Pressable>
+                  </View>
+                  <View style={{ flexDirection: "row", gap: 6 }}>
+                    <Pressable
+                      style={{
+                        flex: 1,
+                        justifyContent: "center",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 4,
+                        paddingVertical: 7,
+                        paddingHorizontal: 6,
+                        borderRadius: 4,
+                        backgroundColor: "rgba(56, 189, 248, 0.12)",
+                        borderWidth: 1,
+                        borderColor: "rgba(56, 189, 248, 0.4)",
+                      }}
+                      onPress={() => setShowImportModal(true)}
+                    >
+                      <Ionicons name="document-text-outline" size={14} color="#38BDF8" />
+                      <Text style={{ fontSize: 11, fontWeight: "800", color: "#38BDF8" }} numberOfLines={1}>
+                        Import
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      style={{
+                        flex: 1,
+                        justifyContent: "center",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 4,
+                        paddingVertical: 7,
+                        paddingHorizontal: 6,
+                        borderRadius: 4,
+                        backgroundColor: "rgba(224, 168, 76, 0.12)",
+                        borderWidth: 1,
+                        borderColor: "rgba(224, 168, 76, 0.4)",
+                      }}
+                      onPress={() => setShowAaModal(true)}
+                    >
+                      <Ionicons name="link-outline" size={14} color="#E0A84C" />
+                      <Text style={{ fontSize: 11, fontWeight: "800", color: "#E0A84C" }} numberOfLines={1}>
+                        AA Sync
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      style={{
+                        flex: 1,
+                        justifyContent: "center",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 4,
+                        paddingVertical: 7,
+                        paddingHorizontal: 6,
+                        borderRadius: 4,
+                        backgroundColor: "rgba(16, 185, 129, 0.12)",
+                        borderWidth: 1,
+                        borderColor: "rgba(16, 185, 129, 0.4)",
+                      }}
+                      onPress={exportRosterCsv}
+                    >
+                      <Ionicons name="download-outline" size={14} color="#10B981" />
+                      <Text style={{ fontSize: 11, fontWeight: "800", color: "#10B981" }} numberOfLines={1}>
+                        Export
+                      </Text>
+                    </Pressable>
+                  </View>
+                </View>
+              )}
             </View>
             {filteredClients.length === 0 ? (
               <View style={styles.emptyState}>
@@ -751,7 +868,7 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
       </View>
 
       {/* Client Insights & Report Studio */}
-      <View style={[styles.dualColumn, isDesktop && { flexDirection: "row", alignItems: "flex-start" }]}>
+      <View style={[styles.dualColumn, { marginTop: 16 }, isDesktop && { flexDirection: "row", alignItems: "flex-start" }]}>
         <View style={isDesktop ? styles.column : { width: "100%" }}>
           <View style={styles.panel}>
             <Text style={styles.panelTitle}>Client insight engine</Text>

@@ -124,7 +124,7 @@ export const AppShell: React.FC<AppShellProps> = ({
               onClearClient={onClearSelectedClient}
             />
           )}
-          <ScreenTransition triggerKey={activeTab} style={{ flex: 1, height: "100%" }}>
+          <ScreenTransition triggerKey={activeTab} style={{ flex: 1 }}>
             {children}
           </ScreenTransition>
         </View>

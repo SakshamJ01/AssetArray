@@ -3387,67 +3387,51 @@ function AppContent() {
         ) : null}
 
         {activeTab === "Clients" ? (
-          <>
-            <ClientsScreen
-              theme={theme}
-              isDesktop={isDesktop}
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              categoryFilter={categoryFilter}
-              setCategoryFilter={setCategoryFilter}
-              filterMode={filterMode}
-              setFilterMode={setFilterMode}
-              selectedClientIds={selectedClientIds}
-              selectAllVisibleClients={selectAllVisibleClients}
-              clearSelectedClients={clearSelectedClients}
-              setIsBroadcastModalOpen={setIsBroadcastModalOpen}
-              filteredClients={filteredClients}
-              selectedClientId={selectedClientId}
-              setSelectedClientId={setSelectedClientId}
-              toggleSelectedClient={toggleSelectedClient}
-              selectedClient={selectedClient}
-              getClientAvatar={getClientAvatar}
-              formatReminderDate={formatReminderDate}
-              isReminderDue={isReminderDue}
-              contactClient={contactClient}
-              isPro={isPro}
-              setIsPaywallVisible={setIsPaywallVisible}
-              exportClientPdfReport={exportClientPdfReport}
-              advisorName={authSession?.user?.username || cloudSettings.ownerName || "Asset Array Advisor"}
-              openEditModal={openEditModal}
-              deleteClient={deleteClient}
-              onAddClient={openAddModal}
-              onOpenOnboardingWizard={() => setIsOnboardingWizardOpen(true)}
-              selectedClientInsights={selectedClientInsights}
-              selectedClientMessageDraft={selectedClientMessageDraft}
-              selectedClientReportDraft={selectedClientReportDraft}
-              onImportHoldings={handleImportClientHoldings}
-              goals={goals}
-              onNavigateTab={(tab, params) => {
-                setActiveTab(tab as AppTab);
-                if (tab === "Portfolios" && params?.view) {
-                  setPortfolioActiveModal(params.view);
-                } else if (tab === "Tools" && params?.calculator) {
-                  setActiveCalculator(params.calculator);
-                }
-              }}
-              styles={styles}
-            />
-            <PortfolioManagerSection
-              selectedClient={selectedClient}
-              portfolioStats={portfolioStats}
-              currencyDisplay={currencyDisplay}
-              openAddHoldingModal={openAddHoldingModal}
-              openEditHoldingModal={openEditHoldingModal}
-              deleteHolding={deleteHolding}
-              dueClients={dueClients}
-              formatReminderDate={formatReminderDate}
-              setSelectedClientId={setSelectedClientId}
-              categorySummary={categorySummary}
-              isDesktop={isDesktop}
-              styles={styles}
-            />
-          </>
+          <ClientsScreen
+            theme={theme}
+            isDesktop={isDesktop}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            categoryFilter={categoryFilter}
+            setCategoryFilter={setCategoryFilter}
+            filterMode={filterMode}
+            setFilterMode={setFilterMode}
+            selectedClientIds={selectedClientIds}
+            selectAllVisibleClients={selectAllVisibleClients}
+            clearSelectedClients={clearSelectedClients}
+            setIsBroadcastModalOpen={setIsBroadcastModalOpen}
+            filteredClients={filteredClients}
+            selectedClientId={selectedClientId}
+            setSelectedClientId={setSelectedClientId}
+            toggleSelectedClient={toggleSelectedClient}
+            selectedClient={selectedClient}
+            getClientAvatar={getClientAvatar}
+            formatReminderDate={formatReminderDate}
+            isReminderDue={isReminderDue}
+            contactClient={contactClient}
+            isPro={isPro}
+            setIsPaywallVisible={setIsPaywallVisible}
+            exportClientPdfReport={exportClientPdfReport}
+            advisorName={authSession?.user?.username || cloudSettings.ownerName || "Asset Array Advisor"}
+            openEditModal={openEditModal}
+            deleteClient={deleteClient}
+            onAddClient={openAddModal}
+            onOpenOnboardingWizard={() => setIsOnboardingWizardOpen(true)}
+            selectedClientInsights={selectedClientInsights}
+            selectedClientMessageDraft={selectedClientMessageDraft}
+            selectedClientReportDraft={selectedClientReportDraft}
+            onImportHoldings={handleImportClientHoldings}
+            goals={goals}
+            onNavigateTab={(tab, params) => {
+              setActiveTab(tab as AppTab);
+              if (tab === "Portfolios" && params?.view) {
+                setPortfolioActiveModal(params.view);
+              } else if (tab === "Tools" && params?.calculator) {
+                setActiveCalculator(params.calculator);
+              }
+            }}
+            styles={styles}
+          />
         ) : null}
 
         {activeTab === "Settings" ? (

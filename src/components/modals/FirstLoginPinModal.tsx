@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   card: {
-    borderRadius: 16,
+    borderRadius: 12,
     borderWidth: 1,
     padding: 24,
     width: "100%",
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
   iconContainer: {
     width: 48,
     height: 48,
-    borderRadius: 24,
+    borderRadius: 9999,
     backgroundColor: "rgba(224, 168, 76, 0.15)",
     borderWidth: 1,
     borderColor: "rgba(224, 168, 76, 0.35)",

@@ -53,6 +53,7 @@ export interface ClientsScreenProps {
   openEditModal: (client: Client) => void;
   deleteClient: (client: Client) => void;
   onAddClient: () => void;
+  onOpenOnboardingWizard?: () => void;
   selectedClientInsights: string[];
   selectedClientMessageDraft: string;
   selectedClientReportDraft: string;
@@ -220,6 +221,7 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
   openEditModal,
   deleteClient,
   onAddClient,
+  onOpenOnboardingWizard,
   selectedClientInsights,
   selectedClientMessageDraft,
   selectedClientReportDraft,
@@ -601,6 +603,30 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
                     {isDesktop ? "Export (.csv)" : "Export"}
                   </Text>
                 </Pressable>
+                {onOpenOnboardingWizard && (
+                  <Pressable
+                    testID="open-onboarding-wizard-btn"
+                    style={{
+                      flex: isDesktop ? undefined : 1,
+                      justifyContent: "center",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 4,
+                      paddingHorizontal: isDesktop ? 10 : 6,
+                      paddingVertical: 6,
+                      borderRadius: 4,
+                      backgroundColor: "rgba(224, 168, 76, 0.15)",
+                      borderWidth: 1,
+                      borderColor: theme.colors.brand,
+                    }}
+                    onPress={() => void onOpenOnboardingWizard()}
+                  >
+                    <Ionicons name="sparkles" size={13} color={theme.colors.brand} />
+                    <Text style={{ fontSize: 12, fontWeight: "800", color: theme.colors.brand }}>
+                      ⚡ 1-Click Onboard
+                    </Text>
+                  </Pressable>
+                )}
                 <Pressable
                   style={{
                     flex: isDesktop ? undefined : 1,
@@ -626,16 +652,28 @@ export const ClientsScreen: React.FC<ClientsScreenProps> = React.memo(({
               <View style={styles.emptyState}>
                 <Text style={styles.emptyTitle}>No clients yet</Text>
                 <Text style={styles.emptyText}>
-                  Add your first client to begin building the advisory roster.
+                  Add your first client or use the 1-click wizard to ingest holdings and mandate instantly.
                 </Text>
-                <Pressable
-                  style={[styles.primaryButton, { marginTop: 14, backgroundColor: theme.colors.brand, borderRadius: 4 }]}
-                  onPress={() => void onAddClient()}
-                >
-                  <Text style={[styles.primaryButtonText, { color: "#050914", fontWeight: "800" }]}>
-                    + Add Client
-                  </Text>
-                </Pressable>
+                <View style={{ flexDirection: "row", gap: 10, marginTop: 14 }}>
+                  {onOpenOnboardingWizard && (
+                    <Pressable
+                      style={[styles.primaryButton, { backgroundColor: theme.colors.brand, borderRadius: 4, paddingHorizontal: 14 }]}
+                      onPress={() => void onOpenOnboardingWizard()}
+                    >
+                      <Text style={[styles.primaryButtonText, { color: "#050914", fontWeight: "800" }]}>
+                        ⚡ 1-Click Onboard
+                      </Text>
+                    </Pressable>
+                  )}
+                  <Pressable
+                    style={[styles.primaryButton, { backgroundColor: theme.colors.surfaceStrong, borderColor: theme.colors.border, borderWidth: 1, borderRadius: 4, paddingHorizontal: 14 }]}
+                    onPress={() => void onAddClient()}
+                  >
+                    <Text style={[styles.primaryButtonText, { color: theme.colors.textPrimary, fontWeight: "700" }]}>
+                      + Manual Add
+                    </Text>
+                  </Pressable>
+                </View>
               </View>
             ) : (
               filteredClients.map((client) => (

@@ -13,3 +13,4 @@ export * from "./AlgoExecutionModal";
 export * from "./ConfirmModal";
 export * from "./AccountAggregatorModal";
 export * from "./FirstLoginPinModal";
+export * from "./ClientOnboardingWizardModal";

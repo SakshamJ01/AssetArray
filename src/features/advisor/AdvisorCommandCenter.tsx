@@ -69,6 +69,7 @@ export interface AdvisorCommandCenterProps {
   onNavigateTab: (tab: any, params?: any) => void;
   onSelectClient: (clientId: string) => void;
   onAddClient: () => void;
+  onOpenOnboardingWizard?: () => void;
   onGenerateReport: (clientId: string) => void;
   onBroadcastOutreach: () => void;
   onOpenAiCopilot?: () => void;
@@ -86,6 +87,7 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
   onNavigateTab,
   onSelectClient,
   onAddClient,
+  onOpenOnboardingWizard,
   onGenerateReport,
   onBroadcastOutreach,
   onOpenAiCopilot,
@@ -871,6 +873,18 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
           WORKFLOW SHORTCUTS
         </Text>
         <View style={styles.dockGrid}>
+          {onOpenOnboardingWizard && (
+            <Pressable
+              onPress={onOpenOnboardingWizard}
+              style={[styles.dockBtn, { backgroundColor: "rgba(224, 168, 76, 0.15)", borderColor: theme.colors.brand, borderWidth: 1 }]}
+            >
+              <Ionicons name="sparkles" size={16} color={theme.colors.brand} />
+              <Text style={[styles.dockBtnText, { color: theme.colors.brand, fontWeight: "700" }]}>
+                1-Click Onboard
+              </Text>
+            </Pressable>
+          )}
+
           <Pressable
             onPress={onAddClient}
             style={[styles.dockBtn, { backgroundColor: theme.colors.surfaceMuted }]}

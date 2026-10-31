@@ -61,6 +61,7 @@ import { AdvisorMessagesScreen } from "./src/screens/workspace/AdvisorMessagesSc
 import { setHapticsEnabled, triggerSuccessHaptic } from "./src/services/haptics";
 import { AppModalsHost } from "./src/components/modals/AppModalsHost";
 import { FirstLoginPinModal } from "./src/components/modals/FirstLoginPinModal";
+import { ClientOnboardingWizardModal } from "./src/components/modals/ClientOnboardingWizardModal";
 import {
   AiResearchResult,
   AuthUser,
@@ -525,6 +526,7 @@ function AppContent() {
   const [isAiCopilotOpen, setIsAiCopilotOpen] = useState(false);
   const [activeCurrency, setActiveCurrency] = useState<CurrencyCode>("INR");
   const [isFirstLoginPinSetupOpen, setIsFirstLoginPinSetupOpen] = useState(false);
+  const [isOnboardingWizardOpen, setIsOnboardingWizardOpen] = useState(false);
   const [lockedDueToInactivity, setLockedDueToInactivity] = useState(false);
   const [portalClientId, setPortalClientId] = useState<string | null>(() => {
     if (Platform.OS !== "web" || typeof window === "undefined") return null;
@@ -1647,6 +1649,16 @@ function AppContent() {
     setEditorMode("add");
     setDraft(emptyDraft);
     setIsEditorOpen(true);
+  }
+
+  function handleCompleteOnboarding(newClient: Client, optionalGoal?: Goal) {
+    setClients((prev) => [newClient, ...prev]);
+    setSelectedClientId(newClient.id);
+    setSelectedClientIds([newClient.id]);
+    if (optionalGoal) {
+      setGoals((prev) => [optionalGoal, ...prev]);
+    }
+    setActiveTab("Clients");
   }
 
   function exportAllClientsCsv() {
@@ -3217,7 +3229,7 @@ function AppContent() {
               }
               setIsBroadcastModalOpen(true);
             }}
-            onQuickImportStatement={() => setActiveTab("Clients")}
+            onQuickImportStatement={() => setIsOnboardingWizardOpen(true)}
             onQuickExportRoster={exportAllClientsCsv}
             syncStatus={syncState}
             tabs={visibleTabs}
@@ -3286,6 +3298,7 @@ function AppContent() {
             setActiveTab("Clients");
           }}
           onAddClient={openAddModal}
+          onOpenOnboardingWizard={() => setIsOnboardingWizardOpen(true)}
           onGenerateReport={(clientId) => {
             setSelectedClientId(clientId);
             const cl = clients.find((c) => c.id === clientId);
@@ -3590,6 +3603,7 @@ function AppContent() {
               openEditModal={openEditModal}
               deleteClient={deleteClient}
               onAddClient={openAddModal}
+              onOpenOnboardingWizard={() => setIsOnboardingWizardOpen(true)}
               selectedClientInsights={selectedClientInsights}
               selectedClientMessageDraft={selectedClientMessageDraft}
               selectedClientReportDraft={selectedClientReportDraft}
@@ -3784,6 +3798,14 @@ function AppContent() {
         theme={theme}
         onSavePin={handleSaveNewDeskPin}
         onSkip={() => setIsFirstLoginPinSetupOpen(false)}
+      />
+
+      <ClientOnboardingWizardModal
+        visible={isOnboardingWizardOpen}
+        isDesktop={isDesktop}
+        theme={theme}
+        onClose={() => setIsOnboardingWizardOpen(false)}
+        onCompleteOnboarding={handleCompleteOnboarding}
       />
     </SafeAreaView>
   );

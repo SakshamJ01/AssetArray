@@ -1,6 +1,6 @@
 # Asset Array 💼📈
 
-[![Version 4.0.0](https://img.shields.io/badge/Version-4.0.0-E0A84C?style=for-the-badge&logo=git&logoColor=white)](https://github.com/SakshamJ01/AssetArray)
+[![Version 4.1.0](https://img.shields.io/badge/Version-4.1.0-E0A84C?style=for-the-badge&logo=git&logoColor=white)](https://github.com/SakshamJ01/AssetArray)
 [![Live Web App](https://img.shields.io/badge/Live%20Web%20App-asset--array.web.app-E0A84C?style=for-the-badge&logo=firebase&logoColor=white)](https://asset-array.web.app)
 [![Live Backend API](https://img.shields.io/badge/API-assetarray.onrender.com-46E3B7?style=for-the-badge&logo=render&logoColor=black)](https://assetarray.onrender.com/api/health)
 [![Cloud Database](https://img.shields.io/badge/Database-MongoDB%20Atlas-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://cloud.mongodb.com)
@@ -9,7 +9,7 @@
 [![RevenueCat](https://img.shields.io/badge/Monetization-RevenueCat-orange.svg)](https://www.revenuecat.com/)
 [![Built with Expo](https://img.shields.io/badge/Built%20with-Expo%20%2F%20React%20Native-blue.svg)](https://expo.dev/)
 [![Gemini & Ollama AI](https://img.shields.io/badge/AI-Google%20Gemini%20%2B%20Ollama-8E75B2.svg)](https://ai.google.dev/)
-[![Tests Passing](https://img.shields.io/badge/Tests-498%20Passed%20(95%20Suites)-22c55e.svg)](https://github.com/SakshamJ01/AssetArray)
+[![Tests Passing](https://img.shields.io/badge/Tests-553%20Passed%20(103%20Suites)-22c55e.svg)](https://github.com/SakshamJ01/AssetArray)
 
 ![Asset Array Hero Banner](assets/hero-thumbnail.jpg)
 
@@ -288,7 +288,7 @@ Below is the deep, exhaustive breakdown of **every single feature, tool, workflo
 
 ---
 
-## 🏗️ Architecture & Platform Stack
+## 🏗️ Modular Architecture & Platform Stack
 
 ```
 AssetArray/
@@ -297,7 +297,7 @@ AssetArray/
 │   ├── honest-analytics.md              # Enforces INSUFFICIENT_DATA / zero fabricated return metrics
 │   ├── e2e-storage-hygiene.md           # Mandates ephemeral browser context isolation & local storage reset
 │   └── git-push.md                      # Mandatory push-to-main synchronization
-├── App.tsx                              # Root layout, live ticker sync, navigation orchestration, auth & lock
+├── App.tsx                              # Clean orchestrator utilizing AppProviders & AppShell
 ├── firebase.json                        # Firebase Hosting configuration with SPA rewrites & zero-cache headers
 ├── render.yaml                          # Render.com Web Service Blueprint CI/CD
 ├── scripts/
@@ -306,25 +306,35 @@ AssetArray/
 │   ├── generate-pdf-docs.js             # Headless Chrome script generating full project PDF documentation
 │   └── check-live.js                    # Live HTTP response & JS bundle status checker
 ├── src/
+│   ├── context/                         # Modular React Context Providers (State Isolation)
+│   │   ├── AuthSecurityContext.tsx      # Inactivity lock, biometric auth, PIN vault & session state
+│   │   ├── WealthContext.tsx            # Client roster, portfolios, holdings CRUD & goals state
+│   │   ├── MarketContext.tsx            # Real-time ticking stream, currency & market health
+│   │   ├── ModalContext.tsx             # Active modal workstation state & workflow routing
+│   │   └── AppProviders.tsx             # Unified composite root state provider
+│   ├── hooks/                           # Reusable Domain Hooks
+│   │   ├── useInactivityLock.ts         # Screen idle detection, PIN verification & biometric gate
+│   │   ├── useWealthClients.ts          # Client CRUD, persistence, portfolio calculation & metrics
+│   │   ├── useMarketData.ts             # Real-time WebSocket/stochastic ticker & currency conversion
+│   │   ├── useModalManager.ts           # Centralized modal state, history & modal parameters
+│   │   ├── useCalculators.ts            # Financial calculators (SIP, SWP, Goal, Tax, Retirement)
+│   │   └── useAiAdvisor.ts              # Gemini/Ollama copilot streaming, prompt crafting & grounding
 │   ├── components/
+│   │   ├── layout/                      # Reusable Layout Components
+│   │   │   └── AppShell.tsx             # Responsive shell (Desktop sidebar, mobile bottom nav, ticker)
 │   │   ├── dashboard/                   # Executive Launchpad 1-click dock & Intelligence Hub cards
 │   │   ├── DesktopSidebar.tsx           # Desktop navigation sidebar with Quick Import & Export Roster actions
 │   │   ├── LiveMarketTicker.tsx         # Real-time ticking header with micro-flash animations
 │   │   ├── AiWealthCopilot.tsx          # Floating conversational AI copilot (Gemini + Ollama)
-│   │   └── modals/
-│   │       ├── FamilyVaultModal.tsx     # Family Continuity Vault & Nominee Audit dossier generator
-│   │       ├── FundXrayModal.tsx        # Look-Through Fund X-Ray & Overlap Matrix eliminator
-│   │       ├── ConstitutionModal.tsx    # Anti-Impulse Investment Constitution & Cooling-Off Gate
-│   │       ├── ShadowWealthModal.tsx    # Physical Gold Bullion, Real Estate & Private Debt Desk
-│   │       ├── TaxHarvestStudioModal.tsx# Realized & Unrealized Tax-Loss Harvesting Studio
-│   │       ├── MonteCarloModal.tsx      # 1,000-run statistical simulation studio
-│   │       ├── RebalanceModal.tsx       # Institutional portfolio rebalancing
-│   │       └── StressTestModal.tsx      # Historical Crisis Stress Testing studio
+│   │   ├── client360/                   # Client 360 Workspace & detailed analytics workstation
+│   │   └── modals/                      # 11 Dedicated Workstation Engines & Modals
 │   ├── screens/
 │   │   ├── ClientsScreen.tsx            # Search, filter, client dossier, statement import & roster CSV export
 │   │   ├── PortfoliosScreen.tsx         # Unified portfolio analytics & action bar statement import
-│   │   └── SettingsScreen.tsx           # Institutional multi-theme selector & system health
+│   │   ├── SettingsScreen.tsx           # Institutional multi-theme selector & system health
+│   │   └── ToolsScreen.tsx              # Quantitative financial tools & calculators workstation
 │   └── services/
+│       ├── wealthHelpers.ts             # Pure business logic helpers (tax, AUM, health, rebalance)
 │       ├── intelligence/                # Wealth Intelligence engines (vault, xray, constitution, shadow)
 │       ├── accountAggregator/           # RBI Sahamati consent generator, OTP validator & FIP data decryptor
 │       ├── batchReporting.ts            # Firm-wide review package & GIPS drift dossier generator
@@ -332,8 +342,51 @@ AssetArray/
 │       ├── statementParser.ts           # Zero-PII Zerodha/Upstox/ICICI Direct/Groww/CAMS statement parser
 │       ├── realTimeMarket.ts            # Ticker engine (ITC, NVDA, SILVER, BANKNIFTY) + RSI & Spread Bps
 │       └── aiGateway/providers/         # Resilient multi-model gateway (Gemini, Anthropic, OpenAI, Ollama)
-└── __tests__/                           # 95 passing Jest test suites (498 total unit/E2E tests)
+└── __tests__/                           # 103 passing Jest test suites (553 total tests)
 ```
+
+---
+
+## 🧪 Comprehensive Multi-Dimensional Testing Matrix
+
+AssetArray is audited across four comprehensive quality testing dimensions:
+
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                  MULTI-DIMENSIONAL SYSTEM QUALITY ASSURANCE FRAMEWORK                  │
+├─────────────────────────┬──────────────────────────┬───────────────────────────────────┤
+│ 1. FUNCTIONAL TESTING   │ 2. NON-FUNCTIONAL TESTING│ 3. MAINTENANCE & DEPLOYMENT       │
+│ • Isolated Unit Tests   │ • High-Frequency Bench   │ • Full Regression Suite (103/103) │
+│ • Cross-Module Ingestion│ • Client AES-256 Vault   │ • Smoke & Cold-Start Tests        │
+│ • End-to-End System Flow│ • Fluid Touch Targets    │ • Production Build Verification   │
+│ • UAT Mandate Validation│ • Cross-Device Layouts   │ • Zero-Downtime Deployment        │
+├─────────────────────────┴──────────────────────────┴───────────────────────────────────┤
+│                             4. EXECUTION & CODE VISIBILITY                             │
+│ • Black-Box System Checks  • White-Box Mathematical Audits  • Automated CI Pipelines   │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+1. **Functional Testing (What It Does)**:
+   - **Unit Tests**: Isolated mathematical tests verifying GIPS TWR, Newton-Raphson XIRR, Section 112A/111A Indian statutory taxes, Mulberry32 Monte Carlo, and Brinson-Fachler attribution.
+   - **Integration Tests**: Verification of combined modules (statement parser → broker gateway → Account Aggregator → portfolio state).
+   - **System Tests**: End-to-end client lifecycle (1-click onboarding → holdings ingestion → risk evaluation → AI brief generation → PDF export).
+   - **Acceptance / UAT**: User acceptance criteria verifying advisor mandate rules, anti-impulse cooling-off gates, and honest empty states (`INSUFFICIENT_DATA`).
+
+2. **Non-Functional Testing (How Well It Does It)**:
+   - **Performance**: High-frequency benchmark tests maintaining sub-10ms math execution across 1,000 Monte Carlo runs and 60 FPS live market ticker rendering.
+   - **Security**: Zero-knowledge AES-256-GCM vault validation, DPDP Act 2023 PII sanitization (PAN, Aadhaar, folio, Demat redaction), and strict CORS origin checks.
+   - **Usability & Accessibility**: Fluid responsive layouts, non-clipping typography, 42px touch targets, and high-contrast Obsidian Gold luxury aesthetic.
+   - **Compatibility**: Responsive rendering across desktop monitors, tablets, iOS Safari, Android Chrome, and modern web browsers.
+
+3. **Maintenance & Deployment Testing**:
+   - **Regression**: 103 test suites (553 tests) executed on every release cycle without breaking legacy features.
+   - **Smoke Tests**: Instant initialization, cold-start bundle checks, and asset preconnect validation.
+   - **Deployment Verification**: Automated build verification (`npm run build:web`) and live health probes (`https://asset-array.web.app` returning HTTP 200).
+
+4. **Execution & Code Visibility**:
+   - **Black-Box**: UI contract, event dispatching, and REST endpoint validation.
+   - **White-Box**: State machine invariants, cryptographic entropy verification, and internal AST checks.
+   - **Gray-Box**: Hybrid end-to-end tests evaluating database replication, token refresh cycles, and cache invalidation.
 
 ---
 
@@ -363,20 +416,19 @@ npm install
 npm run web
 ```
 
-### 2. Run Automated Test Verification & Live Browser QA
+### 2. Run Automated Test Verification & Live Quality Gates
 ```bash
-# Run full 95-suite Jest test regression (498 tests passing)
+# Run full 103-suite Jest test regression (553 tests passing)
 npm test
-
-# Run live headless Chrome browser verification (7 stages + storage reset)
-node scripts/verify-v4-enhancements.js
-
-# Run the canonical 7-gate verification (tsc, backend syntax, tests,
-# AI audit, desktop E2E, mobile audit, production build)
-npm run verify:all
 
 # TypeScript typecheck
 npm run typecheck
+
+# Build web production bundle (dist/)
+npm run build:web
+
+# Deploy live to Firebase Hosting
+npm run deploy:web
 ```
 
 ---

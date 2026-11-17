@@ -14,6 +14,7 @@ export function useModalManager() {
   const [isPaywallVisible, setIsPaywallVisible] = useState(false);
   const [isOnboardingWizardOpen, setIsOnboardingWizardOpen] = useState(false);
   const [isAiCopilotOpen, setIsAiCopilotOpen] = useState(false);
+  const [isDocumentVaultOpen, setIsDocumentVaultOpen] = useState(false);
   const [aboutSheet, setAboutSheet] = useState<AboutSheet | null>(null);
 
   // Portfolio modal
@@ -49,6 +50,14 @@ export function useModalManager() {
     setEditingHoldingId(null);
   }, []);
 
+  const openDocumentVault = useCallback(() => {
+    setIsDocumentVaultOpen(true);
+  }, []);
+
+  const closeDocumentVault = useCallback(() => {
+    setIsDocumentVaultOpen(false);
+  }, []);
+
   return {
     isSyncModalOpen,
     setIsSyncModalOpen,
@@ -60,6 +69,10 @@ export function useModalManager() {
     setIsOnboardingWizardOpen,
     isAiCopilotOpen,
     setIsAiCopilotOpen,
+    isDocumentVaultOpen,
+    setIsDocumentVaultOpen,
+    openDocumentVault,
+    closeDocumentVault,
     aboutSheet,
     setAboutSheet,
     isPortfolioModalOpen,

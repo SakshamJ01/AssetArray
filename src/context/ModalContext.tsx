@@ -13,6 +13,10 @@ export interface ModalContextValue {
   setIsOnboardingWizardOpen: React.Dispatch<React.SetStateAction<boolean>>;
   isAiCopilotOpen: boolean;
   setIsAiCopilotOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  isDocumentVaultOpen: boolean;
+  setIsDocumentVaultOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  openDocumentVault: () => void;
+  closeDocumentVault: () => void;
   aboutSheet: AboutSheet | null;
   setAboutSheet: React.Dispatch<React.SetStateAction<AboutSheet | null>>;
   isPortfolioModalOpen: boolean;

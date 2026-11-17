@@ -4,6 +4,11 @@ import { AppTheme } from "../theme";
 import { radiusTokens, surfaceTokens, semanticStatusColors } from "../theme/tokens";
 import { storageService } from "../platform/storage";
 import { FirmProfile, defaultFirmProfile } from "../types/wealth";
+import {
+  getShowSampleDataSetting,
+  setShowSampleDataSetting,
+  subscribeToShowSampleData,
+} from "../services/sampleDataSettings";
 
 export interface SettingsScreenProps {
   theme: AppTheme;
@@ -135,6 +140,13 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 }) => {
   const [firmProfile, setFirmProfile] = useState<FirmProfile>(defaultFirmProfile);
   const [isFirmProfileSaved, setIsFirmProfileSaved] = useState(false);
+  const [showSampleData, setShowSampleData] = useState<boolean>(true);
+
+  useEffect(() => {
+    void getShowSampleDataSetting().then((val) => setShowSampleData(val));
+    const unsub = subscribeToShowSampleData((enabled) => setShowSampleData(enabled));
+    return unsub;
+  }, []);
 
   useEffect(() => {
     void storageService.getSecureItem("asset_array_firm_profile").then((raw) => {
@@ -268,6 +280,23 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           <Switch
             value={hapticsEnabled}
             onValueChange={(val) => void toggleHaptics(val)}
+            trackColor={{ false: "#334155", true: surfaceTokens.brand }}
+          />
+        </View>
+
+        <View style={localStyles.rowItem}>
+          <View style={{ flex: 1 }}>
+            <Text style={localStyles.rowTitle}>Testing Sample Data & Presets</Text>
+            <Text style={localStyles.rowSubtitle}>
+              Enable pre-loaded sample statements, mock CAS datasets, and sandbox testing chips across the Document Vault and Ingestion desks. Turn off for clean production advisory.
+            </Text>
+          </View>
+          <Switch
+            value={showSampleData}
+            onValueChange={(val) => {
+              setShowSampleData(val);
+              void setShowSampleDataSetting(val);
+            }}
             trackColor={{ false: "#334155", true: surfaceTokens.brand }}
           />
         </View>

@@ -74,6 +74,7 @@ export interface AdvisorCommandCenterProps {
   onBroadcastOutreach: () => void;
   onOpenAiCopilot?: () => void;
   onOpenAiResearch?: () => void;
+  onOpenDocumentVault?: () => void;
   isOffline?: boolean;
 }
 
@@ -92,6 +93,7 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
   onBroadcastOutreach,
   onOpenAiCopilot,
   onOpenAiResearch,
+  onOpenDocumentVault,
   isOffline = false,
 }) => {
   const [horizon, setHorizon] = useState<HorizonPerspective>("TODAY");
@@ -729,6 +731,7 @@ export const AdvisorCommandCenter: React.FC<AdvisorCommandCenterProps> = ({
         onOpenFundXray={() => setIsFundXrayOpen(true)}
         onOpenConstitution={() => setIsConstitutionOpen(true)}
         onOpenShadowWealth={() => setIsShadowWealthOpen(true)}
+        onOpenDocumentVault={onOpenDocumentVault}
         onOpenAiCopilot={onOpenAiCopilot}
         onOpenBroadcast={onBroadcastOutreach}
         colors={theme.colors}

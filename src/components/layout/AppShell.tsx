@@ -36,6 +36,7 @@ export interface AppShellProps {
   onQuickBroadcast: () => void;
   onQuickImportStatement: () => void;
   onQuickExportRoster: () => void;
+  onOpenDocumentVault?: () => void;
   onClearSelectedClient: () => void;
   onNavigateTab: (tab: string, params?: any) => void;
   insetsBottom?: number;
@@ -69,6 +70,7 @@ export const AppShell: React.FC<AppShellProps> = ({
   onQuickBroadcast,
   onQuickImportStatement,
   onQuickExportRoster,
+  onOpenDocumentVault,
   onClearSelectedClient,
   onNavigateTab,
   insetsBottom = 0,
@@ -99,6 +101,7 @@ export const AppShell: React.FC<AppShellProps> = ({
             onQuickBroadcast={onQuickBroadcast}
             onQuickImportStatement={onQuickImportStatement}
             onQuickExportRoster={onQuickExportRoster}
+            onOpenDocumentVault={onOpenDocumentVault}
             syncStatus={syncStatus}
             tabs={visibleTabs}
             theme={theme}

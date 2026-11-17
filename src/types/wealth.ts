@@ -752,5 +752,53 @@ export interface TenantContext {
   permissions: V4Permission[];
 }
 
+// ==========================================
+// FIDUCIARY DOCUMENT VAULT & RECONCILIATION
+// ==========================================
+
+export type DocumentCategory = "statement" | "kyc" | "tax" | "legal" | "ips" | "general";
+
+export interface FiduciaryDocument {
+  id: string;
+  clientId: string;
+  name: string;
+  category: DocumentCategory;
+  fileSizeFormatted: string;
+  uploadedAt: string;
+  mimeType: string;
+  extractedHoldingsCount?: number;
+  status: "verified" | "pending_review" | "archived";
+  notes?: string;
+  contentBase64?: string;
+}
+
+export type DiffType = "new" | "modified" | "removed" | "unchanged";
+
+export interface HoldingDiffItem {
+  ticker: string;
+  assetName: string;
+  assetClass: string;
+  existingQuantity: number;
+  statementQuantity: number;
+  deltaQuantity: number;
+  existingValue: number;
+  statementValue: number;
+  deltaValue: number;
+  diffType: DiffType;
+}
+
+export interface ReconciliationReport {
+  id: string;
+  clientId: string;
+  timestamp: string;
+  statementSource?: string;
+  totalExistingValue: number;
+  totalStatementValue: number;
+  totalDiscrepancyValue: number;
+  items: HoldingDiffItem[];
+  auditSignature: string;
+}
+
+
 
 

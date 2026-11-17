@@ -9,6 +9,7 @@ import {
   ClientDraft,
   CloudSettings,
   HoldingDraft,
+  PortfolioHolding,
 } from "../../types/wealth";
 import { BillingPackage } from "../../platform/billing";
 import { purchasePackage, restorePurchases } from "../../services/revenueCat";
@@ -19,6 +20,7 @@ import { ConfirmModal } from "./ConfirmModal";
 import { SyncConfigModal } from "./SyncConfigModal";
 import { BroadcastModal } from "./BroadcastModal";
 import { AboutLegalModal } from "./AboutLegalModal";
+import { DocumentVaultModal } from "./DocumentVaultModal";
 import { PaywallScreen } from "../../screens/PaywallScreen";
 
 export interface PendingConfirmState {
@@ -91,6 +93,12 @@ export interface AppModalsHostProps {
   isPaywallLoading: boolean;
   setIsPaywallLoading: (loading: boolean) => void;
   setIsPro: (pro: boolean) => void;
+
+  // Document Vault Modal
+  isDocumentVaultOpen?: boolean;
+  setIsDocumentVaultOpen?: (open: boolean) => void;
+  selectedClient?: Client | null;
+  onUpdateClientHoldings?: (clientId: string, updatedHoldings: PortfolioHolding[]) => void;
 }
 
 export const AppModalsHost: React.FC<AppModalsHostProps> = ({
@@ -142,9 +150,23 @@ export const AppModalsHost: React.FC<AppModalsHostProps> = ({
   isPaywallLoading,
   setIsPaywallLoading,
   setIsPro,
+  isDocumentVaultOpen = false,
+  setIsDocumentVaultOpen,
+  selectedClient = null,
+  onUpdateClientHoldings,
 }) => {
   return (
     <>
+      <DocumentVaultModal
+        visible={isDocumentVaultOpen}
+        onClose={() => setIsDocumentVaultOpen?.(false)}
+        theme={theme}
+        client={selectedClient}
+        clients={clients}
+        onUpdateClientHoldings={onUpdateClientHoldings}
+        isDesktop={isDesktop}
+      />
+
       <ClientEditorModal
         visible={isEditorOpen}
         isDesktop={isDesktop}

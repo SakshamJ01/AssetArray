@@ -348,6 +348,7 @@ function AppContent() {
   const [clientAiRecommendation, setClientAiRecommendation] = useState<ClientAiRecommendation | null>(null);
   const [isClientAiLoading, setIsClientAiLoading] = useState(false);
   const [isAiCopilotOpen, setIsAiCopilotOpen] = useState(false);
+  const [isDocumentVaultOpen, setIsDocumentVaultOpen] = useState(false);
   const [activeCurrency, setActiveCurrency] = useState<CurrencyCode>("INR");
   const [isFirstLoginPinSetupOpen, setIsFirstLoginPinSetupOpen] = useState(false);
   const [isOnboardingWizardOpen, setIsOnboardingWizardOpen] = useState(false);
@@ -557,6 +558,9 @@ function AppContent() {
           setSelectedClientIds(clients.map((c) => c.id));
         }
         setIsBroadcastModalOpen(true);
+      } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "d") {
+        e.preventDefault();
+        setIsDocumentVaultOpen((prev) => !prev);
       } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "l") {
         e.preventDefault();
         setIsUnlocked(false);
@@ -569,6 +573,7 @@ function AppContent() {
         setIsBroadcastModalOpen(false);
         setIsSyncModalOpen(false);
         setIsPortfolioModalOpen(false);
+        setIsDocumentVaultOpen(false);
         setAboutSheet(null);
       }
     };
@@ -3066,6 +3071,7 @@ function AppContent() {
         }}
         onQuickImportStatement={() => setIsOnboardingWizardOpen(true)}
         onQuickExportRoster={exportAllClientsCsv}
+        onOpenDocumentVault={() => setIsDocumentVaultOpen(true)}
         onClearSelectedClient={() => setSelectedClientId(null)}
         onNavigateTab={(tab, params) => {
           setActiveTab(tab as AppTab);
@@ -3128,6 +3134,7 @@ function AppContent() {
           }}
           onOpenAiCopilot={() => setIsAiCopilotOpen(true)}
           onOpenAiResearch={() => setActiveTab("AI Research")}
+          onOpenDocumentVault={() => setIsDocumentVaultOpen(true)}
         />
 
       ) : (
@@ -3575,6 +3582,14 @@ function AppContent() {
         isPaywallLoading={isPaywallLoading}
         setIsPaywallLoading={setIsPaywallLoading}
         setIsPro={setIsPro}
+        isDocumentVaultOpen={isDocumentVaultOpen}
+        setIsDocumentVaultOpen={setIsDocumentVaultOpen}
+        selectedClient={selectedClient}
+        onUpdateClientHoldings={(cId, updated) => {
+          setClients((current) =>
+            current.map((c) => (c.id === cId ? { ...c, portfolio: updated } : c))
+          );
+        }}
       />
 
       <FirstLoginPinModal

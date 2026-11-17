@@ -17,6 +17,7 @@ export interface DesktopSidebarProps {
   onQuickBroadcast: () => void;
   onQuickImportStatement?: () => void;
   onQuickExportRoster?: () => void;
+  onOpenDocumentVault?: () => void;
   onLockDesk: () => void;
   dueClientsCount?: number;
   advisorName?: string;
@@ -46,6 +47,7 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
   onQuickBroadcast,
   onQuickImportStatement,
   onQuickExportRoster,
+  onOpenDocumentVault,
   onLockDesk,
   dueClientsCount = 0,
   advisorName = "Senior Wealth Advisor",
@@ -194,6 +196,21 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
             <Text style={[styles.actionSecondaryText, { color: "#10B981" }]}>Export Roster (.csv)</Text>
           </Pressable>
         )}
+
+        {onOpenDocumentVault && (
+          <Pressable
+            style={({ pressed }) => [
+              styles.actionButton,
+              styles.actionSecondary,
+              { marginTop: 6, borderColor: "rgba(224, 168, 76, 0.4)", backgroundColor: "rgba(224, 168, 76, 0.08)" },
+              pressed && styles.actionButtonPressed,
+            ]}
+            onPress={onOpenDocumentVault}
+          >
+            <Ionicons name="folder-open-outline" size={16} color="#E0A84C" />
+            <Text style={[styles.actionSecondaryText, { color: "#E0A84C" }]}>Document Vault</Text>
+          </Pressable>
+        )}
       </View>
 
       {/* Keyboard Shortcut Legend */}
@@ -202,6 +219,7 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
         {([
           ["⌘ K", "Clients"],
           ["⌘ B", "Broadcast"],
+          ["⌘ D", "Doc Vault"],
           ["⌘ L", "Lock Desk"],
           ["Esc", "Close Panel"],
         ] as const).map(([key, desc]) => (

@@ -9,7 +9,7 @@
 [![RevenueCat](https://img.shields.io/badge/Monetization-RevenueCat-orange.svg)](https://www.revenuecat.com/)
 [![Built with Expo](https://img.shields.io/badge/Built%20with-Expo%20%2F%20React%20Native-blue.svg)](https://expo.dev/)
 [![Gemini & Ollama AI](https://img.shields.io/badge/AI-Google%20Gemini%20%2B%20Ollama-8E75B2.svg)](https://ai.google.dev/)
-[![Tests Passing](https://img.shields.io/badge/Tests-553%20Passed%20(103%20Suites)-22c55e.svg)](https://github.com/SakshamJ01/AssetArray)
+[![Tests Passing](https://img.shields.io/badge/Tests-561%20Passed%20(106%20Suites)-22c55e.svg)](https://github.com/SakshamJ01/AssetArray)
 
 ![Asset Array Hero Banner](assets/hero-thumbnail.jpg)
 
@@ -83,6 +83,12 @@ Below is the deep, exhaustive breakdown of **every single feature, tool, workflo
 ---
 
 ### 0. 🌟 Next-Gen Wealth Intelligence & Zero-Friction Workstation (v4.1)
+* **📁 Fiduciary Document Vault & Statement Reconciliation Engine**:
+  - Comprehensive client-scoped legal archive (`ASSETARRAY_DOCS_<clientId>`) categorizing CKYC identity records, CAS statements, Tax filings (ITR/Form 16), Trust Deeds & Wills, and IPS Mandates.
+  - **Interactive Holding Diff & Reconciliation Desk**: Automatically compares incoming CAS/broker statements against live portfolio holdings to identify New Positions, Quantity Discrepancies, and Liquidations.
+  - **Advisor-Selective 1-Click Merge**: Granular checkbox controls allowing the advisor to approve specific security deltas before atomically updating client portfolios.
+  - **Fiduciary Cryptographic Receipt**: Generates deterministic SHA-256 signatures (`AA-REC-...`) ensuring DPDP Act 2023 compliance with zero client PII transmitted.
+  - **Settings Sandbox Switch**: Settings toggle (*Testing Sample Data & Presets*) to cleanly hide or show testing sample statements and preset chips across the desk.
 * **🛡️ Family Continuity Vault & Nominee Audit**:
   - Comprehensive depository, registrar, and banking audit evaluating nominee completeness score across all client portfolio holdings.
   - Generates a **1-Click Encrypted Family Continuity Playbook Dossier** with folio numbers, custodian emergency claim hotlines, and step-by-step handover instructions.
@@ -101,14 +107,15 @@ Below is the deep, exhaustive breakdown of **every single feature, tool, workflo
   - **Private Debt Notes**: Accrued interest calculators across Simple, Annually Compounded, and Quarterly Compounded promissory notes.
   - Full CRUD registration with persistent local storage (`ASSETARRAY_SHADOW_<clientId>`).
 * **⚡ Executive Quick-Launch Dock (Zero-Click Navigation)**:
-  - 1-Click access from the Executive Dashboard header to 11 workstation engines: Tax Harvest Studio, Rebalance Desk, Crisis Stress Test, Monte Carlo Sim, What-If Sandbox, Family Vault, Fund X-Ray, Investment Constitution, Shadow Wealth Desk, AI Copilot, and Outreach Broadcast.
+  - 1-Click access from the Executive Dashboard header to 12 workstation engines: Tax Harvest Studio, Rebalance Desk, Crisis Stress Test, Monte Carlo Sim, What-If Sandbox, Family Vault, Fund X-Ray, Investment Constitution, Shadow Wealth Desk, Document Vault, AI Copilot, and Outreach Broadcast.
 * **🎨 Institutional Multi-Theme Engine**:
   - **Executive Gold**: Private banking luxury dark mode (`#030712` + `#E0A84C`).
   - **Terminal Aladdin**: Quant/Hedge Fund cyber slate (`#060A12` + emerald `#00E5A3` & cyan `#38BDF8`).
   - **Swiss Ivory**: Daylight private wealth aesthetic (`#F8F9FA` + `#B37E28`).
   - 1-Click Theme Switcher Pill in the dashboard header and Settings.
-* **⌨️ Universal Command Palette (`⌘K` / `Ctrl+K`)**:
+* **⌨️ Universal Command Palette (`⌘K` / `Ctrl+K`) & Hotkeys**:
   - Instant keyboard accelerator with direct routing to all wealth pillars, portfolios, clients, and workstation studios without key collisions.
+  - `⌘ D` / `Ctrl+D` instant Document Vault shortcut, `⌘ B` Broadcast Center, and `⌘ L` instant privacy lock.
 
 ---
 

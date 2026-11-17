@@ -24,6 +24,10 @@ import { parseStatement, SAMPLE_STATEMENTS, ParsedStatementResult } from "../../
 import { formatWealthAmount } from "../../services/currency";
 import { triggerSuccessHaptic } from "../../services/haptics";
 import { getClientAvatar } from "../../services/avatars";
+import {
+  subscribeToShowSampleData,
+  getCachedShowSampleDataSetting,
+} from "../../services/sampleDataSettings";
 
 export interface ClientOnboardingWizardModalProps {
   visible: boolean;
@@ -102,6 +106,17 @@ export const ClientOnboardingWizardModal: React.FC<ClientOnboardingWizardModalPr
   const [goalTitle, setGoalTitle] = useState("Retirement Corpus");
   const [goalTargetAmount, setGoalTargetAmount] = useState("50000000"); // 5 Cr default
   const [goalYears, setGoalYears] = useState("10");
+  const [showSampleData, setShowSampleData] = useState<boolean>(getCachedShowSampleDataSetting());
+
+  React.useEffect(() => {
+    const unsub = subscribeToShowSampleData((enabled) => {
+      setShowSampleData(enabled);
+      if (!enabled && ingestionMode === "sample") {
+        setIngestionMode("paste");
+      }
+    });
+    return unsub;
+  }, [ingestionMode]);
 
   if (!visible) return null;
 
@@ -419,18 +434,20 @@ export const ClientOnboardingWizardModal: React.FC<ClientOnboardingWizardModalPr
                     Paste Statement
                   </Text>
                 </Pressable>
-                <Pressable
-                  onPress={() => {
-                    setIngestionMode("sample");
-                    if (!parsedResult) handleLoadSample("zerodha");
-                  }}
-                  style={[styles.segmentBtn, ingestionMode === "sample" && styles.segmentBtnActive]}
-                >
-                  <Ionicons name="flash-outline" size={14} color={ingestionMode === "sample" ? "#000" : "#94A3B8"} />
-                  <Text style={[styles.segmentText, ingestionMode === "sample" && styles.segmentTextActive]}>
-                    1-Click Sample
-                  </Text>
-                </Pressable>
+                {showSampleData && (
+                  <Pressable
+                    onPress={() => {
+                      setIngestionMode("sample");
+                      if (!parsedResult) handleLoadSample("zerodha");
+                    }}
+                    style={[styles.segmentBtn, ingestionMode === "sample" && styles.segmentBtnActive]}
+                  >
+                    <Ionicons name="flash-outline" size={14} color={ingestionMode === "sample" ? "#000" : "#94A3B8"} />
+                    <Text style={[styles.segmentText, ingestionMode === "sample" && styles.segmentTextActive]}>
+                      1-Click Sample
+                    </Text>
+                  </Pressable>
+                )}
                 <Pressable
                   onPress={() => {
                     setIngestionMode("skip");

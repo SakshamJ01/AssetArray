@@ -17,6 +17,10 @@ import {
   SAMPLE_STATEMENTS,
 } from "../../services/statementParser";
 import { SimpleHolding } from "../../services/rebalancer";
+import {
+  subscribeToShowSampleData,
+  getCachedShowSampleDataSetting,
+} from "../../services/sampleDataSettings";
 
 export interface StatementImportModalProps {
   visible: boolean;
@@ -51,6 +55,12 @@ const StatementImportModalContent: React.FC<StatementImportModalProps> = ({
   const [csvText, setCsvText] = useState<string>("");
   const [importMode, setImportMode] = useState<"merge" | "replace">("merge");
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [showSampleData, setShowSampleData] = useState<boolean>(getCachedShowSampleDataSetting());
+
+  React.useEffect(() => {
+    const unsub = subscribeToShowSampleData((enabled) => setShowSampleData(enabled));
+    return unsub;
+  }, []);
 
   const parseResult = useMemo(() => {
     return parseStatement(csvText);
@@ -263,35 +273,37 @@ const StatementImportModalContent: React.FC<StatementImportModalProps> = ({
               </View>
 
               {/* Quick Broker Samples */}
-              <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                <Text style={{ fontSize: 11, color: isDark ? "#94A3B8" : "#64748B", marginRight: 2 }}>
-                  Quick Broker Samples:
-                </Text>
-                {[
-                  { label: "Zerodha", key: "zerodha" },
-                  { label: "Upstox", key: "upstox" },
-                  { label: "ICICI Direct", key: "iciciDirect" },
-                  { label: "CAMS CAS", key: "camsCas" },
-                  { label: "Groww", key: "groww" },
-                ].map((tpl) => (
-                  <Pressable
-                    key={tpl.key}
-                    onPress={() => setCsvText(SAMPLE_STATEMENTS[tpl.key as keyof typeof SAMPLE_STATEMENTS])}
-                    style={{
-                      paddingHorizontal: 8,
-                      paddingVertical: 4,
-                      borderRadius: 4,
-                      borderWidth: 1,
-                      borderColor: isDark ? "rgba(224, 168, 76, 0.4)" : "rgba(179, 126, 40, 0.4)",
-                      backgroundColor: isDark ? "rgba(224, 168, 76, 0.08)" : "rgba(179, 126, 40, 0.08)",
-                    }}
-                  >
-                    <Text style={{ fontSize: 11, fontWeight: "600", color: brandColor }}>
-                      ⚡ {tpl.label}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
+              {showSampleData && (
+                <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                  <Text style={{ fontSize: 11, color: isDark ? "#94A3B8" : "#64748B", marginRight: 2 }}>
+                    Quick Broker Samples:
+                  </Text>
+                  {[
+                    { label: "Zerodha", key: "zerodha" },
+                    { label: "Upstox", key: "upstox" },
+                    { label: "ICICI Direct", key: "iciciDirect" },
+                    { label: "CAMS CAS", key: "camsCas" },
+                    { label: "Groww", key: "groww" },
+                  ].map((tpl) => (
+                    <Pressable
+                      key={tpl.key}
+                      onPress={() => setCsvText(SAMPLE_STATEMENTS[tpl.key as keyof typeof SAMPLE_STATEMENTS])}
+                      style={{
+                        paddingHorizontal: 8,
+                        paddingVertical: 4,
+                        borderRadius: 4,
+                        borderWidth: 1,
+                        borderColor: isDark ? "rgba(224, 168, 76, 0.4)" : "rgba(179, 126, 40, 0.4)",
+                        backgroundColor: isDark ? "rgba(224, 168, 76, 0.08)" : "rgba(179, 126, 40, 0.08)",
+                      }}
+                    >
+                      <Text style={{ fontSize: 11, fontWeight: "600", color: brandColor }}>
+                        ⚡ {tpl.label}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+              )}
 
               <TextInput
                 style={[

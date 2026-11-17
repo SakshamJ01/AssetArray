@@ -13,6 +13,7 @@ export interface ExecutiveLaunchpadProps {
   onOpenFundXray: () => void;
   onOpenConstitution: () => void;
   onOpenShadowWealth: () => void;
+  onOpenDocumentVault?: () => void;
   onOpenAiCopilot?: () => void;
   onOpenBroadcast?: () => void;
   colors: ThemeColors;
@@ -28,6 +29,7 @@ export const ExecutiveLaunchpad: React.FC<ExecutiveLaunchpadProps> = ({
   onOpenFundXray,
   onOpenConstitution,
   onOpenShadowWealth,
+  onOpenDocumentVault,
   onOpenAiCopilot,
   onOpenBroadcast,
   colors,
@@ -114,6 +116,19 @@ export const ExecutiveLaunchpad: React.FC<ExecutiveLaunchpadProps> = ({
       color: "#f59e0b",
       onPress: onOpenShadowWealth,
     },
+    ...(onOpenDocumentVault
+      ? [
+          {
+            id: "doc_vault",
+            title: "Document Vault",
+            badge: "CAS & Reconcile",
+            badgeColor: "#10b981",
+            icon: "folder-open-outline" as const,
+            color: "#10b981",
+            onPress: onOpenDocumentVault,
+          },
+        ]
+      : []),
     ...(onOpenAiCopilot
       ? [
           {

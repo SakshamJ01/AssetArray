@@ -27,6 +27,9 @@ jobs:
       - name: TypeScript Typecheck
         run: npm run typecheck
 
+      - name: Build Web Production Bundle
+        run: npm run build:web
+
       - name: Run Unit Tests
         run: npm test
 
